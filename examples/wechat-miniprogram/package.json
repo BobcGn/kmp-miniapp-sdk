@@ -1,0 +1,12 @@
+{
+  "name": "kmp-miniapp-sdk-wechat-example",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "smoke": "node scripts/commonjs-smoke.cjs",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "devDependencies": {
+    "typescript": "6.0.3"
+  }
+}

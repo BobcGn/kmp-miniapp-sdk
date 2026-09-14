@@ -1,0 +1,31 @@
+.page {
+  padding: 48rpx 32rpx;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  padding: 40rpx;
+  border-radius: 24rpx;
+  background: #ffffff;
+  box-shadow: 0 12rpx 36rpx rgba(23, 32, 51, 0.08);
+}
+
+.eyebrow {
+  color: #526079;
+  font-size: 24rpx;
+  letter-spacing: 1rpx;
+}
+
+.label {
+  margin-top: 40rpx;
+  color: #526079;
+  font-size: 28rpx;
+}
+
+.version {
+  margin-top: 12rpx;
+  color: #172033;
+  font-size: 48rpx;
+  font-weight: 600;
+}

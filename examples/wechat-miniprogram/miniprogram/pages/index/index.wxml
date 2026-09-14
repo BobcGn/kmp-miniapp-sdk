@@ -1,0 +1,7 @@
+<view class="page">
+  <view class="card">
+    <text class="eyebrow">Kotlin/JS Consumer Bridge</text>
+    <text class="label">SDK version</text>
+    <text class="version">{{sdkVersion}}</text>
+  </view>
+</view>
