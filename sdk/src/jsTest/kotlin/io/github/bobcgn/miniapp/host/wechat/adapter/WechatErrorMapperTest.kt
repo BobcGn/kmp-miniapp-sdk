@@ -1,0 +1,46 @@
+package io.github.bobcgn.miniapp.host.wechat.adapter
+
+import io.github.bobcgn.miniapp.error.MiniAppException
+import io.github.bobcgn.miniapp.host.wechat.interop.WxGeneralCallbackResult
+import io.github.bobcgn.miniapp.host.wechat.interop.WxRequestFailureResult
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
+
+class WechatErrorMapperTest {
+    @Test
+    fun rawWechatFailureMapsWithoutLeakingExternalObject() {
+        val raw: WxGeneralCallbackResult = js("({ errMsg: 'getStorage:fail denied' })")
+
+        val mapped = mapWechatHostFailure(operation = "getStorage", result = raw)
+
+        assertEquals("wechat", mapped.host)
+        assertNull(mapped.code)
+        assertEquals("getStorage:fail denied", mapped.hostMessage)
+        assertEquals("getStorage", mapped.metadata["operation"])
+    }
+
+    @Test
+    fun requestTimeoutMapsToTimeoutRatherThanHostFailure() {
+        val raw: WxRequestFailureResult = js("({ errMsg: 'request:fail timeout' })")
+
+        val mapped = mapWechatRequestFailure(raw)
+
+        val timeout = mapped as MiniAppException.Timeout
+        assertEquals("request", timeout.operation)
+        assertEquals("request:fail timeout", timeout.hostMessage)
+    }
+
+    @Test
+    fun requestTransportFailureKeepsErrnoAsScalarDiagnostic() {
+        val raw: WxRequestFailureResult =
+            js("({ errMsg: 'request:fail unable to resolve host', errno: 600009 })")
+
+        val mapped = mapWechatRequestFailure(raw)
+
+        val failure = mapped as MiniAppException.HostFailure
+        assertEquals("wechat", failure.host)
+        assertEquals("600009", failure.code)
+        assertEquals("request", failure.metadata["operation"])
+    }
+}

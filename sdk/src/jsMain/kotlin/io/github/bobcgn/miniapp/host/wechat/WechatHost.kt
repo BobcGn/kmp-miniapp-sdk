@@ -1,0 +1,81 @@
+package io.github.bobcgn.miniapp.host.wechat
+
+import io.github.bobcgn.miniapp.capability.CapabilityKey
+import io.github.bobcgn.miniapp.capability.CapabilitySupport
+import io.github.bobcgn.miniapp.capability.lifecycle.LifecycleCapabilityProvider
+import io.github.bobcgn.miniapp.capability.lifecycle.MiniAppLifecycle
+import io.github.bobcgn.miniapp.capability.network.MiniAppHttpTransport
+import io.github.bobcgn.miniapp.capability.network.NetworkCapabilityProvider
+import io.github.bobcgn.miniapp.capability.storage.MiniAppStorage
+import io.github.bobcgn.miniapp.capability.storage.StorageCapabilityProvider
+import io.github.bobcgn.miniapp.host.HostPlatformApi
+import io.github.bobcgn.miniapp.host.MiniAppHost
+import io.github.bobcgn.miniapp.host.wechat.adapter.WechatAuth
+import io.github.bobcgn.miniapp.host.wechat.adapter.WechatAuthHost
+import io.github.bobcgn.miniapp.host.wechat.adapter.WechatNavigation
+import io.github.bobcgn.miniapp.host.wechat.adapter.WechatNavigationHost
+import io.github.bobcgn.miniapp.host.wechat.adapter.WechatNetwork
+import io.github.bobcgn.miniapp.host.wechat.adapter.WechatNetworkHost
+import io.github.bobcgn.miniapp.host.wechat.adapter.WechatStorage
+import io.github.bobcgn.miniapp.host.wechat.adapter.WechatStorageHost
+import io.github.bobcgn.miniapp.host.wechat.adapter.WxAuthHost
+import io.github.bobcgn.miniapp.host.wechat.adapter.WxNavigationHost
+import io.github.bobcgn.miniapp.host.wechat.adapter.WxNetworkHost
+import io.github.bobcgn.miniapp.host.wechat.adapter.WxStorageHost
+import io.github.bobcgn.miniapp.host.wechat.runtime.WechatAppLifecycle
+import io.github.bobcgn.miniapp.host.wechat.runtime.WechatPageLifecycle
+
+/**
+ * Typed escape hatch for WeChat-only APIs that do not form common capabilities.
+ *
+ * A page stack and a page route exist in a DSL mini-program runtime and have no
+ * equivalent in a WebView-based host, so navigation and page lifecycle stay here.
+ * The app-level lifecycle is not host-specific and is therefore a common
+ * capability; only the WeChat hooks that *drive* it appear here.
+ */
+internal class WechatPlatformApi(
+    /** WeChat-specific client authentication bootstrap. */
+    internal val auth: WechatAuth,
+    /** WeChat page-stack navigation. */
+    internal val navigation: WechatNavigation,
+    /** WeChat App hooks that drive the common lifecycle capability. */
+    internal val appLifecycle: WechatAppLifecycle,
+    /** WeChat page-level lifecycle, which is not a common concept. */
+    internal val pageLifecycle: WechatPageLifecycle,
+) : HostPlatformApi
+
+/** First concrete [MiniAppHost], backed by the WeChat Mini Program runtime. */
+internal class WechatHost(
+    storageHost: WechatStorageHost = WxStorageHost,
+    authHost: WechatAuthHost = WxAuthHost,
+    networkHost: WechatNetworkHost = WxNetworkHost,
+    navigationHost: WechatNavigationHost = WxNavigationHost,
+) : MiniAppHost<WechatPlatformApi>,
+    StorageCapabilityProvider,
+    NetworkCapabilityProvider,
+    LifecycleCapabilityProvider {
+    private val appLifecycle: WechatAppLifecycle = WechatAppLifecycle()
+
+    override val platform: WechatPlatformApi = WechatPlatformApi(
+        auth = WechatAuth(authHost),
+        navigation = WechatNavigation(navigationHost),
+        appLifecycle = appLifecycle,
+        pageLifecycle = WechatPageLifecycle(),
+    )
+
+    override val storage: MiniAppStorage = WechatStorage(storageHost)
+
+    override val network: MiniAppHttpTransport = WechatNetwork(networkHost)
+
+    override val lifecycle: MiniAppLifecycle = appLifecycle
+
+    override fun capabilitySupport(capability: CapabilityKey): CapabilitySupport =
+        when (capability) {
+            MiniAppStorage.Key,
+            MiniAppHttpTransport.Key,
+            MiniAppLifecycle.Key,
+            -> CapabilitySupport.Supported
+
+            else -> CapabilitySupport.Unsupported
+        }
+}
