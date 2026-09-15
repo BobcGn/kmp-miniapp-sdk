@@ -6,6 +6,8 @@
 
 如果本文件与可执行配置或源码冲突，以可执行配置和源码为准。
 
+微信各能力的实现状态、宿主 API、权限前置条件和验证等级见 [微信能力矩阵](platforms/wechat/WECHAT_CAPABILITIES-ch.md)。矩阵中的 `Planned`、`Partial`、`Experimental`、`Unsupported` 与 `P3-Presentation` 均不得解释为已实现能力。
+
 ## 1. 项目标识
 
 - 项目：`kmp-miniapp-sdk`

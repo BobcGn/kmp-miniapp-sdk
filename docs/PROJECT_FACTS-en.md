@@ -6,6 +6,8 @@ This file is the human-readable source of truth for the current state of kmp-min
 
 If this file conflicts with executable configuration or source code, the executable configuration and source code take precedence.
 
+See the [WeChat capability matrix](platforms/wechat/WECHAT_CAPABILITIES-en.md) for each capability's implementation status, host API, permission prerequisites, and verification level. `Planned`, `Partial`, `Experimental`, `Unsupported`, and `P3-Presentation` entries must not be interpreted as implemented capabilities.
+
 ## 1. Project Identity
 
 - Project: `kmp-miniapp-sdk`

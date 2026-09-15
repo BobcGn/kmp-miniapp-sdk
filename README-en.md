@@ -6,7 +6,7 @@ A Kotlin Multiplatform SDK for bridging shared Kotlin logic into WeChat Mini Pro
 
 ## Status
 
-Experimental / pre-alpha. The project bootstrap builds and tests, but no `wx` API bridge is implemented.
+Experimental / pre-alpha. The Consumer Bridge, Storage, `wx.login` client authentication bootstrap, `wx.request` HTTP transport, App lifecycle, and part of WeChat page-stack navigation are implemented and have the required WeChat Developer Tools evidence. See the [WeChat capability matrix](docs/platforms/wechat/WECHAT_CAPABILITIES-en.md) for the exact status of every other capability.
 
 ## What this project is
 
@@ -36,7 +36,7 @@ WeChat Mini Program
 
 ## Current scope
 
-The repository currently provides one `:sdk` module, a JavaScript library target, CommonJS output, TypeScript definition generation, and Node.js-based Kotlin/JS tests. It does not yet expose a JavaScript consumer API or implement a WeChat platform API.
+The repository currently provides one `:sdk` module and CommonJS and TypeScript consumer artifacts. Platform-neutral contracts live in `commonMain`; WeChat interop, adapter, runtime, and export boundaries live in `jsMain`. Only capabilities explicitly listed as implemented in the matrix are currently supported; planned entries are not implementation facts.
 
 ## Build
 
@@ -46,6 +46,7 @@ Use the checked-in Gradle Wrapper:
 ./gradlew projects
 ./gradlew clean build
 ./gradlew :sdk:jsNodeTest
+./gradlew buildMiniAppSdk
 ```
 
 ## Documentation
@@ -53,6 +54,8 @@ Use the checked-in Gradle Wrapper:
 - [Current project facts](docs/PROJECT_FACTS-en.md)
 - [Architecture](docs/ARCHITECTURE-en.md)
 - [Development guide](docs/DEVELOPMENT-en.md)
+- [WeChat capability matrix](docs/platforms/wechat/WECHAT_CAPABILITIES-en.md)
+- [Testing and WeChat host verification](docs/TESTING-en.md)
 - [Roadmap](docs/ROADMAP-en.md)
 - [Architecture decisions](docs/decisions/README-en.md)
 

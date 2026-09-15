@@ -16,6 +16,8 @@ IntelliJ IDEA is recommended for Kotlin Multiplatform, Gradle Kotlin DSL, and Ko
 
 VS Code may be useful for files under `examples/wechat-miniprogram`. WeChat Developer Tools is required for the real-host Consumer Bridge validation.
 
+Before starting or closing WeChat capability work, review the [WeChat capability matrix](platforms/wechat/WECHAT_CAPABILITIES-en.md). It distinguishes implemented, partial, planned, unsupported, and P3 presentation capabilities and records the verification levels required for each entry.
+
 ## Commands
 
 ```shell
