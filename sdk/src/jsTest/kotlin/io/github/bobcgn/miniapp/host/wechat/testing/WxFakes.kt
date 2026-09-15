@@ -4,6 +4,7 @@ import io.github.bobcgn.miniapp.host.wechat.interop.WxGeneralCallbackResult
 import io.github.bobcgn.miniapp.host.wechat.interop.WxGetSettingSuccessResult
 import io.github.bobcgn.miniapp.host.wechat.interop.WxLoginFailureResult
 import io.github.bobcgn.miniapp.host.wechat.interop.WxLoginSuccessResult
+import io.github.bobcgn.miniapp.host.wechat.interop.WxGetClipboardDataSuccessResult
 import io.github.bobcgn.miniapp.host.wechat.interop.WxGetPrivacySettingSuccessResult
 import io.github.bobcgn.miniapp.host.wechat.interop.WxOpenSettingSuccessResult
 import io.github.bobcgn.miniapp.host.wechat.interop.WxRequestFailureResult
@@ -103,6 +104,19 @@ internal fun fakeGetSettingSuccess(authSetting: Any?): WxGetSettingSuccessResult
     val result: WxGetSettingSuccessResult = js("({})")
     js("result.errMsg = 'getSetting:ok'")
     js("result.authSetting = authSetting")
+    return result
+}
+
+/**
+ * Builds a `wx.getClipboardData` success result.
+ *
+ * `data` is supplied as `Any?` so a test can produce the malformed shapes the
+ * contract must reject, such as a missing value or a non-string one.
+ */
+internal fun fakeGetClipboardDataSuccess(data: Any?): WxGetClipboardDataSuccessResult {
+    val result: WxGetClipboardDataSuccessResult = js("({})")
+    js("result.errMsg = 'getClipboardData:ok'")
+    js("result.data = data")
     return result
 }
 

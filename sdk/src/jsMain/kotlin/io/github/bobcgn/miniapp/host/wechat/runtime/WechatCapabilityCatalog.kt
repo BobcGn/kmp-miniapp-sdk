@@ -6,6 +6,7 @@ import io.github.bobcgn.miniapp.capability.network.MiniAppHttpTransport
 import io.github.bobcgn.miniapp.capability.permission.MiniAppPermissions
 import io.github.bobcgn.miniapp.capability.privacy.MiniAppPrivacy
 import io.github.bobcgn.miniapp.capability.storage.MiniAppStorage
+import io.github.bobcgn.miniapp.host.wechat.WeChatDeviceCapabilities
 import io.github.bobcgn.miniapp.host.wechat.WeChatSessionState
 import io.github.bobcgn.miniapp.host.HostVersion
 
@@ -68,6 +69,39 @@ internal object WechatCapabilityCatalog {
         // not infer one, so the probe below is the authority.
         WeChatSessionState.Key to WechatCapabilityRequirement(
             canIUseSchemas = listOf("checkSession"),
+        ),
+        // The four device capabilities are gated separately: a host may expose one
+        // clipboard direction or one vibration length without the other. WeChat
+        // documents 1.1.0 for the clipboard APIs and 1.2.0 for the vibration APIs,
+        // and canIUse is probed as well because a version figure alone does not
+        // prove the function exists.
+        WeChatDeviceCapabilities.ClipboardRead to WechatCapabilityRequirement(
+            canIUseSchemas = listOf("getClipboardData"),
+            // https://developers.weixin.qq.com/miniprogram/dev/api/device/clipboard/wx.getClipboardData.html
+            minimumBaseLibraryVersion = requireNotNull(HostVersion.parse("1.1.0")) {
+                "The recorded minimum base-library version must be a dotted numeric version"
+            },
+        ),
+        WeChatDeviceCapabilities.ClipboardWrite to WechatCapabilityRequirement(
+            canIUseSchemas = listOf("setClipboardData"),
+            // https://developers.weixin.qq.com/miniprogram/dev/api/device/clipboard/wx.setClipboardData.html
+            minimumBaseLibraryVersion = requireNotNull(HostVersion.parse("1.1.0")) {
+                "The recorded minimum base-library version must be a dotted numeric version"
+            },
+        ),
+        WeChatDeviceCapabilities.VibrateShort to WechatCapabilityRequirement(
+            canIUseSchemas = listOf("vibrateShort"),
+            // https://developers.weixin.qq.com/miniprogram/dev/api/device/vibrate/wx.vibrateShort.html
+            minimumBaseLibraryVersion = requireNotNull(HostVersion.parse("1.2.0")) {
+                "The recorded minimum base-library version must be a dotted numeric version"
+            },
+        ),
+        WeChatDeviceCapabilities.VibrateLong to WechatCapabilityRequirement(
+            canIUseSchemas = listOf("vibrateLong"),
+            // https://developers.weixin.qq.com/miniprogram/dev/api/device/vibrate/wx.vibrateLong.html
+            minimumBaseLibraryVersion = requireNotNull(HostVersion.parse("1.2.0")) {
+                "The recorded minimum base-library version must be a dotted numeric version"
+            },
         ),
         // WeChat integrated its privacy APIs in a single base library and does not
         // intercept privacy-gated calls below it, so this is both the documented

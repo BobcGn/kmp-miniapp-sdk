@@ -101,4 +101,16 @@ internal external object wx {
      * contract reaches `success`; a declined or dismissed one reaches `fail`.
      */
     fun requirePrivacyAuthorize(options: WxRequirePrivacyAuthorizeOptions): Unit
+
+    /** Reads the system clipboard through callbacks. */
+    fun getClipboardData(options: WxGetClipboardDataOptions): Unit
+
+    /** Writes to the system clipboard through callbacks. */
+    fun setClipboardData(options: WxSetClipboardDataOptions): Unit
+
+    /** Performs the host's short vibration through callbacks. */
+    fun vibrateShort(options: WxVibrateOptions): Unit
+
+    /** Performs the host's long vibration through callbacks. */
+    fun vibrateLong(options: WxVibrateOptions): Unit
 }

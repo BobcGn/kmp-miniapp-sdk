@@ -9,6 +9,7 @@ import io.github.bobcgn.miniapp.capability.permission.MiniAppPermissions
 import io.github.bobcgn.miniapp.capability.privacy.MiniAppPrivacy
 import io.github.bobcgn.miniapp.capability.storage.MiniAppStorage
 import io.github.bobcgn.miniapp.host.HostVersion
+import io.github.bobcgn.miniapp.host.wechat.WeChatDeviceCapabilities
 import io.github.bobcgn.miniapp.host.wechat.runtime.WechatCapabilityCatalog
 import io.github.bobcgn.miniapp.host.wechat.testing.FakeWechatRuntimeInfoHost
 import io.github.bobcgn.miniapp.host.wechat.testing.fakeWechatHost
@@ -40,6 +41,24 @@ internal class WechatHostTest {
         assertEquals(CapabilitySupport.Supported, host.capabilitySupport(MiniAppPrivacy.Key))
         // Session checking is a WeChat-specific condition, so its key is namespaced.
         assertEquals(CapabilitySupport.Supported, host.capabilitySupport(WeChatSessionState.Key))
+        // The four device capabilities are WeChat-specific too, and each is gated
+        // separately rather than through one all-or-nothing switch.
+        assertEquals(
+            CapabilitySupport.Supported,
+            host.capabilitySupport(WeChatDeviceCapabilities.ClipboardRead),
+        )
+        assertEquals(
+            CapabilitySupport.Supported,
+            host.capabilitySupport(WeChatDeviceCapabilities.ClipboardWrite),
+        )
+        assertEquals(
+            CapabilitySupport.Supported,
+            host.capabilitySupport(WeChatDeviceCapabilities.VibrateShort),
+        )
+        assertEquals(
+            CapabilitySupport.Supported,
+            host.capabilitySupport(WeChatDeviceCapabilities.VibrateLong),
+        )
         assertEquals(
             CapabilitySupport.Unsupported,
             host.capabilitySupport(CapabilityKey("unknown")),

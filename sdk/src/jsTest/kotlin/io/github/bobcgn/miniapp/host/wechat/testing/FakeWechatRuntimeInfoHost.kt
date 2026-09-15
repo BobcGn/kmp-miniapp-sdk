@@ -32,6 +32,10 @@ internal class FakeWechatRuntimeInfoHost(
         "getPrivacySetting",
         "requirePrivacyAuthorize",
         "checkSession",
+        "getClipboardData",
+        "setClipboardData",
+        "vibrateShort",
+        "vibrateLong",
     ),
     private val canIUseAvailable: Boolean = true,
 ) : WechatRuntimeInfoHost {

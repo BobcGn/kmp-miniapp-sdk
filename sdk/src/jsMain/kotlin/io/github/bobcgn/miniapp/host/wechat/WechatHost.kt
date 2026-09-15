@@ -16,24 +16,30 @@ import io.github.bobcgn.miniapp.host.HostPlatformApi
 import io.github.bobcgn.miniapp.host.MiniAppHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatAuth
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatAuthHost
+import io.github.bobcgn.miniapp.host.wechat.adapter.WechatClipboard
+import io.github.bobcgn.miniapp.host.wechat.adapter.WechatClipboardHost
+import io.github.bobcgn.miniapp.host.wechat.adapter.WechatHaptics
+import io.github.bobcgn.miniapp.host.wechat.adapter.WechatHapticsHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatNavigation
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatNavigationHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatNetwork
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatNetworkHost
-import io.github.bobcgn.miniapp.host.wechat.adapter.WechatPermissions
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatPermissionHost
+import io.github.bobcgn.miniapp.host.wechat.adapter.WechatPermissions
+import io.github.bobcgn.miniapp.host.wechat.adapter.WechatPrivacy
+import io.github.bobcgn.miniapp.host.wechat.adapter.WechatPrivacyHost
+import io.github.bobcgn.miniapp.host.wechat.adapter.WechatRuntimeInfoHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatStorage
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatStorageHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WxAuthHost
+import io.github.bobcgn.miniapp.host.wechat.adapter.WxClipboardHost
+import io.github.bobcgn.miniapp.host.wechat.adapter.WxHapticsHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WxNavigationHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WxNetworkHost
-import io.github.bobcgn.miniapp.host.wechat.adapter.WechatPrivacy
-import io.github.bobcgn.miniapp.host.wechat.adapter.WechatPrivacyHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WxPermissionHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WxPrivacyHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WxRuntimeInfoHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WxStorageHost
-import io.github.bobcgn.miniapp.host.wechat.adapter.WechatRuntimeInfoHost
 import io.github.bobcgn.miniapp.host.wechat.runtime.WechatAppLifecycle
 import io.github.bobcgn.miniapp.host.wechat.runtime.WechatCapabilityGate
 import io.github.bobcgn.miniapp.host.wechat.runtime.WechatPageLifecycle
@@ -58,6 +64,10 @@ internal class WechatPlatformApi(
     internal val pageLifecycle: WechatPageLifecycle,
     /** What this runtime reports about itself, including the base-library version. */
     internal val runtimeInfo: WechatRuntimeInfo,
+    /** WeChat system clipboard access. */
+    internal val clipboard: WechatClipboard,
+    /** WeChat short and long vibrations. */
+    internal val haptics: WechatHaptics,
 ) : HostPlatformApi
 
 /** First concrete [MiniAppHost], backed by the WeChat Mini Program runtime. */
@@ -69,6 +79,8 @@ internal class WechatHost(
     runtimeInfoHost: WechatRuntimeInfoHost = WxRuntimeInfoHost,
     permissionHost: WechatPermissionHost = WxPermissionHost,
     privacyHost: WechatPrivacyHost = WxPrivacyHost,
+    clipboardHost: WechatClipboardHost = WxClipboardHost,
+    hapticsHost: WechatHapticsHost = WxHapticsHost,
 ) : MiniAppHost<WechatPlatformApi>,
     StorageCapabilityProvider,
     NetworkCapabilityProvider,
@@ -88,6 +100,8 @@ internal class WechatHost(
         appLifecycle = appLifecycle,
         pageLifecycle = WechatPageLifecycle(),
         runtimeInfo = runtimeInfo,
+        clipboard = WechatClipboard(clipboardHost),
+        haptics = WechatHaptics(hapticsHost),
     )
 
     override val storage: MiniAppStorage = WechatStorage(storageHost)
