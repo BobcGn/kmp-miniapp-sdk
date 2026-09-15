@@ -5,6 +5,7 @@ import io.github.bobcgn.miniapp.capability.CapabilitySupport
 import io.github.bobcgn.miniapp.capability.lifecycle.MiniAppLifecycle
 import io.github.bobcgn.miniapp.capability.network.MiniAppHttpTransport
 import io.github.bobcgn.miniapp.capability.permission.MiniAppPermissions
+import io.github.bobcgn.miniapp.capability.privacy.MiniAppPrivacy
 import io.github.bobcgn.miniapp.capability.storage.MiniAppStorage
 import io.github.bobcgn.miniapp.testing.CapabilitySupportContractChecks
 import io.github.bobcgn.miniapp.testing.FakeMiniAppHost
@@ -48,10 +49,12 @@ public class MiniAppHostTest {
         assertEquals(CapabilitySupport.Supported, host.capabilitySupport(MiniAppHttpTransport.Key))
         assertEquals(CapabilitySupport.Supported, host.capabilitySupport(MiniAppLifecycle.Key))
         assertEquals(CapabilitySupport.Supported, host.capabilitySupport(MiniAppPermissions.Key))
+        assertEquals(CapabilitySupport.Supported, host.capabilitySupport(MiniAppPrivacy.Key))
         assertNotNull(host.storage)
         assertNotNull(host.network)
         assertNotNull(host.lifecycle)
         assertNotNull(host.permissions)
+        assertNotNull(host.privacy)
     }
 
     @Test

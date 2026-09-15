@@ -11,6 +11,24 @@ export interface WeChatLoginResult {
 /** Obtains a code that must be exchanged by a trusted consumer backend. */
 export function wechatLogin(): Promise<WeChatLoginResult>;
 
+/**
+ * Whether WeChat still holds a usable client login session.
+ *
+ * `Valid` says only that WeChat's own client login state is intact. It is not an
+ * authenticated user, a consumer backend session, or proof that any credential
+ * the consumer holds is still accepted.
+ */
+export type WeChatSessionState = 'Valid' | 'Invalid';
+
+/**
+ * Reports whether WeChat still holds a usable login session.
+ *
+ * An `Invalid` result is a query result and changes nothing by itself: no code is
+ * acquired, no session is exchanged, and no token is refreshed. Call
+ * {@link wechatLogin} when a new code is needed.
+ */
+export function wechatCheckSession(): Promise<WeChatSessionState>;
+
 /** Options accepted by {@link networkRequest}. */
 export interface NetworkRequestInit {
   /** HTTP method name; defaults to `GET`. */
@@ -186,6 +204,53 @@ export function permissionState(permission: PermissionName): Promise<PermissionS
  * to re-enable it through {@link openPermissionSettings}.
  */
 export function requestPermission(permission: PermissionName): Promise<PermissionState>;
+
+/**
+ * What the host currently requires for its privacy contract.
+ *
+ * `NOT_REQUIRED` means the host requires nothing right now; it is not proof that
+ * the user agreed, because a host may also report it when the mini program
+ * declares no personal-data collection at all.
+ */
+export type PrivacyRequirement = 'REQUIRED' | 'NOT_REQUIRED';
+
+/** Result of {@link privacyStatus}. */
+export interface PrivacyStatusResult {
+  readonly requirement: PrivacyRequirement;
+  /** The host's own name for its privacy contract, or null when it reports none. */
+  readonly contractName: string | null | undefined;
+}
+
+/**
+ * Returns what the host currently requires for its privacy contract.
+ *
+ * Privacy is not a permission: the host tracks its privacy contract separately
+ * from the system permissions the permission functions above report.
+ */
+export function privacyStatus(): Promise<PrivacyStatusResult>;
+
+/** What one privacy authorization attempt reported. */
+export type PrivacyAuthorizationResult = 'Authorized' | 'Refused';
+
+/**
+ * Asks the host to obtain the user's acceptance of its privacy contract.
+ *
+ * Must be called from a user gesture, because the host presents its own prompt.
+ * A refusal resolves with `Refused`: it is the user's answer, not a failure, so
+ * only a host-level problem rejects. A declined and a dismissed prompt are
+ * reported the same way, because the host does not distinguish them.
+ */
+export function requestPrivacyAuthorization(): Promise<PrivacyAuthorizationResult>;
+
+/**
+ * Fails unless the host currently requires no privacy authorization.
+ *
+ * The precondition point for capabilities the host gates behind its privacy
+ * contract. It shows nothing and starts no prompt, so a capability that needs the
+ * user to accept the contract reports that and leaves the consumer to ask again
+ * from a gesture.
+ */
+export function requirePrivacySatisfied(): Promise<void>;
 
 /**
  * Opens the host's permission settings and resolves with the state afterwards.

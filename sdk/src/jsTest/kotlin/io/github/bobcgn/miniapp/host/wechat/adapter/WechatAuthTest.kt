@@ -68,5 +68,12 @@ internal class WechatAuthTest {
         ) {
             succeedCallback = success
         }
+
+        override fun isSessionCheckSupported(): Boolean = error("Not used")
+
+        override fun checkSession(
+            success: () -> Unit,
+            failure: (io.github.bobcgn.miniapp.host.wechat.interop.WxGeneralCallbackResult) -> Unit,
+        ): Unit = error("Not used")
     }
 }

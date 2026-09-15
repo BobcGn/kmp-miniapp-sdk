@@ -16,6 +16,19 @@ export declare namespace io.github.bobcgn.miniapp.export {
     }
 }
 export declare namespace io.github.bobcgn.miniapp.export {
+    class JsPrivacyStatus {
+        private constructor();
+        get requirement(): string;
+        get contractName(): Nullable<string>;
+    }
+    namespace JsPrivacyStatus {
+        /** @deprecated $metadata$ is used for internal purposes, please don't use it in your code, because it can be removed at any moment */
+        namespace $metadata$ {
+            const constructor: abstract new () => JsPrivacyStatus;
+        }
+    }
+}
+export declare namespace io.github.bobcgn.miniapp.export {
     class JsRuntimeInfo {
         private constructor();
         get baseLibraryVersion(): Nullable<string>;
@@ -42,6 +55,7 @@ export declare namespace io.github.bobcgn.miniapp.export {
                 storageSet(key: string, value: string): Promise<void>;
                 storageRemove(key: string): Promise<void>;
                 wechatLogin(): Promise<io.github.bobcgn.miniapp.host.wechat.WeChatLoginResult>;
+                wechatCheckSession(): Promise<string>;
                 networkRequest(url: string, method: string, headers: Array<string>, body: Nullable<string>, timeoutMillis: Nullable<number>): Promise<io.github.bobcgn.miniapp.export.MiniAppHttpResult>;
                 wechatAppOnLaunch(): void;
                 wechatAppOnShow(): void;
@@ -61,6 +75,9 @@ export declare namespace io.github.bobcgn.miniapp.export {
                 permissionState(permission: string): Promise<string>;
                 requestPermission(permission: string): Promise<string>;
                 openPermissionSettings(permission: string): Promise<string>;
+                privacyStatus(): Promise<io.github.bobcgn.miniapp.export.JsPrivacyStatus>;
+                requestPrivacyAuthorization(): Promise<string>;
+                requirePrivacySatisfied(): Promise<void>;
                 private constructor();
             }
         }

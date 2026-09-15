@@ -11,9 +11,14 @@ import io.github.bobcgn.miniapp.capability.network.MiniAppHttpTransport
 import io.github.bobcgn.miniapp.capability.permission.MiniAppPermissions
 import io.github.bobcgn.miniapp.capability.permission.PermissionKey
 import io.github.bobcgn.miniapp.capability.permission.PermissionState
+import io.github.bobcgn.miniapp.capability.privacy.MiniAppPrivacy
+import io.github.bobcgn.miniapp.capability.privacy.PrivacyAuthorizationOutcome
+import io.github.bobcgn.miniapp.capability.privacy.PrivacyAuthorizationRequirement
+import io.github.bobcgn.miniapp.capability.privacy.PrivacyStatus
 import io.github.bobcgn.miniapp.capability.storage.MiniAppStorage
 import io.github.bobcgn.miniapp.host.requireSupported
 import io.github.bobcgn.miniapp.host.wechat.WeChatLoginResult
+import io.github.bobcgn.miniapp.host.wechat.WeChatSessionState
 import io.github.bobcgn.miniapp.host.wechat.WechatHost
 import io.github.bobcgn.miniapp.host.wechat.runtime.WechatRuntimeInfo
 import kotlin.js.ExperimentalJsExport
@@ -31,6 +36,7 @@ public object MiniAppExports {
     private val storage: MiniAppStorage = host.storage
     private val network: MiniAppHttpTransport = host.network
     private val permissions: MiniAppPermissions = host.permissions
+    private val privacy: MiniAppPrivacy = host.privacy
 
     /**
      * Returns the version of the Kotlin SDK bundled into the JavaScript artifact.
@@ -54,6 +60,21 @@ public object MiniAppExports {
      * The returned value does not represent an authenticated user or session.
      */
     public suspend fun wechatLogin(): WeChatLoginResult = host.platform.auth.login()
+
+    /**
+     * Reports whether WeChat still holds a usable login session.
+     *
+     * Resolves with `Valid` or `Invalid`. A valid answer says only that WeChat's
+     * own client login state is intact: it is not an authenticated user, not a
+     * consumer backend session, and not proof that any credential the consumer
+     * holds is still accepted. An `Invalid` answer is a result, so nothing is
+     * re-logged-in automatically; call [wechatLogin] when a new code is needed.
+     */
+    public suspend fun wechatCheckSession(): String =
+        when (host.platform.auth.checkSession()) {
+            WeChatSessionState.VALID -> SESSION_VALID
+            WeChatSessionState.INVALID -> SESSION_INVALID
+        }
 
     /**
      * Performs an HTTP exchange and resolves with its result.
@@ -222,6 +243,35 @@ public object MiniAppExports {
      */
     public suspend fun openPermissionSettings(permission: String): String =
         permissions.openSettings(PermissionKey(permission)).toJsName()
+
+    /**
+     * Returns what the host currently requires for its privacy contract.
+     *
+     * Privacy is not a permission: the host tracks its privacy contract separately
+     * from the system permissions the permission functions above report.
+     */
+    public suspend fun privacyStatus(): JsPrivacyStatus = privacy.status().toJs()
+
+    /**
+     * Asks the host to obtain the user's acceptance of its privacy contract.
+     *
+     * Must be called from a user gesture, because the host presents its own
+     * prompt. Resolves with `Authorized` or `Refused`; a refusal is an answer, not
+     * a failure, so only a host-level problem rejects.
+     */
+    public suspend fun requestPrivacyAuthorization(): String =
+        when (privacy.requestAuthorization()) {
+            is PrivacyAuthorizationOutcome.Authorized -> PRIVACY_AUTHORIZED
+            is PrivacyAuthorizationOutcome.Refused -> PRIVACY_REFUSED
+        }
+
+    /**
+     * Fails unless the host currently requires no privacy authorization.
+     *
+     * This is the precondition point for capabilities the host gates behind its
+     * privacy contract. It shows nothing and starts no prompt.
+     */
+    public suspend fun requirePrivacySatisfied(): Unit = privacy.requireSatisfied()
 }
 
 /** Presents a capability's support state in a form a JavaScript caller can read. */
@@ -251,6 +301,22 @@ private fun WechatRuntimeInfo.toJs(): JsRuntimeInfo = JsRuntimeInfo(
     platform = platform,
     isDeveloperTools = isDeveloperTools,
 )
+
+/** Presents the host's privacy requirement in a form a JavaScript caller can read. */
+private fun PrivacyStatus.toJs(): JsPrivacyStatus = JsPrivacyStatus(
+    requirement = when (requirement) {
+        PrivacyAuthorizationRequirement.REQUIRED -> PRIVACY_REQUIRED
+        PrivacyAuthorizationRequirement.NOT_REQUIRED -> PRIVACY_NOT_REQUIRED
+    },
+    contractName = contractName,
+)
+
+private const val SESSION_VALID: String = "Valid"
+private const val SESSION_INVALID: String = "Invalid"
+private const val PRIVACY_REQUIRED: String = "REQUIRED"
+private const val PRIVACY_NOT_REQUIRED: String = "NOT_REQUIRED"
+private const val PRIVACY_AUTHORIZED: String = "Authorized"
+private const val PRIVACY_REFUSED: String = "Refused"
 
 /** Presents a permission state as the stable string the TypeScript contract declares. */
 private fun PermissionState.toJsName(): String = when (this) {

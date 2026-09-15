@@ -10,6 +10,13 @@ internal external object wx {
     /** Obtains a short-lived client login code through callbacks. */
     fun login(options: WxLoginOptions): Unit
 
+    /**
+     * Reports whether the WeChat login session is still usable.
+     *
+     * The host offers no abort handle, so a cancelled caller only stops waiting.
+     */
+    fun checkSession(options: WxCheckSessionOptions): Unit
+
     /** Requests a native toast using the supplied raw WeChat options. */
     fun showToast(options: WxShowToastOptions): Unit
 
@@ -78,4 +85,20 @@ internal external object wx {
      * The host requires a user gesture before it will open the page.
      */
     fun openSetting(options: WxOpenSettingOptions): Unit
+
+    /**
+     * Reports what the host currently requires for its privacy contract.
+     *
+     * This is the host's own privacy condition and is unrelated to the system
+     * permissions [getSetting] reports.
+     */
+    fun getPrivacySetting(options: WxGetPrivacySettingOptions): Unit
+
+    /**
+     * Asks the host to obtain the user's acceptance of its privacy contract.
+     *
+     * The host presents its own prompt, so a user gesture is required. An accepted
+     * contract reaches `success`; a declined or dismissed one reaches `fail`.
+     */
+    fun requirePrivacyAuthorize(options: WxRequirePrivacyAuthorizeOptions): Unit
 }

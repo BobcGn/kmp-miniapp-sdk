@@ -83,7 +83,17 @@ Page 级生命周期与页面栈导航不是 capability。页面、页面 route 
 
 `PermissionState` 与 `CapabilitySupport.PermissionDependent` 回答的是不同问题：前者是权限自身的状态，后者表示某个 capability 正被权限阻塞。权限 capability 自身由其宿主 API 判定为 `Supported`，永远不会依赖权限。
 
-权限不是隐私。微信的隐私授权是独立生命周期、独立 API，不属于本 capability。
+权限不是隐私。微信的隐私授权是独立生命周期、独立 API、独立 capability 与独立状态；二者共享模型会互相误报。
+
+### 隐私
+
+隐私之所以是 capability，是因为每个代替用户收集个人数据的宿主都有某种同意条件，而微信把它明确表述出来。`MiniAppPrivacy` 报告宿主当前对其自身隐私协议的要求、请求宿主取得用户同意，并暴露受门控 capability 所调用的前置条件判定点。它与 `MiniAppPermissions` 不共享任何状态：宿主对二者的弹窗、存储与清除都是分开的。
+
+三者分开建模，因为宿主也是分开报告的：可查询的要求、一次尝试的结果与 SDK 错误。`NOT_REQUIRED` 是关于宿主的陈述，不是用户已同意的证明，因为微信在小程序未声明任何收集类型时也会返回它。
+
+拒绝是结果而不是错误；拒绝与关闭弹窗会进入宿主的失败回调，但只有可识别的拒绝消息才映射为 `Refused`，其他未知失败保守地保留为 `HostFailure`。SDK 不凭空造出宿主没有的拒绝/取消区分。隐私前置条件失败是 `MiniAppException.PrivacyAuthorizationRequired`，绝不是 `PermissionDenied`；没有隐私 API 的宿主报告 `UnsupportedCapability`。
+
+前置条件判定点只查询宿主，从不展示任何界面：只有消费者能弹窗，且必须在用户手势中。
 
 ## 4. JS Interop 边界
 
@@ -151,6 +161,10 @@ typed login interop
     ↓
 wx.login
 ```
+
+微信还提供 `wx.checkSession`，用于报告微信自身发放的客户端登录态是否仍在微信定义的时效内。它被建模为微信专属结果，而不是通用认证 capability，因为没有任何其他宿主被证明共享这些语义，而通用的 `isAuthenticated()` 会承诺该 API 无法给出的保证。它只是查询：失效的答案不会获取 code、不交换 session、不刷新 token，是否再次走既有登录流程由消费者自行决定。
+
+会话检查有效不等于身份。它不表示用户已认证、不表示消费者后端 session 有效、不表示 `session_key` 仍被消费者后端接受，也不表示 access token 有效。只有经由消费者后端的 login code 路径才能建立可信身份，与本 capability 出现之前完全一致。
 
 登录 code 是短期客户端凭证，不是可信用户身份、SDK session 或 access token。向微信交换 code 并建立可信应用 session 属于消费者后端职责。SDK 不记录、不持久化、不交换也不刷新该 code。
 

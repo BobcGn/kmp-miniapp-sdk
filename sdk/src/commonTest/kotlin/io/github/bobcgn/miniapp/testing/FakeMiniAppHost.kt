@@ -8,6 +8,8 @@ import io.github.bobcgn.miniapp.capability.network.MiniAppHttpTransport
 import io.github.bobcgn.miniapp.capability.network.NetworkCapabilityProvider
 import io.github.bobcgn.miniapp.capability.permission.MiniAppPermissions
 import io.github.bobcgn.miniapp.capability.permission.PermissionCapabilityProvider
+import io.github.bobcgn.miniapp.capability.privacy.MiniAppPrivacy
+import io.github.bobcgn.miniapp.capability.privacy.PrivacyCapabilityProvider
 import io.github.bobcgn.miniapp.capability.storage.MiniAppStorage
 import io.github.bobcgn.miniapp.capability.storage.StorageCapabilityProvider
 import io.github.bobcgn.miniapp.host.HostPlatformApi
@@ -34,6 +36,7 @@ internal class FakePlatformApi : HostPlatformApi
  * @param network capability facet this host provides
  * @param lifecycle capability facet this host provides
  * @param permissions capability facet this host provides
+ * @param privacy capability facet this host provides
  * @param support the support state reported for each key; unlisted keys are unsupported
  */
 internal class FakeMiniAppHost(
@@ -42,17 +45,20 @@ internal class FakeMiniAppHost(
     override val network: MiniAppHttpTransport = RecordingHttpTransport(),
     override val lifecycle: MiniAppLifecycle = FakeMiniAppLifecycle(),
     override val permissions: MiniAppPermissions = FakeMiniAppPermissions(),
+    override val privacy: MiniAppPrivacy = FakeMiniAppPrivacy(),
     private val support: Map<CapabilityKey, CapabilitySupport> = mapOf(
         MiniAppStorage.Key to CapabilitySupport.Supported,
         MiniAppHttpTransport.Key to CapabilitySupport.Supported,
         MiniAppLifecycle.Key to CapabilitySupport.Supported,
         MiniAppPermissions.Key to CapabilitySupport.Supported,
+        MiniAppPrivacy.Key to CapabilitySupport.Supported,
     ),
 ) : MiniAppHost<FakePlatformApi>,
     StorageCapabilityProvider,
     NetworkCapabilityProvider,
     LifecycleCapabilityProvider,
-    PermissionCapabilityProvider {
+    PermissionCapabilityProvider,
+    PrivacyCapabilityProvider {
     override fun capabilitySupport(capability: CapabilityKey): CapabilitySupport =
         support[capability] ?: CapabilitySupport.Unsupported
 }

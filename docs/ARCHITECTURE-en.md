@@ -83,7 +83,17 @@ A refusal is `MiniAppException.PermissionDenied` and a host that cannot answer i
 
 `PermissionState` and `CapabilitySupport.PermissionDependent` answer different questions: the first is a permission's own state, the second says a capability is blocked by one. The permission capability reports `Supported` from its host APIs and is never itself permission-dependent.
 
-Permission is not privacy. WeChat's privacy authorization is a separate lifecycle with its own APIs and is not part of this capability.
+Permission is not privacy. WeChat's privacy authorization is a separate lifecycle with its own APIs, its own capability, and its own state; sharing either model with the other would misreport one as the other.
+
+### Privacy
+
+Privacy is a capability because every host that collects personal data on the user's behalf has some form of consent condition, and WeChat states it explicitly. `MiniAppPrivacy` reports what the host currently requires for its own privacy contract, asks the host to obtain the user's acceptance, and exposes the precondition point a gated capability calls. It shares no state with `MiniAppPermissions`: the two are prompted, stored, and cleared separately by the host.
+
+Three things are modelled separately, because the host reports them separately: the queryable requirement, the result of one attempt, and SDK errors. A requirement of `NOT_REQUIRED` is a statement about the host, not proof that the user agreed, because WeChat also reports it when the mini program declares no collection at all.
+
+A refusal is an outcome rather than an error. Declining and dismissing enter the host failure callback, but only a recognizable refusal message maps to `Refused`; every unknown failure conservatively remains a `HostFailure`. The SDK does not invent a decline/cancel distinction the host does not provide. A failed privacy precondition is `MiniAppException.PrivacyAuthorizationRequired`, never a `PermissionDenied`, and a host without the privacy APIs reports `UnsupportedCapability`.
+
+The precondition point queries the host and never shows anything: only a consumer can prompt, and only from a user gesture.
 
 ## 4. JS Interop Boundary
 
@@ -151,6 +161,10 @@ typed login interop
     ↓
 wx.login
 ```
+
+WeChat also exposes `wx.checkSession`, which reports whether the client login state WeChat issued is still within the lifetime WeChat defines. It is modelled as a WeChat-specific result rather than a common authentication capability, because no other host has been shown to share those semantics and a generic `isAuthenticated()` would promise a guarantee the API cannot give. It is a query: an invalid answer acquires no code, exchanges no session, and refreshes no token, and a consumer decides for itself whether to call the existing login flow again.
+
+A valid session check is not identity. It does not mean a user is authenticated, that a consumer backend session is valid, that a `session_key` is still accepted by a consumer backend, or that an access token is valid. Only the login-code path through the consumer's backend establishes a trusted identity, exactly as it did before this capability existed.
 
 The login code is a short-lived client credential, not a trusted user identity, SDK session, or access token. Exchanging it with WeChat and establishing a trusted application session are consumer-backend responsibilities. The SDK does not log, persist, exchange, or refresh the code.
 

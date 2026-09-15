@@ -41,6 +41,9 @@ module.exports = {
   wechatLogin: function wechatLogin() {
     return miniAppExports.wechatLogin();
   },
+  wechatCheckSession: function wechatCheckSession() {
+    return miniAppExports.wechatCheckSession();
+  },
   networkRequest: function networkRequest(url, init) {
     const options = init || {};
     return miniAppExports
@@ -112,5 +115,14 @@ module.exports = {
   },
   openPermissionSettings: function openPermissionSettings(permission) {
     return miniAppExports.openPermissionSettings(permission);
+  },
+  privacyStatus: function privacyStatus() {
+    return miniAppExports.privacyStatus();
+  },
+  requestPrivacyAuthorization: function requestPrivacyAuthorization() {
+    return miniAppExports.requestPrivacyAuthorization();
+  },
+  requirePrivacySatisfied: function requirePrivacySatisfied() {
+    return miniAppExports.requirePrivacySatisfied();
   },
 };

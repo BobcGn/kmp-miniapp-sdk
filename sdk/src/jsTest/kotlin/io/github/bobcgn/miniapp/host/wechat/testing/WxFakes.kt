@@ -4,6 +4,7 @@ import io.github.bobcgn.miniapp.host.wechat.interop.WxGeneralCallbackResult
 import io.github.bobcgn.miniapp.host.wechat.interop.WxGetSettingSuccessResult
 import io.github.bobcgn.miniapp.host.wechat.interop.WxLoginFailureResult
 import io.github.bobcgn.miniapp.host.wechat.interop.WxLoginSuccessResult
+import io.github.bobcgn.miniapp.host.wechat.interop.WxGetPrivacySettingSuccessResult
 import io.github.bobcgn.miniapp.host.wechat.interop.WxOpenSettingSuccessResult
 import io.github.bobcgn.miniapp.host.wechat.interop.WxRequestFailureResult
 import io.github.bobcgn.miniapp.host.wechat.interop.WxRequestSuccessResult
@@ -102,6 +103,23 @@ internal fun fakeGetSettingSuccess(authSetting: Any?): WxGetSettingSuccessResult
     val result: WxGetSettingSuccessResult = js("({})")
     js("result.errMsg = 'getSetting:ok'")
     js("result.authSetting = authSetting")
+    return result
+}
+
+/**
+ * Builds a `wx.getPrivacySetting` success result.
+ *
+ * Both fields are supplied as `Any?` so a test can produce the malformed shapes
+ * the contract must reject, such as a missing flag or a non-boolean one.
+ */
+internal fun fakeGetPrivacySettingSuccess(
+    needAuthorization: Any?,
+    privacyContractName: Any?,
+): WxGetPrivacySettingSuccessResult {
+    val result: WxGetPrivacySettingSuccessResult = js("({})")
+    js("result.errMsg = 'getPrivacySetting:ok'")
+    js("result.needAuthorization = needAuthorization")
+    js("result.privacyContractName = privacyContractName")
     return result
 }
 

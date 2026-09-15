@@ -32,7 +32,7 @@ When running WeChat host acceptance, use the [WeChat real-host verification matr
 
 These commands are valid and were verified on 2026-09-15.
 
-The `:sdk:jsTest` suite includes host-boundary, error-model, callback adaptation, cancellation, double-completion, optional abort, WeChat error-mapping, HTTP transport adaptation including host abort on cancellation, lifecycle state transitions, navigation adaptation, capability-support states and version gating, permission lifecycle behaviour including concurrent request merging, and interop object-construction coverage. These tests use fake callbacks and do not claim access to a real `wx` runtime.
+The `:sdk:jsTest` suite includes host-boundary, error-model, callback adaptation, cancellation, double-completion, optional abort, WeChat error-mapping, HTTP transport adaptation including host abort on cancellation, lifecycle state transitions, navigation adaptation, capability-support states and version gating, permission lifecycle behaviour including concurrent request merging, privacy authorization including the refusal classification, WeChat session checking including the expiry classification, and interop object-construction coverage. These tests use fake callbacks and do not claim access to a real `wx` runtime.
 
 ## Consumer Bridge
 
@@ -71,7 +71,7 @@ npm run smoke
 npm run typecheck
 ```
 
-The smoke test loads the consumer-facing CommonJS module, calls `sdkVersion()`, and installs a fake global `wx` to verify Storage, the WeChat login bootstrap, the HTTP transport, lifecycle forwarding, all three navigation calls, runtime capability detection, and the permission lifecycle. It also asserts what the HTTP transport handed to the fake host, including the raw-text response mode, the absolute page paths received by navigation, and the support state reported for each gated capability. This validates module and adapter behavior but is not real-host evidence. TypeScript runs in strict mode and validates the Promise-based Storage, typed `WeChatLoginResult`, HTTP transport, lifecycle, navigation, capability-support, and permission exports without `any`.
+The smoke test loads the consumer-facing CommonJS module, calls `sdkVersion()`, and installs a fake global `wx` to verify Storage, the WeChat login bootstrap, the HTTP transport, lifecycle forwarding, all three navigation calls, runtime capability detection, the permission lifecycle, privacy authorization, and the WeChat session check. It also asserts what the HTTP transport handed to the fake host, including the raw-text response mode, the absolute page paths received by navigation, and the support state reported for each gated capability. This validates module and adapter behavior but is not real-host evidence. TypeScript runs in strict mode and validates the Promise-based Storage, typed `WeChatLoginResult`, HTTP transport, lifecycle, navigation, capability-support, permission, privacy, and session-check exports without `any`.
 
 Real-host verification follows the checklist in [TESTING-en.md](TESTING-en.md), which is the authoritative list of required page values, console lines, and preparation steps. A capability is recorded as host-verified in [PROJECT_FACTS-en.md](PROJECT_FACTS-en.md) only after that run.
 
@@ -87,7 +87,26 @@ A passing Node/CommonJS smoke test or TypeScript check does not establish a pass
 
 Runtime capability detection completed Developer Tools (base library 3.17.2) and Android device (OnePlus PLQ110, Android 36, WeChat 8.0.76) acceptance on 2026-09-15, both reporting `runtime-detection=Supported`, `storage=Supported`, and `ungated=Unsupported`. The lowest debug base library WeChat Developer Tools currently offers is 2.21.4, so a host below 2.20.1 cannot be constructed; `VersionDependent` is therefore covered by automated tests rather than a real-host screenshot. The checklist in [TESTING-en.md](TESTING-en.md) describes how to produce each case.
 
+### WeChat privacy configuration
+
+WeChat gates the personal-data APIs a mini program declares behind its own privacy contract, separately from system permissions. Two things belong to the mini program's backend and cannot be done or replaced by this SDK:
+
+- The collection types must be declared in the MP backend under 设置 → 服务内容声明 → 用户隐私保护指引. A mini program that declares nothing is reported as needing no authorization, so a `NOT_REQUIRED` reading does not prove that a user ever agreed.
+- From base library 2.32.3 the host intercepts privacy-gated calls. Below that version it does not intercept them at all, which is why this capability reports `UnsupportedCapability` rather than pretending the condition does not exist.
+
+The SDK informs and gates; it does not generate a privacy policy, decide whether a business is compliant, or provide legal advice.
+
+To observe privacy state in WeChat Developer Tools, open the index page and use the Privacy Authorization card: `Refresh privacy status` queries the host without any side effect, and only the `Request privacy authorization` button starts a prompt. The debug base library must be 2.32.3 or later for the card to reach the host at all.
+
+A recorded answer belongs to the account, the device, the backend configuration, and the account's history with the mini program, so the same build can report `REQUIRED` on one account and `NOT_REQUIRED` on another. Clear the account's acceptance in the Developer Tools cache, or use another account, to see `REQUIRED` again; do not reset a device or an account destructively to produce a state.
+
+Privacy and permission acceptance are recorded separately in the verification matrix, because the host tracks them separately and a result for one says nothing about the other.
+
 The permission lifecycle completed Developer Tools (base library 3.17.2) and Android device acceptance on 2026-09-15: the host reported `Granted` and `Denied`, a settings visit reported the host's decision, and requesting a refused permission reported `DENIED` without a second prompt. `NotRequested` could not be produced on the account used, because it already holds a decision for the mapped permission, so that state is covered by automated tests. The automated suite still never requests a permission, because a real prompt requires a user gesture. Only the microphone permission is mapped.
+
+The WeChat session check passed Android real-device acceptance on 2026-09-15: OnePlus PLQ110, Android 36, WeChat 8.0.76, base library 3.17.3 [1641]. The console reported `check #1, state=Invalid` before the login bootstrap acquired a new code and repeatedly reported `state=Valid` after `wx.login` succeeded. This result is still not evidence of identity, and session-check acceptance remains separate from login-bootstrap acceptance.
+
+Privacy authorization has automated coverage only. Its real-host acceptance is outstanding, and it depends on two things this repository cannot arrange: the mini program's declared collection in the MP backend, and the account's own answer to the host prompt. The evidence the verification matrix requires is a `REQUIRED` reading with the host's contract name, a successful acceptance that leaves the host reporting `NOT_REQUIRED`, and a refusal that is reported as `REFUSED` while the requirement stays in place.
 
 ## Development Principle
 

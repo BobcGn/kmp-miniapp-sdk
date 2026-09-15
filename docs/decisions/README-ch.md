@@ -18,3 +18,4 @@
 - [0006 — 生命周期与导航边界](0006-lifecycle-and-navigation-boundary-ch.md)
 - [0007 — 能力支持状态与版本门控](0007-capability-support-and-version-gating-ch.md)
 - [0008 — 权限生命周期边界](0008-permission-lifecycle-boundary-ch.md)
+- [0009 — 隐私授权边界](0009-privacy-authorization-boundary-ch.md)

@@ -40,11 +40,16 @@ npm run typecheck
 [kmp-miniapp-sdk] storage: PASS first=first, overwritten=second, missing=null
 [kmp-miniapp-sdk] auth bootstrap: PASS codeReceived=true, length=<正整数>
 [kmp-miniapp-sdk] network: PASS status=200, bytes=<正整数>
+[kmp-miniapp-sdk] session check: PASS check #N, state=Valid
 ```
 
 Network 检查会向 `https://example.com/` 发起 `GET`。微信要求该 host 已列入 request domain 白名单，或编译时关闭域名校验。验证其他 endpoint 时请修改 `networkUrl` 常量。
 
 导航需要交互，无法只靠一次页面加载验证。依次点击第二、第三页会为 `wx.navigateTo`、`wx.redirectTo`、`wx.navigateBack` 分别打印 `[kmp-miniapp-sdk] navigation: PASS <action>`；点击顺序见检查清单。
+
+WeChat Session Check 卡片向微信询问其自身的客户端登录态是否仍然可用。它在页面加载时执行一次，且刻意位于 login bootstrap 之前：获取 code 会刷新客户端登录态并掩盖已过期的会话，因此启动顺序是先检查、后获取。有效结果不是已认证用户或后端 session，失效结果本身也不会获取 code。
+
+Privacy Authorization 卡片查询宿主对其自身隐私协议的要求，并且只在按钮触发时请求用户同意。查询在页面加载时执行，因为它没有副作用；请求则绝不如此。微信要求小程序先在 MP 后台隐私指引中声明收集类型才会弹窗，而读到 `NOT_REQUIRED` 并不证明用户已同意。详见 [../../docs/DEVELOPMENT-ch.md](../../docs/DEVELOPMENT-ch.md) 的隐私配置一节。
 
 Permission lifecycle 卡片用于查询、请求权限以及打开设置；页面加载期间不会执行其中任何一步，每一步都由点击触发。权限状态每次都从宿主读取而不是记忆，拒绝会报告为 denied 而不是宿主失败。完整点击顺序见检查清单。该流程已在微信开发者工具（基础库 3.17.2）与 Android 真机上执行；所用账号已对所映射权限持有决定，因此无法产出 `NotRequested`。
 

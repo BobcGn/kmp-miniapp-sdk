@@ -93,6 +93,8 @@ The following procedure is the DeveloperTools checklist for currently implemente
 | Runtime lifecycle | The `Runtime Lifecycle` card shows `FOREGROUND` and a page route | No dedicated line; the card is the evidence |
 | Runtime detection | The `Runtime Detection and Version Gate` card shows `PASS`, the base-library version, and support states | `[kmp-miniapp-sdk] runtime detection: PASS baseLibrary=…, platform=…, runtime-detection=…, storage=Supported, ungated=Unsupported` |
 | Permission | The `Permission Lifecycle` card shows the permission name and its state after the steps below | `[kmp-miniapp-sdk] permission query: PASS permission=microphone, state=…` |
+| Privacy | The `Privacy Authorization` card shows the host's requirement and its contract name | `[kmp-miniapp-sdk] privacy query: PASS requirement=…, contract=…` |
+| Session check | The `WeChat Session Check` card shows `VALID`, `INVALID`, or `FAIL` | `[kmp-miniapp-sdk] session check: PASS check #N, state=Valid\|Invalid` |
 | Storage | `Storage verification: PASS` | `[kmp-miniapp-sdk] storage: PASS first=first, overwritten=second, missing=null` |
 | Client login code | `Client login code: PASS` | `[kmp-miniapp-sdk] auth bootstrap: PASS codeReceived=true, length=<positive integer>` |
 | Network | `Network verification: PASS` | `[kmp-miniapp-sdk] network: PASS status=200, bytes=<positive integer>` |
@@ -139,7 +141,30 @@ A prompt may only ever follow a tap. If the smoke test or page load produces one
 
 This flow has been executed in WeChat Developer Tools at base library 3.17.2 and on an Android device (OnePlus PLQ110, Android 36, WeChat 8.0.76), including the full `Granted` → `Denied` → `DENIED` → `Granted` transition with no second prompt after the refusal. Step 1 is the exception: the account used already holds a decision, so `NotRequested` could not be produced. That state is instead covered by automated tests — the Fake Host contract checks, the adapter tests for a missing authorization entry and for `true`/`false`/missing conversion, and the first-prompt success and refusal paths — and reproducing it on a host would require a different account or device, or clearing the mini program's authorization history.
 
-9. Record which checks you observed and which you did not. A capability is recorded as host-verified in [PROJECT_FACTS-en.md](PROJECT_FACTS-en.md) only after a real-host run for that capability.
+9. Verify the privacy authorization flow. It is a different condition from the permission above, and the two are recorded separately. The debug base library must be 2.32.3 or later, and the mini program must declare its collection in the MP backend privacy guideline, or the host reports nothing to authorize.
+
+| Step | Tap | Expected |
+| --- | --- | --- |
+| 1 | Read the card after the page loads | `[kmp-miniapp-sdk] privacy query: PASS requirement=REQUIRED, contract=…`. The query has no side effect, so nothing was prompted |
+| 2 | `Request privacy authorization` and accept | `[kmp-miniapp-sdk] privacy request: PASS result=Authorized`, and the card then shows `NOT_REQUIRED` |
+| 3 | `Refresh privacy status` | Still `NOT_REQUIRED`, read from the host rather than remembered |
+| 4 | Clear the account's acceptance in the Developer Tools cache and reload | `REQUIRED` again |
+| 5 | `Request privacy authorization` and decline or dismiss | `[kmp-miniapp-sdk] privacy request: REFUSED result=Refused`, and the requirement stays `REQUIRED` |
+
+Step 5 is one state, not two: WeChat publishes no field that distinguishes declining from dismissing. The SDK reports a recognizable refusal as `Refused`; an unknown failure is shown as `FAIL` and remains a `HostFailure`. `NOT_REQUIRED` never means the user agreed, because the host also reports it when the mini program declares no collection.
+
+10. Verify the WeChat session check. It is recorded separately from the login bootstrap above, because a valid session is not identity and only the login-code path establishes one. The check runs before the bootstrap while the page loads, on purpose: acquiring a code refreshes the client login state and would hide an expired session.
+
+| Step | Action | Expected |
+| --- | --- | --- |
+| 1 | Clear the mini program's login state, then open the page | The card shows `INVALID` for check #1, before the bootstrap acquires a code. Console: `[kmp-miniapp-sdk] session check: PASS check #1, state=Invalid` |
+| 2 | `Check WeChat session` again | Still `INVALID` while no new code has been acquired |
+| 3 | Let the auth bootstrap run, or call `wechatLogin()` from the Auth card | `codeReceived=true` and a positive length; the code itself is never displayed or logged |
+| 4 | `Check WeChat session` | `VALID`. Console: `… check #N, state=Valid` |
+
+Under the host contract, the `wx.checkSession` failure callback means the login state is invalid, so the page reports `INVALID` without depending on the language or exact text of `errMsg`. Only a missing API or a call that cannot be registered rejects the Promise rather than masquerading as `VALID`.
+
+11. Record which checks you observed and which you did not. A capability is recorded as host-verified in [PROJECT_FACTS-en.md](PROJECT_FACTS-en.md) only after a real-host run for that capability.
 
 The Storage check writes a dedicated test key, verifies overwrite, removes it, and confirms that the missing key reads as `null`. The network check issues a `GET` to `https://example.com/` and reports the status code and body length; point the example's `networkUrl` constant at any reachable HTTPS endpoint when verifying a different host.
 

@@ -46,6 +46,41 @@ class WechatErrorMapperTest {
     }
 
     @Test
+    fun aDeclinedPrivacyContractIsClassifiedAsARefusal() {
+        val raw: WxGeneralCallbackResult =
+            js("({ errMsg: 'requirePrivacyAuthorize:fail privacy permission is not authorized' })")
+
+        // Only the recognizable refusal message becomes a user outcome.
+        assertEquals(WxPrivacyAuthorizeFailure.Refused, mapWechatPrivacyAuthorizeFailure(raw))
+    }
+
+    @Test
+    fun anUnknownPrivacyAuthorizationFailureRemainsAHostFailure() {
+        val raw: WxGeneralCallbackResult =
+            js("({ errMsg: 'requirePrivacyAuthorize:fail system error' })")
+
+        val classified = mapWechatPrivacyAuthorizeFailure(raw)
+
+        val failed = classified as WxPrivacyAuthorizeFailure.Failed
+        val error = failed.error as MiniAppException.HostFailure
+        assertEquals("wechat", error.host)
+        assertEquals("requirePrivacyAuthorize", error.metadata["operation"])
+    }
+
+    @Test
+    fun anUndeclaredPrivacyCollectionIsAHostFailureRatherThanARefusal() {
+        val raw: WxGeneralCallbackResult =
+            js("({ errMsg: 'requirePrivacyAuthorize:fail api scope is not declared in the privacy agreement' })")
+
+        val classified = mapWechatPrivacyAuthorizeFailure(raw)
+
+        val failed = classified as WxPrivacyAuthorizeFailure.Failed
+        val error = failed.error as MiniAppException.HostFailure
+        assertEquals("wechat", error.host)
+        assertEquals("requirePrivacyAuthorize", error.metadata["operation"])
+    }
+
+    @Test
     fun anAuthorizeRefusalMapsToAPermissionDenial() {
         val raw: WxGeneralCallbackResult = js("({ errMsg: 'authorize:fail auth deny' })")
 

@@ -4,7 +4,9 @@ import io.github.bobcgn.miniapp.capability.CapabilityKey
 import io.github.bobcgn.miniapp.capability.lifecycle.MiniAppLifecycle
 import io.github.bobcgn.miniapp.capability.network.MiniAppHttpTransport
 import io.github.bobcgn.miniapp.capability.permission.MiniAppPermissions
+import io.github.bobcgn.miniapp.capability.privacy.MiniAppPrivacy
 import io.github.bobcgn.miniapp.capability.storage.MiniAppStorage
+import io.github.bobcgn.miniapp.host.wechat.WeChatSessionState
 import io.github.bobcgn.miniapp.host.HostVersion
 
 /**
@@ -59,6 +61,24 @@ internal object WechatCapabilityCatalog {
         // is a different question and is not answered here.
         MiniAppPermissions.Key to WechatCapabilityRequirement(
             canIUseSchemas = listOf("getSetting", "authorize", "openSetting"),
+        ),
+        // Session checking is a WeChat condition rather than something every host
+        // can be asked for, so its key is namespaced. No minimum base library is
+        // recorded: WeChat's page for this API states none, and this repository does
+        // not infer one, so the probe below is the authority.
+        WeChatSessionState.Key to WechatCapabilityRequirement(
+            canIUseSchemas = listOf("checkSession"),
+        ),
+        // WeChat integrated its privacy APIs in a single base library and does not
+        // intercept privacy-gated calls below it, so this is both the documented
+        // minimum and a real availability boundary. Both APIs are probed as well,
+        // because a version number alone does not prove they exist.
+        MiniAppPrivacy.Key to WechatCapabilityRequirement(
+            canIUseSchemas = listOf("getPrivacySetting", "requirePrivacyAuthorize"),
+            // https://developers.weixin.qq.com/miniprogram/dev/api/open-api/privacy/wx.getPrivacySetting.html
+            minimumBaseLibraryVersion = requireNotNull(HostVersion.parse("2.32.3")) {
+                "The recorded minimum base-library version must be a dotted numeric version"
+            },
         ),
         RuntimeDetectionKey to WechatCapabilityRequirement(
             canIUseSchemas = listOf("getAppBaseInfo"),

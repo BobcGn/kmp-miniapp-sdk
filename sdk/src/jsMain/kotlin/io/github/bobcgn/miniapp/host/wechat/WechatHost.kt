@@ -8,6 +8,8 @@ import io.github.bobcgn.miniapp.capability.network.MiniAppHttpTransport
 import io.github.bobcgn.miniapp.capability.network.NetworkCapabilityProvider
 import io.github.bobcgn.miniapp.capability.permission.MiniAppPermissions
 import io.github.bobcgn.miniapp.capability.permission.PermissionCapabilityProvider
+import io.github.bobcgn.miniapp.capability.privacy.MiniAppPrivacy
+import io.github.bobcgn.miniapp.capability.privacy.PrivacyCapabilityProvider
 import io.github.bobcgn.miniapp.capability.storage.MiniAppStorage
 import io.github.bobcgn.miniapp.capability.storage.StorageCapabilityProvider
 import io.github.bobcgn.miniapp.host.HostPlatformApi
@@ -25,7 +27,10 @@ import io.github.bobcgn.miniapp.host.wechat.adapter.WechatStorageHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WxAuthHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WxNavigationHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WxNetworkHost
+import io.github.bobcgn.miniapp.host.wechat.adapter.WechatPrivacy
+import io.github.bobcgn.miniapp.host.wechat.adapter.WechatPrivacyHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WxPermissionHost
+import io.github.bobcgn.miniapp.host.wechat.adapter.WxPrivacyHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WxRuntimeInfoHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WxStorageHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatRuntimeInfoHost
@@ -63,11 +68,13 @@ internal class WechatHost(
     navigationHost: WechatNavigationHost = WxNavigationHost,
     runtimeInfoHost: WechatRuntimeInfoHost = WxRuntimeInfoHost,
     permissionHost: WechatPermissionHost = WxPermissionHost,
+    privacyHost: WechatPrivacyHost = WxPrivacyHost,
 ) : MiniAppHost<WechatPlatformApi>,
     StorageCapabilityProvider,
     NetworkCapabilityProvider,
     LifecycleCapabilityProvider,
-    PermissionCapabilityProvider {
+    PermissionCapabilityProvider,
+    PrivacyCapabilityProvider {
     private val appLifecycle: WechatAppLifecycle = WechatAppLifecycle()
 
     private val runtimeInfo: WechatRuntimeInfo = WechatRuntimeInfo(runtimeInfoHost)
@@ -90,6 +97,8 @@ internal class WechatHost(
     override val lifecycle: MiniAppLifecycle = appLifecycle
 
     override val permissions: MiniAppPermissions = WechatPermissions(permissionHost)
+
+    override val privacy: MiniAppPrivacy = WechatPrivacy(privacyHost)
 
     override fun capabilitySupport(capability: CapabilityKey): CapabilitySupport =
         capabilityGate.supportFor(capability)

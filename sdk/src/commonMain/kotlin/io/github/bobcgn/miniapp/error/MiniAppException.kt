@@ -63,6 +63,21 @@ public sealed class MiniAppException protected constructor(
         cause: Throwable? = null,
     ) : MiniAppException(message, cause)
 
+    /**
+     * The host requires the user to accept its privacy contract first.
+     *
+     * This is not a permission denial. A privacy contract is the host's own
+     * condition for the personal data a mini program collects and is tracked
+     * separately from system permissions, so collapsing the two would tell a
+     * consumer to ask for the wrong thing.
+     */
+    public class PrivacyAuthorizationRequired public constructor(
+        public val contractName: String? = null,
+    ) : MiniAppException(
+        contractName?.let { "Privacy authorization required: $it" }
+            ?: "Privacy authorization required",
+    )
+
     /** An unexpected SDK or adapter failure occurred. */
     public class InternalFailure public constructor(
         message: String,

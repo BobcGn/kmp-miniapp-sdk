@@ -40,11 +40,16 @@ Import this directory as a Mini Program project and compile it. The index page m
 [kmp-miniapp-sdk] storage: PASS first=first, overwritten=second, missing=null
 [kmp-miniapp-sdk] auth bootstrap: PASS codeReceived=true, length=<positive integer>
 [kmp-miniapp-sdk] network: PASS status=200, bytes=<positive integer>
+[kmp-miniapp-sdk] session check: PASS check #N, state=Valid
 ```
 
 The network check issues a `GET` to `https://example.com/`. WeChat requires that host to be listed in the request domain whitelist, or the project must be compiled with domain checking disabled. Change the `networkUrl` constant to verify a different endpoint.
 
 Navigation needs interaction rather than a single page load. Tapping through the second and third pages prints `[kmp-miniapp-sdk] navigation: PASS <action>` for `wx.navigateTo`, `wx.redirectTo`, and `wx.navigateBack`; the tap sequence is in the checklist.
+
+The WeChat Session Check card asks WeChat whether its own client login state is still usable. It runs once while the page loads, deliberately before the login bootstrap: acquiring a code refreshes the client login state and would hide an expired session, so the startup order is check first, acquire later. A valid answer is not an authenticated user or a backend session, and an invalid one acquires no code by itself.
+
+The Privacy Authorization card queries what the host requires for its own privacy contract and, only from a button, asks the host for the user's acceptance. The query runs while the page loads because it has no side effect; the request never does. WeChat requires the mini program to declare its collection in the MP backend privacy guideline before it will prompt at all, and a reading of `NOT_REQUIRED` does not prove the user agreed. See the privacy configuration section of [../../docs/DEVELOPMENT-en.md](../../docs/DEVELOPMENT-en.md).
 
 The Permission lifecycle card queries, requests, and opens settings for one permission; none of it happens while the page loads, so every step follows a tap. The permission state is read from the host each time rather than remembered, and a refusal is reported as denied rather than as a host failure. The required sequence is in the checklist. The flow has been executed in WeChat Developer Tools at base library 3.17.2 and on an Android device; `NotRequested` could not be produced on the account used, because it already holds a decision for the mapped permission.
 

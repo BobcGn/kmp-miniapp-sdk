@@ -71,3 +71,43 @@ internal fun mapWechatAuthorizeFailure(
 
 /** Substring WeChat embeds in `errMsg` when the user refused a scope. */
 private const val DENIED_ERRMSG_MARKER: String = "auth deny"
+
+/**
+ * What a raw `wx.requirePrivacyAuthorize` failure means.
+ *
+ * A declined privacy contract is the user's answer and is modelled as an outcome;
+ * only a failure that is not the user's answer becomes an error.
+ */
+internal sealed interface WxPrivacyAuthorizeFailure {
+    /** The user did not accept the privacy contract. */
+    data object Refused : WxPrivacyAuthorizeFailure
+
+    /** The request failed for a reason that is not the user's answer. */
+    data class Failed(val error: MiniAppException) : WxPrivacyAuthorizeFailure
+}
+
+/**
+ * Classifies a raw `wx.requirePrivacyAuthorize` failure.
+ *
+ * WeChat reports a declined privacy contract through the failure path rather
+ * than through a dedicated result type. Only the recognizable refusal message
+ * is classified as [WxPrivacyAuthorizeFailure.Refused]. Every unrecognized
+ * failure remains a host failure: treating an arbitrary system or invocation
+ * error as a user decision would hide a condition the consumer must diagnose.
+ *
+ * This is the only place the failure text is interpreted. Nothing outside this
+ * file reads it, and the raw message never reaches a public type.
+ */
+internal fun mapWechatPrivacyAuthorizeFailure(
+    result: WxGeneralCallbackResult,
+): WxPrivacyAuthorizeFailure =
+    if (result.errMsg.contains(PRIVACY_REFUSED_ERRMSG_MARKER, ignoreCase = true)) {
+        WxPrivacyAuthorizeFailure.Refused
+    } else {
+        WxPrivacyAuthorizeFailure.Failed(
+            mapWechatHostFailure(operation = "requirePrivacyAuthorize", result = result),
+        )
+    }
+
+/** Substring WeChat embeds in `errMsg` when the user did not authorize the contract. */
+private const val PRIVACY_REFUSED_ERRMSG_MARKER: String = "privacy permission is not authorized"

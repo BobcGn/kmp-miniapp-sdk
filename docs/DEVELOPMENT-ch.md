@@ -32,7 +32,7 @@ VS Code 可用于处理 `examples/wechat-miniprogram` 下的文件。Consumer Br
 
 这些命令有效，并已于 2026-09-15 完成验证。
 
-`:sdk:jsTest` suite 覆盖 Host boundary、error model、callback adaptation、cancellation、double completion、可选 abort、微信 error mapping、包含取消时宿主中止的 HTTP transport adaptation、生命周期状态迁移、导航适配、capability support 状态与版本门控、包含并发请求合并的权限生命周期行为，以及 interop object construction。这些测试使用 fake callbacks，不代表能够访问真实 `wx` runtime。
+`:sdk:jsTest` suite 覆盖 Host boundary、error model、callback adaptation、cancellation、double completion、可选 abort、微信 error mapping、包含取消时宿主中止的 HTTP transport adaptation、生命周期状态迁移、导航适配、capability support 状态与版本门控、包含并发请求合并的权限生命周期行为、包含拒绝分类的隐私授权、包含过期分类的微信会话检查，以及 interop object construction。这些测试使用 fake callbacks，不代表能够访问真实 `wx` runtime。
 
 ## Consumer Bridge
 
@@ -71,7 +71,7 @@ npm run smoke
 npm run typecheck
 ```
 
-smoke test 加载 consumer-facing CommonJS 模块、调用 `sdkVersion()`，并安装 fake global `wx` 验证 Storage、微信 login bootstrap、HTTP transport、lifecycle 转发、三种导航调用、运行时能力检测与权限生命周期。它还会断言 HTTP transport 交给 fake host 的内容，包括原始文本响应模式、导航收到的绝对页面路径，以及每个纳入门控的能力所报告的支持状态。该测试验证 module 与 adapter behavior，但不构成真实 Host 证据。TypeScript 使用 strict mode，并在不依赖 `any` 的情况下验证 Promise-based Storage、typed `WeChatLoginResult`、HTTP transport、lifecycle、导航、capability support 与权限 exports。
+smoke test 加载 consumer-facing CommonJS 模块、调用 `sdkVersion()`，并安装 fake global `wx` 验证 Storage、微信 login bootstrap、HTTP transport、lifecycle 转发、三种导航调用、运行时能力检测、权限生命周期、隐私授权与微信会话检查。它还会断言 HTTP transport 交给 fake host 的内容，包括原始文本响应模式、导航收到的绝对页面路径，以及每个纳入门控的能力所报告的支持状态。该测试验证 module 与 adapter behavior，但不构成真实 Host 证据。TypeScript 使用 strict mode，并在不依赖 `any` 的情况下验证 Promise-based Storage、typed `WeChatLoginResult`、HTTP transport、lifecycle、导航、capability support、权限、隐私与会话检查 exports。
 
 真实宿主验证按 [TESTING-ch.md](TESTING-ch.md) 中的检查清单执行，该清单是页面取值、console 输出与准备步骤的权威来源。只有在完成该运行后，某项 capability 才会在 [PROJECT_FACTS-ch.md](PROJECT_FACTS-ch.md) 中被记录为已通过宿主验证。
 
@@ -87,7 +87,26 @@ Node/CommonJS smoke test 或 TypeScript check 通过，并不能证明微信小�
 
 运行时能力检测已于 2026-09-15 完成开发者工具（基础库 3.17.2）与 Android 真机（OnePlus PLQ110、Android 36、微信 8.0.76）验收，两种环境均报告 `runtime-detection=Supported`、`storage=Supported`、`ungated=Unsupported`。开发者工具当前可选的最低调试基础库为 2.21.4，无法构造低于 2.20.1 的宿主，因此 `VersionDependent` 由自动化测试覆盖而不是真实宿主截图；各情形的构造方式见 [TESTING-ch.md](TESTING-ch.md) 中的检查清单。
 
+### 微信隐私配置
+
+微信针对小程序已声明的个人信息接口把关其自身的隐私协议，与系统权限分开。有两件事属于小程序后台，本 SDK 既不能代做也无法替代：
+
+- 收集类型必须在 MP 后台「设置 → 服务内容声明 → 用户隐私保护指引」中声明。未声明任何类型的小程序会被报告为无需授权，因此读到 `NOT_REQUIRED` 并不证明用户曾经同意过。
+- 自基础库 2.32.3 起宿主才会拦截隐私相关调用。低于该版本宿主根本不拦截，因此本 capability 报告 `UnsupportedCapability`，而不是假装该条件不存在。
+
+SDK 只做告知与把关；它不生成隐私政策、不判断业务是否合规，也不提供法律意见。
+
+要在微信开发者工具中观察隐私状态，打开 index 页面并使用 Privacy Authorization 卡片：`Refresh privacy status` 只查询宿主、无任何副作用，只有 `Request privacy authorization` 按钮会启动弹窗。调试基础库需为 2.32.3 或更高，卡片才能到达宿主。
+
+已记录的答案属于账号、设备、后台配置与该账号在小程序中的历史，因此同一份构建在不同账号上可能报告 `REQUIRED` 或 `NOT_REQUIRED`。要再次看到 `REQUIRED`，请在开发者工具缓存中清除该账号的同意记录，或更换账号；不要为了制造状态而破坏性地重置设备或账号。
+
+隐私与权限的验收在验证矩阵中分别记录，因为宿主对二者分开跟踪，其中一项的结果不能说明另一项。
+
 权限生命周期已于 2026-09-15 完成开发者工具（基础库 3.17.2）与 Android 真机验收：宿主报告了 `Granted` 与 `Denied`，设置页返回的是宿主的决定，对已拒绝权限再次请求报告 `DENIED` 且不出现第二次弹窗。`NotRequested` 无法在所用账号上产出，因为该账号已对所映射权限持有决定，因此该状态由自动化测试覆盖。自动化套件仍然从不请求权限，因为真实弹窗需要用户手势。当前只映射麦克风权限。
+
+微信会话检查已于 2026-09-15 通过 Android 真机验收：OnePlus PLQ110、Android 36、微信 8.0.76、基础库 3.17.3 [1641]。Console 在 login bootstrap 取得新 code 前报告 `check #1, state=Invalid`，`wx.login` 成功后连续报告 `state=Valid`。该结果仍不是身份的证明，会话检查与 login bootstrap 继续分别记录。
+
+隐私授权目前仅有自动化覆盖。其真实宿主验收尚未完成，且取决于两件本仓库无法安排的事：小程序在 MP 后台声明的收集类型，以及该账号对宿主弹窗的作答。验证矩阵要求的证据是：`REQUIRED` 读数与宿主返回的协议名；成功后宿主报告 `NOT_REQUIRED`；以及拒绝被报告为 `REFUSED` 且要求仍然存在。
 
 ## 开发原则
 

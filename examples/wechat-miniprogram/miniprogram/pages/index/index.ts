@@ -26,6 +26,13 @@ interface IndexPageData {
   permissionName: string;
   permissionStatus: string;
   permissionDetails: string;
+  privacyRequirement: string;
+  privacyContract: string;
+  privacyLastAction: string;
+  privacyDetails: string;
+  sessionStatus: string;
+  sessionDetails: string;
+  sessionChecks: number;
 }
 
 type IndexPage = MiniProgramPageInstance<IndexPageData>;
@@ -154,6 +161,95 @@ async function openPermissionSettings(this: IndexPage): Promise<void> {
   }
 }
 
+/**
+ * Reads what the host currently requires for its privacy contract.
+ *
+ * This is a query only. It has no side effect, shows nothing, and is therefore
+ * safe to run while the page loads; asking the user is a separate step that only
+ * a tap may start.
+ */
+async function readPrivacy(page: IndexPage): Promise<void> {
+  try {
+    const status: MiniAppSdk.PrivacyStatusResult = await MiniAppSdk.privacyStatus();
+    const contract = status.contractName ?? 'unavailable';
+    const details = `requirement=${status.requirement}, contract=${contract}`;
+    console.log('[kmp-miniapp-sdk] privacy query: PASS', details);
+    page.setData({
+      privacyRequirement: status.requirement,
+      privacyContract: contract,
+      privacyDetails: details,
+    });
+  } catch (error) {
+    const details = String(error);
+    console.error('[kmp-miniapp-sdk] privacy query: FAIL', error);
+    page.setData({
+      privacyRequirement: 'UNKNOWN',
+      privacyContract: 'unavailable',
+      privacyDetails: details,
+    });
+  }
+}
+
+async function refreshPrivacy(this: IndexPage): Promise<void> {
+  await readPrivacy(this);
+}
+
+async function requestPrivacy(this: IndexPage): Promise<void> {
+  try {
+    const result: MiniAppSdk.PrivacyAuthorizationResult =
+      await MiniAppSdk.requestPrivacyAuthorization();
+    const details = `result=${result}`;
+
+    if (result === 'Authorized') {
+      console.log('[kmp-miniapp-sdk] privacy request: PASS', details);
+    } else {
+      // WeChat reports a declined and a dismissed prompt through the same path,
+      // so this is the one refusal state the host actually provides.
+      console.error('[kmp-miniapp-sdk] privacy request: REFUSED', details);
+    }
+
+    this.setData({ privacyLastAction: result === 'Authorized' ? 'AUTHORIZED' : 'REFUSED' });
+    // The requirement is the host's answer after the prompt, so it is re-read
+    // rather than assumed.
+    await readPrivacy(this);
+  } catch (error) {
+    const details = String(error);
+    console.error('[kmp-miniapp-sdk] privacy request: FAIL', error);
+    this.setData({
+      privacyLastAction: 'HOST_FAILURE',
+      privacyDetails: details,
+    });
+  }
+}
+
+/**
+ * Asks WeChat whether its own client login session is still usable.
+ *
+ * A valid answer says only that WeChat's login state is intact. It is not an
+ * authenticated user, a backend session, or an accepted credential, and an
+ * invalid answer changes nothing by itself: acquiring a new login code stays the
+ * consumer's decision.
+ */
+async function runSessionCheck(page: IndexPage): Promise<void> {
+  const attempt = page.data.sessionChecks + 1;
+
+  try {
+    const state: MiniAppSdk.WeChatSessionState = await MiniAppSdk.wechatCheckSession();
+    const status = state === 'Valid' ? 'VALID' : 'INVALID';
+    const details = `check #${attempt}, state=${state}`;
+    console.log('[kmp-miniapp-sdk] session check: PASS', details);
+    page.setData({ sessionStatus: status, sessionDetails: details, sessionChecks: attempt });
+  } catch (error) {
+    const details = `check #${attempt}, ${String(error)}`;
+    console.error('[kmp-miniapp-sdk] session check: FAIL', error);
+    page.setData({ sessionStatus: 'FAIL', sessionDetails: details, sessionChecks: attempt });
+  }
+}
+
+async function checkSession(this: IndexPage): Promise<void> {
+  await runSessionCheck(this);
+}
+
 async function runStorageCheck(page: IndexPage): Promise<void> {
   try {
     await MiniAppSdk.storageSet(storageKey, 'first');
@@ -221,6 +317,12 @@ async function runNetworkCheck(page: IndexPage): Promise<void> {
 
 async function onLoad(this: IndexPage): Promise<void> {
   runRuntimeDetectionCheck(this);
+  // A query only: no prompt is started while the page loads.
+  await readPrivacy(this);
+  // Deliberately before the auth bootstrap below: acquiring a login code
+  // refreshes the client login state, which would hide an expired session from
+  // the first check and make an invalid result impossible to observe.
+  await runSessionCheck(this);
   await runStorageCheck(this);
   await runAuthCheck(this);
   await runNetworkCheck(this);
@@ -269,6 +371,13 @@ Page<IndexPageData>({
     navigationStatus: 'READY',
     navigationDetails: 'Tap the button to open the second page.',
     permissionName,
+    privacyRequirement: 'UNKNOWN',
+    privacyContract: 'unavailable',
+    privacyLastAction: 'NOT_RUN',
+    privacyDetails: 'Reading the host privacy requirement…',
+    sessionStatus: 'UNKNOWN',
+    sessionDetails: 'Not checked yet.',
+    sessionChecks: 0,
     permissionStatus: 'UNKNOWN',
     permissionDetails:
       'Permission is never requested on load. Tap a button to query or request it.',
@@ -281,4 +390,7 @@ Page<IndexPageData>({
   refreshPermission,
   requestPermission,
   openPermissionSettings,
+  refreshPrivacy,
+  requestPrivacy,
+  checkSession,
 });

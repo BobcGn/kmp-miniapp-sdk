@@ -5,6 +5,7 @@ import io.github.bobcgn.miniapp.host.wechat.adapter.WechatAuthHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatNavigationHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatNetworkHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatPermissionHost
+import io.github.bobcgn.miniapp.host.wechat.adapter.WechatPrivacyHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatRuntimeInfoHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatStorageHost
 
@@ -21,6 +22,7 @@ internal fun fakeWechatHost(
     networkHost: WechatNetworkHost = FakeWechatNetworkHost(),
     navigationHost: WechatNavigationHost = FakeWechatNavigationHost(),
     permissionHost: WechatPermissionHost = FakeWechatPermissionHost(),
+    privacyHost: WechatPrivacyHost = FakeWechatPrivacyHost(),
 ): WechatHost = WechatHost(
     storageHost = storageHost,
     authHost = authHost,
@@ -28,4 +30,5 @@ internal fun fakeWechatHost(
     navigationHost = navigationHost,
     runtimeInfoHost = runtimeInfoHost,
     permissionHost = permissionHost,
+    privacyHost = privacyHost,
 )

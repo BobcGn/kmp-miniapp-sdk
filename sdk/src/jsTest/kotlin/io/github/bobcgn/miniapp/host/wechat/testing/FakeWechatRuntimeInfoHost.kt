@@ -29,6 +29,9 @@ internal class FakeWechatRuntimeInfoHost(
         "getSetting",
         "authorize",
         "openSetting",
+        "getPrivacySetting",
+        "requirePrivacyAuthorize",
+        "checkSession",
     ),
     private val canIUseAvailable: Boolean = true,
 ) : WechatRuntimeInfoHost {

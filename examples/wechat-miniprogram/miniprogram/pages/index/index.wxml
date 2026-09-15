@@ -33,6 +33,25 @@
   </view>
 
   <view class="card">
+    <text class="eyebrow">Privacy Authorization</text>
+    <text class="label">Requirement: {{privacyRequirement}}</text>
+    <text class="status">{{privacyContract}}</text>
+    <text class="details">Last action: {{privacyLastAction}}</text>
+    <text class="details">{{privacyDetails}}</text>
+    <text class="security-note">A host contract, not a system permission. No prompt starts on load.</text>
+    <button class="action" bindtap="refreshPrivacy">Refresh privacy status</button>
+    <button class="action" bindtap="requestPrivacy">Request privacy authorization</button>
+  </view>
+
+  <view class="card">
+    <text class="eyebrow">WeChat Session Check</text>
+    <text class="label">Client login state: {{sessionStatus}}</text>
+    <text class="details">{{sessionDetails}}</text>
+    <text class="security-note">A valid WeChat client session is not an authenticated user or backend session.</text>
+    <button class="action" bindtap="checkSession">Check WeChat session</button>
+  </view>
+
+  <view class="card">
     <text class="eyebrow">First Host Capability</text>
     <text class="label">Storage verification</text>
     <text class="status status--{{storageStatus}}">{{storageStatus}}</text>

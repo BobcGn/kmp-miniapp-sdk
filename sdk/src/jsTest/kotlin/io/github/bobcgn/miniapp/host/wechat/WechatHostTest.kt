@@ -6,6 +6,7 @@ import io.github.bobcgn.miniapp.capability.lifecycle.MiniAppLifecycle
 import io.github.bobcgn.miniapp.capability.lifecycle.MiniAppLifecycleState
 import io.github.bobcgn.miniapp.capability.network.MiniAppHttpTransport
 import io.github.bobcgn.miniapp.capability.permission.MiniAppPermissions
+import io.github.bobcgn.miniapp.capability.privacy.MiniAppPrivacy
 import io.github.bobcgn.miniapp.capability.storage.MiniAppStorage
 import io.github.bobcgn.miniapp.host.HostVersion
 import io.github.bobcgn.miniapp.host.wechat.runtime.WechatCapabilityCatalog
@@ -36,6 +37,9 @@ internal class WechatHostTest {
         // The permission capability is supported when its three host APIs exist;
         // it is never reported as depending on a permission itself.
         assertEquals(CapabilitySupport.Supported, host.capabilitySupport(MiniAppPermissions.Key))
+        assertEquals(CapabilitySupport.Supported, host.capabilitySupport(MiniAppPrivacy.Key))
+        // Session checking is a WeChat-specific condition, so its key is namespaced.
+        assertEquals(CapabilitySupport.Supported, host.capabilitySupport(WeChatSessionState.Key))
         assertEquals(
             CapabilitySupport.Unsupported,
             host.capabilitySupport(CapabilityKey("unknown")),
@@ -44,6 +48,7 @@ internal class WechatHostTest {
         assertNotNull(host.network)
         assertNotNull(host.lifecycle)
         assertNotNull(host.permissions)
+        assertNotNull(host.privacy)
         assertNotNull(host.platform.auth)
     }
 

@@ -17,6 +17,9 @@ const supportedSchemas = new Set([
   'getSetting',
   'authorize',
   'openSetting',
+  'getPrivacySetting',
+  'requirePrivacyAuthorize',
+  'checkSession',
 ]);
 
 // Permission state this fake host holds, plus a record of what it was asked to
@@ -24,6 +27,19 @@ const supportedSchemas = new Set([
 const scopeDecisions = new Map();
 const authorizeCalls = [];
 let openSettingCalls = 0;
+
+// Privacy is a separate host condition from the permissions above, so it gets
+// its own state and its own record of what the host was asked to do.
+let privacyRequired = true;
+let privacyAuthorizeFails = false;
+const privacyQueries = [];
+const privacyAuthorizations = [];
+const privacyContractName = '《node smoke privacy contract》';
+
+// The WeChat client login session is its own condition, asked about separately.
+let sessionFailure = null;
+const sessionCheckCalls = [];
+let loginCalls = 0;
 
 function authSettingSnapshot() {
   const authSetting = {};
@@ -36,7 +52,16 @@ const baseLibraryVersion = '3.17.3';
 
 global.wx = {
   login(options) {
+    loginCalls += 1;
     options.success({ code: 'node-login-code', errMsg: 'login:ok' });
+  },
+  checkSession(options) {
+    sessionCheckCalls.push(1);
+    if (sessionFailure === null) {
+      options.success({ errMsg: 'checkSession:ok' });
+    } else {
+      options.fail({ errMsg: sessionFailure });
+    }
   },
   getStorage(options) {
     if (storage.has(options.key)) {
@@ -100,6 +125,23 @@ global.wx = {
     openSettingCalls += 1;
     options.success({ authSetting: authSettingSnapshot(), errMsg: 'openSetting:ok' });
   },
+  getPrivacySetting(options) {
+    privacyQueries.push(1);
+    options.success({
+      needAuthorization: privacyRequired,
+      privacyContractName,
+      errMsg: 'getPrivacySetting:ok',
+    });
+  },
+  requirePrivacyAuthorize(options) {
+    privacyAuthorizations.push(1);
+    if (privacyAuthorizeFails) {
+      options.fail({ errMsg: 'requirePrivacyAuthorize:fail privacy permission is not authorized' });
+      return;
+    }
+    privacyRequired = false;
+    options.success({ errMsg: 'requirePrivacyAuthorize:ok' });
+  },
 };
 
 const miniAppSdk = require('../miniprogram/libs/kmp-miniapp-sdk.js');
@@ -111,6 +153,7 @@ async function main() {
     'storageSet',
     'storageRemove',
     'wechatLogin',
+    'wechatCheckSession',
     'networkRequest',
     'wechatAppOnLaunch',
     'wechatAppOnShow',
@@ -130,6 +173,9 @@ async function main() {
     'permissionState',
     'requestPermission',
     'openPermissionSettings',
+    'privacyStatus',
+    'requestPrivacyAuthorization',
+    'requirePrivacySatisfied',
   ]);
   assert.equal(miniAppSdk.sdkVersion(), '0.1.0-SNAPSHOT');
 
@@ -259,6 +305,59 @@ async function main() {
   // A permission this SDK does not map is refused rather than forwarded.
   await assert.rejects(miniAppSdk.permissionState('not-a-permission'));
 
+  // Loading the module must not have touched privacy either.
+  assert.deepEqual(privacyQueries, []);
+  assert.deepEqual(privacyAuthorizations, []);
+
+  // The host states its requirement, and the SDK reports it unchanged.
+  const privacy = await miniAppSdk.privacyStatus();
+  assert.equal(privacy.requirement, 'REQUIRED');
+  assert.equal(privacy.contractName, privacyContractName);
+
+  // Accepting the contract clears the host's requirement.
+  assert.equal(await miniAppSdk.requestPrivacyAuthorization(), 'Authorized');
+  assert.equal((await miniAppSdk.privacyStatus()).requirement, 'NOT_REQUIRED');
+
+  // A refusal is a result rather than a rejection.
+  privacyRequired = true;
+  privacyAuthorizeFails = true;
+  assert.equal(await miniAppSdk.requestPrivacyAuthorization(), 'Refused');
+
+  // The precondition point reports the host's requirement and starts no prompt.
+  await assert.rejects(miniAppSdk.requirePrivacySatisfied());
+  assert.equal(privacyAuthorizations.length, 2);
+
+  privacyAuthorizeFails = false;
+  privacyRequired = false;
+  await miniAppSdk.requirePrivacySatisfied();
+  assert.equal(privacyAuthorizations.length, 2);
+
+  // Privacy and permission are separate host conditions.
+  assert.equal(miniAppSdk.wechatCanIUse('getPrivacySetting'), true);
+  assert.equal(scopeDecisions.has('scope.record'), true);
+
+  // Loading the module must not have checked anything. The auth-bootstrap check
+  // above has already asked for one code, so the baseline is recorded here: what
+  // matters is that checking the session never adds another.
+  assert.deepEqual(sessionCheckCalls, []);
+  const loginsBeforeSessionCheck = loginCalls;
+
+  // An intact client login session is reported as Valid.
+  assert.equal(await miniAppSdk.wechatCheckSession(), 'Valid');
+  assert.equal(loginCalls, loginsBeforeSessionCheck);
+
+  // The failure callback itself means the session is invalid; its message is not ABI.
+  sessionFailure = 'checkSession:fail session time out, need relogin';
+  assert.equal(await miniAppSdk.wechatCheckSession(), 'Invalid');
+  // An invalid session does not acquire a new code by itself.
+  assert.equal(loginCalls, loginsBeforeSessionCheck);
+
+  // A bare failure is also invalid, independent of localized host wording.
+  sessionFailure = 'checkSession:fail';
+  assert.equal(await miniAppSdk.wechatCheckSession(), 'Invalid');
+  assert.equal(loginCalls, loginsBeforeSessionCheck);
+  sessionFailure = null;
+
   console.log('[node-smoke] sdkVersion:', miniAppSdk.sdkVersion());
   console.log('[node-smoke] storage: PASS');
   console.log('[node-smoke] auth bootstrap: PASS');
@@ -267,6 +366,8 @@ async function main() {
   console.log('[node-smoke] navigation: PASS');
   console.log('[node-smoke] runtime detection: PASS');
   console.log('[node-smoke] permission: PASS');
+  console.log('[node-smoke] privacy: PASS');
+  console.log('[node-smoke] session check: PASS');
 }
 
 main().catch((error) => {
