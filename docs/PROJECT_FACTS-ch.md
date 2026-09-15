@@ -21,8 +21,25 @@
 - Bootstrap completed
 - Consumer Bridge 已完成并通过微信开发者工具验证
 - 微信强类型 interop 基础已实现
+- Host 与 Capability 边界 contract 已实现
+- 公共错误模型与 internal callback-to-coroutine primitive 已实现
+- Storage capability 已实现并通过微信开发者工具验证
+- 微信客户端 authentication bootstrap 已实现并通过微信开发者工具验证
+- HTTP transport capability 已实现并通过微信开发者工具验证
+- App 级 lifecycle capability 已实现，并通过微信开发者工具验证前台状态与页面 route
+- 微信页面栈导航桥接已实现，并通过微信开发者工具验证
 
-构建基线与第一条端到端消费链路均已通过验证。第一批原始 callback-style 微信契约现已通过编译和 option 构造测试；production code 尚未调用任何平台 API。
+构建基线与第一条端到端消费链路均已通过验证。Common layer 包含最小 Host identity、Capability support 与强类型 platform escape-hatch contracts。Production code 通过 Host 与 adapter boundaries 调用 typed 微信 Storage contracts，完整 Storage 链路已通过真实宿主验证。
+
+首个 Storage capability implementation 已通过 Kotlin/JS、fake-host、CommonJS 和 TypeScript 自动检查。用户提供的微信开发者工具证据也验证了真实 runtime 中的读取、覆盖、删除与 key 不存在语义。
+
+微信专属 authentication adapter 调用 typed `wx.login`、返回 `WeChatLoginResult`，并通过公共错误模型映射宿主失败。它不会建立已认证用户或 session。Kotlin/JS、CommonJS 与 TypeScript 自动检查均已通过；用户提供的微信开发者工具证据确认真实 runtime 能取得非空 login code，且没有暴露该 code。
+
+HTTP transport capability 定义了宿主无关的 request 与 response 契约，通过微信 adapter 适配 typed `wx.request`，并将传输失败与超时映射到公共错误模型。`wx.request` 还会返回 abort handle，因此这是第一个在协程取消时会同时中止底层宿主操作的 capability。Kotlin/JS、fake-host、CommonJS 与 TypeScript 自动检查均已通过。用户提供的微信开发者工具验收确认 index 页面的 network 检查可在真实 runtime 中运行。
+
+App 级 lifecycle capability 建模应用是否呈现在用户面前。它是唯一被建模为公共概念的生命周期；Page 级生命周期与页面栈导航属于微信语义，保留在 platform escape hatch 之后。微信 adapter 转发消费者传入的 App 钩子。自动化检查已通过；用户于 2026-09-15 确认微信开发者工具中的前台状态与页面 route 验收通过。后台切换仍无法从开发者工具模拟器触发。
+
+微信导航桥接适配 `wx.navigateTo`、`wx.redirectTo` 与 `wx.navigateBack`，并将页面栈已满、route 未知、以及在首页执行返回映射为 `MiniAppException.HostFailure`，而不是报告成功。自动化检查已通过；用户于 2026-09-15 确认三种导航操作均在微信开发者工具中验收通过。
 
 ## 3. 当前 Gradle Modules
 
@@ -52,10 +69,12 @@ Node.js 仅配置为本地 Kotlin/JS 构建和测试环境，不是目标宿主�
 - 通过 `useCommonJs()` 生成 CommonJS module output
 - 通过 `binaries.library()` 生成 library output
 - 通过 `generateTypeScriptDefinitions()` 生成 TypeScript definitions
+- 稳定的编译器模块名 `kmp-miniapp-sdk-kotlin`
 - 在 `jsMain/.../export` 下提供最小 `@JsExport` facade
 - 为消费者提供极薄的 CommonJS export normalization wrapper
+- 用于 consumer distribution 的根级 `buildMiniAppSdk` 任务
 
-编译器生成的 TypeScript declaration 已包含 `MiniAppExports.sdkVersion(): string`。编译器的 CommonJS export shape 带有命名空间，因此 consumer-facing wrapper 在不包含业务逻辑的前提下提供稳定的 `sdkVersion(): string` 入口。
+编译器生成的 TypeScript declaration 已包含版本、Promise-based Storage 与 Promise-based HTTP transport exports。编译器的 CommonJS export shape 带有命名空间，因此 consumer-facing wrapper 在不包含业务逻辑的前提下提供稳定的扁平函数。`buildMiniAppSdk` 会将编译器模块、类型声明、runtime dependencies 与外部 source maps 同步到微信示例，同时保留该 wrapper。
 
 ## 6. 当前依赖
 
@@ -64,6 +83,7 @@ Node.js 仅配置为本地 Kotlin/JS 构建和测试环境，不是目标宿主�
 | 构建插件和 Kotlin libraries | Kotlin Multiplatform / Kotlin | `gradle/libs.versions.toml` | 2.4.20 |
 | 生产代码 | `org.jetbrains.kotlinx:kotlinx-coroutines-core` | `gradle/libs.versions.toml` | 1.11.0 |
 | 测试 | `kotlin-test` | Kotlin plugin version | 2.4.20 |
+| 测试 | `org.jetbrains.kotlinx:kotlinx-coroutines-test` | `gradle/libs.versions.toml` | 1.11.0 |
 
 Kotlin/JS platform variants 及其传递依赖由 Gradle 在依赖解析期间选择。
 
@@ -98,7 +118,7 @@ Kotlin/JS platform variants 及其传递依赖由 Gradle 在依赖解析期间�
 - `host/wechat/runtime`：宿主 lifecycle 和 runtime integration
 - `export`：宿主无关的 Kotlin 到 JavaScript / TypeScript public boundary
 
-`export` 边界目前只包含版本 facade。Interop 边界包含 `showToast`、`getStorage`、`setStorage` 和 `removeStorage` 的 internal 契约；项目尚无调用这些契约的微信平台 API 实现。
+`export` 边界包含版本 facade、Promise-based Storage functions、微信专属 login bootstrap、Promise-based HTTP transport function、供消费者转发的 App 与 Page lifecycle 入口，以及微信导航函数。Interop 边界包含 `login`、`showToast`、Storage、`request` 与三个页面栈导航方法的 internal 契约；production adapters 通过 `WechatHost` 调用 login、Storage、HTTP transport 与导航，`showToast` 仍仅为 interop contract。`runtime` 边界包含实现公共 lifecycle capability 的 `WechatAppLifecycle`，以及跟踪 runtime 报告为已显示页面的 `WechatPageLifecycle`。
 
 ## 9. 当前能力
 
@@ -106,6 +126,8 @@ Kotlin/JS platform variants 及其传递依赖由 Gradle 在依赖解析期间�
 - `:sdk` JavaScript library target 可编译。
 - 可生成生产用 CommonJS library 文件。
 - 已配置 TypeScript definition generation 和 validation。
+- `./gradlew buildMiniAppSdk` 无需手工复制即可准备微信 integration host 所需的全部 compiler-managed 产物。
+- 编译器模块使用稳定名称 `kmp-miniapp-sdk-kotlin`；外部 source maps 会复制用于本地调试，并被 Git 忽略。
 - `MiniAppExports.sdkVersion()` 可导出共享的 `MiniAppSdk.VERSION` 值。
 - `examples/wechat-miniprogram/miniprogram/libs` 下的 consumer-facing CommonJS wrapper 暴露 `sdkVersion(): string`。
 - 严格 TypeScript consumer 与 Node/CommonJS smoke test 均通过，consumer contract 不依赖 `any`。
@@ -113,26 +135,59 @@ Kotlin/JS platform variants 及其传递依赖由 Gradle 在依赖解析期间�
 - 微信开发者工具能够加载该产物，在 console 输出 `0.1.0-SNAPSHOT`，并在 index 页面显示相同值。
 - 一个 common test 可在 Node.js Kotlin/JS test environment 中运行。
 - 已启用 Explicit API mode。
+- `commonMain` 已定义 `MiniAppHost`、`HostPlatformApi`、`CapabilityKey` 以及 `Supported` / `Unsupported` capability states。
 - `jsMain/.../host/wechat/interop` 已定义 internal 全局 `wx` 契约、强类型 callback results，以及首批 toast 和 storage 方法的强类型 option bags。
 - 这些 option bags 的 plain-object factories 已在 Kotlin/JS Node test environment 中通过测试，不需要真实 `wx` runtime。
+- `commonMain` 已定义不含 raw JavaScript value 的语义化 `MiniAppException` hierarchy。
+- Internal `awaitHostCallback` primitive 保证只有一个 terminal callback 生效、忽略 cancellation 后 callback，并最多调用一次可选 Host abort hook。
+- 微信 adapter boundary 已将强类型 raw callback failure 映射为 `MiniAppException.HostFailure`，同时保留 scalar diagnostics。
+- `MiniAppStorage` 已定义字符串 get/set/remove 语义，包括覆盖、幂等删除以及 key 不存在时返回 `null`。
+- `WechatHost` 通过 `StorageCapabilityProvider` 提供 `MiniAppStorage`；`WechatStorage` 将其连接到 typed 微信 storage interop 和 coroutine adaptation。
+- JavaScript / TypeScript facade 已暴露 Promise-based `storageGet`、`storageSet` 和 `storageRemove` functions。
+- 自动测试覆盖 Storage 语义、微信 adaptation、invalid response、Host error、cancellation 和 CommonJS consumption。
+- 微信开发者工具已验证 Storage 的读取、覆盖、删除与 key 不存在语义；页面显示 `PASS`，详情为 `first=first, overwritten=second, missing=null`。
+- Typed `wx.login` interop 覆盖 option bag、成功结果 `code`/`errMsg` 与失败结果 `errMsg`/`errno` shapes。
+- `WechatAuth` 将 callback 适配为 coroutine result、拒绝空 code，并在不暴露 raw JavaScript values 的前提下映射宿主失败。
+- TypeScript facade 暴露不依赖 `any` 的 `wechatLogin(): Promise<WeChatLoginResult>`；示例不会记录或渲染 raw code。
+- `MiniAppHttpTransport` 定义了宿主无关的 request 与 response 契约，仅承载文本 body 与字符串值 headers，不包含 payload 序列化或重试策略。
+- 完成的 exchange 对包括 `4xx` 与 `5xx` 在内的所有 HTTP status 都返回 response；只有传输层失败才会成为 `MiniAppException`。
+- `MiniAppException.Timeout` 与 `MiniAppException.HostFailure` 相互独立，仅当宿主表明 exchange 超出 timeout 时上报。
+- Adapter 请求原始文本响应（`dataType: 'text'`），避免宿主返回字符串契约无法表示的已解析对象；非文本 body 会映射为 `InvalidResponse`。
+- `WechatHost` 通过 `NetworkCapabilityProvider` 提供 `MiniAppHttpTransport`；`WechatNetwork` 将其连接到 typed `wx.request` interop 和 coroutine adaptation。
+- `wx.request` 会返回 abort handle，因此这是第一个在协程取消时同时中止底层宿主操作的 capability，且最多调用一次。
+- Typed `wx.request` interop 覆盖 option bag、含 `statusCode`/`header`/`data` 的成功结果、含 `errMsg`/`errno` 的失败结果，以及返回的 task handle。
+- JavaScript / TypeScript facade 暴露不依赖 `any` 的 `networkRequest(url, init): Promise<NetworkResponse>`。
+- 自动测试覆盖 request 转发、response 映射、header 转换、invalid response、timeout 映射、host failure 映射，以及取消时的宿主中止。
+- `MiniAppLifecycle` 定义 App 级 lifecycle capability：当前 `MiniAppLifecycleState` 与后续变化的 `Flow`。它是唯一事件形态的 capability，也是唯一被建模为公共概念的生命周期。
+- `WechatAppLifecycle` 由 `App.onLaunch` 与 `App.onShow` 上报前台、`App.onHide` 上报后台来实现该契约。
+- `WechatPageLifecycle` 跟踪 runtime 报告为已显示的页面 route。Page 级生命周期不是公共 capability，仅通过 `WechatPlatformApi` 可达。
+- `WechatNavigation` 适配 `wx.navigateTo`、`wx.redirectTo` 与 `wx.navigateBack`，仅通过 `WechatPlatformApi` 可达，并将微信的 failure callback 映射为 `MiniAppException.HostFailure`。
+- JavaScript / TypeScript facade 暴露 App 与 Page lifecycle 入口、lifecycle 状态与页面 route，以及三个导航函数。
+- 微信开发者工具已验证前台 lifecycle 状态、页面 route，以及 `navigateTo` → `redirectTo` → `navigateBack` 的完整页面栈路径。
+- [TESTING-ch.md](TESTING-ch.md) 记录了两层测试体系、各层可用的 fake，以及可复现的真实宿主检查清单。
+- `commonTest` 定义了宿主无关的 FakeHost 边界：`FakeMiniAppHost`、`InMemoryStorage`、`RecordingHttpTransport` 与 `FakeMiniAppLifecycle`。
+- `jsTest` 定义了面向原始微信 callback port 的 FakeAdapter 边界，使微信 adapter 无需微信 runtime、也无需 `wx` 即可被驱动。
+- Storage、transport 与 App lifecycle 契约各自只声明一次为共享检查，并分别跑在宿主无关参考实现与微信 adapter 上。
+- 没有任何自动化测试声称能够访问真实 `wx` runtime，也没有任何自动化检查可以替代真实宿主验证。
 
 ## 10. 明确尚不具备的能力
 
 项目当前没有：
 
-- `wx` API wrappers
-- 对已声明 `wx` 契约的 runtime 调用
-- Mini Program lifecycle adapter
-- Network、storage 或 authentication adapter
-- Callback-to-coroutine bridge
+- Router 或导航栈框架
+- UI 组件生命周期抽象
+- Request 或 response body 序列化、cookie 处理、redirect 策略、streaming、upload 或 download
+- 服务端 code exchange、已认证用户/session 管理和 token refresh
+- 公共通用 callback-to-coroutine API
 - Compose integration、UI DSL、renderer 或 Virtual DOM
 - npm publication
 - Maven publication
 - Gradle plugin
+- 支付宝或 Telegram Host implementations
 
 ## 11. 已验证命令
 
-验证日期：2026-09-14。
+验证日期：2026-09-15。
 
 | 命令 | 结果 |
 | --- | --- |
@@ -140,9 +195,12 @@ Kotlin/JS platform variants 及其传递依赖由 Gradle 在依赖解析期间�
 | `./gradlew clean build` | VERIFIED |
 | `./gradlew :sdk:jsNodeTest` | VERIFIED |
 | `./gradlew :sdk:jsNodeProductionLibraryDistribution` | VERIFIED |
+| `./gradlew buildMiniAppSdk` | VERIFIED — 重复执行可复用 configuration cache，且任务为 up to date |
 | 在 `examples/wechat-miniprogram` 执行 `npm run smoke` | VERIFIED |
 | 在 `examples/wechat-miniprogram` 执行 `npm run typecheck` | VERIFIED |
-| 微信开发者工具加载、console 与页面渲染 | VERIFIED — 用户提供的截图同时显示 index 页面与一致的 console 输出 |
+| 微信开发者工具加载、console、页面渲染、lifecycle 与导航 | VERIFIED — 用户确认前台状态、页面 route 与三种导航操作验收通过 |
+
+早期微信开发者工具证据覆盖版本、Storage 与 authentication 检查；network 检查于 2026-09-14 单独完成验收。用户于 2026-09-15 确认 lifecycle 前台状态、页面 route，以及 `navigateTo`、`redirectTo`、`navigateBack` 的真实宿主验收通过。后台状态迁移不属于开发者工具模拟器可验证范围。
 
 验证环境使用仓库内置的 Gradle 9.3.1 Wrapper 和 JDK 25.0.2。当前构建没有固定 JDK toolchain。
 

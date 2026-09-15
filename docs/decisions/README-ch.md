@@ -12,3 +12,7 @@
 
 - [0001 — Kotlin Multiplatform JavaScript library](0001-kmp-js-library-ch.md)
 - [0002 — 不构建 UI framework](0002-no-ui-framework-ch.md)
+- [0003 — 小程序宿主边界](0003-miniapp-host-boundary-ch.md)
+- [0004 — 错误与异步适配](0004-error-and-async-adaptation-ch.md)
+- [0005 — HTTP 传输能力](0005-http-transport-capability-ch.md)
+- [0006 — 生命周期与导航边界](0006-lifecycle-and-navigation-boundary-ch.md)

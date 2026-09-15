@@ -22,24 +22,30 @@ VS Code 可用于处理 `examples/wechat-miniprogram` 下的文件。Consumer Br
 ./gradlew projects
 ./gradlew clean build
 ./gradlew :sdk:jsNodeTest
+./gradlew :sdk:jsTest
+./gradlew buildMiniAppSdk
 ```
 
-这些命令有效，并已于 2026-09-14 完成验证。
+这些命令有效，并已于 2026-09-15 完成验证。
+
+`:sdk:jsTest` suite 覆盖 Host boundary、error model、callback adaptation、cancellation、double completion、可选 abort、微信 error mapping、包含取消时宿主中止的 HTTP transport adaptation、生命周期状态迁移、导航适配，以及 interop object construction。这些测试使用 fake callbacks，不代表能够访问真实 `wx` runtime。
 
 ## Consumer Bridge
 
-生成 Kotlin/JS production library：
+构建并准备微信 integration host 所需的全部产物：
 
 ```shell
-./gradlew :sdk:jsNodeProductionLibraryDistribution
+./gradlew buildMiniAppSdk
 ```
 
-编译器输出位于：
+该任务会构建 Kotlin/JS production library 与 TypeScript declaration，再将所需模块同步到示例。稳定的编译器输出名称为：
 
 ```text
-sdk/build/dist/js/productionLibrary/kmp-miniapp-sdk-sdk.js
-sdk/build/dist/js/productionLibrary/kmp-miniapp-sdk-sdk.d.ts
+sdk/build/dist/js/productionLibrary/kmp-miniapp-sdk-kotlin.js
+sdk/build/dist/js/productionLibrary/kmp-miniapp-sdk-kotlin.d.ts
 sdk/build/dist/js/productionLibrary/kotlin-kotlin-stdlib.js
+sdk/build/dist/js/productionLibrary/kotlinx-coroutines-core.js
+sdk/build/dist/js/productionLibrary/kotlinx-atomicfu.js
 ```
 
 示例使用独立的 consumer-facing 副本：
@@ -48,7 +54,9 @@ sdk/build/dist/js/productionLibrary/kotlin-kotlin-stdlib.js
 examples/wechat-miniprogram/miniprogram/libs/
 ```
 
-当前复制流程有意保持手工操作。自动复制产物属于后续 tooling Issue。刷新时，将编译器模块复制为 `kmp-miniapp-sdk-kotlin.js`，类型声明复制为 `kmp-miniapp-sdk-kotlin.d.ts`，并复制所需的标准库模块；不得改写极薄的 `kmp-miniapp-sdk.js` / `kmp-miniapp-sdk.d.ts` normalization wrapper。
+该目录包含两个手工维护的 normalization 文件：`kmp-miniapp-sdk.js` 与 `kmp-miniapp-sdk.d.ts`。`buildMiniAppSdk` 会保留这两个文件，并同步编译器模块、类型声明和三个 runtime modules。目录内其余文件均视为任务管理的产物，不要放置无关文件。
+
+外部 `.js.map` 文件会随每个 JavaScript module 生成并复制，用于本地微信调试。它们包含嵌入的源码、可重复生成，并被 Git 忽略。JavaScript 与 `.d.ts` 分发文件继续纳入版本控制，使示例可直接打开；`buildMiniAppSdk` 是刷新产物的唯一事实路径。
 
 执行本地消费端检查：
 
@@ -59,11 +67,17 @@ npm run smoke
 npm run typecheck
 ```
 
-smoke test 加载 consumer-facing CommonJS 模块并调用 `sdkVersion()`。TypeScript 使用 strict mode，并将同一函数解析为返回 `string`。
+smoke test 加载 consumer-facing CommonJS 模块、调用 `sdkVersion()`，并安装 fake global `wx` 验证 Storage、微信 login bootstrap、HTTP transport、lifecycle 转发与三种导航调用。它还会断言 HTTP transport 交给 fake host 的内容，包括原始文本响应模式，以及导航收到的绝对页面路径。该测试验证 module 与 adapter behavior，但不构成真实 Host 证据。TypeScript 使用 strict mode，并在不依赖 `any` 的情况下验证 Promise-based Storage、typed `WeChatLoginResult`、HTTP transport、lifecycle 与导航 exports。
 
-进行真实宿主验证时，在微信开发者工具中导入 `examples/wechat-miniprogram`，编译项目并打开 index 页面。页面必须显示 `0.1.0-SNAPSHOT`，console 必须包含 `[kmp-miniapp-sdk] sdkVersion: 0.1.0-SNAPSHOT`。
+真实宿主验证按 [TESTING-ch.md](TESTING-ch.md) 中的检查清单执行，该清单是页面取值、console 输出与准备步骤的权威来源。只有在完成该运行后，某项 capability 才会在 [PROJECT_FACTS-ch.md](PROJECT_FACTS-ch.md) 中被记录为已通过宿主验证。
 
-该结果已于 2026-09-14 在微信开发者工具 Stable 2.01.2510290 中通过用户提供的视觉证据完成验证。
+Consumer Bridge 与 Storage capability 已于 2026-09-14 在微信开发者工具 Stable 2.01.2510290 中通过用户提供的视觉证据完成验证。页面显示 `0.1.0-SNAPSHOT`，Storage 状态为 `PASS`，详情为 `first=first, overwritten=second, missing=null`。
+
+Authentication 的真实宿主验收已于 2026-09-14 通过用户提供的微信开发者工具证据完成。页面显示 `Client login code: PASS`、`codeReceived=true` 和 code 长度 32，且没有显示凭证本身。示例不会记录或渲染 raw credential。`wx.login` code 是短期凭证，必须发送到可信的消费者后端与微信交换；取得 code 不代表用户已认证，不会创建 SDK session，也不能授权请求。
+
+HTTP transport capability 已于 2026-09-14 通过用户提供的微信开发者工具确认完成真实宿主验收。其 adapter、error mapping 与 cancellation 行为仍由 Kotlin/JS、fake-host、CommonJS 与 TypeScript 自动检查覆盖；真实宿主运行确认 index 页面上的 network 卡片可成功到达 `wx.request`。
+
+Lifecycle 与导航桥接已于 2026-09-15 通过用户确认完成微信开发者工具验收。运行结果覆盖前台 lifecycle 状态、当前页面 route，以及 `navigateTo` 打开第二页、`redirectTo` 替换为第三页、`navigateBack` 直接返回首页的完整页面栈路径。后台状态迁移仍需要真机将小程序切入后台，开发者工具模拟器不覆盖该行为。
 
 Node/CommonJS smoke test 或 TypeScript check 通过，并不能证明微信小程序集成通过。必须分别记录两层结果。
 

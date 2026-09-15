@@ -75,7 +75,7 @@ WeChat Mini Program
 AGENTS.md                    仓库规则
 CLAUDE-en.md / CLAUDE-ch.md  本操作指南
 README-en.md / README-ch.md
-docs/                        PROJECT_FACTS、ARCHITECTURE、DEVELOPMENT、ROADMAP、decisions/（ADR）
+docs/                        PROJECT_FACTS、ARCHITECTURE、DEVELOPMENT、TESTING、ROADMAP、decisions/（ADR）
 gradle/libs.versions.toml    依赖与插件版本的唯一来源
 settings.gradle.kts          仅 include :sdk
 sdk/                         唯一的 Gradle module
@@ -86,10 +86,10 @@ examples/                    集成宿主；不是 Gradle module
 
 - `commonMain` —— 平台无关的 API、model、error 与共享逻辑。不得出现 `wx`，不得出现 DOM 或 Node API，不得出现 `dynamic` / `external` / `js()`。
 - `commonTest` —— 共享测试。
-- `jsMain/kotlin/io/github/bobcgn/miniapp/wechat/` —— `interop`、`adapter`、`runtime`、`export`。这些目录目前仅确立边界，不含任何实现。
+- `jsMain/kotlin/io/github/bobcgn/miniapp/host/wechat/` —— `interop`、`adapter`、`runtime`、`export`，以及 `WechatHost` 实现。
 - `jsTest` —— JavaScript 测试。
 
-`jsMain/wechat` 各层职责：`interop` 只描述底层 JavaScript 与 `wx` 契约，不放置业务逻辑；`adapter` 负责类型转换、错误映射与异步适配，不承担 UI 职责；`runtime` 只负责宿主 runtime 与生命周期集成；`export` 负责 Kotlin 到 JavaScript 与 TypeScript 的边界，不得演变为业务实现层。
+`jsMain/.../host/wechat` 各层职责：`interop` 只描述底层 JavaScript 与 `wx` 契约，不放置业务逻辑；`adapter` 负责类型转换、错误映射与异步适配，不承担 UI 职责；`runtime` 只负责宿主 runtime 与生命周期集成；`export` 负责 Kotlin 到 JavaScript 与 TypeScript 的边界，不得演变为业务实现层。
 
 依赖方向：`commonMain` 绝不依赖微信相关代码；`interop` 绝不依赖业务实现逻辑；平台代码可以实现平台无关代码定义的契约，反向依赖被禁止。
 
@@ -111,16 +111,18 @@ examples/                    集成宿主；不是 Gradle module
 
 截至 2026-09-14 的当前状态：
 
-- 状态为实验性 / pre-alpha。Bootstrap 已完成。
+- 状态为实验性 / pre-alpha。Bootstrap 已完成，consumer bridge 以及 Storage、微信客户端 login 与 HTTP transport 三项 capability 均已在微信开发者工具中验证。
 - module 列表仅有 `:sdk`。`examples/` 是集成宿主目录，不是 Gradle module。
 - JavaScript target 配置为 `nodejs()`、`useCommonJs()`、`binaries.library()` 与 `generateTypeScriptDefinitions()`。
-- `sdk/src/commonMain/.../api/MiniAppSdk.kt` 声明 `MiniAppSdk.VERSION = "0.1.0-SNAPSHOT"`，`commonTest` 对其断言。这就是当前全部 public 面。
-- 生成的 TypeScript declaration 中没有任何正式 SDK export API，因为尚未实现 `@JsExport` 边界。
-- 尚未实现任何 `wx` wrapper、生命周期 adapter、network/storage/auth adapter、callback 到 coroutine 的桥接，以及面向消费者的 JS/TS export API。
+- `sdk/src/commonMain/.../api/MiniAppSdk.kt` 声明 `MiniAppSdk.VERSION = "0.1.0-SNAPSHOT"`，`commonTest` 对其断言。
+- `commonMain` 包含 `MiniAppHost` / `HostPlatformApi`、`CapabilityKey` / `CapabilitySupport`、带 `StorageCapabilityProvider` 的 `MiniAppStorage`、带 `NetworkCapabilityProvider` 的 `MiniAppHttpTransport`、带 `LifecycleCapabilityProvider` 的 `MiniAppLifecycle`、`MiniAppException`，以及 internal 的 `awaitHostCallback` primitive。
+- 微信 interop 覆盖 typed `login`、`showToast`、Storage、`request` 与三个页面栈导航契约。Storage、微信客户端 login、HTTP transport 与导航均有 adapter；`showToast` 仍仅为 interop contract。`WechatAppLifecycle` 与 `WechatPageLifecycle` 位于微信 `runtime` package。
+- 只有 App 级生命周期是公共 capability。Page 级生命周期与导航属于微信专属，仅通过 `WechatPlatformApi` 可达。
+- 编译器生成的 TypeScript declaration 包含版本、Storage、微信 login、HTTP transport、生命周期与导航 exports，手工维护的 CommonJS wrapper 将其暴露为扁平函数。
 
 Node.js 只是本地 Kotlin/JS 构建与测试环境。预期生产宿主是微信小程序 JavaScript runtime，Node.js 测试通过并不代表微信小程序集成成功。这两类结果必须分别汇报。
 
-当前工作副本中没有 `.git` 目录，因此没有可查阅的 git 历史。
+当前工作副本中存在 Git 仓库。改动可能尚未提交，因此在假设文件与最后一次提交一致之前，请先检查 `git status`。
 
 ## 7. 工作流程
 

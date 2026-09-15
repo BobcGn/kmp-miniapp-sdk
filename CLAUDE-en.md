@@ -75,7 +75,7 @@ Never infer an implemented capability from the roadmap. Roadmap entries, TODOs, 
 AGENTS.md                  repository rules
 CLAUDE-en.md / CLAUDE-ch.md  this operating guide
 README-en.md / README-ch.md
-docs/                      PROJECT_FACTS, ARCHITECTURE, DEVELOPMENT, ROADMAP, decisions/ (ADRs)
+docs/                      PROJECT_FACTS, ARCHITECTURE, DEVELOPMENT, TESTING, ROADMAP, decisions/ (ADRs)
 gradle/libs.versions.toml  single source of dependency and plugin versions
 settings.gradle.kts        includes only :sdk
 sdk/                       the only Gradle module
@@ -86,10 +86,10 @@ Inside `sdk/src`:
 
 - `commonMain` — platform-neutral APIs, models, errors, shared logic. No `wx`, no DOM or Node APIs, no `dynamic` / `external` / `js()`.
 - `commonTest` — shared tests.
-- `jsMain/kotlin/io/github/bobcgn/miniapp/wechat/` — `interop`, `adapter`, `runtime`, `export`. These directories currently establish boundaries only and contain no implementation.
+- `jsMain/kotlin/io/github/bobcgn/miniapp/host/wechat/` — `interop`, `adapter`, `runtime`, and `export`, plus the `WechatHost` implementation.
 - `jsTest` — JavaScript tests.
 
-Layer responsibilities in `jsMain/wechat`: `interop` holds raw JavaScript and `wx` contracts and no business logic; `adapter` owns type conversion, error mapping, and async adaptation and no UI responsibilities; `runtime` owns host runtime and lifecycle integration only; `export` owns the Kotlin-to-JavaScript and TypeScript boundary and must not become the business implementation layer.
+Layer responsibilities in `jsMain/.../host/wechat`: `interop` holds raw JavaScript and `wx` contracts and no business logic; `adapter` owns type conversion, error mapping, and async adaptation and no UI responsibilities; `runtime` owns host runtime and lifecycle integration only; `export` owns the Kotlin-to-JavaScript and TypeScript boundary and must not become the business implementation layer.
 
 Dependency direction: `commonMain` never depends on WeChat code; `interop` never depends on business implementation logic; platform code may implement contracts defined by platform-neutral code, never the reverse.
 
@@ -111,16 +111,18 @@ Toolchain: Gradle 9.3.1 from the checked-in Wrapper, project Kotlin 2.4.20 from 
 
 Current state, as of 2026-09-14:
 
-- Status is experimental / pre-alpha. Bootstrap is complete.
+- Status is experimental / pre-alpha. Bootstrap is complete, and the consumer bridge plus the Storage, WeChat client login, and HTTP transport capabilities are verified in WeChat Developer Tools.
 - Module list is `:sdk` only. `examples/` is an integration host directory, not a Gradle module.
 - The JavaScript target is configured with `nodejs()`, `useCommonJs()`, `binaries.library()`, and `generateTypeScriptDefinitions()`.
-- `sdk/src/commonMain/.../api/MiniAppSdk.kt` declares `MiniAppSdk.VERSION = "0.1.0-SNAPSHOT"`; `commonTest` asserts it. That is the entire current public surface.
-- The generated TypeScript declaration contains no SDK export API because no `@JsExport` boundary exists yet.
-- No `wx` wrapper, lifecycle adapter, network/storage/auth adapter, callback-to-coroutine bridge, or consumer-facing JS/TS export API is implemented.
+- `sdk/src/commonMain/.../api/MiniAppSdk.kt` declares `MiniAppSdk.VERSION = "0.1.0-SNAPSHOT"`; `commonTest` asserts it.
+- `commonMain` contains `MiniAppHost` / `HostPlatformApi`, `CapabilityKey` / `CapabilitySupport`, `MiniAppStorage` with `StorageCapabilityProvider`, `MiniAppHttpTransport` with `NetworkCapabilityProvider`, `MiniAppLifecycle` with `LifecycleCapabilityProvider`, `MiniAppException`, and the internal `awaitHostCallback` primitive.
+- WeChat interop covers typed `login`, `showToast`, Storage, `request`, and the three page-stack navigation contracts. Storage, WeChat client login, the HTTP transport, and navigation have adapters; `showToast` remains interop-only. `WechatAppLifecycle` and `WechatPageLifecycle` live in the WeChat `runtime` package.
+- Only the app-level lifecycle is a common capability. Page-level lifecycle and navigation are WeChat-specific and are reachable only through `WechatPlatformApi`.
+- The compiler-generated TypeScript declaration contains the version, Storage, WeChat login, HTTP transport, lifecycle, and navigation exports, and the hand-maintained CommonJS wrapper exposes them as flat functions.
 
 Node.js is only the local Kotlin/JS build and test environment. The intended production host is the WeChat Mini Program JavaScript runtime, and a passing Node.js test does not establish WeChat Mini Program integration. Report those two results separately.
 
-There is no `.git` directory in this working copy, so no git history is available to consult.
+A Git repository is present in this working copy. A change may be uncommitted, so check `git status` before assuming a file matches the last commit.
 
 ## 7. Workflow
 
