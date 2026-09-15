@@ -24,6 +24,7 @@ const supportedSchemas = new Set([
   'setClipboardData',
   'vibrateShort',
   'vibrateLong',
+  'getFileSystemManager',
 ]);
 
 // Permission state this fake host holds, plus a record of what it was asked to
@@ -51,6 +52,53 @@ let loginCalls = 0;
 let clipboardText = '';
 const clipboardWrites = [];
 const vibrateCalls = [];
+
+// The file system is an in-memory sandbox. The fake exposes the manager as a
+// host object with its methods, because the SDK probes each method rather than
+// assuming the manager implies them.
+const sandboxRoot = '/node-sandbox';
+const sandboxFiles = new Map();
+const fileSystemCalls = [];
+
+function fileSystemManager() {
+  return {
+    readFile(options) {
+      fileSystemCalls.push({ operation: 'readFile', path: options.filePath, encoding: options.encoding });
+      if (sandboxFiles.has(options.filePath)) {
+        options.success({ data: sandboxFiles.get(options.filePath), errMsg: 'readFile:ok' });
+      } else {
+        options.fail({ errMsg: 'readFile:fail no such file or directory ' + options.filePath });
+      }
+    },
+    writeFile(options) {
+      fileSystemCalls.push({
+        operation: 'writeFile',
+        path: options.filePath,
+        data: options.data,
+        encoding: options.encoding,
+      });
+      sandboxFiles.set(options.filePath, options.data);
+      options.success({ errMsg: 'writeFile:ok' });
+    },
+    access(options) {
+      fileSystemCalls.push({ operation: 'access', path: options.path });
+      if (sandboxFiles.has(options.path)) {
+        options.success({ errMsg: 'access:ok' });
+      } else {
+        options.fail({ errMsg: 'access:fail no such file or directory ' + options.path });
+      }
+    },
+    unlink(options) {
+      fileSystemCalls.push({ operation: 'unlink', path: options.filePath });
+      if (sandboxFiles.has(options.filePath)) {
+        sandboxFiles.delete(options.filePath);
+        options.success({ errMsg: 'unlink:ok' });
+      } else {
+        options.fail({ errMsg: 'unlink:fail no such file or directory ' + options.filePath });
+      }
+    },
+  };
+}
 
 function authSettingSnapshot() {
   const authSetting = {};
@@ -160,6 +208,12 @@ global.wx = {
     vibrateCalls.push('long');
     options.success({ errMsg: 'vibrateLong:ok' });
   },
+  getFileSystemManager() {
+    return fileSystemManager();
+  },
+  env: {
+    USER_DATA_PATH: sandboxRoot,
+  },
   requirePrivacyAuthorize(options) {
     privacyAuthorizations.push(1);
     if (privacyAuthorizeFails) {
@@ -185,6 +239,11 @@ async function main() {
     'wechatSetClipboardText',
     'wechatVibrateShort',
     'wechatVibrateLong',
+    'wechatUserDataPath',
+    'wechatReadTextFile',
+    'wechatWriteTextFile',
+    'wechatFileExists',
+    'wechatRemoveFile',
     'networkRequest',
     'wechatAppOnLaunch',
     'wechatAppOnShow',
@@ -422,6 +481,46 @@ async function main() {
   await miniAppSdk.wechatVibrateLong();
   assert.deepEqual(vibrateCalls, ['short', 'long']);
 
+  // Loading the module must not have touched the file system.
+  assert.deepEqual(fileSystemCalls, []);
+
+  // The file operations are gated separately and all read Supported here.
+  for (const capability of [
+    'wechat.filesystem-read',
+    'wechat.filesystem-write',
+    'wechat.filesystem-access',
+    'wechat.filesystem-remove',
+    'wechat.filesystem-sandbox-path',
+  ]) {
+    assert.equal(miniAppSdk.capabilitySupport(capability).state, 'Supported');
+  }
+
+  // The sandbox root comes from the host rather than being guessed.
+  assert.equal(miniAppSdk.wechatUserDataPath(), sandboxRoot);
+  const testPath = `${sandboxRoot}/kmp-miniapp-sdk-bob72.txt`;
+  const testContent = 'kmp-miniapp-sdk bob72 test';
+
+  // write -> access true -> read matched -> remove -> access false.
+  assert.equal(await miniAppSdk.wechatFileExists(testPath), false);
+
+  await miniAppSdk.wechatWriteTextFile(testPath, testContent);
+  assert.equal(await miniAppSdk.wechatFileExists(testPath), true);
+  assert.equal(await miniAppSdk.wechatReadTextFile(testPath), testContent);
+
+  await miniAppSdk.wechatRemoveFile(testPath);
+  assert.equal(await miniAppSdk.wechatFileExists(testPath), false);
+
+  // Every call carried UTF-8, because a read without an encoding returns bytes
+  // the text contract cannot carry.
+  const readCall = fileSystemCalls.find((call) => call.operation === 'readFile');
+  const writeCall = fileSystemCalls.find((call) => call.operation === 'writeFile');
+  assert.equal(readCall.encoding, 'utf8');
+  assert.equal(writeCall.encoding, 'utf8');
+  assert.equal(writeCall.data, testContent);
+
+  // Removing a file that is not there follows the host contract and fails.
+  await assert.rejects(miniAppSdk.wechatRemoveFile(testPath));
+
   console.log('[node-smoke] sdkVersion:', miniAppSdk.sdkVersion());
   console.log('[node-smoke] storage: PASS');
   console.log('[node-smoke] auth bootstrap: PASS');
@@ -434,6 +533,7 @@ async function main() {
   console.log('[node-smoke] session check: PASS');
   console.log('[node-smoke] clipboard: PASS');
   console.log('[node-smoke] haptics: PASS');
+  console.log('[node-smoke] filesystem: PASS');
 }
 
 main().catch((error) => {

@@ -45,11 +45,18 @@ Import this directory as a Mini Program project and compile it. The clipboard an
 [kmp-miniapp-sdk] clipboard read: PASS matched=true
 [kmp-miniapp-sdk] haptics short: PASS
 [kmp-miniapp-sdk] haptics long: PASS
+[kmp-miniapp-sdk] filesystem write: PASS
+[kmp-miniapp-sdk] filesystem access: PASS exists=true
+[kmp-miniapp-sdk] filesystem read: PASS matched=true
+[kmp-miniapp-sdk] filesystem remove: PASS
+[kmp-miniapp-sdk] filesystem access: PASS exists=false
 ```
 
 The network check issues a `GET` to `https://example.com/`. WeChat requires that host to be listed in the request domain whitelist, or the project must be compiled with domain checking disabled. Change the `networkUrl` constant to verify a different endpoint.
 
 Navigation needs interaction rather than a single page load. Tapping through the second and third pages prints `[kmp-miniapp-sdk] navigation: PASS <action>` for `wx.navigateTo`, `wx.redirectTo`, and `wx.navigateBack`; the tap sequence is in the checklist.
+
+The File System card writes a fixed, non-sensitive string to a fixed file name in the mini program sandbox, reads it back, checks that it is there, removes it, and checks again that it is gone. Nothing touches the file system while the page loads. Only UTF-8 text is supported, only inside the sandbox, and the sandbox root itself is never displayed or logged. Removing a file that is not there fails, following WeChat's contract, so the remove and the final check are meant to be run once each, in order.
 
 The Clipboard and Haptics card writes a fixed, non-sensitive test string, reads the clipboard back to compare, and triggers the short and long vibrations. Nothing touches the clipboard or the vibrator while the page loads; every action follows a tap. The read only ever compares against the string this page wrote, and the page never displays or logs whatever else the clipboard holds. A successful vibration line means WeChat accepted the call, not that a vibration was felt — that can only be checked on a real device. `getClipboardData` is not an allowed `app.json.requiredPrivateInfos` entry, so the example does not declare it there.
 

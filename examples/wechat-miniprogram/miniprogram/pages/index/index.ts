@@ -11,6 +11,10 @@ const permissionName: MiniAppSdk.PermissionName = 'microphone';
 // A fixed, non-sensitive string this page writes itself. The page only ever
 // compares against what it wrote; it never shows or logs clipboard contents.
 const clipboardTestText = 'kmp-miniapp-sdk clipboard test';
+// The file this page writes, reads, and removes. Only the file name is ever
+// displayed; the sandbox root it sits under is never printed.
+const testFileName = 'kmp-miniapp-sdk-bob72.txt';
+const testFileContent = 'kmp-miniapp-sdk bob72 test';
 
 interface IndexPageData {
   sdkVersion: string;
@@ -42,6 +46,12 @@ interface IndexPageData {
   hapticsShortStatus: string;
   hapticsLongStatus: string;
   hapticsDetails: string;
+  fileSystemPath: string;
+  fileWriteStatus: string;
+  fileReadStatus: string;
+  fileAccessStatus: string;
+  fileRemoveStatus: string;
+  fileSystemDetails: string;
 }
 
 type IndexPage = MiniProgramPageInstance<IndexPageData>;
@@ -333,6 +343,95 @@ async function vibrateLong(this: IndexPage): Promise<void> {
   }
 }
 
+/**
+ * Builds the sandbox path this page operates on.
+ *
+ * The root comes from the host; the SDK never guesses it. Only the file name is
+ * ever shown to the user.
+ */
+function testFilePath(): string {
+  return `${MiniAppSdk.wechatUserDataPath()}/${testFileName}`;
+}
+
+/** Writes a fixed, non-sensitive test string to the sandbox. */
+async function writeTestFile(this: IndexPage): Promise<void> {
+  try {
+    await MiniAppSdk.wechatWriteTextFile(testFilePath(), testFileContent);
+    console.log('[kmp-miniapp-sdk] filesystem write: PASS');
+    this.setData({ fileWriteStatus: 'PASS', fileSystemDetails: `wrote ${testFileName}` });
+  } catch (error) {
+    const details = String(error);
+    console.error('[kmp-miniapp-sdk] filesystem write: FAIL', error);
+    this.setData({ fileWriteStatus: 'FAIL', fileSystemDetails: details });
+  }
+}
+
+/** Reads the test file back and compares it with what this page wrote. */
+async function readTestFile(this: IndexPage): Promise<void> {
+  try {
+    const content = await MiniAppSdk.wechatReadTextFile(testFilePath());
+    const matched = content === testFileContent;
+
+    if (matched) {
+      console.log('[kmp-miniapp-sdk] filesystem read: PASS matched=true');
+    } else {
+      console.error('[kmp-miniapp-sdk] filesystem read: FAIL matched=false');
+    }
+
+    this.setData({ fileReadStatus: matched ? 'PASS' : 'FAIL', fileSystemDetails: `matched=${matched}` });
+  } catch (error) {
+    const details = String(error);
+    console.error('[kmp-miniapp-sdk] filesystem read: FAIL', error);
+    this.setData({ fileReadStatus: 'FAIL', fileSystemDetails: details });
+  }
+}
+
+/** Reports whether the test file is there. */
+async function checkTestFile(this: IndexPage): Promise<void> {
+  try {
+    const exists = await MiniAppSdk.wechatFileExists(testFilePath());
+    console.log('[kmp-miniapp-sdk] filesystem access: PASS exists=' + exists);
+    this.setData({ fileAccessStatus: 'PASS', fileSystemDetails: `exists=${exists}` });
+  } catch (error) {
+    const details = String(error);
+    console.error('[kmp-miniapp-sdk] filesystem access: FAIL', error);
+    this.setData({ fileAccessStatus: 'FAIL', fileSystemDetails: details });
+  }
+}
+
+/** Removes the test file. */
+async function removeTestFile(this: IndexPage): Promise<void> {
+  try {
+    await MiniAppSdk.wechatRemoveFile(testFilePath());
+    console.log('[kmp-miniapp-sdk] filesystem remove: PASS');
+    this.setData({ fileRemoveStatus: 'PASS', fileSystemDetails: `removed ${testFileName}` });
+  } catch (error) {
+    const details = String(error);
+    console.error('[kmp-miniapp-sdk] filesystem remove: FAIL', error);
+    this.setData({ fileRemoveStatus: 'FAIL', fileSystemDetails: details });
+  }
+}
+
+/** Reports whether the test file is gone after removal. */
+async function checkRemovedFile(this: IndexPage): Promise<void> {
+  try {
+    const exists = await MiniAppSdk.wechatFileExists(testFilePath());
+    if (exists) {
+      console.error('[kmp-miniapp-sdk] filesystem access: FAIL exists=true');
+    } else {
+      console.log('[kmp-miniapp-sdk] filesystem access: PASS exists=false');
+    }
+    this.setData({
+      fileAccessStatus: exists ? 'FAIL' : 'PASS',
+      fileSystemDetails: `exists=${exists}`,
+    });
+  } catch (error) {
+    const details = String(error);
+    console.error('[kmp-miniapp-sdk] filesystem access: FAIL', error);
+    this.setData({ fileAccessStatus: 'FAIL', fileSystemDetails: details });
+  }
+}
+
 async function runStorageCheck(page: IndexPage): Promise<void> {
   try {
     await MiniAppSdk.storageSet(storageKey, 'first');
@@ -467,6 +566,12 @@ Page<IndexPageData>({
     hapticsShortStatus: 'READY',
     hapticsLongStatus: 'READY',
     hapticsDetails: 'Tap a button; nothing vibrates on load.',
+    fileSystemPath: testFileName,
+    fileWriteStatus: 'READY',
+    fileReadStatus: 'READY',
+    fileAccessStatus: 'READY',
+    fileRemoveStatus: 'READY',
+    fileSystemDetails: 'Tap a button; nothing touches the file system on load.',
     permissionStatus: 'UNKNOWN',
     permissionDetails:
       'Permission is never requested on load. Tap a button to query or request it.',
@@ -486,4 +591,9 @@ Page<IndexPageData>({
   readClipboard,
   vibrateShort,
   vibrateLong,
+  writeTestFile,
+  readTestFile,
+  checkTestFile,
+  removeTestFile,
+  checkRemovedFile,
 });

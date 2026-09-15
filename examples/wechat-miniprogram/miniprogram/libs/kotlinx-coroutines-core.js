@@ -81,8 +81,8 @@
   var LinkedHashSet_init_$Create$ = kotlin_kotlin.$_$.r;
   var stackTraceToString = kotlin_kotlin.$_$.f4;
   var removeFirstOrNull = kotlin_kotlin.$_$.r1;
-  var Collection = kotlin_kotlin.$_$.f1;
   var KtList = kotlin_kotlin.$_$.g1;
+  var Collection = kotlin_kotlin.$_$.f1;
   //endregion
   //region block: pre-declaration
   initMetadataForInterface(ParentJob, 'ParentJob', VOID, VOID, [Element], [0]);
@@ -148,7 +148,7 @@
   initMetadataForClass(Symbol, 'Symbol');
   initMetadataForClass(SetTimeoutBasedDispatcher, 'SetTimeoutBasedDispatcher', VOID, CoroutineDispatcher, VOID, [1]);
   initMetadataForObject(NodeDispatcher, 'NodeDispatcher', VOID, SetTimeoutBasedDispatcher, VOID, [1]);
-  initMetadataForClass(MessageQueue, 'MessageQueue', VOID, VOID, [Collection, KtList]);
+  initMetadataForClass(MessageQueue, 'MessageQueue', VOID, VOID, [KtList, Collection]);
   initMetadataForClass(ScheduledMessageQueue, 'ScheduledMessageQueue', VOID, MessageQueue);
   initMetadataForClass(WindowMessageQueue, 'WindowMessageQueue', VOID, MessageQueue);
   initMetadataForObject(Dispatchers, 'Dispatchers');

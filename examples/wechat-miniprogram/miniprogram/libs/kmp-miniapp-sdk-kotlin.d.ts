@@ -81,6 +81,11 @@ export declare namespace io.github.bobcgn.miniapp.export {
                 wechatSetClipboardText(value: string): Promise<void>;
                 wechatVibrateShort(): Promise<void>;
                 wechatVibrateLong(): Promise<void>;
+                wechatUserDataPath(): string;
+                wechatReadTextFile(path: string): Promise<string>;
+                wechatWriteTextFile(path: string, content: string): Promise<void>;
+                wechatFileExists(path: string): Promise<boolean>;
+                wechatRemoveFile(path: string): Promise<void>;
                 requirePrivacySatisfied(): Promise<void>;
                 private constructor();
             }

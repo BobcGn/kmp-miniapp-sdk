@@ -56,6 +56,21 @@ module.exports = {
   wechatVibrateLong: function wechatVibrateLong() {
     return miniAppExports.wechatVibrateLong();
   },
+  wechatUserDataPath: function wechatUserDataPath() {
+    return miniAppExports.wechatUserDataPath();
+  },
+  wechatReadTextFile: function wechatReadTextFile(path) {
+    return miniAppExports.wechatReadTextFile(path);
+  },
+  wechatWriteTextFile: function wechatWriteTextFile(path, content) {
+    return miniAppExports.wechatWriteTextFile(path, content);
+  },
+  wechatFileExists: function wechatFileExists(path) {
+    return miniAppExports.wechatFileExists(path);
+  },
+  wechatRemoveFile: function wechatRemoveFile(path) {
+    return miniAppExports.wechatRemoveFile(path);
+  },
   networkRequest: function networkRequest(url, init) {
     const options = init || {};
     return miniAppExports

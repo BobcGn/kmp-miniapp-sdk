@@ -67,6 +67,22 @@
   </view>
 
   <view class="card">
+    <text class="eyebrow">File System</text>
+    <text class="label">Test file: {{fileSystemPath}}</text>
+    <text class="label">Write: {{fileWriteStatus}}</text>
+    <text class="label">Read: {{fileReadStatus}}</text>
+    <text class="label">Exists: {{fileAccessStatus}}</text>
+    <text class="label">Removed: {{fileRemoveStatus}}</text>
+    <text class="details">{{fileSystemDetails}}</text>
+    <text class="security-note">Sandbox UTF-8 text only; the sandbox root itself is never shown.</text>
+    <button class="action" bindtap="writeTestFile">Write test file</button>
+    <button class="action" bindtap="checkTestFile">Check file exists</button>
+    <button class="action" bindtap="readTestFile">Read test file</button>
+    <button class="action" bindtap="removeTestFile">Remove test file</button>
+    <button class="action" bindtap="checkRemovedFile">Check removed file</button>
+  </view>
+
+  <view class="card">
     <text class="eyebrow">First Host Capability</text>
     <text class="label">Storage verification</text>
     <text class="status status--{{storageStatus}}">{{storageStatus}}</text>

@@ -43,6 +43,48 @@ export function wechatVibrateShort(): Promise<void>;
 export function wechatVibrateLong(): Promise<void>;
 
 /**
+ * Returns the sandbox root the file functions below work against.
+ *
+ * The caller builds paths from this. The SDK does not normalise paths and makes
+ * no claim to prevent traversal, so passing one outside the sandbox is the
+ * caller's mistake rather than something this refuses.
+ */
+export function wechatUserDataPath(): string;
+
+/**
+ * Reads a UTF-8 text file from the mini program file sandbox.
+ *
+ * An empty file resolves with an empty string.
+ *
+ * @param path file path inside the sandbox
+ */
+export function wechatReadTextFile(path: string): Promise<string>;
+
+/**
+ * Writes UTF-8 text to a file in the mini program file sandbox, replacing what is
+ * there.
+ *
+ * The parent directory must already exist; this creates none.
+ */
+export function wechatWriteTextFile(path: string, content: string): Promise<void>;
+
+/**
+ * Reports whether a sandbox path exists and is accessible.
+ *
+ * A path the host reports as missing resolves `false`. Any other failure rejects,
+ * so a permission error is never reported as a missing file.
+ */
+export function wechatFileExists(path: string): Promise<boolean>;
+
+/**
+ * Removes a file from the mini program file sandbox.
+ *
+ * Removing a file that is not there rejects, because that is what WeChat's
+ * `unlink` does. Check {@link wechatFileExists} first when that matters.
+ */
+export function wechatRemoveFile(path: string): Promise<void>;
+
+/**
  * Whether WeChat still holds a usable client login session.
  *
  * `Valid` says only that WeChat's own client login state is intact. It is not an
