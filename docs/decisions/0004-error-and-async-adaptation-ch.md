@@ -13,7 +13,7 @@ Host callback 可能迟到或互相冲突。Adapter 必须能够处理 success �
 
 ## 决策
 
-- `MiniAppException` 是公共语义错误边界。最小 variants 为 `UnsupportedCapability`、`PermissionDenied`、`UserCancelled`、`HostFailure`、`InvalidResponse` 和 `InternalFailure`。
+- `MiniAppException` 是公共语义错误边界。最小 variants 为 `UnsupportedCapability`、`PermissionDenied`、`UserCancelled`、`HostInteractionInterrupted`、`HostFailure`、`InvalidResponse` 和 `InternalFailure`。`HostInteractionInterrupted` 用于宿主无法区分用户取消、权限限制或其他未启动条件的交互中断，不得推断用户意图。
 - Raw host result objects 保留在 Host-specific interop 与 adapter layers。Host adapter 将强类型 scalar diagnostics 映射为 `HostFailure`，其中可保留 host、可选 code、message、可选 cause 和经过净化的字符串 metadata。
 - `awaitHostCallback` 是 internal callback-to-coroutine primitive。它接收已经映射为 `MiniAppException` 的失败，并且只允许一个 terminal result。
 - 取消 coroutine 一定会阻止其继续消费后续 callback，但不代表底层 Host operation 已经停止。

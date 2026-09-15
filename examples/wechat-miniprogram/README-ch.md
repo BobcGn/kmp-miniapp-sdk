@@ -54,6 +54,9 @@ npm run typecheck
 [kmp-miniapp-sdk] location permission query: PASS state=Granted
 [kmp-miniapp-sdk] location privacy query: PASS requirement=NOT_REQUIRED
 [kmp-miniapp-sdk] location: PASS coordinatesValid=true, accuracyValid=true
+[kmp-miniapp-sdk] scanner capability: PASS wechat.scan-code=Supported
+[kmp-miniapp-sdk] scan: PASS resultPresent=true, typeRecognized=true
+[kmp-miniapp-sdk] scan: INTERRUPTED cause=indeterminate
 ```
 
 Network 检查会向 `https://example.com/` 发起 `GET`。微信要求该 host 已列入 request domain 白名单，或编译时关闭域名校验。验证其他 endpoint 时请修改 `networkUrl` 常量。
@@ -73,6 +76,8 @@ Permission lifecycle 卡片用于查询、请求权限以及打开设置；页�
 Runtime detection 卡片的期望状态来自宿主而不是固定表格。未登记能力始终显示 `ungated=Unsupported`，已登记能力则显示其宿主的实际判定。`VersionDependent` 无法在此构造：开发者工具可选的最低调试基础库为 2.21.4，高于该能力记录的 2.20.1 边界，因此该状态改由自动化测试覆盖。卡片同时显示基础库版本与 platform，这两项是验证记录所需的字段。
 
 Location 卡片是唯一由能力自身强制前置条件的卡片。`Check location capability` 报告门控对 `wechat.location` 的判定；权限与隐私要求分别报告，因为 API 是否存在与用户是否放行是两个不同问题。页面加载期间不会读取位置。在隐私协议被接受前尝试读取会以 SDK 的隐私前置条件错误失败，且不触及宿主；在权限授予前尝试读取会被拒绝，而不是代替消费者弹窗——驱动该弹窗需要用户手势，因此它始终留在 `Request location permission` 按钮之后。页面只校验返回值的形状并打印 `coordinatesValid` 与 `accuracyValid`，从不显示或记录经纬度。`app.json` 的两处声明必须就位，且接口必须在 MP 后台开启，否则宿主会在用户看到任何东西之前就拒绝。开发者工具的结果由 IP 推导而非来自设备定位模块，且只支持 `gcj02`，因此可以在其中走通流程，但只有真机能证明真实定位。详见 [../../docs/DEVELOPMENT-ch.md](../../docs/DEVELOPMENT-ch.md) 的定位配置一节。
+
+Scanner 卡片打开微信自身的扫码界面，只报告返回结果而从不显示扫码内容。`Check scanner capability` 报告门控；`Scan code` 允许相册入口，`Scan from camera only` 设置 `onlyFromCamera=true`。真机证明主动取消和系统相机权限阻止界面启动产生相同信号，因此二者都打印 `INTERRUPTED cause=indeterminate`，不声称是用户取消或权限拒绝；其他失败打印 `FAIL`。页面从不显示或记录解码内容、`rawData`、字符集或图片路径，也不为扫码建立未经证实的 SDK 权限前置条件。
 
 Node 与 TypeScript 检查不能替代真实宿主验证。[../../docs/TESTING-ch.md](../../docs/TESTING-ch.md) 是权威检查清单与两层测试模型的来源。
 

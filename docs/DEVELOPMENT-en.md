@@ -32,7 +32,7 @@ When running WeChat host acceptance, use the [WeChat real-host verification matr
 
 These commands are valid and were verified on 2026-09-15.
 
-The `:sdk:jsTest` suite includes host-boundary, error-model, callback adaptation, cancellation, double-completion, optional abort, WeChat error-mapping, HTTP transport adaptation including host abort on cancellation, lifecycle state transitions, navigation adaptation, capability-support states and version gating, permission lifecycle behaviour including concurrent request merging, privacy authorization including the refusal classification, WeChat session checking including the expiry classification, the WeChat clipboard and vibration adapters including their per-capability gating, the WeChat file-system adapter including its sandbox and text boundaries, the WeChat location adapter including its coordinate validation and privacy precondition, and interop object-construction coverage. These tests use fake callbacks and do not claim access to a real `wx` runtime.
+The `:sdk:jsTest` suite includes host-boundary, error-model, callback adaptation, cancellation, double-completion, optional abort, WeChat error-mapping, HTTP transport adaptation including host abort on cancellation, lifecycle state transitions, navigation adaptation, capability-support states and version gating, permission lifecycle behaviour including concurrent request merging, privacy authorization including the refusal classification, WeChat session checking including the expiry classification, the WeChat clipboard and vibration adapters including their per-capability gating, the WeChat file-system adapter including its sandbox and text boundaries, the WeChat location adapter including its coordinate validation and privacy precondition, the WeChat scan adapter including indeterminate-interruption classification and result validation, and interop object-construction coverage. These tests use fake callbacks and do not claim access to a real `wx` runtime.
 
 ## Consumer Bridge
 
@@ -71,7 +71,7 @@ npm run smoke
 npm run typecheck
 ```
 
-The smoke test loads the consumer-facing CommonJS module, calls `sdkVersion()`, and installs a fake global `wx` to verify Storage, the WeChat login bootstrap, the HTTP transport, lifecycle forwarding, all three navigation calls, runtime capability detection, the permission lifecycle, privacy authorization, the WeChat session check, the clipboard and vibration capabilities, the file system, and location. It also asserts what the HTTP transport handed to the fake host, including the raw-text response mode, the absolute page paths received by navigation, and the support state reported for each gated capability. This validates module and adapter behavior but is not real-host evidence. TypeScript runs in strict mode and validates the Promise-based Storage, typed `WeChatLoginResult`, HTTP transport, lifecycle, navigation, capability-support, permission, privacy, session-check, clipboard, vibration, file-system, and location exports without `any`.
+The smoke test loads the consumer-facing CommonJS module, calls `sdkVersion()`, and installs a fake global `wx` to verify Storage, the WeChat login bootstrap, the HTTP transport, lifecycle forwarding, all three navigation calls, runtime capability detection, the permission lifecycle, privacy authorization, the WeChat session check, the clipboard and vibration capabilities, the file system, location, and scanning. It also asserts what the HTTP transport handed to the fake host, including the raw-text response mode, the absolute page paths received by navigation, and the support state reported for each gated capability, that a scan queries and requests no permission, and how a dismissal is told apart from a similar-looking failure. This validates module and adapter behavior but is not real-host evidence. TypeScript runs in strict mode and validates the Promise-based Storage, typed `WeChatLoginResult`, HTTP transport, lifecycle, navigation, capability-support, permission, privacy, session-check, clipboard, vibration, file-system, location, and scan exports without `any`.
 
 Real-host verification follows the checklist in [TESTING-en.md](TESTING-en.md), which is the authoritative list of required page values, console lines, and preparation steps. A capability is recorded as host-verified in [PROJECT_FACTS-en.md](PROJECT_FACTS-en.md) only after that run.
 
@@ -121,6 +121,20 @@ WeChat's own simulator locates by IP and supports `gcj02` only, so a simulator r
 Reading a position is not something the page may do on its own: the example's Location card calls it only from a tap, and never displays or logs the coordinates.
 
 WeChat location completed Developer Tools and Android-device acceptance on 2026-09-15. The runs covered a `Supported` capability, permission moving from `NotRequested` to `Granted`, blocking with `DENIED` before `getLocation` after refusal, and successful location again after permission recovery; success logs report only coordinate and accuracy validity and never actual coordinates. The current scope implements only one-shot on-demand `getLocation`, not `chooseLocation` or `openLocation`.
+
+### Indeterminate WeChat scan interruption
+
+`wx.scanCode` opens WeChat's own scanning interface, so the SDK implements no interface and models no camera. The example's Scanner card calls it only from a tap and never displays or logs the scanned content, `rawData`, the character set, or the image path.
+
+A device run proved that dismissing the scan interface and system camera access preventing it from opening both produce the host's cancel signal. The SDK therefore no longer interprets that signal as user intent or permission denial; `HostInteractionInterrupted` reports that the interaction produced no result and its cause is indeterminate. Only `scanCode:cancel` and `scanCode:fail cancel` match; similar but different messages remain `HostFailure`.
+
+Developer Tools is not a device: its scan implementation has the user pick an image and then decodes it, so the camera path, what `onlyFromCamera` actually does, and the device's dismissal text all have to be confirmed on hardware.
+
+The capability queries and requests no permission. `scope.camera` does exist on this host, but nothing citable ties it to `wx.scanCode`, so the SDK neither prompts for it nor registers it as a permission precondition, and the example adds nothing to `app.json.requiredPrivateInfos`.
+
+A page must not read the scanned content itself: the example reports only whether content was present, whether the format the host named is one the SDK recognizes, and whether the outcome was a dismissal or a failure.
+
+WeChat scanning has Developer Tools and Android-device coverage for `Supported` and successful scanning. The device also proved that dismissal and camera restriction produce the same indeterminate interruption. BOB-61 remains `Partial` because its original acceptance requires those causes to be separated and the real host exposes too little information to do so.
 
 The WeChat file system completed real-host acceptance on 2026-09-15. WeChat Developer Tools and an Android device both verified, at base library 3.17.2, writing the fixed test file, reading matching content, checking that it existed, removing it, and checking that it no longer existed; neither the sandbox root nor file contents were displayed or logged. Automated Kotlin/JS, fake-host, CommonJS, and TypeScript checks also pass.
 

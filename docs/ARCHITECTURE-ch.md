@@ -107,6 +107,8 @@ Page 级生命周期与页面栈导航不是 capability。页面、页面 route 
 
 Capability 还可能有 SDK 能够强制、而不只是记录的前置条件。定位 adapter 会先查询宿主隐私协议与位置权限：任一条件未满足都在调用 `getLocation` 前失败。两项检查都只查询而不展示界面；隐私接受和权限请求仍必须由消费者通过明确的用户手势分别触发，因此位置读取永远不会成为隐式弹窗。
 
+宿主自带的界面也可能就是这项能力本身。扫描属于这种情况：`WechatScanCode` 位于 `host/wechat` 下，只拥有调用方描述的请求与宿主给出的答案，既不实现界面，也不建模相机，更不解析它拿到的东西。当宿主只通过失败回调表达用户决定、又不提供任何结构化字段时，SDK 只在唯一一处依据宿主文本分类，且只做精确匹配：识别不出的一律保持为失败，因为把真实故障报告成用户的选择，会让调用方停止重试一个从未打开过界面的调用。同样的判断也适用于能力对结果的表达方式：请求用的类别词汇与宿主在结果中报出的格式词汇是两套不同的取值，SDK 不把它们混为一谈。
+
 设备调用成功只表示宿主接受并执行了它，仅此而已：尤其是震动，只能由实际握持设备的人确认，因此 SDK 中没有任何部分把震动报告为「已被感知」。
 
 ## 4. JS Interop 边界
@@ -133,7 +135,7 @@ adapter
 coroutine-friendly Kotlin API
 ```
 
-`MiniAppException` 是平台无关的语义错误边界。Raw host failure 保留在 interop 和 Host adapter code 中；adapter 在映射为 SDK error 时保留有用的 scalar diagnostics。Raw JavaScript object 永不进入 common error model。
+`MiniAppException` 是平台无关的语义错误边界。Raw host failure 保留在 interop 和 Host adapter code 中；adapter 在映射为 SDK error 时保留有用的 scalar diagnostics。Raw JavaScript object 永不进入 common error model。只有宿主明确表达用户意图时才使用 `UserCancelled`；宿主结束交互却无法区分用户取消、权限限制或其他原因时使用 `HostInteractionInterrupted`。
 
 Internal `awaitHostCallback` primitive 已实现 callback-to-coroutine mechanics，但没有实现任何 Capability。它只接收一个 success 或 failure terminal result，并忽略所有后续 callback，包括 cancellation 后到达的 callback。
 

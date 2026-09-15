@@ -32,7 +32,7 @@ VS Code 可用于处理 `examples/wechat-miniprogram` 下的文件。Consumer Br
 
 这些命令有效，并已于 2026-09-15 完成验证。
 
-`:sdk:jsTest` suite 覆盖 Host boundary、error model、callback adaptation、cancellation、double completion、可选 abort、微信 error mapping、包含取消时宿主中止的 HTTP transport adaptation、生命周期状态迁移、导航适配、capability support 状态与版本门控、包含并发请求合并的权限生命周期行为、包含拒绝分类的隐私授权、包含过期分类的微信会话检查、包含逐项门控的微信剪贴板与震动 adapter、包含沙箱与文本边界的微信文件系统 adapter、包含坐标校验与隐私前置条件的微信定位 adapter，以及 interop object construction。这些测试使用 fake callbacks，不代表能够访问真实 `wx` runtime。
+`:sdk:jsTest` suite 覆盖 Host boundary、error model、callback adaptation、cancellation、double completion、可选 abort、微信 error mapping、包含取消时宿主中止的 HTTP transport adaptation、生命周期状态迁移、导航适配、capability support 状态与版本门控、包含并发请求合并的权限生命周期行为、包含拒绝分类的隐私授权、包含过期分类的微信会话检查、包含逐项门控的微信剪贴板与震动 adapter、包含沙箱与文本边界的微信文件系统 adapter、包含坐标校验与隐私前置条件的微信定位 adapter、包含不可归因中断分类与结果校验的微信扫码 adapter，以及 interop object construction。这些测试使用 fake callbacks，不代表能够访问真实 `wx` runtime。
 
 ## Consumer Bridge
 
@@ -71,7 +71,7 @@ npm run smoke
 npm run typecheck
 ```
 
-smoke test 加载 consumer-facing CommonJS 模块、调用 `sdkVersion()`，并安装 fake global `wx` 验证 Storage、微信 login bootstrap、HTTP transport、lifecycle 转发、三种导航调用、运行时能力检测、权限生命周期、隐私授权、微信会话检查、剪贴板与震动能力、文件系统，以及定位。它还会断言 HTTP transport 交给 fake host 的内容，包括原始文本响应模式、导航收到的绝对页面路径，以及每个纳入门控的能力所报告的支持状态。该测试验证 module 与 adapter behavior，但不构成真实 Host 证据。TypeScript 使用 strict mode，并在不依赖 `any` 的情况下验证 Promise-based Storage、typed `WeChatLoginResult`、HTTP transport、lifecycle、导航、capability support、权限、隐私、会话检查、剪贴板、震动、文件系统与定位 exports。
+smoke test 加载 consumer-facing CommonJS 模块、调用 `sdkVersion()`，并安装 fake global `wx` 验证 Storage、微信 login bootstrap、HTTP transport、lifecycle 转发、三种导航调用、运行时能力检测、权限生命周期、隐私授权、微信会话检查、剪贴板与震动能力、文件系统、定位，以及扫码。它还会断言 HTTP transport 交给 fake host 的内容，包括原始文本响应模式、导航收到的绝对页面路径，以及每个纳入门控的能力所报告的支持状态。该测试还会断言扫码不查询、不请求任何权限，并覆盖取消与相似失败文本的分类。该测试验证 module 与 adapter behavior，但不构成真实 Host 证据。TypeScript 使用 strict mode，并在不依赖 `any` 的情况下验证 Promise-based Storage、typed `WeChatLoginResult`、HTTP transport、lifecycle、导航、capability support、权限、隐私、会话检查、剪贴板、震动、文件系统、定位与扫码 exports。
 
 真实宿主验证按 [TESTING-ch.md](TESTING-ch.md) 中的检查清单执行，该清单是页面取值、console 输出与准备步骤的权威来源。只有在完成该运行后，某项 capability 才会在 [PROJECT_FACTS-ch.md](PROJECT_FACTS-ch.md) 中被记录为已通过宿主验证。
 
@@ -121,6 +121,20 @@ SDK 只做告知与把关；它不生成隐私政策、不判断业务是否合�
 页面不得自行读取位置：示例的 Location 卡片只在点击后调用，且从不显示或记录坐标。
 
 微信定位已于 2026-09-15 完成开发者工具与 Android 真机验收。运行覆盖能力为 `Supported`、权限由 `NotRequested` 到 `Granted`、拒绝后在触及 `getLocation` 前报告 `DENIED`，以及恢复权限后再次定位成功；成功日志只报告坐标与精度是否有效，不记录实际经纬度。当前仅实现按需单次 `getLocation`，不包含 `chooseLocation` 或 `openLocation`。
+
+### 微信扫码的不可归因中断
+
+`wx.scanCode` 打开的是微信自身的扫码界面，因此 SDK 不实现界面，也不建模相机。示例的 Scanner 卡片只在点击后调用，且从不显示或记录扫码内容、`rawData`、字符集或图片路径。
+
+真机验证证明主动关闭扫码界面与系统相机权限阻止界面启动都会产出宿主的 cancel 信号。因此 SDK 不再把该信号解释为用户意图或权限拒绝，而是以 `HostInteractionInterrupted` 报告“交互没有结果且原因不可判定”。只精确匹配 `scanCode:cancel` 与 `scanCode:fail cancel`；相似但不同的消息保持为 `HostFailure`。
+
+开发者工具不是真机：其扫码实现是让用户选一张图片再解码，因此相机路径、`onlyFromCamera` 的实际行为与真机取消文本都必须在真机上确认。
+
+该能力不查询也不请求任何权限。`scope.camera` 确实存在于该宿主，但没有任何可引用来源把它与 `wx.scanCode` 绑定，因此 SDK 既不为它弹窗，也不把它登记为权限前置条件，示例也不向 `app.json.requiredPrivateInfos` 添加任何字段。
+
+页面不得自行读取扫码内容：示例只报告内容是否存在、宿主报出的格式是否被 SDK 识别，以及取消与失败的区别。
+
+微信扫码已在开发者工具与 Android 真机覆盖 `Supported` 和成功扫描；真机还证明主动取消与相机受限产生相同的不可归因中断。BOB-61 仍为 `Partial`，因为原验收标准要求两者独立，而真实宿主未提供足以完成这种分类的信息。
 
 微信文件系统已于 2026-09-15 完成真实宿主验收。微信开发者工具与 Android 真机均在基础库 3.17.2 上验证了固定测试文件的写入、读取匹配、存在检查、删除与删除后不存在；沙箱根和文件内容均未被显示或记录。自动化 Kotlin/JS、fake-host、CommonJS 与 TypeScript 检查也已通过。
 

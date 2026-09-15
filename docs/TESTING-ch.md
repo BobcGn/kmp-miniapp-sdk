@@ -97,6 +97,7 @@ cd examples/wechat-miniprogram && npm run smoke && npm run typecheck
 | Session check | `WeChat Session Check` 卡片显示 `VALID`、`INVALID` 或 `FAIL` | `[kmp-miniapp-sdk] session check: PASS check #N, state=Valid\|Invalid` |
 | File system | `File System` 卡片的写入、检查、读取、删除四项均为 `PASS` | `[kmp-miniapp-sdk] filesystem write: PASS`、`filesystem access: PASS exists=true`、`filesystem read: PASS matched=true`、`filesystem remove: PASS`、`filesystem access: PASS exists=false` |
 | Location | `Location` 卡片显示能力判定、权限、隐私要求，以及定位读取的 `PASS` | `[kmp-miniapp-sdk] location capability: PASS wechat.location=…`、`location permission query: PASS state=…`、`location privacy query: PASS requirement=…`、`location: PASS coordinatesValid=true, accuracyValid=true` |
+| Scanner | `Scanner` 卡片显示能力判定，以及扫码的 `PASS`、`INTERRUPTED` 或 `FAIL` | `[kmp-miniapp-sdk] scanner capability: PASS wechat.scan-code=…`、`scan: PASS resultPresent=true, typeRecognized=true`、`scan: INTERRUPTED cause=indeterminate` |
 | Clipboard 与震动 | `Clipboard and Haptics` 卡片的写入、读取、短震动、长震动四项均为 `PASS` | `[kmp-miniapp-sdk] clipboard write: PASS`、`clipboard read: PASS matched=true`、`haptics short: PASS`、`haptics long: PASS` |
 | Storage | `Storage verification: PASS` | `[kmp-miniapp-sdk] storage: PASS first=first, overwritten=second, missing=null` |
 | Client login code | `Client login code: PASS` | `[kmp-miniapp-sdk] auth bootstrap: PASS codeReceived=true, length=<正整数>` |
@@ -212,7 +213,23 @@ cd examples/wechat-miniprogram && npm run smoke && npm run typecheck
 
 本能力同样执行并回滚了一次变异探针：把坐标范围判断取反后，interop、adapter 与契约三个层面共 9 项测试失败，说明形状校验确实被断言，而不是碰巧通过。
 
-14. 记录你观察到了哪些检查项、哪些没有观察到。只有在某项 capability 完成真实宿主运行后，才会在 [PROJECT_FACTS-ch.md](PROJECT_FACTS-ch.md) 中被记录为已通过宿主验证。
+14. 验证扫码。它打开的是微信自身的扫码界面，因此页面加载期间不会打开任何界面，以下每一步都由点击触发。页面只报告内容是否存在、宿主报出的格式是否被识别，以及结果是成功、原因不可判定的中断还是其他失败；**从不显示或记录扫码内容、`rawData`、字符集或图片路径**。
+
+| 步骤 | 点击 | 预期 |
+| --- | --- | --- |
+| 1 | `Check scanner capability` | `[kmp-miniapp-sdk] scanner capability: PASS wechat.scan-code=Supported`，卡片显示同一状态。宿主没有该 API 时 `Unsupported` 也是正确结果 |
+| 2 | 页面加载后确认 Console 与页面 | 没有出现扫码界面，也没有任何 `scan:` 行；卡片保持 `NOT RUN` |
+| 3 | `Scan code` 并扫描一个普通测试二维码 | `[kmp-miniapp-sdk] scan: PASS resultPresent=true, typeRecognized=true`，且 Console 中没有出现扫码内容 |
+| 4 | `Scan code` 后主动取消 | `[kmp-miniapp-sdk] scan: INTERRUPTED cause=indeterminate` |
+| 5 | 在系统设置中限制微信的相机权限，然后点击 `Scan from camera only` | 同样为 `scan: INTERRUPTED cause=indeterminate`；这证明宿主没有提供足够信息区分取消与相机限制 |
+
+第 3 步只证明 SDK 交回了契约能承载的结果，不证明内容被业务解析过——本能力不做任何业务解析。第 4、5 步共同证明宿主把用户取消与相机限制压成同一信号；SDK 必须保留这种不确定性，不能将其报告为 `UserCancelled` 或 `PermissionDenied`。
+
+中断分类只精确匹配两种宿主消息（`scanCode:cancel` 与 `scanCode:fail cancel`）；其他失败保持为 `HostFailure`。该结论来自真实宿主行为而不是对错误文本含义的猜测。
+
+开发者工具不是真机：其扫码实现是让用户选一张图片再解码，因此相机路径与 `onlyFromCamera` 的实际行为只能在真机上判断。`Scan from camera only` 只是把 `onlyFromCamera=true` 交给微信，用于防止相册回退；它不查询、不请求也不假定 `scope.camera`。示例没有向 `app.json.requiredPrivateInfos` 添加任何扫码字段。系统或微信自身可能在扫码界面中处理相机访问，这不等于 SDK 建立了权限前置条件。
+
+15. 记录你观察到了哪些检查项、哪些没有观察到。只有在某项 capability 完成真实宿主运行后，才会在 [PROJECT_FACTS-ch.md](PROJECT_FACTS-ch.md) 中被记录为已通过宿主验证。
 
 Storage 检查会写入专用测试 key、验证覆盖、删除该 key，并确认 missing key 读取为 `null`。Network 检查会向 `https://example.com/` 发起 `GET`，并报告 status code 与 body 长度；验证其他 host 时请修改示例中的 `networkUrl` 常量。
 

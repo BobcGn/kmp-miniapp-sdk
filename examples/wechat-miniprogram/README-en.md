@@ -54,6 +54,9 @@ Import this directory as a Mini Program project and compile it. The clipboard an
 [kmp-miniapp-sdk] location permission query: PASS state=Granted
 [kmp-miniapp-sdk] location privacy query: PASS requirement=NOT_REQUIRED
 [kmp-miniapp-sdk] location: PASS coordinatesValid=true, accuracyValid=true
+[kmp-miniapp-sdk] scanner capability: PASS wechat.scan-code=Supported
+[kmp-miniapp-sdk] scan: PASS resultPresent=true, typeRecognized=true
+[kmp-miniapp-sdk] scan: INTERRUPTED cause=indeterminate
 ```
 
 The network check issues a `GET` to `https://example.com/`. WeChat requires that host to be listed in the request domain whitelist, or the project must be compiled with domain checking disabled. Change the `networkUrl` constant to verify a different endpoint.
@@ -73,6 +76,8 @@ The Permission lifecycle card queries, requests, and opens settings for one perm
 The Runtime detection card reads its expected state from the host rather than from a fixed table. An unregistered capability always reads `ungated=Unsupported`, and a registered one reads whichever state its host answers. `VersionDependent` cannot be produced here: the lowest debug base library Developer Tools offers is 2.21.4, which is above the 2.20.1 boundary that capability records, so that state is covered by automated tests instead. The card also shows the base-library version and platform, which the verification record needs.
 
 The Location card is the only card whose capability enforces a precondition of its own. `Check location capability` reports how the gate answers for `wechat.location`; the permission and the privacy requirement are reported separately, because whether the API exists is a different question from whether the user has allowed it. Nothing reads a position while the page loads. A read attempted before the privacy contract is accepted fails with the SDK's privacy-required error and never reaches the host, and a read attempted before the permission is granted is refused rather than prompting on the consumer's behalf — driving that prompt needs a user gesture, so it stays behind `Request location permission`. The page validates the shape of the answer and prints `coordinatesValid` and `accuracyValid`; it never displays or logs a coordinate. Both `app.json` declarations must be in place and the interface must be enabled in the MP backend, or the host refuses before the user sees anything. Developer Tools derives its position from IP rather than from a device receiver, and only for `gcj02`, so the flow can be walked there but only a device proves a real position. See the location configuration section of [../../docs/DEVELOPMENT-en.md](../../docs/DEVELOPMENT-en.md).
+
+The Scanner card opens WeChat's own scanning interface and reports what came back without showing scanned content. `Check scanner capability` reports the gate; `Scan code` permits an album entry, while `Scan from camera only` sets `onlyFromCamera=true`. A device proved that dismissal and system camera access preventing launch produce the same signal, so both print `INTERRUPTED cause=indeterminate` without claiming user cancellation or permission denial; other failures print `FAIL`. The page never displays or logs decoded content, `rawData`, character set, or image path, and it establishes no unverified SDK permission precondition for scanning.
 
 Node and TypeScript checks do not replace this real-host verification. [../../docs/TESTING-en.md](../../docs/TESTING-en.md) holds the authoritative checklist and the two-layer testing model.
 

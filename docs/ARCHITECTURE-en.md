@@ -107,6 +107,8 @@ A capability whose request model is itself host-specific stays behind the escape
 
 A capability may also have a precondition the SDK can enforce rather than merely document. The location adapter first queries both the host privacy contract and the location permission, and fails before `getLocation` when either is unsatisfied. Both checks are queries that present nothing; accepting privacy and requesting permission remain separate consumer actions that require explicit user gestures, so a location read can never become an implicit prompt.
 
+The host's own interface can also be the capability itself. Scanning is that case: `WechatScanCode` lives under `host/wechat` and owns only the request the caller describes and the answer the host gives — it does not implement the interface, model a camera, or parse what it receives. When a host expresses the user's decision only through its failure callback and publishes no structured field for it, the SDK classifies on host text in exactly one place and only by exact match: anything unrecognized stays a failure, because reporting a real fault as the user's choice would tell a caller to stop retrying a call that never opened an interface. The same care applies to how a capability expresses its answer: the categories a request may ask for and the formats the host reports back are two different vocabularies, and the SDK does not conflate them.
+
 A device call resolving means the host accepted and performed it. It never means more than that: a vibration in particular can only be confirmed by someone holding the device, so nothing in the SDK reports one as having been felt.
 
 ## 4. JS Interop Boundary
@@ -133,7 +135,7 @@ adapter
 coroutine-friendly Kotlin API
 ```
 
-`MiniAppException` is the platform-neutral semantic error boundary. Raw host failures stay in interop and host adapter code; adapters preserve useful scalar diagnostics while mapping them to SDK errors. Raw JavaScript objects never enter the common error model.
+`MiniAppException` is the platform-neutral semantic error boundary. Raw host failures stay in interop and host adapter code; adapters preserve useful scalar diagnostics while mapping them to SDK errors. Raw JavaScript objects never enter the common error model. `UserCancelled` is used only when the host identifies user intent; when the host ends an interaction without distinguishing dismissal, permission restriction, or another cause, the adapter uses `HostInteractionInterrupted`.
 
 The internal `awaitHostCallback` primitive implements the callback-to-coroutine mechanics without implementing a capability. It accepts one success or failure terminal result and ignores every later callback, including callbacks received after cancellation.
 

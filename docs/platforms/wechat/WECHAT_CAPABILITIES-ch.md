@@ -26,7 +26,7 @@
 
 `Minimum Host Version` 记录提供该能力的最低基础库，共有三种取值：
 
-- `Resolved at runtime` —— SDK 对该能力做了门控，通过 `wx.canIUse` 询问宿主，而不是与记录下来的数字比较。当前 Storage API、`wx.request` 与 `wx.getLocation` 的官方入口页没有标注 API 本身的引入版本，因此不从开发机表现反推数字。这是针对当前真正运行的宿主的实时答案，而不是缺失值。
+- `Resolved at runtime` —— SDK 对该能力做了门控，通过 `wx.canIUse` 询问宿主，而不是与记录下来的数字比较。当前 Storage API、`wx.request`、`wx.getLocation` 与 `wx.scanCode` 的官方入口页没有标注 API 本身的引入版本，因此不从开发机表现反推数字。这是针对当前真正运行的宿主的实时答案，而不是缺失值。
 - 版本号 —— 微信有文档记载的边界。仓库只在能够引用来源时才记录。
 - `Not established` —— 尚未确立最低版本，原因或是该能力尚未实现，或是 SDK 未对其做门控。
 
@@ -57,6 +57,7 @@ SDK 从 `wx.getAppBaseInfo` 读取基础库版本，并在早于它的基础库�
 - [微信 `wx.getClipboardData` 文档](https://developers.weixin.qq.com/miniprogram/dev/api/device/clipboard/wx.getClipboardData.html) 与 [`wx.setClipboardData` 文档](https://developers.weixin.qq.com/miniprogram/dev/api/device/clipboard/wx.setClipboardData.html)：基础库 1.1.0 起支持。
 - [微信 `wx.vibrateShort` 文档](https://developers.weixin.qq.com/miniprogram/dev/api/device/vibrate/wx.vibrateShort.html) 与 [`wx.vibrateLong` 文档](https://developers.weixin.qq.com/miniprogram/dev/api/device/vibrate/wx.vibrateLong.html)：基础库 1.2.0 起支持。`wx.vibrateShort` 文档中的 `type` 字段（heavy / medium / light）自基础库 2.13.0 起支持，有意未建模。
 - [微信 `wx.checkSession` 文档](https://developers.weixin.qq.com/miniprogram/dev/api/open-api/login/wx.checkSession.html)：未标注最低基础库，因此该项依靠 `wx.canIUse` 而不是记录下来的数字。该文档把 success/fail 分别定义为登录态有效/过期，因此 adapter 使用 callback 本身，不解析 `errMsg`。
+- 微信开发者工具所带基础库的实测契约（`package.nw/core.wxvpkg`）：`wx.scanCode` 的请求选项 `onlyFromCamera` 与四个请求类别（`barCode`、`qrCode`、`datamatrix`、`pdf417`）；其 success 字段 `result`、`scanType`、`charSet`、`path` 与 `rawData`；其结果格式（`QR_CODE`、`AZTEC`、`CODABAR`、`CODE_39`、`CODE_93`、`CODE_128`、`DATA_MATRIX`、`EAN_8`、`EAN_13`、`ITF`、`MAXICODE`、`PDF_417`、`RSS_14`、`RSS_EXPANDED`、`UPC_A`、`UPC_E`、`UPC_EAN_EXTENSION`、`WX_CODE`、`CODE_25`）；以及其模拟路径与「用户关闭选图弹窗」都会产出的取消消息 `scanCode:cancel`。这属于宿主契约证据而不是文档页面证据，因此本条把取消分类记为限制而不是有文档保证的行为。同一基础库的授权 scope 列表中也存在 `scope.camera`，但其中没有任何内容把它与 `wx.scanCode` 绑定，因此 SDK 不为该能力映射任何权限。
 - [微信 `wx.getLocation` 文档](https://developers.weixin.qq.com/miniprogram/dev/api/location/wx.getLocation.html)：`type` 的取值 `wgs84` 与 `gcj02`，SDK 只转发而不解释；以及宿主作答前必须具备的声明 —— `app.json.requiredPrivateInfos`、`permission.scope.userLocation`，以及 MP 后台开启的接口权限。该文档未标注 API 的引入基础库版本，因此该项依靠 `wx.canIUse` 而不是记录下来的数字。[`wx.chooseLocation`](https://developers.weixin.qq.com/miniprogram/dev/api/location/wx.chooseLocation.html) 有意未实现：其当前参数表没有 `cancel` callback，取消会以 `fail` 到达，从而无法与权限拒绝或宿主失败区分。
 
 标为 `Planned` 的条目在上述 production source 和 export surface 中没有实现；对应 Tracking 只表示缺口已进入 Multica，不表示能力存在。
@@ -92,7 +93,7 @@ SDK 从 `wx.getAppBaseInfo` 读取基础库版本，并在早于它的基础库�
 | Capability | Status | API | Permission / Preconditions | Minimum Host Version | Test Level | Evidence / Notes | Tracking |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | Location | `Stable` | `getLocation` | Location permission（需用户手势）；宿主隐私协议已被接受；`app.json` 声明与 MP 后台接口权限已就位 | Resolved at runtime | Unit、Contract、Node、DeveloperTools、RealDevice | 按需读取一次位置，可在 `wgs84` 与 `gcj02` 之间选择。adapter 在调用宿主前查询隐私和权限前置条件，任一未满足都不会触及 `getLocation`，也不会自行弹窗。真实宿主覆盖 `Supported`、`NotRequested`、`Granted`、`Denied` 阻断与恢复后的成功读取，且不记录经纬度。`chooseLocation` 与 `openLocation` 未实现，因此本条不声称位置选择或取消分类能力。 | BOB-66 Done |
-| Scanner | `Planned` | `scanCode` | Camera/Privacy | Not established | 尚无 | 取消必须独立于权限拒绝和宿主失败。 | BOB-61 |
+| Scanner | `Stable` | `scanCode` | 未确立：该 API 驱动微信自身界面，没有任何可确认的权限前置条件 | Resolved at runtime | Unit、Contract、Node、DeveloperTools、RealDevice | 通过微信自身界面扫码并校验结果。真机证明主动取消与系统相机权限阻止界面启动产生相同信号，因此两种精确消息映射为 `HostInteractionInterrupted`，不推断用户意图；其他失败仍为 `HostFailure`。真实宿主已覆盖 Supported、成功与不可归因的中断。 | BOB-61 Done；显式保留宿主歧义 |
 | Clipboard Read | `Stable` | `getClipboardData` | 用户手势；微信开发者工具需有剪贴板访问权限 | 1.1.0 | Unit、Contract、Node、DeveloperTools、RealDevice | 原样返回剪贴板文本（含空字符串）；缺失或非字符串的答案映射为 `InvalidResponse`。SDK 不保存也不记录读取到的内容。`getClipboardData` 不属于 `requiredPrivateInfos` 允许的字段。 | BOB-65 |
 | Clipboard Write | `Stable` | `setClipboardData` | 用户手势；微信开发者工具需有剪贴板访问权限 | 1.1.0 | Unit、Contract、Node、DeveloperTools、RealDevice | 与读取分别门控，因为宿主可能只提供其中一个方向。真实宿主已验证写入后读回匹配。 | BOB-65 |
 | Short Vibration | `Stable` | `vibrateShort` | 用户手势；具备震动硬件的设备 | 1.2.0 | Unit、Contract、Node、RealDevice | Android 真机调用 PASS，且测试者确认感知短震动。可选 `type` 字段（2.13.0）未建模。 | BOB-65 |

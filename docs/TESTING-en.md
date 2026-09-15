@@ -98,6 +98,7 @@ The following procedure is the DeveloperTools checklist for currently implemente
 | Clipboard and haptics | The `Clipboard and Haptics` card shows `PASS` for write, read, short vibration, and long vibration | `[kmp-miniapp-sdk] clipboard write: PASS`, `clipboard read: PASS matched=true`, `haptics short: PASS`, `haptics long: PASS` |
 | File system | The `File System` card shows `PASS` for write, access, read, and remove | `[kmp-miniapp-sdk] filesystem write: PASS`, `filesystem access: PASS exists=true`, `filesystem read: PASS matched=true`, `filesystem remove: PASS`, `filesystem access: PASS exists=false` |
 | Location | The `Location` card shows the capability answer, the permission, the privacy requirement, and `PASS` for a position | `[kmp-miniapp-sdk] location capability: PASS wechat.location=…`, `location permission query: PASS state=…`, `location privacy query: PASS requirement=…`, `location: PASS coordinatesValid=true, accuracyValid=true` |
+| Scanner | The `Scanner` card shows the capability answer and `PASS`, `INTERRUPTED`, or `FAIL` for a scan | `[kmp-miniapp-sdk] scanner capability: PASS wechat.scan-code=…`, `scan: PASS resultPresent=true, typeRecognized=true`, `scan: INTERRUPTED cause=indeterminate` |
 | Storage | `Storage verification: PASS` | `[kmp-miniapp-sdk] storage: PASS first=first, overwritten=second, missing=null` |
 | Client login code | `Client login code: PASS` | `[kmp-miniapp-sdk] auth bootstrap: PASS codeReceived=true, length=<positive integer>` |
 | Network | `Network verification: PASS` | `[kmp-miniapp-sdk] network: PASS status=200, bytes=<positive integer>` |
@@ -212,7 +213,23 @@ Three configuration requirements decide whether this works at all, and all three
 
 A mutation probe was executed and reverted for this capability: inverting the coordinate range check failed nine tests across the interop, adapter, and contract levels, so the shape validation is genuinely asserted rather than incidentally passing.
 
-14. Record which checks you observed and which you did not. A capability is recorded as host-verified in [PROJECT_FACTS-en.md](PROJECT_FACTS-en.md) only after a real-host run for that capability.
+14. Verify scanning. It opens WeChat's own scanning interface, so nothing opens while the page loads and every step below follows a tap. The page reports only whether content was present, whether the format the host named is recognized, and whether the outcome was success, an indeterminate interruption, or another failure; it **never displays or logs the scanned content, `rawData`, the character set, or the image path**.
+
+| Step | Tap | Expected |
+| --- | --- | --- |
+| 1 | `Check scanner capability` | `[kmp-miniapp-sdk] scanner capability: PASS wechat.scan-code=Supported`, and the card shows the same state. `Unsupported` is a correct answer on a host without the API |
+| 2 | After the page loads, check the console and the card | No scanning interface appeared and there is no `scan:` line; the card still reads `NOT RUN` |
+| 3 | `Scan code` and scan an ordinary test QR code | `[kmp-miniapp-sdk] scan: PASS resultPresent=true, typeRecognized=true`, and no scanned content appears anywhere in the console |
+| 4 | `Scan code` and dismiss the interface | `[kmp-miniapp-sdk] scan: INTERRUPTED cause=indeterminate` |
+| 5 | Restrict WeChat's camera access in system settings, then tap `Scan from camera only` | The same `scan: INTERRUPTED cause=indeterminate`; this proves the host provides too little information to distinguish dismissal from camera restriction |
+
+Step 3 proves only that the SDK handed over a result the contract can carry, not that anything parsed it — this capability does no business parsing. Steps 4 and 5 together prove that the host collapses user dismissal and camera restriction into one signal; the SDK must preserve that uncertainty instead of reporting `UserCancelled` or `PermissionDenied`.
+
+The interruption classification matches exactly two host messages (`scanCode:cancel` and `scanCode:fail cancel`); all other failures stay `HostFailure`. This conclusion follows the observed real-host behavior rather than guessing what the text means.
+
+Developer Tools is not a device: its scan implementation has the user pick an image and then decodes it, so the camera path and what `onlyFromCamera` actually does can only be settled on hardware. `Scan from camera only` only passes `onlyFromCamera=true` to WeChat to prevent an album fallback; it neither queries nor requests nor assumes `scope.camera`. The example adds no scan field to `app.json.requiredPrivateInfos`. The system or WeChat may handle camera access inside the scanning interface, which does not mean the SDK established a permission precondition.
+
+15. Record which checks you observed and which you did not. A capability is recorded as host-verified in [PROJECT_FACTS-en.md](PROJECT_FACTS-en.md) only after a real-host run for that capability.
 
 The Storage check writes a dedicated test key, verifies overwrite, removes it, and confirms that the missing key reads as `null`. The network check issues a `GET` to `https://example.com/` and reports the status code and body length; point the example's `networkUrl` constant at any reachable HTTPS endpoint when verifying a different host.
 

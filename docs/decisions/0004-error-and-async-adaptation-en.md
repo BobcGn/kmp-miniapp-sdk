@@ -13,7 +13,7 @@ Host callbacks may be late or contradictory. An adapter must tolerate success fo
 
 ## Decision
 
-- `MiniAppException` is the common semantic error boundary. Its minimal variants are `UnsupportedCapability`, `PermissionDenied`, `UserCancelled`, `HostFailure`, `InvalidResponse`, and `InternalFailure`.
+- `MiniAppException` is the common semantic error boundary. Its minimal variants are `UnsupportedCapability`, `PermissionDenied`, `UserCancelled`, `HostInteractionInterrupted`, `HostFailure`, `InvalidResponse`, and `InternalFailure`. `HostInteractionInterrupted` represents an interaction the host ended without distinguishing user dismissal, permission restriction, or another failure to start; it must not infer user intent.
 - Raw host result objects remain inside the host-specific interop and adapter layers. A host adapter maps typed scalar diagnostics into `HostFailure`, including host, optional code, message, optional cause, and sanitized string metadata.
 - `awaitHostCallback` is the internal callback-to-coroutine primitive. It accepts already-mapped `MiniAppException` failures and permits one terminal result only.
 - Cancelling a coroutine always stops it from consuming later callbacks. It does not imply that the underlying host operation stopped.
