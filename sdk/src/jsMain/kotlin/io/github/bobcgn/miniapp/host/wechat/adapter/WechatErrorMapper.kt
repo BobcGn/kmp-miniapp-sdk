@@ -73,6 +73,53 @@ internal fun mapWechatAuthorizeFailure(
 private const val DENIED_ERRMSG_MARKER: String = "auth deny"
 
 /**
+ * Converts a raw `wx.scanCode` failure into the platform-neutral SDK model.
+ *
+ * A user dismissing the host's scanning interface reaches the failure callback by
+ * the same path as a genuine failure, and WeChat publishes no structured field
+ * that separates them, so the host message is the only evidence there is.
+ *
+ * The exact ambiguous messages become
+ * [MiniAppException.HostInteractionInterrupted]. A substring or prefix match is deliberately
+ * not used: a real failure that happens to mention cancelling would then be
+ * reclassified as a user decision the caller would act on — and telling a
+ * consumer "the user chose this" when the host actually broke is worse than
+ * reporting a host failure it can diagnose.
+ *
+ * **Why these two forms.** Real-device verification showed that `scanCode:cancel`
+ * can mean either a user dismissal or a camera restriction that prevented the
+ * interface from opening. The host's other conventional form is
+ * `scanCode:fail cancel`. Both are therefore classified as interruptions with an
+ * indeterminate cause, not as user intent. Matching remains exact so unrelated
+ * failures keep their diagnostic [MiniAppException.HostFailure] classification.
+ *
+ * This is the only place the scan failure text is interpreted, and the raw message
+ * never reaches a public type. Every other failure stays a
+ * [MiniAppException.HostFailure].
+ */
+internal fun mapWechatScanFailure(result: WxGeneralCallbackResult): MiniAppException =
+    if (result.errMsg in SCAN_INTERRUPTED_ERRMSGS) {
+        MiniAppException.HostInteractionInterrupted(
+            host = "wechat",
+            operation = "scanCode",
+            hostMessage = result.errMsg,
+        )
+    } else {
+        mapWechatHostFailure(operation = "scanCode", result = result)
+    }
+
+/**
+ * The exact host messages that mean the user dismissed the scanning interface.
+ *
+ * Matching is exact and case-sensitive on purpose: `ScanCode:cancel` and
+ * `scanCode:fail user cancel` are host failures, not user decisions.
+ */
+private val SCAN_INTERRUPTED_ERRMSGS: Set<String> = setOf(
+    "scanCode:cancel",
+    "scanCode:fail cancel",
+)
+
+/**
  * What a raw `wx.requirePrivacyAuthorize` failure means.
  *
  * A declined privacy contract is the user's answer and is modelled as an outcome;

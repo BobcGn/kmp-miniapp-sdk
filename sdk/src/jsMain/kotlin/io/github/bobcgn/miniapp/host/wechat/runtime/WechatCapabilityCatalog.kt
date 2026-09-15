@@ -119,6 +119,12 @@ internal object WechatCapabilityCatalog {
         WeChatDeviceCapabilities.Location to WechatCapabilityRequirement(
             canIUseSchemas = listOf("getLocation"),
         ),
+        // WeChat documents no introduction version for scanCode either, so no
+        // number is recorded and the probe is the authority. The API needs no
+        // permission the SDK could establish, so nothing else is gated here.
+        WeChatDeviceCapabilities.ScanCode to WechatCapabilityRequirement(
+            canIUseSchemas = listOf("scanCode"),
+        ),
         // The four device capabilities are gated separately: a host may expose one
         // clipboard direction or one vibration length without the other. WeChat
         // documents 1.1.0 for the clipboard APIs and 1.2.0 for the vibration APIs,

@@ -13,6 +13,11 @@ public class MiniAppExceptionTest {
         val unsupported = MiniAppException.UnsupportedCapability(CapabilityKey("storage"))
         val permission = MiniAppException.PermissionDenied(permission = "location")
         val cancelled = MiniAppException.UserCancelled()
+        val interrupted = MiniAppException.HostInteractionInterrupted(
+            host = "test-host",
+            operation = "scan",
+            hostMessage = "scan:cancel",
+        )
         val invalid = MiniAppException.InvalidResponse("Missing field")
         val timeout = MiniAppException.Timeout(
             operation = "request",
@@ -22,6 +27,10 @@ public class MiniAppExceptionTest {
         assertEquals("storage", unsupported.capability.value)
         assertEquals("location", permission.permission)
         assertIs<MiniAppException.UserCancelled>(cancelled)
+        assertEquals("test-host", interrupted.host)
+        assertEquals("scan", interrupted.operation)
+        assertEquals("scan:cancel", interrupted.hostMessage)
+        assertIsNot<MiniAppException.UserCancelled>(interrupted)
         assertEquals("Missing field", invalid.message)
         assertNull(invalid.cause)
         assertEquals("request", timeout.operation)

@@ -122,6 +122,15 @@ internal external object wx {
     fun getLocation(options: WxGetLocationOptions): Unit
 
     /**
+     * Asks the host to scan through its own scanning interface.
+     *
+     * The user dismissing that interface arrives at the failure callback, so a
+     * caller cannot treat every failure as a host error. The host offers no abort
+     * handle, so a cancelled caller only stops waiting.
+     */
+    fun scanCode(options: WxScanCodeOptions): Unit
+
+    /**
      * Returns the host's global file manager.
      *
      * The manager is a host object whose methods are optional, so callers probe

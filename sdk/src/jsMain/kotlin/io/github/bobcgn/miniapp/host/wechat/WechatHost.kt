@@ -33,6 +33,8 @@ import io.github.bobcgn.miniapp.host.wechat.adapter.WechatPermissions
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatPrivacy
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatPrivacyHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatRuntimeInfoHost
+import io.github.bobcgn.miniapp.host.wechat.adapter.WechatScanCode
+import io.github.bobcgn.miniapp.host.wechat.adapter.WechatScanCodeHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatStorage
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatStorageHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WxAuthHost
@@ -45,6 +47,7 @@ import io.github.bobcgn.miniapp.host.wechat.adapter.WxNetworkHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WxPermissionHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WxPrivacyHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WxRuntimeInfoHost
+import io.github.bobcgn.miniapp.host.wechat.adapter.WxScanCodeHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WxStorageHost
 import io.github.bobcgn.miniapp.host.wechat.runtime.WechatAppLifecycle
 import io.github.bobcgn.miniapp.host.wechat.runtime.WechatCapabilityGate
@@ -78,6 +81,8 @@ internal class WechatPlatformApi(
     internal val fileSystem: WechatFileSystem,
     /** WeChat position access. */
     internal val location: WechatLocation,
+    /** Scanning through WeChat's own scanning interface. */
+    internal val scanCode: WechatScanCode,
 ) : HostPlatformApi
 
 /** First concrete [MiniAppHost], backed by the WeChat Mini Program runtime. */
@@ -93,6 +98,7 @@ internal class WechatHost(
     hapticsHost: WechatHapticsHost = WxHapticsHost,
     fileSystemHost: WechatFileSystemHost = WxFileSystemHost,
     locationHost: WechatLocationHost = WxLocationHost,
+    scanCodeHost: WechatScanCodeHost = WxScanCodeHost,
 ) : MiniAppHost<WechatPlatformApi>,
     StorageCapabilityProvider,
     NetworkCapabilityProvider,
@@ -124,6 +130,7 @@ internal class WechatHost(
         haptics = WechatHaptics(hapticsHost),
         fileSystem = WechatFileSystem(fileSystemHost),
         location = WechatLocation(locationHost, privacyAdapter, permissionsAdapter),
+        scanCode = WechatScanCode(scanCodeHost),
     )
 
     override val storage: MiniAppStorage = WechatStorage(storageHost)

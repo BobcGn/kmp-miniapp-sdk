@@ -19,6 +19,8 @@ import io.github.bobcgn.miniapp.capability.storage.MiniAppStorage
 import io.github.bobcgn.miniapp.host.requireSupported
 import io.github.bobcgn.miniapp.host.wechat.WeChatCoordinateSystem
 import io.github.bobcgn.miniapp.host.wechat.WeChatLoginResult
+import io.github.bobcgn.miniapp.host.wechat.WeChatScanCategory
+import io.github.bobcgn.miniapp.host.wechat.WeChatScanRequest
 import io.github.bobcgn.miniapp.host.wechat.WeChatSessionState
 import io.github.bobcgn.miniapp.host.wechat.WechatHost
 import io.github.bobcgn.miniapp.host.wechat.runtime.WechatRuntimeInfo
@@ -385,6 +387,50 @@ public object MiniAppExports {
     }
 
     /**
+     * Asks WeChat to scan through its own scanning interface.
+     *
+     * When the host reports its ambiguous cancel signal, this rejects with
+     * `HostInteractionInterrupted`. Real-device verification showed that the same
+     * signal can mean either user dismissal or camera access preventing the
+     * interface from opening, so the SDK does not assign user intent.
+     *
+     * This call asks the host for no permission. `wx.scanCode` drives WeChat's own
+     * interface, and no permission precondition for it could be established from
+     * the host contract, so the SDK neither prompts for one nor maps it to a scope
+     * the host does not tie to this API.
+     *
+     * The decoded content is never logged or stored by the SDK. It is the user's
+     * data, so a caller that keeps it does so on its own authority.
+     *
+     * @param onlyFromCamera whether the host must scan through its camera rather
+     *   than also accepting an image the user already has
+     * @param scanTypes categories to ask for, for example `qrCode`; an empty array
+     *   asks for every category the host supports, which is not the same as asking
+     *   for none
+     * @throws IllegalArgumentException when [scanTypes] names a category this SDK
+     *   does not know
+     */
+    public suspend fun wechatScanCode(
+        onlyFromCamera: Boolean,
+        scanTypes: Array<String>,
+    ): JsScanResult {
+        val request = WeChatScanRequest(
+            onlyFromCamera = onlyFromCamera,
+            allowedCategories = scanTypes.map { scanCategory(it) },
+        )
+
+        val result = host.platform.scanCode.scan(request)
+        return JsScanResult(
+            text = result.text,
+            scanType = result.scanType,
+            format = result.format?.hostValue,
+            charSet = result.charSet,
+            rawData = result.rawData,
+            path = result.path,
+        )
+    }
+
+    /**
      * Fails unless the host currently requires no privacy authorization.
      *
      * This is the precondition point for capabilities the host gates behind its
@@ -475,3 +521,8 @@ private fun httpMethod(method: String): HttpMethod {
     return HttpMethod.entries.firstOrNull { it.name == normalized }
         ?: throw IllegalArgumentException("Unsupported HTTP method: '$method'")
 }
+
+/** Resolves a JavaScript-supplied scan category to the closed SDK category set. */
+private fun scanCategory(name: String): WeChatScanCategory =
+    WeChatScanCategory.entries.firstOrNull { it.hostValue == name }
+        ?: throw IllegalArgumentException("Unsupported scan category: '$name'")

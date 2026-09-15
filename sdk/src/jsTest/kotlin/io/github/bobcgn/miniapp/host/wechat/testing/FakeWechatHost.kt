@@ -11,6 +11,7 @@ import io.github.bobcgn.miniapp.host.wechat.adapter.WechatNetworkHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatPermissionHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatPrivacyHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatRuntimeInfoHost
+import io.github.bobcgn.miniapp.host.wechat.adapter.WechatScanCodeHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatStorageHost
 
 /**
@@ -31,6 +32,7 @@ internal fun fakeWechatHost(
     hapticsHost: WechatHapticsHost = FakeWechatHapticsHost(),
     fileSystemHost: WechatFileSystemHost = FakeWechatFileSystemHost(),
     locationHost: WechatLocationHost = FakeWechatLocationHost(),
+    scanCodeHost: WechatScanCodeHost = FakeWechatScanCodeHost(),
 ): WechatHost = WechatHost(
     storageHost = storageHost,
     authHost = authHost,
@@ -43,4 +45,5 @@ internal fun fakeWechatHost(
     hapticsHost = hapticsHost,
     fileSystemHost = fileSystemHost,
     locationHost = locationHost,
+    scanCodeHost = scanCodeHost,
 )

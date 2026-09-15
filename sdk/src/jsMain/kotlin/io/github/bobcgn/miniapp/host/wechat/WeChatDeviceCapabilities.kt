@@ -55,4 +55,13 @@ internal object WeChatDeviceCapabilities {
      * by this key.
      */
     val Location: CapabilityKey = CapabilityKey("wechat.location")
+
+    /**
+     * Scanning through WeChat's own scanning interface.
+     *
+     * Only API availability is answered by this key. No permission precondition
+     * for `wx.scanCode` could be established from the host contract, so this key
+     * deliberately does not stand in for one.
+     */
+    val ScanCode: CapabilityKey = CapabilityKey("wechat.scan-code")
 }

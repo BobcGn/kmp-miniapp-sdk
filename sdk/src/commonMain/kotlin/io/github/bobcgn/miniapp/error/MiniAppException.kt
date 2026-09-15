@@ -31,6 +31,21 @@ public sealed class MiniAppException protected constructor(
     ) : MiniAppException(message, cause)
 
     /**
+     * A host-owned interaction ended before producing a result, but the host did
+     * not provide enough information to attribute the interruption to the user,
+     * a permission restriction, or another host condition.
+     *
+     * This is deliberately not [UserCancelled]: assigning intent without evidence
+     * would make consumers handle a blocked operation as a user decision.
+     */
+    public class HostInteractionInterrupted public constructor(
+        public val host: String,
+        public val operation: String,
+        public val hostMessage: String,
+        cause: Throwable? = null,
+    ) : MiniAppException("$host interaction interrupted during $operation", cause)
+
+    /**
      * A host operation did not complete within the time the host allows.
      *
      * This is distinct from [HostFailure] because the operation itself is not

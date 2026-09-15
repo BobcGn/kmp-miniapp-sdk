@@ -12,6 +12,7 @@ import io.github.bobcgn.miniapp.host.wechat.interop.WxReadFileSuccessResult
 import io.github.bobcgn.miniapp.host.wechat.interop.WxRequestFailureResult
 import io.github.bobcgn.miniapp.host.wechat.interop.WxRequestSuccessResult
 import io.github.bobcgn.miniapp.host.wechat.interop.WxRequestTask
+import io.github.bobcgn.miniapp.host.wechat.interop.WxScanCodeSuccessResult
 
 /**
  * Builders for the raw JavaScript result objects WeChat hands to callbacks.
@@ -152,6 +153,31 @@ internal fun fakeGetLocationSuccess(
     js("result.longitude = longitude")
     js("result.accuracy = accuracy")
     return result
+}
+
+/**
+ * Builds a `wx.scanCode` success result.
+ *
+ * Every field is supplied as `Any?` so a test can produce the shapes the contract
+ * must reject, such as missing content or a descriptive field of the wrong type.
+ * The default [path] is absent, which is how WeChat reports a scan it did not take
+ * from a file.
+ */
+internal fun fakeScanCodeSuccess(
+    result: Any?,
+    scanType: Any? = "QR_CODE",
+    charSet: Any? = "utf-8",
+    rawData: Any? = "raw-bytes",
+    path: Any? = null,
+): WxScanCodeSuccessResult {
+    val value: WxScanCodeSuccessResult = js("({})")
+    js("value.errMsg = 'scanCode:ok'")
+    js("value.result = result")
+    js("value.scanType = scanType")
+    js("value.charSet = charSet")
+    js("value.rawData = rawData")
+    js("value.path = path")
+    return value
 }
 
 /**

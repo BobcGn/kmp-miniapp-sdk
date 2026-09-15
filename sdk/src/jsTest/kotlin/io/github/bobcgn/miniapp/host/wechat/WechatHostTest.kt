@@ -82,6 +82,12 @@ internal class WechatHostTest {
             CapabilitySupport.Supported,
             host.capabilitySupport(WeChatDeviceCapabilities.Location),
         )
+        // Scanning is gated on the API alone. No permission precondition for it
+        // could be established, so there is nothing else to answer here.
+        assertEquals(
+            CapabilitySupport.Supported,
+            host.capabilitySupport(WeChatDeviceCapabilities.ScanCode),
+        )
         assertEquals(
             CapabilitySupport.Unsupported,
             host.capabilitySupport(CapabilityKey("unknown")),
@@ -138,7 +144,8 @@ internal class WechatHostTest {
         assertEquals("devtools", runtimeInfo.platform)
         assertTrue(runtimeInfo.isDeveloperTools)
         assertTrue(runtimeInfo.canIUse("getStorage"))
-        assertFalse(runtimeInfo.canIUse("scanCode"))
+        // A schema this fake host does not confirm still answers false.
+        assertFalse(runtimeInfo.canIUse("chooseLocation"))
     }
 
     @Test

@@ -41,6 +41,7 @@ internal class FakeWechatRuntimeInfoHost(
         "vibrateLong",
         "getFileSystemManager",
         "getLocation",
+        "scanCode",
     ),
     private val canIUseAvailable: Boolean = true,
     private val availableFileSystemMethods: Set<String> = setOf(
