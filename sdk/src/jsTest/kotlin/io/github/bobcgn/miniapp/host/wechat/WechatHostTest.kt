@@ -59,6 +59,23 @@ internal class WechatHostTest {
             CapabilitySupport.Supported,
             host.capabilitySupport(WeChatDeviceCapabilities.VibrateLong),
         )
+        // The file operations are separate host methods, each gated on its own.
+        assertEquals(
+            CapabilitySupport.Supported,
+            host.capabilitySupport(WeChatDeviceCapabilities.FileSystemRead),
+        )
+        assertEquals(
+            CapabilitySupport.Supported,
+            host.capabilitySupport(WeChatDeviceCapabilities.FileSystemWrite),
+        )
+        assertEquals(
+            CapabilitySupport.Supported,
+            host.capabilitySupport(WeChatDeviceCapabilities.FileSystemAccess),
+        )
+        assertEquals(
+            CapabilitySupport.Supported,
+            host.capabilitySupport(WeChatDeviceCapabilities.FileSystemRemove),
+        )
         assertEquals(
             CapabilitySupport.Unsupported,
             host.capabilitySupport(CapabilityKey("unknown")),

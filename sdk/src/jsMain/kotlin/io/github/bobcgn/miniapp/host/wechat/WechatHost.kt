@@ -18,6 +18,8 @@ import io.github.bobcgn.miniapp.host.wechat.adapter.WechatAuth
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatAuthHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatClipboard
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatClipboardHost
+import io.github.bobcgn.miniapp.host.wechat.adapter.WechatFileSystem
+import io.github.bobcgn.miniapp.host.wechat.adapter.WechatFileSystemHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatHaptics
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatHapticsHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatNavigation
@@ -33,6 +35,7 @@ import io.github.bobcgn.miniapp.host.wechat.adapter.WechatStorage
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatStorageHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WxAuthHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WxClipboardHost
+import io.github.bobcgn.miniapp.host.wechat.adapter.WxFileSystemHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WxHapticsHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WxNavigationHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WxNetworkHost
@@ -68,6 +71,8 @@ internal class WechatPlatformApi(
     internal val clipboard: WechatClipboard,
     /** WeChat short and long vibrations. */
     internal val haptics: WechatHaptics,
+    /** WeChat file-sandbox access. */
+    internal val fileSystem: WechatFileSystem,
 ) : HostPlatformApi
 
 /** First concrete [MiniAppHost], backed by the WeChat Mini Program runtime. */
@@ -81,6 +86,7 @@ internal class WechatHost(
     privacyHost: WechatPrivacyHost = WxPrivacyHost,
     clipboardHost: WechatClipboardHost = WxClipboardHost,
     hapticsHost: WechatHapticsHost = WxHapticsHost,
+    fileSystemHost: WechatFileSystemHost = WxFileSystemHost,
 ) : MiniAppHost<WechatPlatformApi>,
     StorageCapabilityProvider,
     NetworkCapabilityProvider,
@@ -102,6 +108,7 @@ internal class WechatHost(
         runtimeInfo = runtimeInfo,
         clipboard = WechatClipboard(clipboardHost),
         haptics = WechatHaptics(hapticsHost),
+        fileSystem = WechatFileSystem(fileSystemHost),
     )
 
     override val storage: MiniAppStorage = WechatStorage(storageHost)

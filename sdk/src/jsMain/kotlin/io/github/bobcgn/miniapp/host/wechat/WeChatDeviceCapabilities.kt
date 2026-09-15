@@ -10,8 +10,9 @@ import io.github.bobcgn.miniapp.capability.CapabilityKey
  * been shown to share their semantics, so they are named with a namespace instead
  * of being presented as capabilities every host can be asked for.
  *
- * Each of the four is gated on its own: the two clipboard directions and the two
- * vibration lengths are separate host APIs, and a host may offer any subset.
+ * Each entry is gated on its own, because each is a separate host API and a host
+ * may offer any subset: the two clipboard directions, the two vibration lengths,
+ * and the four file operations the file manager exposes.
  */
 internal object WeChatDeviceCapabilities {
     /** Reading system clipboard text. */
@@ -25,4 +26,24 @@ internal object WeChatDeviceCapabilities {
 
     /** The long vibration. */
     val VibrateLong: CapabilityKey = CapabilityKey("wechat.vibrate-long")
+
+    /** Reading a file from the mini program file sandbox. */
+    val FileSystemRead: CapabilityKey = CapabilityKey("wechat.filesystem-read")
+
+    /** Writing a file to the mini program file sandbox. */
+    val FileSystemWrite: CapabilityKey = CapabilityKey("wechat.filesystem-write")
+
+    /** Testing whether a sandbox path exists and is accessible. */
+    val FileSystemAccess: CapabilityKey = CapabilityKey("wechat.filesystem-access")
+
+    /** Removing a file from the mini program file sandbox. */
+    val FileSystemRemove: CapabilityKey = CapabilityKey("wechat.filesystem-remove")
+
+    /**
+     * The sandbox root the four file operations work against.
+     *
+     * It is a separate host value from the file manager, so a host can expose one
+     * without the other and it is gated on its own.
+     */
+    val FileSystemSandboxPath: CapabilityKey = CapabilityKey("wechat.filesystem-sandbox-path")
 }

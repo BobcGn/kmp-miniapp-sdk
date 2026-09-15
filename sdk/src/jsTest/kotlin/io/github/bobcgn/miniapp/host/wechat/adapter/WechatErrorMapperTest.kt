@@ -46,6 +46,29 @@ class WechatErrorMapperTest {
     }
 
     @Test
+    fun aDocumentedMissingPathIsClassifiedAsNotFound() {
+        val raw: WxGeneralCallbackResult =
+            js("({ errMsg: 'access:fail no such file or directory /sandbox/note.txt' })")
+
+        assertEquals(WxFileSystemFailure.NotFound, mapWechatFileSystemFailure("access", raw))
+    }
+
+    @Test
+    fun aFileSystemFailureThatIsNotAMissingPathRemainsAHostFailure() {
+        val raw: WxGeneralCallbackResult =
+            js("({ errMsg: 'access:fail permission denied, open /sandbox' })")
+
+        val classified = mapWechatFileSystemFailure("access", raw)
+
+        // A permission error must not be reported as a missing file, which would
+        // tell a caller it may create one.
+        val failed = classified as WxFileSystemFailure.Failed
+        val error = failed.error as MiniAppException.HostFailure
+        assertEquals("wechat", error.host)
+        assertEquals("access", error.metadata["operation"])
+    }
+
+    @Test
     fun aDeclinedPrivacyContractIsClassifiedAsARefusal() {
         val raw: WxGeneralCallbackResult =
             js("({ errMsg: 'requirePrivacyAuthorize:fail privacy permission is not authorized' })")

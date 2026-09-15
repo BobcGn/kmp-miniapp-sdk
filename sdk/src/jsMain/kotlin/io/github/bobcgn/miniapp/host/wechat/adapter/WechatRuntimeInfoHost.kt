@@ -1,9 +1,11 @@
 package io.github.bobcgn.miniapp.host.wechat.adapter
 
 import io.github.bobcgn.miniapp.host.wechat.interop.hasWxCanIUse
+import io.github.bobcgn.miniapp.host.wechat.interop.hasWxFileSystemMethod
 import io.github.bobcgn.miniapp.host.wechat.interop.hasWxGetAppBaseInfo
 import io.github.bobcgn.miniapp.host.wechat.interop.hasWxGetDeviceInfo
 import io.github.bobcgn.miniapp.host.wechat.interop.hasWxGetSystemInfoSync
+import io.github.bobcgn.miniapp.host.wechat.interop.hasWxUserDataPath
 import io.github.bobcgn.miniapp.host.wechat.interop.wx
 
 /**
@@ -26,6 +28,19 @@ internal interface WechatRuntimeInfoHost {
      * fails closed instead of letting a call fail later.
      */
     fun canIUse(schema: String): Boolean
+
+    /**
+     * Whether a method of the host's file manager is present.
+     *
+     * The file manager is a host object rather than a `wx` API, so `wx.canIUse`
+     * cannot answer for its members. Asking here keeps the capability gate and the
+     * file-system adapter reading the same guard: a capability cannot be reported
+     * supported while the call the adapter would make is missing.
+     */
+    fun hasFileSystemMethod(method: String): Boolean
+
+    /** Whether the host reports a sandbox root for user files. */
+    fun hasUserDataPath(): Boolean
 }
 
 /** Production runtime port backed directly by the global WeChat API. */
@@ -57,4 +72,8 @@ internal object WxRuntimeInfoHost : WechatRuntimeInfoHost {
     }
 
     override fun canIUse(schema: String): Boolean = hasWxCanIUse() && wx.canIUse(schema)
+
+    override fun hasFileSystemMethod(method: String): Boolean = hasWxFileSystemMethod(method)
+
+    override fun hasUserDataPath(): Boolean = hasWxUserDataPath()
 }

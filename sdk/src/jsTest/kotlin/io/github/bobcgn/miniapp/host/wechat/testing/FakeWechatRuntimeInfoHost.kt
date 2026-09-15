@@ -16,6 +16,9 @@ import io.github.bobcgn.miniapp.host.wechat.adapter.WechatRuntimeInfoHost
  * @param availableSchemas schemas `canIUse` confirms; every other schema is refused
  * @param canIUseAvailable whether the host can be asked at all, which is false on a
  *   base library older than the one that introduced `canIUse`
+ * @param availableFileSystemMethods file-manager methods this host exposes, so a
+ *   test can reproduce a host that offers only some of them
+ * @param userDataPathAvailable whether this host reports a sandbox root
  */
 internal class FakeWechatRuntimeInfoHost(
     private val baseLibraryVersion: String? = "3.17.3",
@@ -36,8 +39,16 @@ internal class FakeWechatRuntimeInfoHost(
         "setClipboardData",
         "vibrateShort",
         "vibrateLong",
+        "getFileSystemManager",
     ),
     private val canIUseAvailable: Boolean = true,
+    private val availableFileSystemMethods: Set<String> = setOf(
+        "readFile",
+        "writeFile",
+        "access",
+        "unlink",
+    ),
+    private val userDataPathAvailable: Boolean = true,
 ) : WechatRuntimeInfoHost {
     /** How many times the version was actually read, to prove it is read once. */
     var baseLibraryVersionReads: Int = 0
@@ -51,4 +62,9 @@ internal class FakeWechatRuntimeInfoHost(
     override fun platform(): String? = platform
 
     override fun canIUse(schema: String): Boolean = canIUseAvailable && schema in availableSchemas
+
+    override fun hasFileSystemMethod(method: String): Boolean =
+        canIUseAvailable && method in availableFileSystemMethods
+
+    override fun hasUserDataPath(): Boolean = canIUseAvailable && userDataPathAvailable
 }

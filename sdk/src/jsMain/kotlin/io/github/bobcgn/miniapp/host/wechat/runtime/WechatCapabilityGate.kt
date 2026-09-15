@@ -41,6 +41,11 @@ internal class WechatCapabilityGate(
         val unprobeable = requirement.canIUseSchemas.any { schema -> !runtimeHost.canIUse(schema) }
         if (unprobeable) return CapabilitySupport.Unsupported
 
+        // Some capabilities live on a host object rather than on `wx` itself, so
+        // canIUse cannot answer for them; the entry brings its own probe.
+        val presence = requirement.presence
+        if (presence != null && !presence(runtimeHost)) return CapabilitySupport.Unsupported
+
         return CapabilitySupport.Supported
     }
 }

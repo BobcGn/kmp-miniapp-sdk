@@ -111,3 +111,47 @@ internal fun mapWechatPrivacyAuthorizeFailure(
 
 /** Substring WeChat embeds in `errMsg` when the user did not authorize the contract. */
 private const val PRIVACY_REFUSED_ERRMSG_MARKER: String = "privacy permission is not authorized"
+
+/**
+ * What a raw file-system failure means.
+ *
+ * WeChat reports a missing path and every other file failure through the same
+ * failure callback, so a caller that needs "does this exist?" has to tell one
+ * from the other.
+ */
+internal sealed interface WxFileSystemFailure {
+    /** The host reports that the path does not exist. */
+    data object NotFound : WxFileSystemFailure
+
+    /** The call failed for a reason that is not a missing path. */
+    data class Failed(val error: MiniAppException) : WxFileSystemFailure
+}
+
+/**
+ * Classifies a raw file-system failure.
+ *
+ * WeChat publishes no error code that separates a missing path from a permission
+ * or path error, so unlike the session check there is no way to answer "does this
+ * exist?" without reading the failure text. WeChat's own pages for `access` and
+ * `unlink` document `no such file or directory` as the text for a missing path,
+ * so only that documented shape becomes [WxFileSystemFailure.NotFound].
+ *
+ * Every other failure stays a [MiniAppException.HostFailure]. That direction is
+ * deliberate: reporting a permission or invalid-path error as "the file is not
+ * there" would tell a caller to create a file it may not be allowed to create.
+ *
+ * This is the only place the failure text is interpreted, and the raw message
+ * never reaches a public type.
+ */
+internal fun mapWechatFileSystemFailure(
+    operation: String,
+    result: WxGeneralCallbackResult,
+): WxFileSystemFailure =
+    if (result.errMsg.contains(NOT_FOUND_ERRMSG_MARKER, ignoreCase = true)) {
+        WxFileSystemFailure.NotFound
+    } else {
+        WxFileSystemFailure.Failed(mapWechatHostFailure(operation = operation, result = result))
+    }
+
+/** Substring WeChat documents as the failure text for a missing path. */
+private const val NOT_FOUND_ERRMSG_MARKER: String = "no such file or directory"

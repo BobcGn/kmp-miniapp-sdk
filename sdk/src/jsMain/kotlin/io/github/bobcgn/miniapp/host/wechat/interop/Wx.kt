@@ -113,4 +113,26 @@ internal external object wx {
 
     /** Performs the host's long vibration through callbacks. */
     fun vibrateLong(options: WxVibrateOptions): Unit
+
+    /**
+     * Returns the host's global file manager.
+     *
+     * The manager is a host object whose methods are optional, so callers probe
+     * each method rather than assuming the manager's presence implies them.
+     */
+    fun getFileSystemManager(): WxFileSystemManager
+
+    /** Host environment values, including the file sandbox root. */
+    val env: WxEnv?
+}
+
+/**
+ * The subset of `wx.env` this SDK reads.
+ *
+ * Only the sandbox root is modelled; other environment values are not needed by
+ * any current capability.
+ */
+internal external interface WxEnv {
+    /** Documented type is `string`: the sandbox root for user files. */
+    val USER_DATA_PATH: Any?
 }

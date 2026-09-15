@@ -8,6 +8,7 @@ import io.github.bobcgn.miniapp.capability.privacy.MiniAppPrivacy
 import io.github.bobcgn.miniapp.capability.storage.MiniAppStorage
 import io.github.bobcgn.miniapp.host.wechat.WeChatDeviceCapabilities
 import io.github.bobcgn.miniapp.host.wechat.WeChatSessionState
+import io.github.bobcgn.miniapp.host.wechat.adapter.WechatRuntimeInfoHost
 import io.github.bobcgn.miniapp.host.HostVersion
 
 /**
@@ -17,10 +18,14 @@ import io.github.bobcgn.miniapp.host.HostVersion
  *   empty when the capability has no host API to probe
  * @property minimumBaseLibraryVersion oldest base library that provides the
  *   capability, or `null` when availability is settled by [canIUseSchemas] alone
+ * @property presence an additional probe for a capability `wx.canIUse` cannot
+ *   express, such as a method on a host object rather than on `wx` itself, or
+ *   `null` when the schemas and version are enough
  */
 internal class WechatCapabilityRequirement(
     val canIUseSchemas: List<String> = emptyList(),
     val minimumBaseLibraryVersion: HostVersion? = null,
+    val presence: ((WechatRuntimeInfoHost) -> Boolean)? = null,
 )
 
 /**
@@ -47,6 +52,16 @@ internal object WechatCapabilityCatalog {
      */
     val RuntimeDetectionKey: CapabilityKey = CapabilityKey("wechat.runtime-detection")
 
+    /**
+     * Oldest base library WeChat documents for `wx.getFileSystemManager` and the
+     * read, write, access, and unlink methods this SDK uses.
+     *
+     * https://developers.weixin.qq.com/miniprogram/dev/api/file/wx.getFileSystemManager.html
+     */
+    private val FILESYSTEM_MINIMUM: HostVersion = requireNotNull(HostVersion.parse("1.9.9")) {
+        "The recorded minimum base-library version must be a dotted numeric version"
+    }
+
     private val requirements: Map<CapabilityKey, WechatCapabilityRequirement> = mapOf(
         MiniAppStorage.Key to WechatCapabilityRequirement(
             canIUseSchemas = listOf("getStorage", "setStorage", "removeStorage"),
@@ -69,6 +84,33 @@ internal object WechatCapabilityCatalog {
         // not infer one, so the probe below is the authority.
         WeChatSessionState.Key to WechatCapabilityRequirement(
             canIUseSchemas = listOf("checkSession"),
+        ),
+        // The file manager exposes four operations, and a host may offer any
+        // subset: the manager existing does not mean each method does. Each entry
+        // probes its own method, which `wx.canIUse` cannot express because these
+        // live on a host object rather than on `wx` itself. WeChat documents 1.9.9
+        // for the manager and its read, write, access, and unlink methods.
+        WeChatDeviceCapabilities.FileSystemRead to WechatCapabilityRequirement(
+            minimumBaseLibraryVersion = FILESYSTEM_MINIMUM,
+            presence = { host -> host.hasFileSystemMethod("readFile") },
+        ),
+        WeChatDeviceCapabilities.FileSystemWrite to WechatCapabilityRequirement(
+            minimumBaseLibraryVersion = FILESYSTEM_MINIMUM,
+            presence = { host -> host.hasFileSystemMethod("writeFile") },
+        ),
+        WeChatDeviceCapabilities.FileSystemAccess to WechatCapabilityRequirement(
+            minimumBaseLibraryVersion = FILESYSTEM_MINIMUM,
+            presence = { host -> host.hasFileSystemMethod("access") },
+        ),
+        WeChatDeviceCapabilities.FileSystemRemove to WechatCapabilityRequirement(
+            minimumBaseLibraryVersion = FILESYSTEM_MINIMUM,
+            presence = { host -> host.hasFileSystemMethod("unlink") },
+        ),
+        // The sandbox root is a separate host value from the manager, so it is
+        // gated on its own rather than assumed to accompany the four operations.
+        WeChatDeviceCapabilities.FileSystemSandboxPath to WechatCapabilityRequirement(
+            minimumBaseLibraryVersion = FILESYSTEM_MINIMUM,
+            presence = { host -> host.hasUserDataPath() },
         ),
         // The four device capabilities are gated separately: a host may expose one
         // clipboard direction or one vibration length without the other. WeChat

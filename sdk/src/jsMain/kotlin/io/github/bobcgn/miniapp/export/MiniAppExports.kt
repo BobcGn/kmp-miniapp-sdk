@@ -301,6 +301,52 @@ public object MiniAppExports {
     public suspend fun wechatVibrateLong(): Unit = host.platform.haptics.vibrateLong()
 
     /**
+     * Returns the sandbox root that the file operations below work against.
+     *
+     * The caller builds file paths from this. The SDK does not normalise paths and
+     * makes no claim to prevent traversal, so a path outside the sandbox is the
+     * caller's mistake rather than something this refuses.
+     */
+    public fun wechatUserDataPath(): String = host.platform.fileSystem.userDataPath()
+
+    /**
+     * Reads a UTF-8 text file from the mini program file sandbox.
+     *
+     * An empty file resolves with an empty string.
+     *
+     * @param path file path inside the sandbox
+     */
+    public suspend fun wechatReadTextFile(path: String): String =
+        host.platform.fileSystem.readText(path)
+
+    /**
+     * Writes UTF-8 text to a file in the mini program file sandbox, replacing what
+     * is there.
+     *
+     * The parent directory must already exist; this creates none.
+     */
+    public suspend fun wechatWriteTextFile(path: String, content: String): Unit =
+        host.platform.fileSystem.writeText(path, content)
+
+    /**
+     * Reports whether a sandbox path exists and is accessible.
+     *
+     * A path the host reports as missing resolves `false`. Any other failure
+     * rejects, so a permission error is never reported as a missing file.
+     */
+    public suspend fun wechatFileExists(path: String): Boolean =
+        host.platform.fileSystem.exists(path)
+
+    /**
+     * Removes a file from the mini program file sandbox.
+     *
+     * Removing a file that is not there rejects, because that is what WeChat's
+     * `unlink` does. Check {@link wechatFileExists} first when that matters.
+     */
+    public suspend fun wechatRemoveFile(path: String): Unit =
+        host.platform.fileSystem.remove(path)
+
+    /**
      * Fails unless the host currently requires no privacy authorization.
      *
      * This is the precondition point for capabilities the host gates behind its

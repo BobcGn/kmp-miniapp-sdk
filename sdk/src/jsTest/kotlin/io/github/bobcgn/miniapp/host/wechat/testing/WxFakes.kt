@@ -7,6 +7,7 @@ import io.github.bobcgn.miniapp.host.wechat.interop.WxLoginSuccessResult
 import io.github.bobcgn.miniapp.host.wechat.interop.WxGetClipboardDataSuccessResult
 import io.github.bobcgn.miniapp.host.wechat.interop.WxGetPrivacySettingSuccessResult
 import io.github.bobcgn.miniapp.host.wechat.interop.WxOpenSettingSuccessResult
+import io.github.bobcgn.miniapp.host.wechat.interop.WxReadFileSuccessResult
 import io.github.bobcgn.miniapp.host.wechat.interop.WxRequestFailureResult
 import io.github.bobcgn.miniapp.host.wechat.interop.WxRequestSuccessResult
 import io.github.bobcgn.miniapp.host.wechat.interop.WxRequestTask
@@ -116,6 +117,19 @@ internal fun fakeGetSettingSuccess(authSetting: Any?): WxGetSettingSuccessResult
 internal fun fakeGetClipboardDataSuccess(data: Any?): WxGetClipboardDataSuccessResult {
     val result: WxGetClipboardDataSuccessResult = js("({})")
     js("result.errMsg = 'getClipboardData:ok'")
+    js("result.data = data")
+    return result
+}
+
+/**
+ * Builds a `FileSystemManager.readFile` success result.
+ *
+ * `data` is supplied as `Any?` so a test can produce the shapes the contract must
+ * reject, such as a missing value or binary content.
+ */
+internal fun fakeReadFileSuccess(data: Any?): WxReadFileSuccessResult {
+    val result: WxReadFileSuccessResult = js("({})")
+    js("result.errMsg = 'readFile:ok'")
     js("result.data = data")
     return result
 }
