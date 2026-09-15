@@ -109,16 +109,16 @@ examples/                    集成宿主；不是 Gradle module
 
 工具链：Gradle 9.3.1（来自仓库内置 Wrapper），项目 Kotlin 2.4.20（来自 `gradle/libs.versions.toml`），`kotlinx-coroutines-core` 1.11.0，验证环境为 JDK 25.0.2。项目未 pin JDK toolchain。始终使用 `./gradlew`（Unix）或 `gradlew.bat`（Windows），不要使用系统安装的 Gradle。
 
-截至 2026-09-14 的当前状态：
+截至 2026-09-15 的当前状态：
 
-- 状态为实验性 / pre-alpha。Bootstrap 已完成，consumer bridge 以及 Storage、微信客户端 login 与 HTTP transport 三项 capability 均已在微信开发者工具中验证。
+- 状态为实验性 / pre-alpha。Bootstrap 已完成，所有已实现的 capability 均已通过微信开发者工具验证，并在适用处通过真机验证。唯一缺口是权限的 `NotRequested` 状态：所用账号无法复现，改由自动化测试覆盖。
 - module 列表仅有 `:sdk`。`examples/` 是集成宿主目录，不是 Gradle module。
 - JavaScript target 配置为 `nodejs()`、`useCommonJs()`、`binaries.library()` 与 `generateTypeScriptDefinitions()`。
 - `sdk/src/commonMain/.../api/MiniAppSdk.kt` 声明 `MiniAppSdk.VERSION = "0.1.0-SNAPSHOT"`，`commonTest` 对其断言。
-- `commonMain` 包含 `MiniAppHost` / `HostPlatformApi`、`CapabilityKey` / `CapabilitySupport`、带 `StorageCapabilityProvider` 的 `MiniAppStorage`、带 `NetworkCapabilityProvider` 的 `MiniAppHttpTransport`、带 `LifecycleCapabilityProvider` 的 `MiniAppLifecycle`、`MiniAppException`，以及 internal 的 `awaitHostCallback` primitive。
-- 微信 interop 覆盖 typed `login`、`showToast`、Storage、`request` 与三个页面栈导航契约。Storage、微信客户端 login、HTTP transport 与导航均有 adapter；`showToast` 仍仅为 interop contract。`WechatAppLifecycle` 与 `WechatPageLifecycle` 位于微信 `runtime` package。
-- 只有 App 级生命周期是公共 capability。Page 级生命周期与导航属于微信专属，仅通过 `WechatPlatformApi` 可达。
-- 编译器生成的 TypeScript declaration 包含版本、Storage、微信 login、HTTP transport、生命周期与导航 exports，手工维护的 CommonJS wrapper 将其暴露为扁平函数。
+- `commonMain` 包含 `MiniAppHost` / `HostPlatformApi`、`HostVersion`、`CapabilityKey` / `CapabilitySupport`（含 `Supported` / `Unsupported` / `VersionDependent` / `PermissionDependent` 四态与 `requireSupported` guard）、带 `StorageCapabilityProvider` 的 `MiniAppStorage`、带 `NetworkCapabilityProvider` 的 `MiniAppHttpTransport`、带 `LifecycleCapabilityProvider` 的 `MiniAppLifecycle`、带 `PermissionCapabilityProvider` 的 `MiniAppPermissions` 及其 `PermissionKey` / `PermissionState` 模型、`MiniAppException`，以及 internal 的 `awaitHostCallback` primitive。
+- 微信 interop 覆盖 typed `login`、`showToast`、Storage、`request`、三个页面栈导航契约、带 presence guard 的 runtime inspection 成员，以及三个权限方法与原始授权 map reader。Storage、微信客户端 login、HTTP transport、导航与权限生命周期均有 adapter；`showToast` 仍仅为 interop contract。`WechatAppLifecycle`、`WechatPageLifecycle`、`WechatRuntimeInfo` 与能力目录表及 gate 位于微信 `runtime` package，`WechatPermissions` 与 `WechatPermissionScopes` 位于其 `adapter` package；`WechatPermissionScopes` 是微信 scope 字符串唯一存在的地方，当前只映射麦克风权限。
+- 只有 App 级生命周期是公共 capability。Page 级生命周期、导航与 runtime 自身描述属于微信专属，仅通过 `WechatPlatformApi` 可达。Capability support 由正在运行的宿主回答，因此对某次构建并不恒定。
+- 编译器生成的 TypeScript declaration 包含版本、Storage、微信 login、HTTP transport、生命周期、导航、capability support 与权限 exports，手工维护的 CommonJS wrapper 将其暴露为扁平函数。
 
 Node.js 只是本地 Kotlin/JS 构建与测试环境。预期生产宿主是微信小程序 JavaScript runtime，Node.js 测试通过并不代表微信小程序集成成功。这两类结果必须分别汇报。
 

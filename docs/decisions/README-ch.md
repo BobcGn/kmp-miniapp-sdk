@@ -16,3 +16,5 @@
 - [0004 — 错误与异步适配](0004-error-and-async-adaptation-ch.md)
 - [0005 — HTTP 传输能力](0005-http-transport-capability-ch.md)
 - [0006 — 生命周期与导航边界](0006-lifecycle-and-navigation-boundary-ch.md)
+- [0007 — 能力支持状态与版本门控](0007-capability-support-and-version-gating-ch.md)
+- [0008 — 权限生命周期边界](0008-permission-lifecycle-boundary-ch.md)

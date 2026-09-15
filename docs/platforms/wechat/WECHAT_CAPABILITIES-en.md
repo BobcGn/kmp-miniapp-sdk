@@ -24,7 +24,13 @@ This document is a factual index of WeChat host capability status, not a roadmap
 | `RealDevice` | Must be or has been verified on a real WeChat device runtime. |
 | `BackendRequired` | Complete verification requires a consumer backend or controlled test service. |
 
-`Minimum Host Version` is consistently “Pending BOB-70.” The repository does not implement `wx.canIUse` or base-library version gating, so versions must not be inferred from a development machine.
+`Minimum Host Version` records the oldest base library that provides the capability, and has three values:
+
+- `Resolved at runtime` — the SDK gates the capability and asks the host through `wx.canIUse` rather than comparing against a recorded figure. The official entry pages for the current Storage APIs and `wx.request` do not state an introduction version for the API itself, so the repository does not infer one from a development machine. This is a live answer for the host actually running, not a missing value.
+- A version number — a boundary WeChat documents. The repository records it only where it can cite the source.
+- `Not established` — no minimum has been established, either because the capability is not implemented or because the SDK does not gate it.
+
+The SDK reads the base-library version from `wx.getAppBaseInfo` and falls back to the unmaintained `wx.getSystemInfoSync` on base libraries that predate it.
 
 ## Evidence sources
 
@@ -38,6 +44,13 @@ This matrix was established on 2026-09-15 against the following sources of fact:
 - [`jsMain` export facade](../../../sdk/src/jsMain/kotlin/io/github/bobcgn/miniapp/export): JavaScript / TypeScript consumer surface.
 - [`commonTest`](../../../sdk/src/commonTest) and [`jsTest`](../../../sdk/src/jsTest): shared contracts and WeChat adapter tests.
 - [ADR-0006](../../decisions/0006-lifecycle-and-navigation-boundary-en.md): App, Page, and navigation boundaries.
+- [ADR-0008](../../decisions/0008-permission-lifecycle-boundary-en.md): the permission lifecycle, its user-gesture rule, and why it stays separate from privacy.
+- [WeChat `wx.canIUse` documentation](https://developers.weixin.qq.com/miniprogram/dev/api/base/wx.canIUse.html): supported from base library 1.1.1.
+- [WeChat `wx.getAppBaseInfo` documentation](https://developers.weixin.qq.com/miniprogram/dev/api/base/system/wx.getAppBaseInfo.html) and [`wx.getDeviceInfo` documentation](https://developers.weixin.qq.com/miniprogram/dev/api/base/system/wx.getDeviceInfo.html): supported from base library 2.20.1.
+- [WeChat `wx.getSystemInfoSync` documentation](https://developers.weixin.qq.com/miniprogram/dev/api/base/system/wx.getSystemInfoSync.html): unmaintained from base library 2.20.1 and retained as the older base-library fallback for version and platform.
+- [WeChat `RequestTask.abort` documentation](https://developers.weixin.qq.com/miniprogram/dev/api/network/request/RequestTask.abort.html): supported from base library 1.4.0.
+- [WeChat `wx.getSetting` documentation](https://developers.weixin.qq.com/miniprogram/dev/api/open-api/setting/wx.getSetting.html) and [`wx.authorize` documentation](https://developers.weixin.qq.com/miniprogram/dev/api/open-api/authorize/wx.authorize.html): supported from base library 1.2.0.
+- [WeChat `wx.openSetting` documentation](https://developers.weixin.qq.com/miniprogram/dev/api/open-api/setting/wx.openSetting.html): supported from base library 1.1.0, and callable only from a user gesture from base library 2.3.0.
 
 Entries marked `Planned` have no implementation in those production sources or exports. Their Tracking value records a Multica gap only; it is not evidence that the capability exists.
 
@@ -46,39 +59,39 @@ Entries marked `Planned` have no implementation in those production sources or e
 | Capability | Status | API | Permission / Preconditions | Minimum Host Version | Test Level | Evidence / Notes | Tracking |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | Consumer Bridge | `Stable` | Kotlin/JS CommonJS artifact | None | Not applicable | Unit, Node, DeveloperTools | `buildMiniAppSdk`, `.d.ts`, smoke, and the WeChat example are verified. | BOB-45 Done |
-| Runtime Detection | `Planned` | `wx.canIUse`, runtime info | None | Pending BOB-70 | None | Only static `Supported` / `Unsupported` states exist. | BOB-70 |
-| Permission | `Planned` | `getSetting`, `authorize`, `openSetting` | User action and API-specific scope | Pending BOB-70 | None | No NotRequested / Granted / Denied lifecycle exists. | BOB-64 |
-| Privacy | `Planned` | `getPrivacySetting` | Privacy policy and user authorization | Pending BOB-70 | None | Privacy must remain separate from Permission. | BOB-60 |
-| Storage | `Stable` | `getStorage`, `setStorage`, `removeStorage` | None | Pending BOB-70 | Unit, Contract, Node, DeveloperTools | String get/set/overwrite/remove, missing keys, and idempotent removal are covered. | BOB-50 Done |
-| Storage Clear | `Unsupported` | `clearStorage` | None | Pending BOB-70 | None | The public contract intentionally does not clear all consumer data. | Matrix record |
-| HTTP Request | `Stable` | `request` | Legal HTTPS request domain | Pending BOB-70 | Unit, Contract, Node, DeveloperTools | Method, URL, headers, text body, status, timeout, failure, and abort on cancellation are covered. | BOB-48 Done |
-| Upload | `Planned` | `uploadFile` | Legal upload domain and readable file | Pending BOB-70 | None | No UploadTask, progress, or abort adapter exists. | BOB-68 |
-| Download | `Planned` | `downloadFile` | Legal download domain and file sandbox | Pending BOB-70 | None | No DownloadTask, progress, or file-result adapter exists. | BOB-68 |
-| Network Status | `Planned` | `getNetworkType`, `on/offNetworkStatusChange` | None | Pending BOB-70 | None | Paired on/off cleanup must be verified. | BOB-68 |
-| WebSocket | `Planned` | WebSocket APIs | Legal socket domain | Pending BOB-70 | None | Production support is outside BOB-68. | Matrix record |
-| Authentication Bootstrap | `Partial` | `login` | Backend performs code exchange | Pending BOB-70 | Unit, Node, DeveloperTools | `wechatLogin()` returns a short-lived code, not identity, SDK session, or access token. | BOB-47 Done |
-| Check Session | `Planned` | `checkSession` | Backend identity verification still required | Pending BOB-70 | None | Login-state validity cannot currently be queried. | BOB-58 |
-| Standard Payment | `Planned` | `requestPayment` | Valid merchant, Backend order/signature, real device | Pending BOB-70 | None | Client success must not be final order truth. | BOB-59 |
-| Virtual Payment | `Planned` | `requestVirtualPayment` | Platform eligibility and Backend | Pending BOB-70 | None | Must remain separate from Standard Payment. | BOB-74 |
-| Subscription Message | `Planned` | `requestSubscribeMessage` | User gesture, template, and Backend | Pending BOB-70 | None | WeChat-specific, not universal push notification. | BOB-73 |
-| Navigation | `Partial` | `navigateTo`, `redirectTo`, `navigateBack` | Valid page route | Pending BOB-70 | Unit, Node, DeveloperTools | Three operations are verified; `switchTab` is not implemented. | BOB-49 |
-| App Lifecycle | `Partial` | Consumer-forwarded launch/show/hide | Consumer forwards host hooks | Pending BOB-70 | Unit, Contract, Node, DeveloperTools | Foreground is verified; background transition lacks RealDevice evidence. | BOB-49 |
-| Page Lifecycle | `Partial` | Consumer-forwarded show/hide/unload | Consumer forwards host hooks | Pending BOB-70 | Unit, Node, DeveloperTools | WeChat escape hatch; Page load is not public, per ADR-0006. | BOB-49 |
+| Runtime Detection | `Stable` | `canIUse`, `getAppBaseInfo`, with legacy `getSystemInfoSync` fallback | None | 2.20.1 | Unit, Contract, Node, DeveloperTools, RealDevice | 2.20.1 is the documented boundary of the modern `getAppBaseInfo` path; the legacy path can still read the version and report `VersionDependent`. `requireSupported` produces `UnsupportedCapability`. Developer Tools (base library 3.17.2) and an Android device both verified `Supported` and `Unsupported`; `VersionDependent` cannot be constructed in Developer Tools because its lowest debug base library, 2.21.4, is above the boundary, so automated tests cover it. 3.17.2 is the current verification version, not a proven minimum supported version. | BOB-70 Done |
+| Permission | `Stable` | `getSetting`, `authorize`, `openSetting` | User gesture for request and settings; a host does not re-prompt after a refusal | 1.2.0 | Unit, Contract, Node, DeveloperTools, RealDevice | Three-state lifecycle with no caching, and a refusal that is a distinct SDK error rather than a host failure. `openSetting` is documented from base library 1.1.0 and `getSetting` and `authorize` from 1.2.0, so 1.2.0 is the oldest base library providing all three; the capability gate still probes all three at runtime. Only the microphone permission is mapped. `NotRequested` is covered by automated tests because a host that has already recorded a decision does not report it again. 3.17.2 is the current verification version, not a proven minimum supported version. | BOB-64 Done |
+| Privacy | `Planned` | `getPrivacySetting` | Privacy policy and user authorization | Not established | None | Privacy must remain separate from Permission. | BOB-60 |
+| Storage | `Stable` | `getStorage`, `setStorage`, `removeStorage` | None | Resolved at runtime | Unit, Contract, Node, DeveloperTools | String get/set/overwrite/remove, missing keys, and idempotent removal are covered. | BOB-50 Done |
+| Storage Clear | `Unsupported` | `clearStorage` | None | Not established | None | The public contract intentionally does not clear all consumer data. | Matrix record |
+| HTTP Request | `Stable` | `request` | Legal HTTPS request domain | Resolved at runtime | Unit, Contract, Node, DeveloperTools | Method, URL, headers, text body, status, timeout, failure, and abort on cancellation are covered. `RequestTask.abort` requires base library 1.4.0; below it a request still completes but cancellation cannot abort it. | BOB-48 Done |
+| Upload | `Planned` | `uploadFile` | Legal upload domain and readable file | Not established | None | No UploadTask, progress, or abort adapter exists. | BOB-68 |
+| Download | `Planned` | `downloadFile` | Legal download domain and file sandbox | Not established | None | No DownloadTask, progress, or file-result adapter exists. | BOB-68 |
+| Network Status | `Planned` | `getNetworkType`, `on/offNetworkStatusChange` | None | Not established | None | Paired on/off cleanup must be verified. | BOB-68 |
+| WebSocket | `Planned` | WebSocket APIs | Legal socket domain | Not established | None | Production support is outside BOB-68. | Matrix record |
+| Authentication Bootstrap | `Partial` | `login` | Backend performs code exchange | Not established | Unit, Node, DeveloperTools | `wechatLogin()` returns a short-lived code, not identity, SDK session, or access token. | BOB-47 Done |
+| Check Session | `Planned` | `checkSession` | Backend identity verification still required | Not established | None | Login-state validity cannot currently be queried. | BOB-58 |
+| Standard Payment | `Planned` | `requestPayment` | Valid merchant, Backend order/signature, real device | Not established | None | Client success must not be final order truth. | BOB-59 |
+| Virtual Payment | `Planned` | `requestVirtualPayment` | Platform eligibility and Backend | Not established | None | Must remain separate from Standard Payment. | BOB-74 |
+| Subscription Message | `Planned` | `requestSubscribeMessage` | User gesture, template, and Backend | Not established | None | WeChat-specific, not universal push notification. | BOB-73 |
+| Navigation | `Partial` | `navigateTo`, `redirectTo`, `navigateBack` | Valid page route | Not established | Unit, Node, DeveloperTools | Three operations are verified; `switchTab` is not implemented. | BOB-49 |
+| App Lifecycle | `Partial` | Consumer-forwarded launch/show/hide | Consumer forwards host hooks | Resolved at runtime | Unit, Contract, Node, DeveloperTools | Foreground is verified; background transition lacks RealDevice evidence. | BOB-49 |
+| Page Lifecycle | `Partial` | Consumer-forwarded show/hide/unload | Consumer forwards host hooks | Not applicable | Unit, Node, DeveloperTools | WeChat escape hatch; Page load is not public, per ADR-0006. | BOB-49 |
 | Platform Escape Hatch | `Stable` | `WechatPlatformApi` | WeChat host only | Not applicable | Unit, Node | WeChat Auth, Navigation, and Page Lifecycle are not represented as universal. | BOB-46 Done |
-| Toast | `Partial` | `showToast` | None | Pending BOB-70 | Unit | Typed interop only; no production adapter or export. | Matrix record |
+| Toast | `Partial` | `showToast` | None | Not established | Unit | Typed interop only; no production adapter or export. | Matrix record |
 
 ## Device and system capabilities
 
 | Capability | Status | API | Permission / Preconditions | Minimum Host Version | Test Level | Evidence / Notes | Tracking |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Location | `Planned` | `getLocation`; assess choose/open location as needed | Location permission + Privacy | Pending BOB-70 | None | No interop, adapter, export, or real-device evidence. | BOB-66 |
-| Scanner | `Planned` | `scanCode` | Camera/Privacy | Pending BOB-70 | None | Cancellation must differ from permission denial and host failure. | BOB-61 |
-| Clipboard | `Planned` | Clipboard get/set | Host-specific rules | Pending BOB-70 | None | Not implemented. | BOB-65 |
-| Haptics | `Planned` | Short/long vibration | Real-device hardware | Pending BOB-70 | None | RealDevice evidence is required. | BOB-65 |
-| Media | `Planned` | `chooseMedia` | Album/Camera permission + Privacy | Pending BOB-70 | None | Excludes Camera and Video native components. | BOB-63 |
-| File System | `Planned` | `getFileSystemManager` read/write/access/remove | Mini Program file sandbox | Pending BOB-70 | None | P1 requires only basic file operations. | BOB-72 |
-| Bluetooth / BLE | `Planned` | Adapter/discovery/event/connect APIs | Bluetooth permission + Privacy + RealDevice | Pending BOB-70 | None | A PoC will validate Flow, cancellation, and listener cleanup; no implementation exists, so it is not `Experimental`. | BOB-69 |
-| Sensors | `Planned` | Accelerometer, gyroscope, compass, beacon, and others | API-specific and real device | Pending BOB-70 | None | P1 does not implement sensors in bulk; status only. | Matrix record |
+| Location | `Planned` | `getLocation`; assess choose/open location as needed | Location permission + Privacy | Not established | None | No interop, adapter, export, or real-device evidence. | BOB-66 |
+| Scanner | `Planned` | `scanCode` | Camera/Privacy | Not established | None | Cancellation must differ from permission denial and host failure. | BOB-61 |
+| Clipboard | `Planned` | Clipboard get/set | Host-specific rules | Not established | None | Not implemented. | BOB-65 |
+| Haptics | `Planned` | Short/long vibration | Real-device hardware | Not established | None | RealDevice evidence is required. | BOB-65 |
+| Media | `Planned` | `chooseMedia` | Album/Camera permission + Privacy | Not established | None | Excludes Camera and Video native components. | BOB-63 |
+| File System | `Planned` | `getFileSystemManager` read/write/access/remove | Mini Program file sandbox | Not established | None | P1 requires only basic file operations. | BOB-72 |
+| Bluetooth / BLE | `Planned` | Adapter/discovery/event/connect APIs | Bluetooth permission + Privacy + RealDevice | Not established | None | A PoC will validate Flow, cancellation, and listener cleanup; no implementation exists, so it is not `Experimental`. | BOB-69 |
+| Sensors | `Planned` | Accelerometer, gyroscope, compass, beacon, and others | API-specific and real device | Not established | None | P1 does not implement sensors in bulk; status only. | Matrix record |
 
 ## Native UI and presentation
 
@@ -95,5 +108,5 @@ Entries marked `Planned` have no implementation in those production sources or e
 1. When a WeChat capability issue is added or closed, review both language versions in the same change.
 2. `Stable` requires implementation and specified verification evidence. A class, interface, roadmap entry, or issue alone is only `Planned`.
 3. DeveloperTools evidence does not replace RealDevice or BackendRequired evidence.
-4. Do not record speculative minimum base-library versions before BOB-70 is complete.
+4. Record a `Minimum Host Version` only from a citable WeChat source, or as `Resolved at runtime` when the SDK gates the capability by asking the host. Never infer a version from a development machine, and never leave a version number without its source.
 5. Native UI remains `P3-Presentation`; this matrix must not start Renderer, Compose, Virtual DOM, or WXML work.

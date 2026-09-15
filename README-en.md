@@ -6,7 +6,7 @@ A Kotlin Multiplatform SDK for bridging shared Kotlin logic into WeChat Mini Pro
 
 ## Status
 
-Experimental / pre-alpha. The Consumer Bridge, Storage, `wx.login` client authentication bootstrap, `wx.request` HTTP transport, App lifecycle, and part of WeChat page-stack navigation are implemented and have the required WeChat Developer Tools evidence. See the [WeChat capability matrix](docs/platforms/wechat/WECHAT_CAPABILITIES-en.md) for the exact status of every other capability.
+Experimental / pre-alpha. The Consumer Bridge, Storage, `wx.login` client authentication bootstrap, `wx.request` HTTP transport, App lifecycle, part of WeChat page-stack navigation, runtime capability detection, and the permission lifecycle are implemented. Everything has the required WeChat Developer Tools and, where applicable, real-device evidence. `NotRequested` could not be produced on the account used for the permission run, because it already holds a decision for the one mapped permission; that state is covered by automated tests. See the [WeChat capability matrix](docs/platforms/wechat/WECHAT_CAPABILITIES-en.md) for the exact status of every other capability.
 
 ## What this project is
 

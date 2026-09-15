@@ -55,7 +55,11 @@ WeChat is Host Adapter #1. Its platform-specific code is isolated under `jsMain/
 
 Only semantics that are genuinely common across hosts should become common capabilities. The SDK does not hide the underlying platform or force unrelated APIs into a lowest-common-denominator abstraction. `MiniAppHost.platform` provides a typed `HostPlatformApi` escape hatch for platform-specific APIs; concrete platform APIs will be introduced only with real consumers.
 
-Capability support currently has two states: `Supported` and `Unsupported`. Version- and permission-dependent states are an explicit evolution direction, but will be introduced only when a concrete capability establishes their required data and behavior.
+Capability support has four states: `Supported`, `Unsupported`, `VersionDependent`, and `PermissionDependent`. The last two describe what the host would need in order to help, and both mean the capability is not usable now. A host answers from its own runtime rather than from a list, so one SDK build can answer differently on two hosts. Version and platform reads are deferred until each is first needed and cached independently because the export facade builds the host while the module is still loading; `wx.canIUse` remains a live query.
+
+Version comparison is platform-neutral logic and lives in `commonMain` as `HostVersion`. Which base library provides a capability is host data, so it lives in the WeChat catalog, and an entry may leave its minimum version unset and rely on `wx.canIUse` instead — a live answer for the host actually running rather than a figure copied from a table. What the WeChat runtime reports about itself, including the base-library version, is host-specific and reachable only through the escape hatch.
+
+`requireSupported` turns any state other than `Supported` into `MiniAppException.UnsupportedCapability`, and is the only path that produces it. A host that cannot be probed at all fails closed: a capability the SDK cannot confirm is reported `Unsupported` rather than assumed present.
 
 ### Runtime families
 
@@ -68,6 +72,18 @@ App-level lifecycle is a capability. Every mini-app host can say whether the app
 Page-level lifecycle and page-stack navigation are not capabilities. A page, a page route, and a page stack belong to a DSL mini-program runtime, and a WebView host has none of them. `WechatPageLifecycle` and `WechatNavigation` therefore live under `host/wechat` and are reachable only through the platform escape hatch. Describing them as neutral contracts would present WeChat semantics as universal ones.
 
 Lifecycle is forwarded rather than intercepted: WeChat reports lifecycle only to the `App(...)` and `Page(...)` registrations the consumer owns, so the SDK exposes entry points the consumer forwards its hooks into.
+
+### Permission
+
+Permission is a capability because every host that gates device access on the user's decision has the same three answers. `MiniAppPermissions` reports `NotRequested`, `Granted`, or `Denied` for a host-neutral `PermissionKey`, and never keeps an answer: the user can change a permission in the host's own settings at any time, so a remembered state would go stale without notice.
+
+A refusal is `MiniAppException.PermissionDenied` and a host that cannot answer is `HostFailure`. They are not the same instruction to a consumer — one says ask the user to visit settings, the other says try again. Requesting and opening settings need a user gesture, so the SDK never prompts on its own, and a settings visit reports the state the host gives afterwards rather than assuming a grant.
+
+`PermissionKey` names what a permission is for. The `scope.*` string a host uses for it exists only inside the WeChat adapter's mapping, and a key that adapter does not map fails before any host call instead of being forwarded.
+
+`PermissionState` and `CapabilitySupport.PermissionDependent` answer different questions: the first is a permission's own state, the second says a capability is blocked by one. The permission capability reports `Supported` from its host APIs and is never itself permission-dependent.
+
+Permission is not privacy. WeChat's privacy authorization is a separate lifecycle with its own APIs and is not part of this capability.
 
 ## 4. JS Interop Boundary
 

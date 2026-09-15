@@ -5,27 +5,37 @@ import io.github.bobcgn.miniapp.capability.CapabilitySupport
 import io.github.bobcgn.miniapp.capability.lifecycle.MiniAppLifecycle
 import io.github.bobcgn.miniapp.capability.lifecycle.MiniAppLifecycleState
 import io.github.bobcgn.miniapp.capability.network.MiniAppHttpTransport
+import io.github.bobcgn.miniapp.capability.permission.MiniAppPermissions
 import io.github.bobcgn.miniapp.capability.storage.MiniAppStorage
-import io.github.bobcgn.miniapp.host.wechat.testing.FakeWechatAuthHost
-import io.github.bobcgn.miniapp.host.wechat.testing.FakeWechatNavigationHost
-import io.github.bobcgn.miniapp.host.wechat.testing.FakeWechatNetworkHost
-import io.github.bobcgn.miniapp.host.wechat.testing.FakeWechatStorageHost
+import io.github.bobcgn.miniapp.host.HostVersion
+import io.github.bobcgn.miniapp.host.wechat.runtime.WechatCapabilityCatalog
+import io.github.bobcgn.miniapp.host.wechat.testing.FakeWechatRuntimeInfoHost
+import io.github.bobcgn.miniapp.host.wechat.testing.fakeWechatHost
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertIs
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 /**
- * The WeChat host is a capability provider, not a platform switch. This test
- * drives it entirely through the FakeAdapter boundary, so it never touches `wx`.
+ * The WeChat host is a capability provider, not a platform switch, and it answers
+ * support from the runtime it found rather than from a hardcoded list.
+ *
+ * This test drives it entirely through the FakeAdapter boundary, so it never
+ * touches `wx`.
  */
 internal class WechatHostTest {
     @Test
-    fun hostProvidesStorageThroughCapabilityFacet() {
-        val host = wechatHost()
+    fun hostReportsSupportForTheCapabilitiesItProvides() {
+        val host = fakeWechatHost()
 
         assertEquals(CapabilitySupport.Supported, host.capabilitySupport(MiniAppStorage.Key))
         assertEquals(CapabilitySupport.Supported, host.capabilitySupport(MiniAppHttpTransport.Key))
         assertEquals(CapabilitySupport.Supported, host.capabilitySupport(MiniAppLifecycle.Key))
+        // The permission capability is supported when its three host APIs exist;
+        // it is never reported as depending on a permission itself.
+        assertEquals(CapabilitySupport.Supported, host.capabilitySupport(MiniAppPermissions.Key))
         assertEquals(
             CapabilitySupport.Unsupported,
             host.capabilitySupport(CapabilityKey("unknown")),
@@ -33,22 +43,60 @@ internal class WechatHostTest {
         assertNotNull(host.storage)
         assertNotNull(host.network)
         assertNotNull(host.lifecycle)
+        assertNotNull(host.permissions)
         assertNotNull(host.platform.auth)
     }
 
     @Test
+    fun hostReportsVersionDependenceFromTheRuntimeItFound() {
+        val host = fakeWechatHost(
+            runtimeInfoHost = FakeWechatRuntimeInfoHost(
+                baseLibraryVersion = "2.19.4",
+                // A base library this old cannot confirm the newer inspection API.
+                availableSchemas = emptySet(),
+            ),
+        )
+
+        val support = host.capabilitySupport(WechatCapabilityCatalog.RuntimeDetectionKey)
+
+        val dependent = assertIs<CapabilitySupport.VersionDependent>(support)
+        assertEquals(version("2.20.1"), dependent.requiredVersion)
+        assertEquals(version("2.19.4"), dependent.currentVersion)
+    }
+
+    @Test
     fun navigationAndPageLifecycleStayBehindTheEscapeHatch() {
-        val host = wechatHost()
+        val host = fakeWechatHost()
 
         // A page stack and a page route are WeChat semantics, not common capabilities.
-        assertEquals(CapabilitySupport.Unsupported, host.capabilitySupport(CapabilityKey("navigation")))
+        assertEquals(
+            CapabilitySupport.Unsupported,
+            host.capabilitySupport(CapabilityKey("navigation")),
+        )
         assertNotNull(host.platform.navigation)
         assertNotNull(host.platform.pageLifecycle)
     }
 
     @Test
+    fun theRuntimeEscapeHatchReportsWhatTheRuntimeSaid() {
+        val host = fakeWechatHost(
+            runtimeInfoHost = FakeWechatRuntimeInfoHost(
+                baseLibraryVersion = "3.17.3",
+                platform = "devtools",
+            ),
+        )
+        val runtimeInfo = host.platform.runtimeInfo
+
+        assertEquals("3.17.3", runtimeInfo.baseLibraryVersion?.toString())
+        assertEquals("devtools", runtimeInfo.platform)
+        assertTrue(runtimeInfo.isDeveloperTools)
+        assertTrue(runtimeInfo.canIUse("getStorage"))
+        assertFalse(runtimeInfo.canIUse("scanCode"))
+    }
+
+    @Test
     fun theCommonLifecycleIsDrivenByTheWechatAppHooks() {
-        val host = wechatHost()
+        val host = fakeWechatHost()
 
         assertEquals(MiniAppLifecycleState.BACKGROUND, host.lifecycle.state)
 
@@ -56,10 +104,5 @@ internal class WechatHostTest {
         assertEquals(MiniAppLifecycleState.FOREGROUND, host.lifecycle.state)
     }
 
-    private fun wechatHost(): WechatHost = WechatHost(
-        storageHost = FakeWechatStorageHost(),
-        authHost = FakeWechatAuthHost(),
-        networkHost = FakeWechatNetworkHost(),
-        navigationHost = FakeWechatNavigationHost(),
-    )
+    private fun version(raw: String): HostVersion = requireNotNull(HostVersion.parse(raw))
 }

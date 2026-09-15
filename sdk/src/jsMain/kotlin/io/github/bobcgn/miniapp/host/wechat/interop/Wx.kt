@@ -38,4 +38,44 @@ internal external object wx {
 
     /** Pops the given number of pages off the current page stack. */
     fun navigateBack(options: WxNavigateBackOptions): Unit
+
+    /**
+     * Reports whether an API, parameter, or component exists in this base library.
+     *
+     * The call is synchronous. A base library older than the one that introduced
+     * `canIUse` has no such member at all, so callers must probe for it first.
+     */
+    fun canIUse(schema: String): Boolean
+
+    /** Returns app and base-library information. Absent before base library 2.20.1. */
+    fun getAppBaseInfo(): WxAppBaseInfo
+
+    /**
+     * Returns legacy system information, including the base-library version.
+     *
+     * Unmaintained since base library 2.20.1, but it is the only source of the
+     * version on base libraries that predate [getAppBaseInfo].
+     */
+    fun getSystemInfoSync(): WxSystemInfo
+
+    /** Returns device information. Absent before base library 2.20.1. */
+    fun getDeviceInfo(): WxDeviceInfo
+
+    /** Reads the authorization state the host holds for each scope. */
+    fun getSetting(options: WxGetSettingOptions): Unit
+
+    /**
+     * Requests one scope from the user.
+     *
+     * The host will not prompt for a scope it has already recorded a decision
+     * for, and it requires a user gesture.
+     */
+    fun authorize(options: WxAuthorizeOptions): Unit
+
+    /**
+     * Opens the host's permission settings page.
+     *
+     * The host requires a user gesture before it will open the page.
+     */
+    fun openSetting(options: WxOpenSettingOptions): Unit
 }

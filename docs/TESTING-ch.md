@@ -91,6 +91,8 @@ cd examples/wechat-miniprogram && npm run smoke && npm run typecheck
 | --- | --- | --- |
 | 版本 | `0.1.0-SNAPSHOT` | `[kmp-miniapp-sdk] sdkVersion: 0.1.0-SNAPSHOT` |
 | Runtime lifecycle | `Runtime Lifecycle` 卡片显示 `FOREGROUND` 与页面 route | 无专门 console 行；卡片本身即证据 |
+| Runtime detection | `Runtime Detection and Version Gate` 卡片显示 `PASS`、基础库版本与各支持状态 | `[kmp-miniapp-sdk] runtime detection: PASS baseLibrary=…, platform=…, runtime-detection=…, storage=Supported, ungated=Unsupported` |
+| Permission | `Permission Lifecycle` 卡片在下述步骤后显示权限名与状态 | `[kmp-miniapp-sdk] permission query: PASS permission=microphone, state=…` |
 | Storage | `Storage verification: PASS` | `[kmp-miniapp-sdk] storage: PASS first=first, overwritten=second, missing=null` |
 | Client login code | `Client login code: PASS` | `[kmp-miniapp-sdk] auth bootstrap: PASS codeReceived=true, length=<正整数>` |
 | Network | `Network verification: PASS` | `[kmp-miniapp-sdk] network: PASS status=200, bytes=<正整数>` |
@@ -105,7 +107,39 @@ cd examples/wechat-miniprogram && npm run smoke && npm run typecheck
 
 第 2 步正是让 `redirectTo` 可观测的关键：第二页是被替换而不是被覆盖，因此第 3 步露出的是 index 页面而不是第二页。
 
-7. 记录你观察到了哪些检查项、哪些没有观察到。只有在某项 capability 完成真实宿主运行后，才会在 [PROJECT_FACTS-ch.md](PROJECT_FACTS-ch.md) 中被记录为已通过宿主验证。
+7. 核对版本门控的状态。Runtime Detection 卡片的期望状态来自宿主，因此不需要改动代码即可观察：
+
+| 情形 | 如何构造 | 预期 |
+| --- | --- | --- |
+| `Supported` | 在当前受支持的基础库版本打开页面 | `storage=Supported`、`runtime-detection=Supported` |
+| `Unsupported` | 在任一基础库版本打开同一页面 | 未登记能力显示 `ungated=Unsupported` |
+| `VersionDependent` | 开发者工具无法构造 | 见下方说明 |
+
+`VersionDependent` 无法在开发者工具中复现：其可选的最低调试基础库为 2.21.4，高于该能力记录的 2.20.1 边界，因此不存在可构造的更低宿主环境。不要为迎合该限制而修改边界，不要伪造旧版本证据，也不要下载不受支持的旧版开发者工具。该状态由以下自动化覆盖承担：
+
+- `HostVersionTest` 验证版本解析与逐段数值比较。
+- `WechatCapabilityGateTest` 覆盖四种状态、`2.20.1` 边界本身、版本不可读时的回退，以及完全无法探测的宿主。
+- `CapabilitySupportContractChecks` 在 Fake Host 与真实 `WechatHost` 两处运行同一组契约断言。
+- 变异探针已实测并回滚：把版本比较方向取反后，方向项与边界项共 3 项失败。
+
+卡片中的基础库版本必须与所选调试基础库一致，请记录下来：它是验证矩阵所要求的证据的一部分。该能力已完成开发者工具与真机验收，记录见 [微信真实宿主验证矩阵](../platforms/wechat/WECHAT_HOST_VERIFICATION-ch.md)。
+
+8. 验证权限生命周期。页面加载期间不会请求任何权限，因此以下每一步都由点击触发。卡片初始显示宿主已有的状态：全新安装或清除小程序授权数据后为 `NotRequested`。
+
+| 步骤 | 点击 | 预期 |
+| --- | --- | --- |
+| 1 | `Refresh permission state` | 从未询问过的宿主上为 `[kmp-miniapp-sdk] permission query: PASS permission=microphone, state=NotRequested` |
+| 2 | `Request permission` 并允许 | `[kmp-miniapp-sdk] permission request: PASS permission=microphone, state=Granted` |
+| 3 | `Refresh permission state` | 状态仍为 `Granted`：它来自宿主，而不是 SDK 的记忆 |
+| 4 | 在宿主自身的设置中关闭该权限，然后 `Refresh permission state` | `state=Denied` |
+| 5 | 再次 `Request permission` | `[kmp-miniapp-sdk] permission request: DENIED permission=microphone, state=Denied`。拒绝不是宿主失败，且不会出现第二次弹窗 |
+| 6 | `Open settings` 并重新允许该权限 | 页面关闭后为 `[kmp-miniapp-sdk] permission settings: PASS permission=microphone, state=Granted` |
+
+弹窗只允许由点击触发。如果 smoke test 或页面加载产生弹窗，那是缺陷，不是配置问题。权限状态属于用户，因此开发者工具运行不能替代验证矩阵中的真机运行。
+
+该流程已在微信开发者工具（基础库 3.17.2）与 Android 真机（OnePlus PLQ110、Android 36、微信 8.0.76）上执行，包含完整走通 `Granted` → `Denied` → `DENIED` → `Granted`，且拒绝后没有第二次弹窗。第 1 步是例外：所用账号已持有决定，因此无法产出 `NotRequested`。该状态改由自动化测试覆盖 —— Fake Host 契约检查、针对缺失授权 entry 与 `true`/`false`/缺失值转换的 adapter 测试，以及首次弹窗的成功与拒绝路径；要在宿主上复现它需要更换账号或设备，或清除小程序的授权历史。
+
+9. 记录你观察到了哪些检查项、哪些没有观察到。只有在某项 capability 完成真实宿主运行后，才会在 [PROJECT_FACTS-ch.md](PROJECT_FACTS-ch.md) 中被记录为已通过宿主验证。
 
 Storage 检查会写入专用测试 key、验证覆盖、删除该 key，并确认 missing key 读取为 `null`。Network 检查会向 `https://example.com/` 发起 `GET`，并报告 status code 与 body 长度；验证其他 host 时请修改示例中的 `networkUrl` 常量。
 

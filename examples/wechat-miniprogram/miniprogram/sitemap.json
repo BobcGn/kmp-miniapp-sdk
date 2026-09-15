@@ -1,4 +1,9 @@
 {
   "desc": "Consumer Bridge integration host",
-  "rules": []
+  "rules": [
+    {
+      "action": "allow",
+      "page": "*"
+    }
+  ]
 }

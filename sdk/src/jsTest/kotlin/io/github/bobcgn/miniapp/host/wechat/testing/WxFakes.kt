@@ -1,8 +1,10 @@
 package io.github.bobcgn.miniapp.host.wechat.testing
 
 import io.github.bobcgn.miniapp.host.wechat.interop.WxGeneralCallbackResult
+import io.github.bobcgn.miniapp.host.wechat.interop.WxGetSettingSuccessResult
 import io.github.bobcgn.miniapp.host.wechat.interop.WxLoginFailureResult
 import io.github.bobcgn.miniapp.host.wechat.interop.WxLoginSuccessResult
+import io.github.bobcgn.miniapp.host.wechat.interop.WxOpenSettingSuccessResult
 import io.github.bobcgn.miniapp.host.wechat.interop.WxRequestFailureResult
 import io.github.bobcgn.miniapp.host.wechat.interop.WxRequestSuccessResult
 import io.github.bobcgn.miniapp.host.wechat.interop.WxRequestTask
@@ -74,3 +76,42 @@ internal fun fakeAbortableTask(onAbort: () -> Unit): WxRequestTask {
 
 /** A host header object containing one single-valued header. */
 internal fun fakeWxResponseHeaders(): Any = js("({ 'Content-Type': 'application/json' })")
+
+/**
+ * Builds a raw host authorization map.
+ *
+ * Entries are supplied explicitly so a test can produce the shapes the contract
+ * must reject, such as a value that is neither `true` nor `false`. A scope that is
+ * not listed is absent from the map, which is how the host reports "never asked".
+ */
+internal fun fakeWxAuthSetting(vararg entries: Pair<String, Any?>): Any {
+    val authSetting: Any = js("({})")
+    for ((scope, value) in entries) {
+        js("authSetting[scope] = value")
+    }
+    return authSetting
+}
+
+/**
+ * Builds a `wx.getSetting` success result.
+ *
+ * @param authSetting raw authorization map, or `null` to model a host that
+ *   answered without one
+ */
+internal fun fakeGetSettingSuccess(authSetting: Any?): WxGetSettingSuccessResult {
+    val result: WxGetSettingSuccessResult = js("({})")
+    js("result.errMsg = 'getSetting:ok'")
+    js("result.authSetting = authSetting")
+    return result
+}
+
+/**
+ * Builds a `wx.openSetting` success result, which reports the map after the
+ * settings page closed.
+ */
+internal fun fakeOpenSettingSuccess(authSetting: Any?): WxOpenSettingSuccessResult {
+    val result: WxOpenSettingSuccessResult = js("({})")
+    js("result.errMsg = 'openSetting:ok'")
+    js("result.authSetting = authSetting")
+    return result
+}

@@ -92,4 +92,25 @@ module.exports = {
   wechatNavigateBack: function wechatNavigateBack(delta) {
     return miniAppExports.wechatNavigateBack(delta === undefined ? null : delta);
   },
+  capabilitySupport: function capabilitySupport(capability) {
+    return miniAppExports.capabilitySupport(capability);
+  },
+  requireCapability: function requireCapability(capability) {
+    return miniAppExports.requireCapability(capability);
+  },
+  wechatRuntimeInfo: function wechatRuntimeInfo() {
+    return miniAppExports.wechatRuntimeInfo();
+  },
+  wechatCanIUse: function wechatCanIUse(schema) {
+    return miniAppExports.wechatCanIUse(schema);
+  },
+  permissionState: function permissionState(permission) {
+    return miniAppExports.permissionState(permission);
+  },
+  requestPermission: function requestPermission(permission) {
+    return miniAppExports.requestPermission(permission);
+  },
+  openPermissionSettings: function openPermissionSettings(permission) {
+    return miniAppExports.openPermissionSettings(permission);
+  },
 };

@@ -1,5 +1,6 @@
 package io.github.bobcgn.miniapp.host.wechat.adapter
 
+import io.github.bobcgn.miniapp.capability.permission.PermissionKey
 import io.github.bobcgn.miniapp.error.MiniAppException
 import io.github.bobcgn.miniapp.host.wechat.interop.WxGeneralCallbackResult
 import io.github.bobcgn.miniapp.host.wechat.interop.WxRequestFailureResult
@@ -42,5 +43,26 @@ class WechatErrorMapperTest {
         assertEquals("wechat", failure.host)
         assertEquals("600009", failure.code)
         assertEquals("request", failure.metadata["operation"])
+    }
+
+    @Test
+    fun anAuthorizeRefusalMapsToAPermissionDenial() {
+        val raw: WxGeneralCallbackResult = js("({ errMsg: 'authorize:fail auth deny' })")
+
+        val denial = mapWechatAuthorizeFailure(PermissionKey.Microphone, raw) as MiniAppException.PermissionDenied
+
+        // The host-neutral key is reported, never the WeChat scope name.
+        assertEquals("microphone", denial.permission)
+        assertEquals("authorize:fail auth deny", denial.message)
+    }
+
+    @Test
+    fun anAuthorizeFailureThatIsNotARefusalStaysAHostFailure() {
+        val raw: WxGeneralCallbackResult = js("({ errMsg: 'authorize:fail invalid scope' })")
+
+        val failure = mapWechatAuthorizeFailure(PermissionKey.Microphone, raw) as MiniAppException.HostFailure
+
+        assertEquals("wechat", failure.host)
+        assertEquals("authorize", failure.metadata["operation"])
     }
 }

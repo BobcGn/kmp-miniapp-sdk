@@ -16,3 +16,5 @@ Accepted ADRs are historical records. If a decision changes, add a new ADR that 
 - [0004 — Error and async adaptation](0004-error-and-async-adaptation-en.md)
 - [0005 — HTTP transport capability](0005-http-transport-capability-en.md)
 - [0006 — Lifecycle and navigation boundary](0006-lifecycle-and-navigation-boundary-en.md)
+- [0007 — Capability support states and version gating](0007-capability-support-and-version-gating-en.md)
+- [0008 — Permission lifecycle boundary](0008-permission-lifecycle-boundary-en.md)

@@ -6,11 +6,15 @@ const storageKey = 'kmp-miniapp-sdk.storage-smoke';
 // host in the request domain whitelist or run with domain checking disabled.
 const networkUrl = 'https://example.com/';
 const secondPageRoute = '/pages/second/index';
+// The only permission this SDK maps today. It is requested only from a button.
+const permissionName: MiniAppSdk.PermissionName = 'microphone';
 
 interface IndexPageData {
   sdkVersion: string;
   lifecycleState: string;
   pageRoute: string;
+  runtimeStatus: string;
+  runtimeDetails: string;
   storageStatus: string;
   storageDetails: string;
   authStatus: string;
@@ -19,6 +23,9 @@ interface IndexPageData {
   networkDetails: string;
   navigationStatus: string;
   navigationDetails: string;
+  permissionName: string;
+  permissionStatus: string;
+  permissionDetails: string;
 }
 
 type IndexPage = MiniProgramPageInstance<IndexPageData>;
@@ -31,6 +38,120 @@ function showLifecycle(page: IndexPage): void {
     lifecycleState: MiniAppSdk.wechatAppLifecycleState(),
     pageRoute: MiniAppSdk.wechatPageRoute() || '(none)',
   });
+}
+
+/**
+ * Reads what the runtime reports and how the gate answers for it.
+ *
+ * This is the check whose expected value depends on the base library: on one older
+ * than 2.20.1 the gate reports `VersionDependent` for the runtime-detection
+ * capability instead of `Supported`. Both are correct answers, so the check
+ * cross-checks the state against the host's own answer for the inspection API
+ * rather than pinning one state.
+ */
+function runRuntimeDetectionCheck(page: IndexPage): void {
+  try {
+    const runtimeInfo: MiniAppSdk.RuntimeInfo = MiniAppSdk.wechatRuntimeInfo();
+    const support: MiniAppSdk.CapabilitySupportResult =
+      MiniAppSdk.capabilitySupport('wechat.runtime-detection');
+    const unknownSupport: MiniAppSdk.CapabilitySupportResult =
+      MiniAppSdk.capabilitySupport('capability-not-registered-by-this-sdk');
+
+    // The inspection API existing means the base library is new enough, so a
+    // version-dependent answer alongside it would contradict the host itself.
+    if (MiniAppSdk.wechatCanIUse('getAppBaseInfo') && support.state !== 'Supported') {
+      throw new Error(`The host provides getAppBaseInfo yet the gate reported ${support.state}`);
+    }
+    if (unknownSupport.state !== 'Unsupported') {
+      throw new Error(`An ungated capability was reported as ${unknownSupport.state}`);
+    }
+
+    // A capability the host really provides must pass the requirement guard.
+    MiniAppSdk.requireCapability('storage');
+
+    const detailParts: string[] = [
+      `baseLibrary=${runtimeInfo.baseLibraryVersion ?? 'unreadable'}`,
+      `platform=${runtimeInfo.platform ?? 'unreadable'}`,
+      `runtime-detection=${support.state}`,
+      `storage=${MiniAppSdk.capabilitySupport('storage').state}`,
+      `ungated=${unknownSupport.state}`,
+    ];
+    if (support.state === 'VersionDependent') {
+      detailParts.push(
+        `requires>=${support.requiredVersion ?? 'unreadable'}`,
+        `current=${support.currentVersion ?? 'unreadable'}`,
+      );
+    }
+    const details = detailParts.join(', ');
+
+    console.log('[kmp-miniapp-sdk] runtime detection: PASS', details);
+    page.setData({ runtimeStatus: 'PASS', runtimeDetails: details });
+  } catch (error) {
+    const details = String(error);
+    console.error('[kmp-miniapp-sdk] runtime detection: FAIL', error);
+    page.setData({ runtimeStatus: 'FAIL', runtimeDetails: details });
+  }
+}
+
+/**
+ * Reads the permission state from the host.
+ *
+ * Nothing in this page requests a permission while loading: a prompt may only
+ * follow a tap, which is what the host requires and what a user should expect.
+ */
+async function refreshPermission(this: IndexPage): Promise<void> {
+  try {
+    const state = await MiniAppSdk.permissionState(permissionName);
+    const details = `permission=${permissionName}, state=${state}`;
+    console.log('[kmp-miniapp-sdk] permission query: PASS', details);
+    this.setData({ permissionStatus: state, permissionDetails: details });
+  } catch (error) {
+    const details = String(error);
+    console.error('[kmp-miniapp-sdk] permission query: FAIL', error);
+    this.setData({ permissionStatus: 'FAIL', permissionDetails: details });
+  }
+}
+
+async function requestPermission(this: IndexPage): Promise<void> {
+  try {
+    const state = await MiniAppSdk.requestPermission(permissionName);
+    const details = `permission=${permissionName}, state=${state}`;
+    console.log('[kmp-miniapp-sdk] permission request: PASS', details);
+    this.setData({ permissionStatus: state, permissionDetails: details });
+  } catch (error) {
+    // A refusal and a host failure both reject, so the host's own state decides
+    // which one this was rather than an error message.
+    try {
+      const state = await MiniAppSdk.permissionState(permissionName);
+      if (state === 'Denied') {
+        const details = `permission=${permissionName}, state=${state}`;
+        console.error('[kmp-miniapp-sdk] permission request: DENIED', details);
+        this.setData({ permissionStatus: state, permissionDetails: details });
+        return;
+      }
+    } catch (stateError) {
+      // Fall through to the generic failure below.
+      console.error('[kmp-miniapp-sdk] permission state after failure: FAIL', stateError);
+    }
+
+    const details = String(error);
+    console.error('[kmp-miniapp-sdk] permission request: FAIL', error);
+    this.setData({ permissionStatus: 'FAIL', permissionDetails: details });
+  }
+}
+
+async function openPermissionSettings(this: IndexPage): Promise<void> {
+  try {
+    // The settings page closing is not a grant; the state below is the host's.
+    const state = await MiniAppSdk.openPermissionSettings(permissionName);
+    const details = `permission=${permissionName}, state=${state}`;
+    console.log('[kmp-miniapp-sdk] permission settings: PASS', details);
+    this.setData({ permissionStatus: state, permissionDetails: details });
+  } catch (error) {
+    const details = String(error);
+    console.error('[kmp-miniapp-sdk] permission settings: FAIL', error);
+    this.setData({ permissionStatus: 'FAIL', permissionDetails: details });
+  }
 }
 
 async function runStorageCheck(page: IndexPage): Promise<void> {
@@ -99,6 +220,7 @@ async function runNetworkCheck(page: IndexPage): Promise<void> {
 }
 
 async function onLoad(this: IndexPage): Promise<void> {
+  runRuntimeDetectionCheck(this);
   await runStorageCheck(this);
   await runAuthCheck(this);
   await runNetworkCheck(this);
@@ -136,6 +258,8 @@ Page<IndexPageData>({
     sdkVersion,
     lifecycleState: 'UNKNOWN',
     pageRoute: '(none)',
+    runtimeStatus: 'RUNNING',
+    runtimeDetails: 'Reading the runtime and the capability gate…',
     storageStatus: 'RUNNING',
     storageDetails: 'Checking set, get, overwrite, remove, and missing key…',
     authStatus: 'RUNNING',
@@ -144,10 +268,17 @@ Page<IndexPageData>({
     networkDetails: 'Requesting an HTTPS endpoint through wx.request…',
     navigationStatus: 'READY',
     navigationDetails: 'Tap the button to open the second page.',
+    permissionName,
+    permissionStatus: 'UNKNOWN',
+    permissionDetails:
+      'Permission is never requested on load. Tap a button to query or request it.',
   },
   onLoad,
   onShow,
   onHide,
   onUnload,
   openSecondPage,
+  refreshPermission,
+  requestPermission,
+  openPermissionSettings,
 });

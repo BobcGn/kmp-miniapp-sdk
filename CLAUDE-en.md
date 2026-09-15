@@ -109,16 +109,16 @@ Verified on 2026-09-14:
 
 Toolchain: Gradle 9.3.1 from the checked-in Wrapper, project Kotlin 2.4.20 from `gradle/libs.versions.toml`, `kotlinx-coroutines-core` 1.11.0, verified on JDK 25.0.2. No JDK toolchain is pinned. Always use `./gradlew` (Unix) or `gradlew.bat` (Windows), never a system Gradle.
 
-Current state, as of 2026-09-14:
+Current state, as of 2026-09-15:
 
-- Status is experimental / pre-alpha. Bootstrap is complete, and the consumer bridge plus the Storage, WeChat client login, and HTTP transport capabilities are verified in WeChat Developer Tools.
+- Status is experimental / pre-alpha. Bootstrap is complete, and every implemented capability is verified in WeChat Developer Tools and, where applicable, on a real device. The one gap is the permission `NotRequested` state, which the account used could not reproduce and which automated tests cover instead.
 - Module list is `:sdk` only. `examples/` is an integration host directory, not a Gradle module.
 - The JavaScript target is configured with `nodejs()`, `useCommonJs()`, `binaries.library()`, and `generateTypeScriptDefinitions()`.
 - `sdk/src/commonMain/.../api/MiniAppSdk.kt` declares `MiniAppSdk.VERSION = "0.1.0-SNAPSHOT"`; `commonTest` asserts it.
-- `commonMain` contains `MiniAppHost` / `HostPlatformApi`, `CapabilityKey` / `CapabilitySupport`, `MiniAppStorage` with `StorageCapabilityProvider`, `MiniAppHttpTransport` with `NetworkCapabilityProvider`, `MiniAppLifecycle` with `LifecycleCapabilityProvider`, `MiniAppException`, and the internal `awaitHostCallback` primitive.
-- WeChat interop covers typed `login`, `showToast`, Storage, `request`, and the three page-stack navigation contracts. Storage, WeChat client login, the HTTP transport, and navigation have adapters; `showToast` remains interop-only. `WechatAppLifecycle` and `WechatPageLifecycle` live in the WeChat `runtime` package.
-- Only the app-level lifecycle is a common capability. Page-level lifecycle and navigation are WeChat-specific and are reachable only through `WechatPlatformApi`.
-- The compiler-generated TypeScript declaration contains the version, Storage, WeChat login, HTTP transport, lifecycle, and navigation exports, and the hand-maintained CommonJS wrapper exposes them as flat functions.
+- `commonMain` contains `MiniAppHost` / `HostPlatformApi`, `HostVersion`, `CapabilityKey` / `CapabilitySupport` with its `Supported` / `Unsupported` / `VersionDependent` / `PermissionDependent` states and the `requireSupported` guard, `MiniAppStorage` with `StorageCapabilityProvider`, `MiniAppHttpTransport` with `NetworkCapabilityProvider`, `MiniAppLifecycle` with `LifecycleCapabilityProvider`, `MiniAppPermissions` with `PermissionCapabilityProvider` and its `PermissionKey` / `PermissionState` model, `MiniAppException`, and the internal `awaitHostCallback` primitive.
+- WeChat interop covers typed `login`, `showToast`, Storage, `request`, the three page-stack navigation contracts, the runtime-inspection members with their presence guards, and the three permission methods with their raw authorization-map reader. Storage, WeChat client login, the HTTP transport, navigation, and the permission lifecycle have adapters; `showToast` remains interop-only. `WechatAppLifecycle`, `WechatPageLifecycle`, `WechatRuntimeInfo`, and the capability catalog and gate live in the WeChat `runtime` package, while `WechatPermissions` and `WechatPermissionScopes` live in its `adapter` package. Only the microphone permission is mapped.
+- Only the app-level lifecycle is a common capability. Page-level lifecycle, navigation, and the runtime description are WeChat-specific and are reachable only through `WechatPlatformApi`. Capability support is answered from the running host, so it is not constant for a build.
+- The compiler-generated TypeScript declaration contains the version, Storage, WeChat login, HTTP transport, lifecycle, navigation, capability-support, and permission exports, and the hand-maintained CommonJS wrapper exposes them as flat functions.
 
 Node.js is only the local Kotlin/JS build and test environment. The intended production host is the WeChat Mini Program JavaScript runtime, and a passing Node.js test does not establish WeChat Mini Program integration. Report those two results separately.
 

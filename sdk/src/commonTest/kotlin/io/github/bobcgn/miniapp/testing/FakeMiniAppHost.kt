@@ -6,6 +6,8 @@ import io.github.bobcgn.miniapp.capability.lifecycle.LifecycleCapabilityProvider
 import io.github.bobcgn.miniapp.capability.lifecycle.MiniAppLifecycle
 import io.github.bobcgn.miniapp.capability.network.MiniAppHttpTransport
 import io.github.bobcgn.miniapp.capability.network.NetworkCapabilityProvider
+import io.github.bobcgn.miniapp.capability.permission.MiniAppPermissions
+import io.github.bobcgn.miniapp.capability.permission.PermissionCapabilityProvider
 import io.github.bobcgn.miniapp.capability.storage.MiniAppStorage
 import io.github.bobcgn.miniapp.capability.storage.StorageCapabilityProvider
 import io.github.bobcgn.miniapp.host.HostPlatformApi
@@ -23,30 +25,34 @@ internal class FakePlatformApi : HostPlatformApi
  * the active runtime. Host adapters are then verified separately against the
  * same contracts through their own callback ports.
  *
+ * A real host answers capability support by inspecting its runtime, so this fake
+ * takes the answer directly. That is what lets a test reproduce every support
+ * state — including the ones WeChat does not produce yet — without a runtime.
+ *
  * @param platform escape hatch instance, exposed unchanged so tests can assert identity
  * @param storage capability facet this host provides
  * @param network capability facet this host provides
  * @param lifecycle capability facet this host provides
- * @param supported capability keys this host reports as [CapabilitySupport.Supported]
+ * @param permissions capability facet this host provides
+ * @param support the support state reported for each key; unlisted keys are unsupported
  */
 internal class FakeMiniAppHost(
     override val platform: FakePlatformApi = FakePlatformApi(),
     override val storage: MiniAppStorage = InMemoryStorage(),
     override val network: MiniAppHttpTransport = RecordingHttpTransport(),
     override val lifecycle: MiniAppLifecycle = FakeMiniAppLifecycle(),
-    private val supported: Set<CapabilityKey> = setOf(
-        MiniAppStorage.Key,
-        MiniAppHttpTransport.Key,
-        MiniAppLifecycle.Key,
+    override val permissions: MiniAppPermissions = FakeMiniAppPermissions(),
+    private val support: Map<CapabilityKey, CapabilitySupport> = mapOf(
+        MiniAppStorage.Key to CapabilitySupport.Supported,
+        MiniAppHttpTransport.Key to CapabilitySupport.Supported,
+        MiniAppLifecycle.Key to CapabilitySupport.Supported,
+        MiniAppPermissions.Key to CapabilitySupport.Supported,
     ),
 ) : MiniAppHost<FakePlatformApi>,
     StorageCapabilityProvider,
     NetworkCapabilityProvider,
-    LifecycleCapabilityProvider {
+    LifecycleCapabilityProvider,
+    PermissionCapabilityProvider {
     override fun capabilitySupport(capability: CapabilityKey): CapabilitySupport =
-        if (capability in supported) {
-            CapabilitySupport.Supported
-        } else {
-            CapabilitySupport.Unsupported
-        }
+        support[capability] ?: CapabilitySupport.Unsupported
 }

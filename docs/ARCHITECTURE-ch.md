@@ -55,7 +55,11 @@ SDK 的范围仅包括 shared logic、runtime integration 和 typed platform bri
 
 只有不同 Host 间语义真正一致的内容才应成为公共 Capability。SDK 不隐藏底层平台，也不把无关 API 强行塞入 lowest-common-denominator abstraction。`MiniAppHost.platform` 提供强类型 `HostPlatformApi` escape hatch；具体平台 API 只在出现真实 consumer 时引入。
 
-Capability support 当前只有 `Supported` 和 `Unsupported` 两种状态。Version-dependent 和 permission-dependent 状态是明确的演进方向，但只会在具体 Capability 证明其所需数据与行为后引入。
+Capability support 有四种状态：`Supported`、`Unsupported`、`VersionDependent` 和 `PermissionDependent`。后两者描述的是宿主需要具备什么才能提供该能力，二者都表示当前不可用。宿主依据自身 runtime 作答，而不是依据清单，因此同一份 SDK 构建在两个宿主上可以给出不同答案。版本与平台读取推迟到各自首次需要时执行并分别缓存，因为导出 facade 在模块仍处于加载阶段时就构造了宿主；`wx.canIUse` 则保持实时查询。
+
+版本比较属于平台无关逻辑，以 `HostVersion` 落在 `commonMain`。哪个基础库提供某项能力属于宿主数据，因此位于微信目录表；目录项可以不设最低版本，转而依靠 `wx.canIUse`——它回答的是当前真正运行的宿主，而不是从表格抄来的数字。微信 runtime 关于自身的报告（含基础库版本）属于宿主专属信息，仅通过逃生口可达。
+
+`requireSupported` 会把除 `Supported` 外的任何状态转换为 `MiniAppException.UnsupportedCapability`，并且是产出该异常的唯一路径。完全无法探测的宿主按失败关闭处理：SDK 无法确认的能力一律报告为 `Unsupported`，而不是假定可用。
 
 ### Runtime families
 
@@ -68,6 +72,18 @@ Mini App Host 可能属于不同 runtime family。微信一类 DSL runtime 与 W
 Page 级生命周期与页面栈导航不是 capability。页面、页面 route 与页面栈属于 DSL 小程序 runtime，WebView 宿主一个都没有。因此 `WechatPageLifecycle` 与 `WechatNavigation` 位于 `host/wechat` 下，仅通过 platform escape hatch 可达。把它们描述为中性的 contract，等于把微信语义当成通用语义。
 
 生命周期是转发而非拦截：微信只向消费者拥有的 `App(...)` 与 `Page(...)` 注册投递生命周期，因此 SDK 提供由消费者转发钩子的入口。
+
+### 权限
+
+权限之所以是 capability，是因为每个依据用户决定来把关设备访问的宿主都会给出同样的三种答案。`MiniAppPermissions` 针对宿主无关的 `PermissionKey` 报告 `NotRequested`、`Granted` 或 `Denied`，且从不保留答案：用户随时可以在宿主自身的设置里改变权限，被记住的状态会在无人察觉时过期。
+
+拒绝是 `MiniAppException.PermissionDenied`，宿主无法作答是 `HostFailure`。对消费者而言这是两条不同的指令——前者是请用户前往设置页，后者是可以稍后重试。请求权限与打开设置都需要用户手势，因此 SDK 绝不自行弹窗；设置页返回后报告的是宿主此后给出的状态，而不是假定为已授权。
+
+`PermissionKey` 命名的是权限「为了什么」。宿主用于它的 `scope.*` 字符串只存在于微信 adapter 的映射边界内，adapter 未映射的 key 会在任何宿主调用之前失败，而不是被转发出去。
+
+`PermissionState` 与 `CapabilitySupport.PermissionDependent` 回答的是不同问题：前者是权限自身的状态，后者表示某个 capability 正被权限阻塞。权限 capability 自身由其宿主 API 判定为 `Supported`，永远不会依赖权限。
+
+权限不是隐私。微信的隐私授权是独立生命周期、独立 API，不属于本 capability。
 
 ## 4. JS Interop 边界
 

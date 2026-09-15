@@ -6,6 +6,8 @@ import io.github.bobcgn.miniapp.capability.lifecycle.LifecycleCapabilityProvider
 import io.github.bobcgn.miniapp.capability.lifecycle.MiniAppLifecycle
 import io.github.bobcgn.miniapp.capability.network.MiniAppHttpTransport
 import io.github.bobcgn.miniapp.capability.network.NetworkCapabilityProvider
+import io.github.bobcgn.miniapp.capability.permission.MiniAppPermissions
+import io.github.bobcgn.miniapp.capability.permission.PermissionCapabilityProvider
 import io.github.bobcgn.miniapp.capability.storage.MiniAppStorage
 import io.github.bobcgn.miniapp.capability.storage.StorageCapabilityProvider
 import io.github.bobcgn.miniapp.host.HostPlatformApi
@@ -16,14 +18,21 @@ import io.github.bobcgn.miniapp.host.wechat.adapter.WechatNavigation
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatNavigationHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatNetwork
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatNetworkHost
+import io.github.bobcgn.miniapp.host.wechat.adapter.WechatPermissions
+import io.github.bobcgn.miniapp.host.wechat.adapter.WechatPermissionHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatStorage
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatStorageHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WxAuthHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WxNavigationHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WxNetworkHost
+import io.github.bobcgn.miniapp.host.wechat.adapter.WxPermissionHost
+import io.github.bobcgn.miniapp.host.wechat.adapter.WxRuntimeInfoHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WxStorageHost
+import io.github.bobcgn.miniapp.host.wechat.adapter.WechatRuntimeInfoHost
 import io.github.bobcgn.miniapp.host.wechat.runtime.WechatAppLifecycle
+import io.github.bobcgn.miniapp.host.wechat.runtime.WechatCapabilityGate
 import io.github.bobcgn.miniapp.host.wechat.runtime.WechatPageLifecycle
+import io.github.bobcgn.miniapp.host.wechat.runtime.WechatRuntimeInfo
 
 /**
  * Typed escape hatch for WeChat-only APIs that do not form common capabilities.
@@ -42,6 +51,8 @@ internal class WechatPlatformApi(
     internal val appLifecycle: WechatAppLifecycle,
     /** WeChat page-level lifecycle, which is not a common concept. */
     internal val pageLifecycle: WechatPageLifecycle,
+    /** What this runtime reports about itself, including the base-library version. */
+    internal val runtimeInfo: WechatRuntimeInfo,
 ) : HostPlatformApi
 
 /** First concrete [MiniAppHost], backed by the WeChat Mini Program runtime. */
@@ -50,17 +61,26 @@ internal class WechatHost(
     authHost: WechatAuthHost = WxAuthHost,
     networkHost: WechatNetworkHost = WxNetworkHost,
     navigationHost: WechatNavigationHost = WxNavigationHost,
+    runtimeInfoHost: WechatRuntimeInfoHost = WxRuntimeInfoHost,
+    permissionHost: WechatPermissionHost = WxPermissionHost,
 ) : MiniAppHost<WechatPlatformApi>,
     StorageCapabilityProvider,
     NetworkCapabilityProvider,
-    LifecycleCapabilityProvider {
+    LifecycleCapabilityProvider,
+    PermissionCapabilityProvider {
     private val appLifecycle: WechatAppLifecycle = WechatAppLifecycle()
+
+    private val runtimeInfo: WechatRuntimeInfo = WechatRuntimeInfo(runtimeInfoHost)
+
+    private val capabilityGate: WechatCapabilityGate =
+        WechatCapabilityGate(runtimeInfo = runtimeInfo, runtimeHost = runtimeInfoHost)
 
     override val platform: WechatPlatformApi = WechatPlatformApi(
         auth = WechatAuth(authHost),
         navigation = WechatNavigation(navigationHost),
         appLifecycle = appLifecycle,
         pageLifecycle = WechatPageLifecycle(),
+        runtimeInfo = runtimeInfo,
     )
 
     override val storage: MiniAppStorage = WechatStorage(storageHost)
@@ -69,13 +89,8 @@ internal class WechatHost(
 
     override val lifecycle: MiniAppLifecycle = appLifecycle
 
-    override fun capabilitySupport(capability: CapabilityKey): CapabilitySupport =
-        when (capability) {
-            MiniAppStorage.Key,
-            MiniAppHttpTransport.Key,
-            MiniAppLifecycle.Key,
-            -> CapabilitySupport.Supported
+    override val permissions: MiniAppPermissions = WechatPermissions(permissionHost)
 
-            else -> CapabilitySupport.Unsupported
-        }
+    override fun capabilitySupport(capability: CapabilityKey): CapabilitySupport =
+        capabilityGate.supportFor(capability)
 }

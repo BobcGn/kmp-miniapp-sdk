@@ -14,6 +14,25 @@
   </view>
 
   <view class="card">
+    <text class="eyebrow">Runtime Detection and Version Gate</text>
+    <text class="label">Base library and capability support</text>
+    <text class="status status--{{runtimeStatus}}">{{runtimeStatus}}</text>
+    <text class="details">{{runtimeDetails}}</text>
+    <text class="security-note">Lower the debug base library below 2.20.1 to see VersionDependent.</text>
+  </view>
+
+  <view class="card">
+    <text class="eyebrow">Permission Lifecycle</text>
+    <text class="label">{{permissionName}}</text>
+    <text class="status status--{{permissionStatus}}">{{permissionStatus}}</text>
+    <text class="details">{{permissionDetails}}</text>
+    <text class="security-note">Never requested on load, and a settings visit does not grant it.</text>
+    <button class="action" bindtap="refreshPermission">Refresh permission state</button>
+    <button class="action" bindtap="requestPermission">Request permission</button>
+    <button class="action" bindtap="openPermissionSettings">Open settings</button>
+  </view>
+
+  <view class="card">
     <text class="eyebrow">First Host Capability</text>
     <text class="label">Storage verification</text>
     <text class="status status--{{storageStatus}}">{{storageStatus}}</text>

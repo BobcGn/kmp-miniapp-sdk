@@ -1,6 +1,35 @@
 type Nullable<T> = T | null | undefined
 declare function KtSingleton<T>(): T & (abstract new() => any);
 export declare namespace io.github.bobcgn.miniapp.export {
+    class JsCapabilitySupport {
+        private constructor();
+        get state(): string;
+        get requiredVersion(): Nullable<string>;
+        get currentVersion(): Nullable<string>;
+        get permission(): Nullable<string>;
+    }
+    namespace JsCapabilitySupport {
+        /** @deprecated $metadata$ is used for internal purposes, please don't use it in your code, because it can be removed at any moment */
+        namespace $metadata$ {
+            const constructor: abstract new () => JsCapabilitySupport;
+        }
+    }
+}
+export declare namespace io.github.bobcgn.miniapp.export {
+    class JsRuntimeInfo {
+        private constructor();
+        get baseLibraryVersion(): Nullable<string>;
+        get platform(): Nullable<string>;
+        get isDeveloperTools(): boolean;
+    }
+    namespace JsRuntimeInfo {
+        /** @deprecated $metadata$ is used for internal purposes, please don't use it in your code, because it can be removed at any moment */
+        namespace $metadata$ {
+            const constructor: abstract new () => JsRuntimeInfo;
+        }
+    }
+}
+export declare namespace io.github.bobcgn.miniapp.export {
     abstract class MiniAppExports extends KtSingleton<MiniAppExports.$metadata$.constructor>() {
         private constructor();
     }
@@ -25,6 +54,13 @@ export declare namespace io.github.bobcgn.miniapp.export {
                 wechatNavigateTo(url: string): Promise<void>;
                 wechatRedirectTo(url: string): Promise<void>;
                 wechatNavigateBack(delta: Nullable<number>): Promise<void>;
+                capabilitySupport(capability: string): io.github.bobcgn.miniapp.export.JsCapabilitySupport;
+                requireCapability(capability: string): void;
+                wechatRuntimeInfo(): io.github.bobcgn.miniapp.export.JsRuntimeInfo;
+                wechatCanIUse(schema: string): boolean;
+                permissionState(permission: string): Promise<string>;
+                requestPermission(permission: string): Promise<string>;
+                openPermissionSettings(permission: string): Promise<string>;
                 private constructor();
             }
         }

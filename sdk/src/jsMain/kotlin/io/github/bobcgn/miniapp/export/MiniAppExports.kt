@@ -3,12 +3,19 @@
 package io.github.bobcgn.miniapp.export
 
 import io.github.bobcgn.miniapp.api.MiniAppSdk
+import io.github.bobcgn.miniapp.capability.CapabilityKey
+import io.github.bobcgn.miniapp.capability.CapabilitySupport
 import io.github.bobcgn.miniapp.capability.network.HttpMethod
 import io.github.bobcgn.miniapp.capability.network.MiniAppHttpRequest
 import io.github.bobcgn.miniapp.capability.network.MiniAppHttpTransport
+import io.github.bobcgn.miniapp.capability.permission.MiniAppPermissions
+import io.github.bobcgn.miniapp.capability.permission.PermissionKey
+import io.github.bobcgn.miniapp.capability.permission.PermissionState
 import io.github.bobcgn.miniapp.capability.storage.MiniAppStorage
+import io.github.bobcgn.miniapp.host.requireSupported
 import io.github.bobcgn.miniapp.host.wechat.WeChatLoginResult
 import io.github.bobcgn.miniapp.host.wechat.WechatHost
+import io.github.bobcgn.miniapp.host.wechat.runtime.WechatRuntimeInfo
 import kotlin.js.ExperimentalJsExport
 import kotlin.js.JsExport
 
@@ -23,6 +30,7 @@ public object MiniAppExports {
     private val host: WechatHost = WechatHost()
     private val storage: MiniAppStorage = host.storage
     private val network: MiniAppHttpTransport = host.network
+    private val permissions: MiniAppPermissions = host.permissions
 
     /**
      * Returns the version of the Kotlin SDK bundled into the JavaScript artifact.
@@ -144,7 +152,121 @@ public object MiniAppExports {
      */
     public suspend fun wechatNavigateBack(delta: Int?): Unit =
         host.platform.navigation.navigateBack(delta)
+
+    /**
+     * Returns how the host currently supports the capability named by [capability].
+     *
+     * A host answers by inspecting its own runtime, so the same build can answer
+     * differently on two hosts. `storage`, `network`, and `lifecycle` are the
+     * capabilities this SDK currently gates.
+     */
+    public fun capabilitySupport(capability: String): JsCapabilitySupport =
+        host.capabilitySupport(CapabilityKey(capability)).toJs()
+
+    /**
+     * Fails unless the host currently supports the capability named by [capability].
+     *
+     * Use this when the caller cannot proceed without the capability. Every state
+     * other than `Supported` fails, so a version-dependent or permission-dependent
+     * capability is reported as unavailable rather than failing later. Call
+     * [capabilitySupport] instead when the reason matters.
+     */
+    public fun requireCapability(capability: String): Unit =
+        host.requireSupported(CapabilityKey(capability))
+
+    /**
+     * Returns what the WeChat runtime reports about itself.
+     *
+     * The base-library version is `null` on a runtime that cannot report one.
+     */
+    public fun wechatRuntimeInfo(): JsRuntimeInfo = host.platform.runtimeInfo.toJs()
+
+    /**
+     * Reports whether a WeChat API, parameter, or component exists in this base library.
+     *
+     * This is the live answer for the running host, which is why it is exposed
+     * alongside the capability states: a capability this SDK does not gate can
+     * still be probed here.
+     */
+    public fun wechatCanIUse(schema: String): Boolean = host.platform.runtimeInfo.canIUse(schema)
+
+    /**
+     * Returns the host's current state for [permission].
+     *
+     * The answer is `NotRequested`, `Granted`, or `Denied`. Every call asks the
+     * host: the state is never a cached fact, because the user can change a
+     * permission in the host's own settings at any time.
+     *
+     * @param permission host-neutral permission name, for example `microphone`
+     * @throws IllegalArgumentException when this SDK has no mapping for the name
+     */
+    public suspend fun permissionState(permission: String): String =
+        permissions.stateOf(PermissionKey(permission)).toJsName()
+
+    /**
+     * Asks the host for [permission] and returns the state afterwards.
+     *
+     * Must be called from a user gesture: the host refuses to prompt otherwise.
+     * Rejects with the SDK's permission-denied error when the host refuses, which
+     * is distinct from a host failure — the host worked and the answer was no.
+     */
+    public suspend fun requestPermission(permission: String): String =
+        permissions.request(PermissionKey(permission)).toJsName()
+
+    /**
+     * Opens the host's permission settings and returns the state afterwards.
+     *
+     * Must be called from a user gesture. A resolved promise means the settings
+     * page closed; it never means the permission was granted, so the state is read
+     * from the host after the page closes.
+     */
+    public suspend fun openPermissionSettings(permission: String): String =
+        permissions.openSettings(PermissionKey(permission)).toJsName()
 }
+
+/** Presents a capability's support state in a form a JavaScript caller can read. */
+private fun CapabilitySupport.toJs(): JsCapabilitySupport = when (this) {
+    is CapabilitySupport.Supported -> JsCapabilitySupport(SUPPORTED_STATE, null, null, null)
+
+    is CapabilitySupport.Unsupported -> JsCapabilitySupport(UNSUPPORTED_STATE, null, null, null)
+
+    is CapabilitySupport.VersionDependent -> JsCapabilitySupport(
+        state = VERSION_DEPENDENT_STATE,
+        requiredVersion = requiredVersion.toString(),
+        currentVersion = currentVersion?.toString(),
+        permission = null,
+    )
+
+    is CapabilitySupport.PermissionDependent -> JsCapabilitySupport(
+        state = PERMISSION_DEPENDENT_STATE,
+        requiredVersion = null,
+        currentVersion = null,
+        permission = permission,
+    )
+}
+
+/** Presents what the runtime reports about itself in a form a JavaScript caller can read. */
+private fun WechatRuntimeInfo.toJs(): JsRuntimeInfo = JsRuntimeInfo(
+    baseLibraryVersion = baseLibraryVersion?.toString(),
+    platform = platform,
+    isDeveloperTools = isDeveloperTools,
+)
+
+/** Presents a permission state as the stable string the TypeScript contract declares. */
+private fun PermissionState.toJsName(): String = when (this) {
+    is PermissionState.NotRequested -> NOT_REQUESTED_STATE
+    is PermissionState.Granted -> GRANTED_STATE
+    is PermissionState.Denied -> DENIED_STATE
+}
+
+private const val NOT_REQUESTED_STATE: String = "NotRequested"
+private const val GRANTED_STATE: String = "Granted"
+private const val DENIED_STATE: String = "Denied"
+
+private const val SUPPORTED_STATE: String = "Supported"
+private const val UNSUPPORTED_STATE: String = "Unsupported"
+private const val VERSION_DEPENDENT_STATE: String = "VersionDependent"
+private const val PERMISSION_DEPENDENT_STATE: String = "PermissionDependent"
 
 /** Restores the Kotlin map shape from the flat entry list used at this boundary. */
 private fun headerMap(headers: Array<String>): Map<String, String> {

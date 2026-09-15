@@ -5,6 +5,35 @@ const assert = require('node:assert/strict');
 const storage = new Map();
 const requests = [];
 const navigations = [];
+
+// What this fake base library claims to provide. The runtime-inspection calls
+// below are the only ones the SDK asks before touching a capability.
+const supportedSchemas = new Set([
+  'getStorage',
+  'setStorage',
+  'removeStorage',
+  'request',
+  'getAppBaseInfo',
+  'getSetting',
+  'authorize',
+  'openSetting',
+]);
+
+// Permission state this fake host holds, plus a record of what it was asked to
+// do. Nothing here may run before the test explicitly asks for it.
+const scopeDecisions = new Map();
+const authorizeCalls = [];
+let openSettingCalls = 0;
+
+function authSettingSnapshot() {
+  const authSetting = {};
+  for (const [scope, granted] of scopeDecisions) {
+    authSetting[scope] = granted;
+  }
+  return authSetting;
+}
+const baseLibraryVersion = '3.17.3';
+
 global.wx = {
   login(options) {
     options.success({ code: 'node-login-code', errMsg: 'login:ok' });
@@ -50,6 +79,27 @@ global.wx = {
     navigations.push({ operation: 'navigateBack', url: options.url, delta: options.delta });
     options.success({ errMsg: 'navigateBack:ok' });
   },
+  canIUse(schema) {
+    return supportedSchemas.has(schema);
+  },
+  getAppBaseInfo() {
+    return { SDKVersion: baseLibraryVersion, version: '8.0.5' };
+  },
+  getDeviceInfo() {
+    return { platform: 'devtools' };
+  },
+  getSetting(options) {
+    options.success({ authSetting: authSettingSnapshot(), errMsg: 'getSetting:ok' });
+  },
+  authorize(options) {
+    authorizeCalls.push(options.scope);
+    scopeDecisions.set(options.scope, true);
+    options.success({ errMsg: 'authorize:ok' });
+  },
+  openSetting(options) {
+    openSettingCalls += 1;
+    options.success({ authSetting: authSettingSnapshot(), errMsg: 'openSetting:ok' });
+  },
 };
 
 const miniAppSdk = require('../miniprogram/libs/kmp-miniapp-sdk.js');
@@ -73,6 +123,13 @@ async function main() {
     'wechatNavigateTo',
     'wechatRedirectTo',
     'wechatNavigateBack',
+    'capabilitySupport',
+    'requireCapability',
+    'wechatRuntimeInfo',
+    'wechatCanIUse',
+    'permissionState',
+    'requestPermission',
+    'openPermissionSettings',
   ]);
   assert.equal(miniAppSdk.sdkVersion(), '0.1.0-SNAPSHOT');
 
@@ -153,12 +210,63 @@ async function main() {
     { operation: 'navigateBack', url: undefined, delta: undefined },
   ]);
 
+  // Runtime detection reads the host rather than a hardcoded list.
+  const runtimeInfo = miniAppSdk.wechatRuntimeInfo();
+  assert.equal(runtimeInfo.baseLibraryVersion, baseLibraryVersion);
+  assert.equal(runtimeInfo.platform, 'devtools');
+  assert.equal(runtimeInfo.isDeveloperTools, true);
+
+  assert.equal(miniAppSdk.wechatCanIUse('getStorage'), true);
+  assert.equal(miniAppSdk.wechatCanIUse('scanCode'), false);
+
+  assert.equal(miniAppSdk.capabilitySupport('storage').state, 'Supported');
+  assert.equal(miniAppSdk.capabilitySupport('network').state, 'Supported');
+  assert.equal(miniAppSdk.capabilitySupport('lifecycle').state, 'Supported');
+  // Base library 3.17.3 is new enough for the inspection API the SDK probes.
+  assert.equal(miniAppSdk.capabilitySupport('wechat.runtime-detection').state, 'Supported');
+  // A capability the SDK does not gate is never assumed present.
+  assert.equal(miniAppSdk.capabilitySupport('not-a-capability').state, 'Unsupported');
+
+  miniAppSdk.requireCapability('storage');
+  assert.throws(() => miniAppSdk.requireCapability('not-a-capability'));
+
+  // Loading the module must not have asked the host for anything. A permission
+  // prompt may only ever follow an explicit user gesture.
+  assert.deepEqual(authorizeCalls, []);
+  assert.equal(miniAppSdk.wechatCanIUse('getSetting'), true);
+
+  // A permission the host holds no decision for is not requested yet.
+  assert.equal(await miniAppSdk.permissionState('microphone'), 'NotRequested');
+
+  // Asking reaches the host once, through the adapter's scope mapping.
+  assert.equal(await miniAppSdk.requestPermission('microphone'), 'Granted');
+  assert.deepEqual(authorizeCalls, ['scope.record']);
+
+  // Every read comes from the host rather than from a remembered answer.
+  assert.equal(await miniAppSdk.permissionState('microphone'), 'Granted');
+  scopeDecisions.set('scope.record', false);
+  assert.equal(await miniAppSdk.permissionState('microphone'), 'Denied');
+
+  // A refusal is reported as denied, and no second prompt is attempted.
+  await assert.rejects(miniAppSdk.requestPermission('microphone'), /already refused/);
+  assert.equal(authorizeCalls.length, 1);
+
+  // The settings page can change the decision; the state is read afterwards.
+  scopeDecisions.set('scope.record', true);
+  assert.equal(await miniAppSdk.openPermissionSettings('microphone'), 'Granted');
+  assert.equal(openSettingCalls, 1);
+
+  // A permission this SDK does not map is refused rather than forwarded.
+  await assert.rejects(miniAppSdk.permissionState('not-a-permission'));
+
   console.log('[node-smoke] sdkVersion:', miniAppSdk.sdkVersion());
   console.log('[node-smoke] storage: PASS');
   console.log('[node-smoke] auth bootstrap: PASS');
   console.log('[node-smoke] network: PASS');
   console.log('[node-smoke] lifecycle: PASS');
   console.log('[node-smoke] navigation: PASS');
+  console.log('[node-smoke] runtime detection: PASS');
+  console.log('[node-smoke] permission: PASS');
 }
 
 main().catch((error) => {
