@@ -1,0 +1,17 @@
+<view class="page">
+  <view class="card">
+    <text class="eyebrow">Second Page</text>
+    <text class="label">Reached through wx.navigateTo</text>
+    <text class="status">{{pageRoute}}</text>
+    <text class="details">App state: {{lifecycleState}}</text>
+  </view>
+
+  <view class="card">
+    <text class="eyebrow">WeChat-specific Navigation</text>
+    <text class="label">Page stack bridge</text>
+    <text class="status status--{{navigationStatus}}">{{navigationStatus}}</text>
+    <text class="details">{{navigationDetails}}</text>
+    <button class="action" bindtap="goBack">Go back (wx.navigateBack)</button>
+    <button class="action" bindtap="replaceWithThird">Replace with third page (wx.redirectTo)</button>
+  </view>
+</view>

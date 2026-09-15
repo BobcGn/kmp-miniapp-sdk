@@ -10,3 +10,6 @@ node_modules/
 *.ipr
 out/
 .vscode/
+
+# Reproducible local debugging output from ./gradlew buildMiniAppSdk.
+examples/wechat-miniprogram/miniprogram/libs/*.js.map

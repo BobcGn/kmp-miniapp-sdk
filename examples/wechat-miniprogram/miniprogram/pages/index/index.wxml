@@ -4,4 +4,43 @@
     <text class="label">SDK version</text>
     <text class="version">{{sdkVersion}}</text>
   </view>
+
+  <view class="card">
+    <text class="eyebrow">Runtime Lifecycle</text>
+    <text class="label">App state and current route</text>
+    <text class="status">{{lifecycleState}}</text>
+    <text class="details">{{pageRoute}}</text>
+    <text class="security-note">App state is host-neutral; the route is WeChat-specific.</text>
+  </view>
+
+  <view class="card">
+    <text class="eyebrow">First Host Capability</text>
+    <text class="label">Storage verification</text>
+    <text class="status status--{{storageStatus}}">{{storageStatus}}</text>
+    <text class="details">{{storageDetails}}</text>
+  </view>
+
+  <view class="card">
+    <text class="eyebrow">WeChat-specific Bootstrap</text>
+    <text class="label">Client login code</text>
+    <text class="status status--{{authStatus}}">{{authStatus}}</text>
+    <text class="details">{{authDetails}}</text>
+    <text class="security-note">A login code is not an authenticated user or session.</text>
+  </view>
+
+  <view class="card">
+    <text class="eyebrow">HTTP Transport Capability</text>
+    <text class="label">Network verification</text>
+    <text class="status status--{{networkStatus}}">{{networkStatus}}</text>
+    <text class="details">{{networkDetails}}</text>
+    <text class="security-note">The request domain must be whitelisted or domain checking disabled.</text>
+  </view>
+
+  <view class="card">
+    <text class="eyebrow">WeChat-specific Navigation</text>
+    <text class="label">Page stack bridge</text>
+    <text class="status status--{{navigationStatus}}">{{navigationStatus}}</text>
+    <text class="details">{{navigationDetails}}</text>
+    <button class="action" bindtap="openSecondPage">Open second page (wx.navigateTo)</button>
+  </view>
 </view>
