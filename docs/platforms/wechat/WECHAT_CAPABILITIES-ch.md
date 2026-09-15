@@ -53,6 +53,7 @@ SDK 从 `wx.getAppBaseInfo` 读取基础库版本，并在早于它的基础库�
 - [微信 `RequestTask.abort` 文档](https://developers.weixin.qq.com/miniprogram/dev/api/network/request/RequestTask.abort.html)：基础库 1.4.0 起支持。
 - [微信 `wx.getSetting` 文档](https://developers.weixin.qq.com/miniprogram/dev/api/open-api/setting/wx.getSetting.html) 与 [`wx.authorize` 文档](https://developers.weixin.qq.com/miniprogram/dev/api/open-api/authorize/wx.authorize.html)：基础库 1.2.0 起支持。
 - [微信 `wx.openSetting` 文档](https://developers.weixin.qq.com/miniprogram/dev/api/open-api/setting/wx.openSetting.html)：基础库 1.1.0 起支持，且自基础库 2.3.0 起只能由用户手势调用。
+- [微信 `wx.getFileSystemManager` 文档](https://developers.weixin.qq.com/miniprogram/dev/api/file/wx.getFileSystemManager.html) 以及 [`FileSystemManager.readFile`](https://developers.weixin.qq.com/miniprogram/dev/api/file/FileSystemManager.readFile.html)、[`writeFile`](https://developers.weixin.qq.com/miniprogram/dev/api/file/FileSystemManager.writeFile.html)、[`access`](https://developers.weixin.qq.com/miniprogram/dev/api/file/FileSystemManager.access.html)、[`unlink`](https://developers.weixin.qq.com/miniprogram/dev/api/file/FileSystemManager.unlink.html)：基础库 1.9.9 起支持。`access` 与 `unlink` 页面把 `no such file or directory` 记录为路径不存在的失败文本，`wechatFileExists` 即据此分类。
 - [微信 `wx.getClipboardData` 文档](https://developers.weixin.qq.com/miniprogram/dev/api/device/clipboard/wx.getClipboardData.html) 与 [`wx.setClipboardData` 文档](https://developers.weixin.qq.com/miniprogram/dev/api/device/clipboard/wx.setClipboardData.html)：基础库 1.1.0 起支持。
 - [微信 `wx.vibrateShort` 文档](https://developers.weixin.qq.com/miniprogram/dev/api/device/vibrate/wx.vibrateShort.html) 与 [`wx.vibrateLong` 文档](https://developers.weixin.qq.com/miniprogram/dev/api/device/vibrate/wx.vibrateLong.html)：基础库 1.2.0 起支持。`wx.vibrateShort` 文档中的 `type` 字段（heavy / medium / light）自基础库 2.13.0 起支持，有意未建模。
 - [微信 `wx.checkSession` 文档](https://developers.weixin.qq.com/miniprogram/dev/api/open-api/login/wx.checkSession.html)：未标注最低基础库，因此该项依靠 `wx.canIUse` 而不是记录下来的数字。该文档把 success/fail 分别定义为登录态有效/过期，因此 adapter 使用 callback 本身，不解析 `errMsg`。
@@ -96,7 +97,10 @@ SDK 从 `wx.getAppBaseInfo` 读取基础库版本，并在早于它的基础库�
 | Short Vibration | `Stable` | `vibrateShort` | 用户手势；具备震动硬件的设备 | 1.2.0 | Unit、Contract、Node、RealDevice | Android 真机调用 PASS，且测试者确认感知短震动。可选 `type` 字段（2.13.0）未建模。 | BOB-65 |
 | Long Vibration | `Stable` | `vibrateLong` | 用户手势；具备震动硬件的设备 | 1.2.0 | Unit、Contract、Node、RealDevice | 与短震动是独立宿主 API。Android 真机调用 PASS，且测试者确认感知长震动。 | BOB-65 |
 | Media | `Planned` | `chooseMedia` | Album/Camera permission + Privacy | Not established | 尚无 | 不包含 Camera 或 Video 原生组件。 | BOB-63 |
-| File System | `Planned` | `getFileSystemManager` read/write/access/remove | 小程序文件沙箱 | Not established | 尚无 | P1 只要求基础文件能力。 | BOB-72 |
+| File System Read | `Stable` | `getFileSystemManager().readFile` | 小程序文件沙箱；`encoding` 始终为 UTF-8 | 1.9.9 | Unit、Contract、Node、DeveloperTools、RealDevice | 读取文本；空文件为空字符串，二进制内容映射为 `InvalidResponse`。基础库 3.17.2 的开发者工具与 Android 真机均验证读回内容匹配。 | BOB-72 |
+| File System Write | `Stable` | `getFileSystemManager().writeFile` | 小程序文件沙箱；父目录必须已存在 | 1.9.9 | Unit、Contract、Node、DeveloperTools、RealDevice | 写入 UTF-8 文本并替换原有内容；基础库 3.17.2 的两个真实宿主环境均验证成功。 | BOB-72 |
+| File System Access | `Stable` | `getFileSystemManager().access` | 小程序文件沙箱 | 1.9.9 | Unit、Contract、Node、DeveloperTools、RealDevice | 仅在微信为「路径不存在」提供文档依据的失败文本上返回 `false`；其他失败一律抛出。真实宿主已验证删除前 `true`、删除后 `false`。 | BOB-72 |
+| File System Remove | `Stable` | `getFileSystemManager().unlink` | 小程序文件沙箱 | 1.9.9 | Unit、Contract、Node、DeveloperTools、RealDevice | 删除不存在的文件会失败，遵循微信契约。沙箱根以 `wechat.filesystem-sandbox-path` 门控；真实宿主已验证删除闭环。 | BOB-72 |
 | Bluetooth / BLE | `Planned` | adapter/discovery/event/connect APIs | Bluetooth permission + Privacy + RealDevice | Not established | 尚无 | 计划用 PoC 验证 Flow、取消和 listener cleanup；尚无实现，不能标为 Experimental。 | BOB-69 |
 | Sensors | `Planned` | accelerometer, gyroscope, compass, beacon 等 | 依具体 API 和真机 | Not established | 尚无 | P1 不批量实现，只记录状态。 | 矩阵记录 |
 

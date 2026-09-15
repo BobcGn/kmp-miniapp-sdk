@@ -99,6 +99,10 @@ The precondition point queries the host and never shows anything: only a consume
 
 A device capability reaches the user through the platform escape hatch, not through a common capability, unless its semantics are genuinely shared across hosts. The clipboard and the two vibration lengths follow that rule: `WechatClipboard` and `WechatHaptics` live under `host/wechat`, and the capability catalogue gates them individually under namespaced keys, because a host may expose one clipboard direction or one vibration length without the other.
 
+A host object is not `wx`: `wx.canIUse` answers for `wx` APIs and some component objects, but not for every object the SDK reaches. A capability entry may therefore carry its own presence probe, which the gate runs in addition to the version and schema checks. The file manager is the first such case, and it is why a capability is reported supported only when the method itself is there rather than when its manager is.
+
+The file system reaches the user the same way: `WechatFileSystem` lives under `host/wechat`, works only on UTF-8 text inside the mini program sandbox, and is gated per operation. It does not stand in for a portable file API, and it adds no directory, stream, descriptor, or traversal operation that WeChat does not offer.
+
 A device call resolving means the host accepted and performed it. It never means more than that: a vibration in particular can only be confirmed by someone holding the device, so nothing in the SDK reports one as having been felt.
 
 ## 4. JS Interop Boundary

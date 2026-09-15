@@ -57,6 +57,7 @@
 | Check Session | Unit + Contract + Node + DeveloperTools + RealDevice | 已完成 `buildMiniAppSdk`；具备一台可清除登录态的宿主 | 运行测试；打开 index 读取 WeChat Session Check 卡片；清除登录态后重新加载以看到 `Invalid`；取得新的 login code 后再次检查得到 `Valid` | 卡片在取得 code 前报告 `INVALID`、之后报告 `VALID`，且 Console 行一致 | Verified 2026-09-15 — Android、OnePlus PLQ110、微信 8.0.76、基础库 3.17.3 [1641] | 每次会话检查 interop、adapter 或 export 变更 |
 | Clipboard | Unit + Contract + Node + DeveloperTools + RealDevice | 已完成 `buildMiniAppSdk`；具备剪贴板访问权限 | 运行测试；打开 index，使用 Clipboard and Haptics 卡片：先写入测试文本，再读回 | `clipboard write: PASS` 与 `clipboard read: PASS matched=true`；页面两项均为 `PASS` | Verified 2026-09-15 — DeveloperTools 3.17.2；Android、OnePlus PLQ110、微信 8.0.76、基础库 3.17.3 [1641] | 每次剪贴板 interop、adapter 或 export 变更 |
 | Haptics | Unit + Contract + Node + RealDevice | 具备震动硬件的设备 | 运行测试；打开 index，依次点击 `Short vibration` 与 `Long vibration` | Console 出现 `haptics short: PASS` 与 `haptics long: PASS`，且测试人员实际感受到两种震动 | Verified 2026-09-15 — Android、OnePlus PLQ110、微信 8.0.76、基础库 3.17.3 [1641]；短/长震动均感知 | 每次震动 interop、adapter 或 export 变更 |
+| File System | Unit + Contract + Node + DeveloperTools + RealDevice | 已完成 `buildMiniAppSdk`；小程序文件沙箱可用 | 运行测试；打开 index，按顺序使用 File System 卡片：写入、检查存在、读取、删除、再次检查 | `filesystem write: PASS`、`filesystem access: PASS exists=true`、`filesystem read: PASS matched=true`、`filesystem remove: PASS`、`filesystem access: PASS exists=false` | `WDT-2026-09-15-E`；`DEVICE-2026-09-15-C` | 每次文件系统 interop、adapter 或 export 变更 |
 | Platform Escape Hatch | Unit + Node + capability consumer 的宿主等级 | 使用 `WechatPlatformApi` | 运行相关测试，并由具体微信专属能力执行宿主验证 | 微信 API 可达且未被描述为通用 capability | 由 Auth、Page Lifecycle、Navigation 间接覆盖 | 每次 platform API surface 变更 |
 
 `VersionDependent` 无法在开发者工具中产出：其可选的最低调试基础库为 2.21.4，高于 Runtime Detection 记录的 2.20.1 边界。该状态仅由自动化测试覆盖。这属于验证环境限制，不是未实现功能。
@@ -80,7 +81,6 @@
 
 | Tracking | Capability | Minimum Verification |
 | --- | --- | --- |
-| BOB-72 | File System | Unit + Contract + DeveloperTools；真机抽查沙箱路径、编码和删除。 |
 | BOB-66 | Location | Unit + Contract + RealDevice；覆盖权限、隐私、成功与拒绝。 |
 | BOB-61 | Scanner | Unit + Contract + RealDevice；覆盖二维码/条码、取消和权限/隐私。 |
 | BOB-63 | Media | Unit + Contract + RealDevice；覆盖选择、取消、临时文件及权限/隐私。 |
@@ -142,6 +142,8 @@
 | `WDT-2026-09-15-D` | 2026-09-15 | WeChat Developer Tools Stable 2.01.2510290，调试基础库 3.17.2 | Permission | Console 记录 `permission query: PASS permission=microphone, state=Denied`、`permission settings: PASS permission=microphone, state=Granted`、`permission query: PASS permission=microphone, state=Granted`；卡片显示 `Granted` 与 `Denied` | 该账号无法复现 `NotRequested`。卡片初始为示例的 `UNKNOWN` 占位值，页面加载期间不出现任何弹窗。 |
 | `DEVICE-2026-09-15-B` | 2026-09-15 | RealDevice：OnePlus PLQ110、Android 36、微信 8.0.76 | Permission、Runtime Detection、Storage、Authentication Bootstrap、HTTP Request | Console 记录 `permission query: PASS … state=Granted`、`permission request: PASS … state=Granted`、`permission settings: PASS … state=Denied`、`permission request: DENIED permission=microphone, state=Denied`、`permission settings: PASS … state=Granted`、`permission query: PASS … state=Granted`，以及 Runtime Detection、Storage、Authentication Bootstrap 与 HTTP Request 的结果。完整迁移：`Granted` → 设置 → `Denied` → 请求 → `DENIED` → 设置 → `Granted` → 查询 → `Granted`，拒绝后未出现第二次弹窗 | SDK 运行时 API 报告基础库 3.17.2，而开发者工具调试面板显示设备基础库 3.17.3 `[1641]`；记录为观测差异，不判定为 SDK 失败。该账号无法复现 `NotRequested`。Console 另有来自微信运行时的 `[wxapplib]` 广告优化错误。 |
 | `DEVICE-2026-09-15-A` | 2026-09-15 | RealDevice：OnePlus PLQ110、Android 36、微信 8.0.76 | Runtime Detection、Storage、Authentication Bootstrap、HTTP Request、Navigation | Console 记录 `runtime detection: PASS baseLibrary=3.17.2, platform=android, runtime-detection=Supported, storage=Supported, ungated=Unsupported`，以及 Storage、Authentication Bootstrap、HTTP Request 与三项导航操作 PASS | SDK 运行时 API 报告基础库 3.17.2，而开发者工具调试面板显示设备基础库 3.17.3 `[1641]`。记录为真机自身基础库与调试运行时版本之间的观测差异，不判定为 SDK 失败。Console 另有来自微信运行时的 `[wxapplib]` 广告优化错误，与本 SDK 无关。 |
+| `WDT-2026-09-15-E` | 2026-09-15 | WeChat Developer Tools，调试基础库 3.17.2 | File System Read、Write、Access、Remove | Console 记录写入 PASS、读回 `matched=true`、删除前 `exists=true`、删除 PASS、删除后 `exists=false` | 用户执行顺序为写入、读取、检查、删除、再检查，仍覆盖完整状态闭环；合法域名检查关闭的提示与文件系统无关。 |
+| `DEVICE-2026-09-15-C` | 2026-09-15 | RealDevice：Android，运行时基础库 3.17.2 | File System Read、Write、Access、Remove | Console 记录 `filesystem write: PASS`、`filesystem read: PASS matched=true`、`filesystem access: PASS exists=true`、`filesystem remove: PASS`、`filesystem access: PASS exists=false` | 设备具体型号和微信版本未在本次文本证据中重复提供；Console 的 `[wxapplib]` privacy/ad errors 来自微信运行环境，与文件系统链路无关。 |
 
 这些记录是既有事实的索引，不补造缺失字段。下一次复测必须使用完整模板，不能仅引用本表。
 

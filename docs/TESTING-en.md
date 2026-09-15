@@ -96,6 +96,7 @@ The following procedure is the DeveloperTools checklist for currently implemente
 | Privacy | The `Privacy Authorization` card shows the host's requirement and its contract name | `[kmp-miniapp-sdk] privacy query: PASS requirement=…, contract=…` |
 | Session check | The `WeChat Session Check` card shows `VALID`, `INVALID`, or `FAIL` | `[kmp-miniapp-sdk] session check: PASS check #N, state=Valid\|Invalid` |
 | Clipboard and haptics | The `Clipboard and Haptics` card shows `PASS` for write, read, short vibration, and long vibration | `[kmp-miniapp-sdk] clipboard write: PASS`, `clipboard read: PASS matched=true`, `haptics short: PASS`, `haptics long: PASS` |
+| File system | The `File System` card shows `PASS` for write, access, read, and remove | `[kmp-miniapp-sdk] filesystem write: PASS`, `filesystem access: PASS exists=true`, `filesystem read: PASS matched=true`, `filesystem remove: PASS`, `filesystem access: PASS exists=false` |
 | Storage | `Storage verification: PASS` | `[kmp-miniapp-sdk] storage: PASS first=first, overwritten=second, missing=null` |
 | Client login code | `Client login code: PASS` | `[kmp-miniapp-sdk] auth bootstrap: PASS codeReceived=true, length=<positive integer>` |
 | Network | `Network verification: PASS` | `[kmp-miniapp-sdk] network: PASS status=200, bytes=<positive integer>` |
@@ -176,7 +177,19 @@ Under the host contract, the `wx.checkSession` failure callback means the login 
 
 Steps 3 and 4 must be run on a real device. The console line records only that WeChat accepted the call; whether a vibration was actually felt is for the person holding the device to confirm, and no automated check can show it. `getClipboardData` is not an allowed `app.json.requiredPrivateInfos` entry and must not be declared in that array.
 
-12. Record which checks you observed and which you did not. A capability is recorded as host-verified in [PROJECT_FACTS-en.md](PROJECT_FACTS-en.md) only after a real-host run for that capability.
+12. Verify the file system. Nothing touches the file system while the page loads, so every step follows a tap. The page only ever writes a fixed, non-sensitive string to a fixed file name; it never displays or logs the sandbox root or any other file's contents.
+
+| Step | Tap | Expected |
+| --- | --- | --- |
+| 1 | `Write test file` | `[kmp-miniapp-sdk] filesystem write: PASS` |
+| 2 | `Check file exists` | `[kmp-miniapp-sdk] filesystem access: PASS exists=true` |
+| 3 | `Read test file` | `[kmp-miniapp-sdk] filesystem read: PASS matched=true` |
+| 4 | `Remove test file` | `[kmp-miniapp-sdk] filesystem remove: PASS` |
+| 5 | `Check removed file` | `[kmp-miniapp-sdk] filesystem access: PASS exists=false` |
+
+The order matters: step 5 only reads `exists=false` when step 4 removed the file. Removing a file that is not there fails, following WeChat's `unlink` contract, so steps 4 and 5 must not be run twice in a row.
+
+13. Record which checks you observed and which you did not. A capability is recorded as host-verified in [PROJECT_FACTS-en.md](PROJECT_FACTS-en.md) only after a real-host run for that capability.
 
 The Storage check writes a dedicated test key, verifies overwrite, removes it, and confirms that the missing key reads as `null`. The network check issues a `GET` to `https://example.com/` and reports the status code and body length; point the example's `networkUrl` constant at any reachable HTTPS endpoint when verifying a different host.
 

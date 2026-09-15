@@ -6,7 +6,7 @@
 
 ## 状态
 
-实验性 / pre-alpha。Consumer Bridge、Storage、`wx.login` 客户端认证启动、`wx.request` HTTP transport、App lifecycle、部分微信页面栈导航、运行时能力检测、权限生命周期、微信会话有效性检查，以及微信剪贴板与震动已经实现并通过规定的真实宿主验证。隐私授权已实现但仍取决于小程序的后台隐私配置与账号，真实宿主验收尚未完成。权限运行所用账号已对唯一映射的权限持有决定，因此无法产出 `NotRequested`；该状态由自动化测试覆盖。其他能力的准确状态见 [微信能力矩阵](docs/platforms/wechat/WECHAT_CAPABILITIES-ch.md)。
+实验性 / pre-alpha。Consumer Bridge、Storage、`wx.login` 客户端认证启动、`wx.request` HTTP transport、App lifecycle、部分微信页面栈导航、运行时能力检测、权限生命周期、微信会话有效性检查、微信剪贴板与震动，以及微信基础文件系统访问已经实现并通过规定的真实宿主验证。隐私授权已实现但仍取决于小程序的后台隐私配置与账号，真实宿主验收尚未完成。权限运行所用账号已对唯一映射的权限持有决定，因此无法产出 `NotRequested`；该状态由自动化测试覆盖。其他能力的准确状态见 [微信能力矩阵](docs/platforms/wechat/WECHAT_CAPABILITIES-ch.md)。
 
 ## 本项目是什么
 

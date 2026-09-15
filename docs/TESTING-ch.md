@@ -95,6 +95,7 @@ cd examples/wechat-miniprogram && npm run smoke && npm run typecheck
 | Permission | `Permission Lifecycle` 卡片在下述步骤后显示权限名与状态 | `[kmp-miniapp-sdk] permission query: PASS permission=microphone, state=…` |
 | Privacy | `Privacy Authorization` 卡片显示宿主的要求与其协议名 | `[kmp-miniapp-sdk] privacy query: PASS requirement=…, contract=…` |
 | Session check | `WeChat Session Check` 卡片显示 `VALID`、`INVALID` 或 `FAIL` | `[kmp-miniapp-sdk] session check: PASS check #N, state=Valid\|Invalid` |
+| File system | `File System` 卡片的写入、检查、读取、删除四项均为 `PASS` | `[kmp-miniapp-sdk] filesystem write: PASS`、`filesystem access: PASS exists=true`、`filesystem read: PASS matched=true`、`filesystem remove: PASS`、`filesystem access: PASS exists=false` |
 | Clipboard 与震动 | `Clipboard and Haptics` 卡片的写入、读取、短震动、长震动四项均为 `PASS` | `[kmp-miniapp-sdk] clipboard write: PASS`、`clipboard read: PASS matched=true`、`haptics short: PASS`、`haptics long: PASS` |
 | Storage | `Storage verification: PASS` | `[kmp-miniapp-sdk] storage: PASS first=first, overwritten=second, missing=null` |
 | Client login code | `Client login code: PASS` | `[kmp-miniapp-sdk] auth bootstrap: PASS codeReceived=true, length=<正整数>` |
@@ -176,7 +177,19 @@ cd examples/wechat-miniprogram && npm run smoke && npm run typecheck
 
 第 3、4 步必须在真机上执行。Console 行只记录微信接受了该调用；震动是否真的被感知，要由握持设备的人确认，任何自动化检查都无法证明。`getClipboardData` 不属于 `app.json.requiredPrivateInfos` 允许的字段，不应在该数组中声明。
 
-12. 记录你观察到了哪些检查项、哪些没有观察到。只有在某项 capability 完成真实宿主运行后，才会在 [PROJECT_FACTS-ch.md](PROJECT_FACTS-ch.md) 中被记录为已通过宿主验证。
+12. 验证文件系统。页面加载期间不会触碰文件系统，因此以下每一步都由点击触发。页面只向固定文件名写入固定的非敏感字符串，从不显示或记录沙箱根或其他文件的内容。
+
+| 步骤 | 点击 | 预期 |
+| --- | --- | --- |
+| 1 | `Write test file` | `[kmp-miniapp-sdk] filesystem write: PASS` |
+| 2 | `Check file exists` | `[kmp-miniapp-sdk] filesystem access: PASS exists=true` |
+| 3 | `Read test file` | `[kmp-miniapp-sdk] filesystem read: PASS matched=true` |
+| 4 | `Remove test file` | `[kmp-miniapp-sdk] filesystem remove: PASS` |
+| 5 | `Check removed file` | `[kmp-miniapp-sdk] filesystem access: PASS exists=false` |
+
+顺序很重要：只有当第 4 步删除了文件，第 5 步才会读到 `exists=false`。删除不存在的文件会失败，遵循微信 `unlink` 契约，因此第 4、5 步不应连续执行两次。
+
+13. 记录你观察到了哪些检查项、哪些没有观察到。只有在某项 capability 完成真实宿主运行后，才会在 [PROJECT_FACTS-ch.md](PROJECT_FACTS-ch.md) 中被记录为已通过宿主验证。
 
 Storage 检查会写入专用测试 key、验证覆盖、删除该 key，并确认 missing key 读取为 `null`。Network 检查会向 `https://example.com/` 发起 `GET`，并报告 status code 与 body 长度；验证其他 host 时请修改示例中的 `networkUrl` 常量。
 

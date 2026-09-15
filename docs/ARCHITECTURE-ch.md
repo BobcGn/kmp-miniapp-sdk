@@ -99,6 +99,10 @@ Page 级生命周期与页面栈导航不是 capability。页面、页面 route 
 
 设备能力通过 platform escape hatch 到达用户，而不是通过公共 capability——除非其语义确实跨宿主共享。剪贴板与两种震动时长遵循该规则：`WechatClipboard` 与 `WechatHaptics` 位于 `host/wechat` 下，能力目录表以命名空间化的 key 逐项门控，因为宿主可能只提供其中一个剪贴板方向或一种震动时长。
 
+宿主对象不等于 `wx`：`wx.canIUse` 回答的是 `wx` API 与部分组件对象，而不是 SDK 触及的每个对象。因此目录项可以是自带 presence 探测，由 gate 在版本与 schema 检查之外执行。文件管理器是第一个这类情况，这也是为什么只有当方法本身存在时才报告支持，而不是仅凭其 manager 存在。
+
+文件系统以同一方式到达用户：`WechatFileSystem` 位于 `host/wechat` 下，仅操作小程序沙箱内的 UTF-8 文本，并按操作逐项门控。它不代替通用文件 API，也不添加微信未提供的目录、stream、descriptor 或遍历操作。
+
 设备调用成功只表示宿主接受并执行了它，仅此而已：尤其是震动，只能由实际握持设备的人确认，因此 SDK 中没有任何部分把震动报告为「已被感知」。
 
 ## 4. JS Interop 边界
