@@ -26,7 +26,7 @@
 
 `Minimum Host Version` 记录提供该能力的最低基础库，共有三种取值：
 
-- `Resolved at runtime` —— SDK 对该能力做了门控，通过 `wx.canIUse` 询问宿主，而不是与记录下来的数字比较。当前 Storage API 与 `wx.request` 的官方入口页没有标注 API 本身的引入版本，因此不从开发机表现反推数字。这是针对当前真正运行的宿主的实时答案，而不是缺失值。
+- `Resolved at runtime` —— SDK 对该能力做了门控，通过 `wx.canIUse` 询问宿主，而不是与记录下来的数字比较。当前 Storage API、`wx.request` 与 `wx.getLocation` 的官方入口页没有标注 API 本身的引入版本，因此不从开发机表现反推数字。这是针对当前真正运行的宿主的实时答案，而不是缺失值。
 - 版本号 —— 微信有文档记载的边界。仓库只在能够引用来源时才记录。
 - `Not established` —— 尚未确立最低版本，原因或是该能力尚未实现，或是 SDK 未对其做门控。
 
@@ -57,6 +57,7 @@ SDK 从 `wx.getAppBaseInfo` 读取基础库版本，并在早于它的基础库�
 - [微信 `wx.getClipboardData` 文档](https://developers.weixin.qq.com/miniprogram/dev/api/device/clipboard/wx.getClipboardData.html) 与 [`wx.setClipboardData` 文档](https://developers.weixin.qq.com/miniprogram/dev/api/device/clipboard/wx.setClipboardData.html)：基础库 1.1.0 起支持。
 - [微信 `wx.vibrateShort` 文档](https://developers.weixin.qq.com/miniprogram/dev/api/device/vibrate/wx.vibrateShort.html) 与 [`wx.vibrateLong` 文档](https://developers.weixin.qq.com/miniprogram/dev/api/device/vibrate/wx.vibrateLong.html)：基础库 1.2.0 起支持。`wx.vibrateShort` 文档中的 `type` 字段（heavy / medium / light）自基础库 2.13.0 起支持，有意未建模。
 - [微信 `wx.checkSession` 文档](https://developers.weixin.qq.com/miniprogram/dev/api/open-api/login/wx.checkSession.html)：未标注最低基础库，因此该项依靠 `wx.canIUse` 而不是记录下来的数字。该文档把 success/fail 分别定义为登录态有效/过期，因此 adapter 使用 callback 本身，不解析 `errMsg`。
+- [微信 `wx.getLocation` 文档](https://developers.weixin.qq.com/miniprogram/dev/api/location/wx.getLocation.html)：`type` 的取值 `wgs84` 与 `gcj02`，SDK 只转发而不解释；以及宿主作答前必须具备的声明 —— `app.json.requiredPrivateInfos`、`permission.scope.userLocation`，以及 MP 后台开启的接口权限。该文档未标注 API 的引入基础库版本，因此该项依靠 `wx.canIUse` 而不是记录下来的数字。[`wx.chooseLocation`](https://developers.weixin.qq.com/miniprogram/dev/api/location/wx.chooseLocation.html) 有意未实现：其当前参数表没有 `cancel` callback，取消会以 `fail` 到达，从而无法与权限拒绝或宿主失败区分。
 
 标为 `Planned` 的条目在上述 production source 和 export surface 中没有实现；对应 Tracking 只表示缺口已进入 Multica，不表示能力存在。
 
@@ -66,7 +67,7 @@ SDK 从 `wx.getAppBaseInfo` 读取基础库版本，并在早于它的基础库�
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | Consumer Bridge | `Stable` | Kotlin/JS CommonJS artifact | 无 | 不适用 | Unit, Node, DeveloperTools | `buildMiniAppSdk`、`.d.ts`、smoke 与微信示例已验证。 | BOB-45 Done |
 | Runtime Detection | `Stable` | `canIUse`, `getAppBaseInfo`，旧版本回退 `getSystemInfoSync` | 无 | 2.20.1 | Unit、Contract、Node、DeveloperTools、RealDevice | 2.20.1 是现代 `getAppBaseInfo` 路径的官方边界；旧路径仍可读取版本并报告 `VersionDependent`。`requireSupported` 产出 `UnsupportedCapability`。开发者工具（基础库 3.17.2）与 Android 真机均已验证 `Supported` 与 `Unsupported`；`VersionDependent` 无法在开发者工具构造（其最低可选调试基础库 2.21.4 高于该边界），由自动化测试覆盖。3.17.2 是当前主要验证版本，不是已验证的最低支持版本。 | BOB-70 Done |
-| Permission | `Stable` | `getSetting`, `authorize`, `openSetting` | 请求与打开设置需用户手势；宿主在拒绝后不会再次弹窗 | 1.2.0 | Unit、Contract、Node、DeveloperTools、RealDevice | 三态生命周期且不做缓存；拒绝是独立的 SDK 错误而不是宿主失败。`openSetting` 有文档记载自基础库 1.1.0，`getSetting` 与 `authorize` 自 1.2.0，因此 1.2.0 是同时提供三者的最低基础库；capability gate 仍在运行时探测三者。当前只映射麦克风权限。`NotRequested` 由自动化测试覆盖，因为已记录决定的宿主不会再报出该状态。3.17.2 是当前验证版本，不是已验证的最低支持版本。 | BOB-64 Done |
+| Permission | `Stable` | `getSetting`, `authorize`, `openSetting` | 请求与打开设置需用户手势；宿主在拒绝后不会再次弹窗 | 1.2.0 | Unit、Contract、Node、DeveloperTools、RealDevice | 三态生命周期且不做缓存；拒绝是独立的 SDK 错误而不是宿主失败。`openSetting` 有文档记载自基础库 1.1.0，`getSetting` 与 `authorize` 自 1.2.0，因此 1.2.0 是同时提供三者的最低基础库；capability gate 仍在运行时探测三者。当前映射麦克风与位置权限；真实宿主证据覆盖两者，且位置运行产出了 `NotRequested`、`Granted` 与 `Denied`。3.17.2 是当前验证版本，不是已验证的最低支持版本。 | BOB-64 Done；BOB-66 Done |
 | Privacy | `Partial` | `getPrivacySetting`, `requirePrivacyAuthorize` | 小程序需在 MP 后台隐私指引中声明收集类型；弹窗由宿主展示 | 2.32.3 | Unit、Contract、Node | 不设三态：授权要求、一次尝试的结果与错误分别建模，且与权限不共享任何状态。微信没有提供可区分拒绝与关闭弹窗的字段，因此不存在 `Cancelled` 结果；可识别的拒绝映射为 `Refused`，未知失败保持 `HostFailure`。目前仅有自动化覆盖，仍需 DeveloperTools 与 RealDevice 证据。 | BOB-60 |
 | Storage | `Stable` | `getStorage`, `setStorage`, `removeStorage` | 无 | Resolved at runtime | Unit, Contract, Node, DeveloperTools | 支持字符串读取、写入、覆盖、删除、missing key 和幂等删除。 | BOB-50 Done |
 | Storage Clear | `Unsupported` | `clearStorage` | 无 | Not established | 尚无 | 公共 contract 有意不清空消费者全部数据。 | 矩阵记录 |
@@ -90,7 +91,7 @@ SDK 从 `wx.getAppBaseInfo` 读取基础库版本，并在早于它的基础库�
 
 | Capability | Status | API | Permission / Preconditions | Minimum Host Version | Test Level | Evidence / Notes | Tracking |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Location | `Planned` | `getLocation`;按需评估 choose/open location | Location permission + Privacy | Not established | 尚无 | 尚无 interop、adapter、export 或真机证据。 | BOB-66 |
+| Location | `Stable` | `getLocation` | Location permission（需用户手势）；宿主隐私协议已被接受；`app.json` 声明与 MP 后台接口权限已就位 | Resolved at runtime | Unit、Contract、Node、DeveloperTools、RealDevice | 按需读取一次位置，可在 `wgs84` 与 `gcj02` 之间选择。adapter 在调用宿主前查询隐私和权限前置条件，任一未满足都不会触及 `getLocation`，也不会自行弹窗。真实宿主覆盖 `Supported`、`NotRequested`、`Granted`、`Denied` 阻断与恢复后的成功读取，且不记录经纬度。`chooseLocation` 与 `openLocation` 未实现，因此本条不声称位置选择或取消分类能力。 | BOB-66 Done |
 | Scanner | `Planned` | `scanCode` | Camera/Privacy | Not established | 尚无 | 取消必须独立于权限拒绝和宿主失败。 | BOB-61 |
 | Clipboard Read | `Stable` | `getClipboardData` | 用户手势；微信开发者工具需有剪贴板访问权限 | 1.1.0 | Unit、Contract、Node、DeveloperTools、RealDevice | 原样返回剪贴板文本（含空字符串）；缺失或非字符串的答案映射为 `InvalidResponse`。SDK 不保存也不记录读取到的内容。`getClipboardData` 不属于 `requiredPrivateInfos` 允许的字段。 | BOB-65 |
 | Clipboard Write | `Stable` | `setClipboardData` | 用户手势；微信开发者工具需有剪贴板访问权限 | 1.1.0 | Unit、Contract、Node、DeveloperTools、RealDevice | 与读取分别门控，因为宿主可能只提供其中一个方向。真实宿主已验证写入后读回匹配。 | BOB-65 |

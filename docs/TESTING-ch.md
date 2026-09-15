@@ -96,6 +96,7 @@ cd examples/wechat-miniprogram && npm run smoke && npm run typecheck
 | Privacy | `Privacy Authorization` 卡片显示宿主的要求与其协议名 | `[kmp-miniapp-sdk] privacy query: PASS requirement=…, contract=…` |
 | Session check | `WeChat Session Check` 卡片显示 `VALID`、`INVALID` 或 `FAIL` | `[kmp-miniapp-sdk] session check: PASS check #N, state=Valid\|Invalid` |
 | File system | `File System` 卡片的写入、检查、读取、删除四项均为 `PASS` | `[kmp-miniapp-sdk] filesystem write: PASS`、`filesystem access: PASS exists=true`、`filesystem read: PASS matched=true`、`filesystem remove: PASS`、`filesystem access: PASS exists=false` |
+| Location | `Location` 卡片显示能力判定、权限、隐私要求，以及定位读取的 `PASS` | `[kmp-miniapp-sdk] location capability: PASS wechat.location=…`、`location permission query: PASS state=…`、`location privacy query: PASS requirement=…`、`location: PASS coordinatesValid=true, accuracyValid=true` |
 | Clipboard 与震动 | `Clipboard and Haptics` 卡片的写入、读取、短震动、长震动四项均为 `PASS` | `[kmp-miniapp-sdk] clipboard write: PASS`、`clipboard read: PASS matched=true`、`haptics short: PASS`、`haptics long: PASS` |
 | Storage | `Storage verification: PASS` | `[kmp-miniapp-sdk] storage: PASS first=first, overwritten=second, missing=null` |
 | Client login code | `Client login code: PASS` | `[kmp-miniapp-sdk] auth bootstrap: PASS codeReceived=true, length=<正整数>` |
@@ -189,7 +190,29 @@ cd examples/wechat-miniprogram && npm run smoke && npm run typecheck
 
 顺序很重要：只有当第 4 步删除了文件，第 5 步才会读到 `exists=false`。删除不存在的文件会失败，遵循微信 `unlink` 契约，因此第 4、5 步不应连续执行两次。
 
-13. 记录你观察到了哪些检查项、哪些没有观察到。只有在某项 capability 完成真实宿主运行后，才会在 [PROJECT_FACTS-ch.md](PROJECT_FACTS-ch.md) 中被记录为已通过宿主验证。
+13. 验证定位。它由三个彼此独立的条件把关，因此以下步骤依次走过能力判定、隐私协议与权限。页面加载期间不会读取位置，因此每一步都由点击触发。
+
+| 步骤 | 点击 | 预期 |
+| --- | --- | --- |
+| 1 | `Check location capability` | `[kmp-miniapp-sdk] location capability: PASS wechat.location=Supported`，卡片显示同一状态。宿主没有该 API 时 `Unsupported` 也是正确结果 |
+| 2 | `Refresh privacy status` | `[kmp-miniapp-sdk] location privacy query: PASS requirement=REQUIRED`。查询无副作用，因此没有弹出任何东西 |
+| 3 | 在未接受协议前点击 `Get current location` | `[kmp-miniapp-sdk] location: PRIVACY_REQUIRED`。调用在触及宿主之前即被拒绝，且不出现弹窗 |
+| 4 | `Request privacy authorization` 并同意 | `[kmp-miniapp-sdk] location privacy request: result=Authorized`，随后卡片显示 `NOT_REQUIRED` |
+| 5 | `Refresh location permission` | 从未询问过的宿主上为 `[kmp-miniapp-sdk] location permission query: PASS state=NotRequested` |
+| 6 | 在未授予权限前点击 `Get current location` | `[kmp-miniapp-sdk] location: DENIED permissionState=NotRequested`；该能力不会代替消费者弹出权限弹窗 |
+| 7 | `Request location permission` 并允许 | `[kmp-miniapp-sdk] location permission request: PASS state=Granted` |
+| 8 | `Get current location` | `[kmp-miniapp-sdk] location: PASS coordinatesValid=true, accuracyValid=true` |
+| 9 | 在宿主设置中关闭该权限后再次点击 `Get current location` | `[kmp-miniapp-sdk] location: DENIED permissionState=Denied`，与第 3 步的隐私前置失败可区分 |
+
+页面只校验返回值的形状 —— 纬度在 `-90..90` 内且有限、经度在 `-180..180` 内且有限、精度不为负 —— 从不渲染或记录经纬度，因此第 8 步那行是它打印的唯一证据。第 3、6 步不应被意外触发：如果页面加载或 smoke test 产生了弹窗或位置读取，那是缺陷而不是配置问题。
+
+第 1、8 步的结论仅限于其字面含义。能力受支持只说宿主暴露了该 API，不代表读到了任何位置；读取成功只说宿主给出的位置能被契约承载，不代表该位置准确或当前有效。模拟器的结果由 IP 推导而非来自设备定位模块，因此开发者工具运行可以走通整个流程，但无法证明真实定位；只有真机可以。在真机上，操作系统还可能独立于 `scope.userLocation` 限制微信自身对定位的访问，因此即便 scope 已授予，在该项放行之前仍可能失败。
+
+有三项配置决定它能否工作，且都在 SDK 之外：`getLocation` 必须列入 `app.json.requiredPrivateInfos`，`scope.userLocation` 必须在 `app.json.permission` 中声明并给出说明，且小程序必须在 MP 后台的接口设置中声明定位接口。缺少最后一项时，宿主会在用户看到任何东西之前就拒绝，这属于配置失败而不是 SDK 缺陷。
+
+本能力同样执行并回滚了一次变异探针：把坐标范围判断取反后，interop、adapter 与契约三个层面共 9 项测试失败，说明形状校验确实被断言，而不是碰巧通过。
+
+14. 记录你观察到了哪些检查项、哪些没有观察到。只有在某项 capability 完成真实宿主运行后，才会在 [PROJECT_FACTS-ch.md](PROJECT_FACTS-ch.md) 中被记录为已通过宿主验证。
 
 Storage 检查会写入专用测试 key、验证覆盖、删除该 key，并确认 missing key 读取为 `null`。Network 检查会向 `https://example.com/` 发起 `GET`，并报告 status code 与 body 长度；验证其他 host 时请修改示例中的 `networkUrl` 常量。
 

@@ -103,6 +103,10 @@ A host object is not `wx`: `wx.canIUse` answers for `wx` APIs and some component
 
 The file system reaches the user the same way: `WechatFileSystem` lives under `host/wechat`, works only on UTF-8 text inside the mini program sandbox, and is gated per operation. It does not stand in for a portable file API, and it adds no directory, stream, descriptor, or traversal operation that WeChat does not offer.
 
+A capability whose request model is itself host-specific stays behind the escape hatch even when its idea is broad. Location is the clear case: reading a position is something every host can do, but WeChat makes the caller choose between `wgs84` and `gcj02`, and that choice is a local mapping concept no portable contract should carry. The whole capability therefore lives under `host/wechat`, and a future WebView host would implement its own rather than claim to satisfy WeChat's.
+
+A capability may also have a precondition the SDK can enforce rather than merely document. The location adapter first queries both the host privacy contract and the location permission, and fails before `getLocation` when either is unsatisfied. Both checks are queries that present nothing; accepting privacy and requesting permission remain separate consumer actions that require explicit user gestures, so a location read can never become an implicit prompt.
+
 A device call resolving means the host accepted and performed it. It never means more than that: a vibration in particular can only be confirmed by someone holding the device, so nothing in the SDK reports one as having been felt.
 
 ## 4. JS Interop Boundary

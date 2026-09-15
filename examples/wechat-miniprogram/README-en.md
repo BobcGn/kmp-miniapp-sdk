@@ -50,6 +50,10 @@ Import this directory as a Mini Program project and compile it. The clipboard an
 [kmp-miniapp-sdk] filesystem read: PASS matched=true
 [kmp-miniapp-sdk] filesystem remove: PASS
 [kmp-miniapp-sdk] filesystem access: PASS exists=false
+[kmp-miniapp-sdk] location capability: PASS wechat.location=Supported
+[kmp-miniapp-sdk] location permission query: PASS state=Granted
+[kmp-miniapp-sdk] location privacy query: PASS requirement=NOT_REQUIRED
+[kmp-miniapp-sdk] location: PASS coordinatesValid=true, accuracyValid=true
 ```
 
 The network check issues a `GET` to `https://example.com/`. WeChat requires that host to be listed in the request domain whitelist, or the project must be compiled with domain checking disabled. Change the `networkUrl` constant to verify a different endpoint.
@@ -66,7 +70,9 @@ The Privacy Authorization card queries what the host requires for its own privac
 
 The Permission lifecycle card queries, requests, and opens settings for one permission; none of it happens while the page loads, so every step follows a tap. The permission state is read from the host each time rather than remembered, and a refusal is reported as denied rather than as a host failure. The required sequence is in the checklist. The flow has been executed in WeChat Developer Tools at base library 3.17.2 and on an Android device; `NotRequested` could not be produced on the account used, because it already holds a decision for the mapped permission.
 
-The Runtime detection card reads its expected state from the host, so lowering the debug base library below 2.20.1 makes `runtime-detection` report `VersionDependent` without any code change, while `storage` keeps reporting `Supported`. An unregistered capability always reads `ungated=Unsupported`, so the current and downgraded runs cover all three states for manual review. The card also shows the base-library version and platform, which the verification record needs.
+The Runtime detection card reads its expected state from the host rather than from a fixed table. An unregistered capability always reads `ungated=Unsupported`, and a registered one reads whichever state its host answers. `VersionDependent` cannot be produced here: the lowest debug base library Developer Tools offers is 2.21.4, which is above the 2.20.1 boundary that capability records, so that state is covered by automated tests instead. The card also shows the base-library version and platform, which the verification record needs.
+
+The Location card is the only card whose capability enforces a precondition of its own. `Check location capability` reports how the gate answers for `wechat.location`; the permission and the privacy requirement are reported separately, because whether the API exists is a different question from whether the user has allowed it. Nothing reads a position while the page loads. A read attempted before the privacy contract is accepted fails with the SDK's privacy-required error and never reaches the host, and a read attempted before the permission is granted is refused rather than prompting on the consumer's behalf — driving that prompt needs a user gesture, so it stays behind `Request location permission`. The page validates the shape of the answer and prints `coordinatesValid` and `accuracyValid`; it never displays or logs a coordinate. Both `app.json` declarations must be in place and the interface must be enabled in the MP backend, or the host refuses before the user sees anything. Developer Tools derives its position from IP rather than from a device receiver, and only for `gcj02`, so the flow can be walked there but only a device proves a real position. See the location configuration section of [../../docs/DEVELOPMENT-en.md](../../docs/DEVELOPMENT-en.md).
 
 Node and TypeScript checks do not replace this real-host verification. [../../docs/TESTING-en.md](../../docs/TESTING-en.md) holds the authoritative checklist and the two-layer testing model.
 

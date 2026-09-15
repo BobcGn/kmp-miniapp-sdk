@@ -36,6 +36,7 @@
 - 微信会话有效性检查已实现，并通过自动化检查与 Android 真机验证
 - 微信剪贴板读写与短/长震动已实现，并通过自动化检查、开发者工具与 Android 真机验证
 - 微信文件系统读取、写入、检查与删除已实现，并通过自动化检查、开发者工具与 Android 真机验证
+- 微信按需单次定位已实现，并通过自动化检查、微信开发者工具与 Android 真机验证
 
 构建基线与第一条端到端消费链路均已通过验证。Common layer 包含最小 Host identity、Capability support 与强类型 platform escape-hatch contracts。Production code 通过 Host 与 adapter boundaries 调用 typed 微信 Storage contracts，完整 Storage 链路已通过真实宿主验证。
 
@@ -128,7 +129,7 @@ Kotlin/JS platform variants 及其传递依赖由 Gradle 在依赖解析期间�
 - `host/wechat/runtime`：宿主 lifecycle 和 runtime integration
 - `export`：宿主无关的 Kotlin 到 JavaScript / TypeScript public boundary
 
-`export` 边界包含版本 facade、Promise-based Storage functions、微信专属 login bootstrap、Promise-based HTTP transport function、供消费者转发的 App 与 Page lifecycle 入口、微信导航函数、capability support 与 runtime inspection 查询、权限生命周期函数、微信专属的会话检查、四项微信剪贴板与震动函数，以及五项微信文件系统函数。Interop 边界包含 `login`、`showToast`、Storage、`request`、三个页面栈导航方法，以及带 presence guard 的 runtime inspection 成员的 internal 契约；production adapters 通过 `WechatHost` 调用 login、Storage、HTTP transport、导航、runtime inspection 与权限生命周期，`showToast` 仍仅为 interop contract。`runtime` 边界包含实现公共 lifecycle capability 的 `WechatAppLifecycle`、跟踪 runtime 报告为已显示页面的 `WechatPageLifecycle`，以及依据 runtime 报告判定支持状态的能力目录表与 gate。`adapter` 边界另外包含 `WechatPermissionScopes`，这是微信 scope 字符串唯一存在的地方。
+`export` 边界包含版本 facade、Promise-based Storage functions、微信专属 login bootstrap、Promise-based HTTP transport function、供消费者转发的 App 与 Page lifecycle 入口、微信导航函数、capability support 与 runtime inspection 查询、权限生命周期函数、微信专属的会话检查、四项微信剪贴板与震动函数、五项微信文件系统函数，以及微信定位函数。Interop 边界包含 `login`、`showToast`、Storage、`request`、三个页面栈导航方法，以及带 presence guard 的 runtime inspection 成员的 internal 契约；production adapters 通过 `WechatHost` 调用 login、Storage、HTTP transport、导航、runtime inspection 与权限生命周期，`showToast` 仍仅为 interop contract。`runtime` 边界包含实现公共 lifecycle capability 的 `WechatAppLifecycle`、跟踪 runtime 报告为已显示页面的 `WechatPageLifecycle`，以及依据 runtime 报告判定支持状态的能力目录表与 gate。`adapter` 边界另外包含 `WechatPermissionScopes`，这是微信 scope 字符串唯一存在的地方。
 
 ## 9. 当前能力
 
@@ -178,7 +179,7 @@ Kotlin/JS platform variants 及其传递依赖由 Gradle 在依赖解析期间�
 - 微信能力目录表记录每个纳入 gate 的能力所需条件。Storage 与 network 声明 `wx.canIUse` 必须确认的 schema，且不设最低版本；App lifecycle 没有可探测的宿主 API；runtime detection 记录有文档依据的 `2.20.1` 边界，这正是版本依赖答案可复现的原因。
 - JavaScript / TypeScript facade 暴露不依赖 `any` 的 `capabilitySupport`、`requireCapability`、`wechatRuntimeInfo` 与 `wechatCanIUse`。
 - `MiniAppPermissions` 定义宿主无关的权限生命周期：`PermissionKey` 命名权限「为了什么」，`PermissionState` 为 `NotRequested`、`Granted` 或 `Denied`，契约提供查询、请求与打开设置。`WechatHost` 通过 `PermissionCapabilityProvider` 提供它。
-- `WechatPermissionScopes` 是微信 scope 字符串唯一存在的地方。当前映射的权限是麦克风；adapter 未映射的 key 会在任何宿主调用之前失败。
+- `WechatPermissionScopes` 是微信 scope 字符串唯一存在的地方。当前映射麦克风与位置权限；adapter 未映射的 key 会在任何宿主调用之前失败。
 - 不做任何缓存：每次查询与每次设置页返回都询问宿主，因为用户随时可以在宿主自身的设置中改变权限。
 - 拒绝是 `MiniAppException.PermissionDenied`，宿主无法作答是 `HostFailure`；只有报告授权被拒绝的失败消息才会成为拒绝。
 - 同一权限的并发请求共享由服务拥有的单次宿主调用；已有决定的权限由宿主状态作答，不会再次弹窗。
@@ -197,6 +198,12 @@ Kotlin/JS platform variants 及其传递依赖由 Gradle 在依赖解析期间�
 - 文件系统 API 以基础库 1.9.9 为最低版本；能力目录表为 `wx.canIUse` 无法回答的宿主对象成员提供了专用 presence 探测。
 - `access` 仅在微信为「路径不存在」提供文档依据的失败文本上返回 `false`；其他失败一律抛出，因此权限错误永远不会被报告为文件不存在。
 - JavaScript / TypeScript facade 暴露不依赖 `any` 的 `wechatUserDataPath`、`wechatReadTextFile`、`wechatWriteTextFile`、`wechatFileExists` 与 `wechatRemoveFile`。
+- `WechatLocation` 只读取一次位置；不监听、不缓存、不上传。仅通过 `WechatPlatformApi` 可达。
+- `WeChatCoordinateSystem` 命名微信可作答的两种坐标系统。SDK 始终显式设置其一，默认 `gcj02`，因为那是微信自身地图视图接受的形式；绝不静默采用宿主默认值。
+- `PermissionKey.Location` 是宿主无关的权限，在唯一的 adapter 映射点内映射为 `scope.userLocation`。
+- Adapter 在调用 `getLocation` 之前查询并强制宿主隐私协议与位置权限；两项检查都不展示界面，也不代替用户接受协议或请求权限。
+- 定位 API 未记录最低基础库版本，因为微信页面未标注；以 `wx.canIUse` 为准。
+- JavaScript / TypeScript facade 暴露 `wechatGetCurrentLocation`，使用 `GeoPosition` 与 `'wgs84' | 'gcj02'` union，不依赖 `any`。
 - 自动测试覆盖版本比较与解析、四种支持状态、版本边界本身、版本不可读时的回退、完全无法探测的宿主、runtime 只读取一次，以及 `UnsupportedCapability` guard。
 - 微信开发者工具已验证前台 lifecycle 状态、页面 route，以及 `navigateTo` → `redirectTo` → `navigateBack` 的完整页面栈路径。
 - [TESTING-ch.md](TESTING-ch.md) 记录了两层测试体系、各层可用的 fake，以及可复现的真实宿主检查清单。
@@ -211,6 +218,7 @@ Kotlin/JS platform variants 及其传递依赖由 Gradle 在依赖解析期间�
 
 - Router 或导航栈框架
 - UI 组件生命周期抽象
+- 地图 SDK、地图 UI、后台或持续定位、`startLocationUpdate`、`onLocationChange`、地理围栏、轨迹记录、逆地理编码、第三方地图服务、原生 `map` 组件、位置缓存、位置上传播，以及 `chooseLocation` 与 `openLocation`
 - 超出小程序沙箱内 UTF-8 文本的文件系统能力：没有目录、目录遍历、递归删除、stream、file descriptor、随机访问、文件监听、数据库、secure storage，也没有二进制或 base64 文件内容
 - Node `fs` 或任何 POSIX 文件抽象
 - 受隐私授权约束的 Location、Scanner、Media、Bluetooth 等设备能力
@@ -252,7 +260,9 @@ Kotlin/JS platform variants 及其传递依赖由 Gradle 在依赖解析期间�
 
 微信文件系统 capability 适配 typed `wx.getFileSystemManager` 及其 `readFile`、`writeFile`、`access` 与 `unlink` 方法，仅操作微信小程序文件沙箱中的 UTF-8 文本。它属于微信专属能力，因此每项操作以命名空间化的 key 独立门控（`wechat.filesystem-read`、`-write`、`-access`、`-remove`），并与调用方据以构造路径的沙箱根（`wechat.filesystem-sandbox-path`）一起。manager 是宿主对象，因此只有当对应方法存在时才报告支持，而不是仅凭 manager 存在。空文件读取为空字符串；二进制内容映射为 `InvalidResponse`；宿主报告路径不存在时 `exists` 返回 `false`，其他失败一律抛出，因此权限错误永远不会被报告为文件不存在。删除不存在的文件会失败，因为微信的 `unlink` 就是这样。Kotlin/JS、fake-host、CommonJS 与 TypeScript 自动检查均已通过。2026-09-15 的微信开发者工具与 Android 真机证据在基础库 3.17.2 上验证了写入、读取匹配、存在、删除和删除后不存在的完整链路。
 
-运行时能力检测已于 2026-09-15 完成开发者工具与真机验收。开发者工具在基础库 3.17.2 下报告 `baseLibrary=3.17.2, platform=devtools, runtime-detection=Supported, storage=Supported, ungated=Unsupported`；Android 真机（OnePlus PLQ110、Android 36、微信 8.0.76）报告同样的状态而 `platform=android`。开发者工具当前可选的最低调试基础库为 2.21.4，无法在该环境中构造低于 2.20.1 的宿主，因此 `VersionDependent` 没有真实宿主截图；该边界由 `HostVersion` 单元测试、Fake Host 契约检查、边界测试与已执行的变异探针覆盖。3.17.2 是当前主要兼容验证版本，不是已验证的最低支持版本。权限生命周期已于 2026-09-15 完成开发者工具（基础库 3.17.2）与 Android 真机验收，覆盖 `Granted`、`Denied`、设置页返回以及拒绝后的再次请求。`NotRequested` 无法在所用账号上复现，改由自动化测试覆盖。当前只映射麦克风权限。
+微信定位 capability 适配 typed `wx.getLocation`，按调用方要求的坐标系统返回 `latitude`、`longitude` 与 `accuracyMeters`。它属于微信专属能力，因为坐标系统（`wgs84` 或 `gcj02`）是本地测绘概念，因此位于 platform escape hatch 之后，key 为 `wechat.location`，导出为 `wechatGetCurrentLocation`。当前只实现 `getLocation`；`chooseLocation` 与 `openLocation` 未实现。宿主还会返回海拔、垂直与水平精度以及速度，这些有意未建模：Android 在无法取得垂直精度时返回 `0`，与真实的零无法区分，且 SDK 中没有任何部分需要它们。字段缺失、非数字、非有限值或超出合法坐标范围的答案映射为 `InvalidResponse`，而不是被填成零——零是一个真实但错误的位置。定位 API 可用性、`scope.userLocation` 权限与宿主隐私协议是三个不同问题：gate 只回答第一个，权限生命周期回答第二个；adapter 在调用宿主之前查询并强制后两项，但从不自行触发权限或隐私弹窗。Kotlin/JS、fake-host、CommonJS 与 TypeScript 自动检查均已通过。2026-09-15 的微信开发者工具与 Android 真机验收覆盖 `Supported`、`NotRequested`、显式授权后的 `Granted`、`Denied` 阻断，以及恢复权限后的成功定位；日志只报告坐标和精度是否有效，不显示实际坐标。
+
+运行时能力检测已于 2026-09-15 完成开发者工具与真机验收。开发者工具在基础库 3.17.2 下报告 `baseLibrary=3.17.2, platform=devtools, runtime-detection=Supported, storage=Supported, ungated=Unsupported`；Android 真机（OnePlus PLQ110、Android 36、微信 8.0.76）报告同样的状态而 `platform=android`。开发者工具当前可选的最低调试基础库为 2.21.4，无法在该环境中构造低于 2.20.1 的宿主，因此 `VersionDependent` 没有真实宿主截图；该边界由 `HostVersion` 单元测试、Fake Host 契约检查、边界测试与已执行的变异探针覆盖。3.17.2 是当前主要兼容验证版本，不是已验证的最低支持版本。权限生命周期已于 2026-09-15 完成麦克风与位置权限的开发者工具和 Android 真机验收；位置运行补充覆盖了 `NotRequested`、`Granted` 与 `Denied`。
 
 验证环境使用仓库内置的 Gradle 9.3.1 Wrapper 和 JDK 25.0.2。当前构建没有固定 JDK toolchain。
 

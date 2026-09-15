@@ -32,7 +32,7 @@ When running WeChat host acceptance, use the [WeChat real-host verification matr
 
 These commands are valid and were verified on 2026-09-15.
 
-The `:sdk:jsTest` suite includes host-boundary, error-model, callback adaptation, cancellation, double-completion, optional abort, WeChat error-mapping, HTTP transport adaptation including host abort on cancellation, lifecycle state transitions, navigation adaptation, capability-support states and version gating, permission lifecycle behaviour including concurrent request merging, privacy authorization including the refusal classification, WeChat session checking including the expiry classification, the WeChat clipboard and vibration adapters including their per-capability gating, the WeChat file-system adapter including its sandbox and text boundaries, and interop object-construction coverage. These tests use fake callbacks and do not claim access to a real `wx` runtime.
+The `:sdk:jsTest` suite includes host-boundary, error-model, callback adaptation, cancellation, double-completion, optional abort, WeChat error-mapping, HTTP transport adaptation including host abort on cancellation, lifecycle state transitions, navigation adaptation, capability-support states and version gating, permission lifecycle behaviour including concurrent request merging, privacy authorization including the refusal classification, WeChat session checking including the expiry classification, the WeChat clipboard and vibration adapters including their per-capability gating, the WeChat file-system adapter including its sandbox and text boundaries, the WeChat location adapter including its coordinate validation and privacy precondition, and interop object-construction coverage. These tests use fake callbacks and do not claim access to a real `wx` runtime.
 
 ## Consumer Bridge
 
@@ -71,7 +71,7 @@ npm run smoke
 npm run typecheck
 ```
 
-The smoke test loads the consumer-facing CommonJS module, calls `sdkVersion()`, and installs a fake global `wx` to verify Storage, the WeChat login bootstrap, the HTTP transport, lifecycle forwarding, all three navigation calls, runtime capability detection, the permission lifecycle, privacy authorization, the WeChat session check, the clipboard and vibration capabilities, and the file system. It also asserts what the HTTP transport handed to the fake host, including the raw-text response mode, the absolute page paths received by navigation, and the support state reported for each gated capability. This validates module and adapter behavior but is not real-host evidence. TypeScript runs in strict mode and validates the Promise-based Storage, typed `WeChatLoginResult`, HTTP transport, lifecycle, navigation, capability-support, permission, privacy, session-check, clipboard, vibration, and file-system exports without `any`.
+The smoke test loads the consumer-facing CommonJS module, calls `sdkVersion()`, and installs a fake global `wx` to verify Storage, the WeChat login bootstrap, the HTTP transport, lifecycle forwarding, all three navigation calls, runtime capability detection, the permission lifecycle, privacy authorization, the WeChat session check, the clipboard and vibration capabilities, the file system, and location. It also asserts what the HTTP transport handed to the fake host, including the raw-text response mode, the absolute page paths received by navigation, and the support state reported for each gated capability. This validates module and adapter behavior but is not real-host evidence. TypeScript runs in strict mode and validates the Promise-based Storage, typed `WeChatLoginResult`, HTTP transport, lifecycle, navigation, capability-support, permission, privacy, session-check, clipboard, vibration, file-system, and location exports without `any`.
 
 Real-host verification follows the checklist in [TESTING-en.md](TESTING-en.md), which is the authoritative list of required page values, console lines, and preparation steps. A capability is recorded as host-verified in [PROJECT_FACTS-en.md](PROJECT_FACTS-en.md) only after that run.
 
@@ -102,11 +102,25 @@ A recorded answer belongs to the account, the device, the backend configuration,
 
 Privacy and permission acceptance are recorded separately in the verification matrix, because the host tracks them separately and a result for one says nothing about the other.
 
-The permission lifecycle completed Developer Tools (base library 3.17.2) and Android device acceptance on 2026-09-15: the host reported `Granted` and `Denied`, a settings visit reported the host's decision, and requesting a refused permission reported `DENIED` without a second prompt. `NotRequested` could not be produced on the account used, because it already holds a decision for the mapped permission, so that state is covered by automated tests. The automated suite still never requests a permission, because a real prompt requires a user gesture. Only the microphone permission is mapped.
+The permission lifecycle completed Developer Tools and Android-device acceptance for both microphone and location on 2026-09-15. The microphone run covered `Granted`, `Denied`, the settings return, and a repeated request after refusal; the location run additionally produced `NotRequested`, `Granted` after an explicit request, and `Denied` after refusal. The automated suite still never requests a permission, because a real prompt requires a user gesture.
 
 The WeChat session check passed Android real-device acceptance on 2026-09-15: OnePlus PLQ110, Android 36, WeChat 8.0.76, base library 3.17.3 [1641]. The console reported `check #1, state=Invalid` before the login bootstrap acquired a new code and repeatedly reported `state=Valid` after `wx.login` succeeded. This result is still not evidence of identity, and session-check acceptance remains separate from login-bootstrap acceptance.
 
 The WeChat clipboard and vibration capabilities completed real-host acceptance on 2026-09-15. Developer Tools at base library 3.17.2 and an Android device both verified clipboard write, read-back, and `matched=true`; the OnePlus PLQ110 running Android 36, WeChat 8.0.76, and base library 3.17.3 [1641] reported both vibration calls as PASS, and the tester confirmed feeling both the short and long vibrations. `getClipboardData` is not an allowed `app.json.requiredPrivateInfos` entry, so the example does not declare it there.
+
+### WeChat location configuration
+
+`wx.getLocation` needs more backend preparation than any other capability here, and none of it can be done or replaced by this SDK:
+
+- The mini program's category must be one WeChat accepts for location, and the interface must be activated under 开发 → 开发管理 → 接口设置.
+- For releases after 2022-07-14, `app.json` must list `getLocation` in `requiredPrivateInfos` and must state a purpose in `permission.scope.userLocation.desc`; the example does both.
+- The user must grant `scope.userLocation`.
+
+WeChat's own simulator locates by IP and supports `gcj02` only, so a simulator result is not evidence about a device's real position. Its call-frequency rules also differ between build kinds, so a second call in the same session may return the first position rather than a fresh one.
+
+Reading a position is not something the page may do on its own: the example's Location card calls it only from a tap, and never displays or logs the coordinates.
+
+WeChat location completed Developer Tools and Android-device acceptance on 2026-09-15. The runs covered a `Supported` capability, permission moving from `NotRequested` to `Granted`, blocking with `DENIED` before `getLocation` after refusal, and successful location again after permission recovery; success logs report only coordinate and accuracy validity and never actual coordinates. The current scope implements only one-shot on-demand `getLocation`, not `chooseLocation` or `openLocation`.
 
 The WeChat file system completed real-host acceptance on 2026-09-15. WeChat Developer Tools and an Android device both verified, at base library 3.17.2, writing the fixed test file, reading matching content, checking that it existed, removing it, and checking that it no longer existed; neither the sandbox root nor file contents were displayed or logged. Automated Kotlin/JS, fake-host, CommonJS, and TypeScript checks also pass.
 

@@ -32,7 +32,7 @@ VS Code 可用于处理 `examples/wechat-miniprogram` 下的文件。Consumer Br
 
 这些命令有效，并已于 2026-09-15 完成验证。
 
-`:sdk:jsTest` suite 覆盖 Host boundary、error model、callback adaptation、cancellation、double completion、可选 abort、微信 error mapping、包含取消时宿主中止的 HTTP transport adaptation、生命周期状态迁移、导航适配、capability support 状态与版本门控、包含并发请求合并的权限生命周期行为、包含拒绝分类的隐私授权、包含过期分类的微信会话检查、包含逐项门控的微信剪贴板与震动 adapter、包含沙箱与文本边界的微信文件系统 adapter，以及 interop object construction。这些测试使用 fake callbacks，不代表能够访问真实 `wx` runtime。
+`:sdk:jsTest` suite 覆盖 Host boundary、error model、callback adaptation、cancellation、double completion、可选 abort、微信 error mapping、包含取消时宿主中止的 HTTP transport adaptation、生命周期状态迁移、导航适配、capability support 状态与版本门控、包含并发请求合并的权限生命周期行为、包含拒绝分类的隐私授权、包含过期分类的微信会话检查、包含逐项门控的微信剪贴板与震动 adapter、包含沙箱与文本边界的微信文件系统 adapter、包含坐标校验与隐私前置条件的微信定位 adapter，以及 interop object construction。这些测试使用 fake callbacks，不代表能够访问真实 `wx` runtime。
 
 ## Consumer Bridge
 
@@ -71,7 +71,7 @@ npm run smoke
 npm run typecheck
 ```
 
-smoke test 加载 consumer-facing CommonJS 模块、调用 `sdkVersion()`，并安装 fake global `wx` 验证 Storage、微信 login bootstrap、HTTP transport、lifecycle 转发、三种导航调用、运行时能力检测、权限生命周期、隐私授权、微信会话检查、剪贴板与震动能力，以及文件系统。它还会断言 HTTP transport 交给 fake host 的内容，包括原始文本响应模式、导航收到的绝对页面路径，以及每个纳入门控的能力所报告的支持状态。该测试验证 module 与 adapter behavior，但不构成真实 Host 证据。TypeScript 使用 strict mode，并在不依赖 `any` 的情况下验证 Promise-based Storage、typed `WeChatLoginResult`、HTTP transport、lifecycle、导航、capability support、权限、隐私、会话检查、剪贴板、震动与文件系统 exports。
+smoke test 加载 consumer-facing CommonJS 模块、调用 `sdkVersion()`，并安装 fake global `wx` 验证 Storage、微信 login bootstrap、HTTP transport、lifecycle 转发、三种导航调用、运行时能力检测、权限生命周期、隐私授权、微信会话检查、剪贴板与震动能力、文件系统，以及定位。它还会断言 HTTP transport 交给 fake host 的内容，包括原始文本响应模式、导航收到的绝对页面路径，以及每个纳入门控的能力所报告的支持状态。该测试验证 module 与 adapter behavior，但不构成真实 Host 证据。TypeScript 使用 strict mode，并在不依赖 `any` 的情况下验证 Promise-based Storage、typed `WeChatLoginResult`、HTTP transport、lifecycle、导航、capability support、权限、隐私、会话检查、剪贴板、震动、文件系统与定位 exports。
 
 真实宿主验证按 [TESTING-ch.md](TESTING-ch.md) 中的检查清单执行，该清单是页面取值、console 输出与准备步骤的权威来源。只有在完成该运行后，某项 capability 才会在 [PROJECT_FACTS-ch.md](PROJECT_FACTS-ch.md) 中被记录为已通过宿主验证。
 
@@ -102,11 +102,25 @@ SDK 只做告知与把关；它不生成隐私政策、不判断业务是否合�
 
 隐私与权限的验收在验证矩阵中分别记录，因为宿主对二者分开跟踪，其中一项的结果不能说明另一项。
 
-权限生命周期已于 2026-09-15 完成开发者工具（基础库 3.17.2）与 Android 真机验收：宿主报告了 `Granted` 与 `Denied`，设置页返回的是宿主的决定，对已拒绝权限再次请求报告 `DENIED` 且不出现第二次弹窗。`NotRequested` 无法在所用账号上产出，因为该账号已对所映射权限持有决定，因此该状态由自动化测试覆盖。自动化套件仍然从不请求权限，因为真实弹窗需要用户手势。当前只映射麦克风权限。
+权限生命周期已于 2026-09-15 完成麦克风权限以及位置权限的开发者工具与 Android 真机验收。麦克风运行覆盖 `Granted`、`Denied`、设置页返回以及拒绝后的再次请求；位置运行额外覆盖宿主中的 `NotRequested`、显式授权后的 `Granted` 与拒绝后的 `Denied`。自动化套件仍然从不请求权限，因为真实弹窗需要用户手势。
 
 微信会话检查已于 2026-09-15 通过 Android 真机验收：OnePlus PLQ110、Android 36、微信 8.0.76、基础库 3.17.3 [1641]。Console 在 login bootstrap 取得新 code 前报告 `check #1, state=Invalid`，`wx.login` 成功后连续报告 `state=Valid`。该结果仍不是身份的证明，会话检查与 login bootstrap 继续分别记录。
 
 微信剪贴板与震动已于 2026-09-15 完成真实宿主验收。开发者工具（基础库 3.17.2）与 Android 真机均验证剪贴板写入、读回与 `matched=true`；OnePlus PLQ110、Android 36、微信 8.0.76、基础库 3.17.3 [1641] 验证短震动与长震动调用均 PASS，且测试者确认实际感知两种震动。`getClipboardData` 不属于 `app.json.requiredPrivateInfos` 允许的字段，示例不声明它。
+
+### 微信定位配置
+
+`wx.getLocation` 比本项目任何其他 capability 都需要更多的后台准备，且这些都无法由 SDK 代做或替代：
+
+- 小程序类目必须是微信允许定位的类目，且需在「开发 → 开发管理 → 接口设置」中开通该接口。
+- 2022-07-14 之后发布的版本，`app.json` 必须在 `requiredPrivateInfos` 中列出 `getLocation`，并在 `permission.scope.userLocation.desc` 中说明用途；示例两者都已配置。
+- 用户必须授予 `scope.userLocation`。
+
+微信自带的模拟器通过 IP 定位且仅支持 `gcj02`，因此模拟器结果不能作为真机真实位置的证据。其调用频率规则在不同版本类型间也有差异，因此同一会话中的第二次调用可能返回第一次的位置而非新位置。
+
+页面不得自行读取位置：示例的 Location 卡片只在点击后调用，且从不显示或记录坐标。
+
+微信定位已于 2026-09-15 完成开发者工具与 Android 真机验收。运行覆盖能力为 `Supported`、权限由 `NotRequested` 到 `Granted`、拒绝后在触及 `getLocation` 前报告 `DENIED`，以及恢复权限后再次定位成功；成功日志只报告坐标与精度是否有效，不记录实际经纬度。当前仅实现按需单次 `getLocation`，不包含 `chooseLocation` 或 `openLocation`。
 
 微信文件系统已于 2026-09-15 完成真实宿主验收。微信开发者工具与 Android 真机均在基础库 3.17.2 上验证了固定测试文件的写入、读取匹配、存在检查、删除与删除后不存在；沙箱根和文件内容均未被显示或记录。自动化 Kotlin/JS、fake-host、CommonJS 与 TypeScript 检查也已通过。
 

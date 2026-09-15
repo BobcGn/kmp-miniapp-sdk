@@ -97,6 +97,7 @@ The following procedure is the DeveloperTools checklist for currently implemente
 | Session check | The `WeChat Session Check` card shows `VALID`, `INVALID`, or `FAIL` | `[kmp-miniapp-sdk] session check: PASS check #N, state=Valid\|Invalid` |
 | Clipboard and haptics | The `Clipboard and Haptics` card shows `PASS` for write, read, short vibration, and long vibration | `[kmp-miniapp-sdk] clipboard write: PASS`, `clipboard read: PASS matched=true`, `haptics short: PASS`, `haptics long: PASS` |
 | File system | The `File System` card shows `PASS` for write, access, read, and remove | `[kmp-miniapp-sdk] filesystem write: PASS`, `filesystem access: PASS exists=true`, `filesystem read: PASS matched=true`, `filesystem remove: PASS`, `filesystem access: PASS exists=false` |
+| Location | The `Location` card shows the capability answer, the permission, the privacy requirement, and `PASS` for a position | `[kmp-miniapp-sdk] location capability: PASS wechat.location=…`, `location permission query: PASS state=…`, `location privacy query: PASS requirement=…`, `location: PASS coordinatesValid=true, accuracyValid=true` |
 | Storage | `Storage verification: PASS` | `[kmp-miniapp-sdk] storage: PASS first=first, overwritten=second, missing=null` |
 | Client login code | `Client login code: PASS` | `[kmp-miniapp-sdk] auth bootstrap: PASS codeReceived=true, length=<positive integer>` |
 | Network | `Network verification: PASS` | `[kmp-miniapp-sdk] network: PASS status=200, bytes=<positive integer>` |
@@ -189,7 +190,29 @@ Steps 3 and 4 must be run on a real device. The console line records only that W
 
 The order matters: step 5 only reads `exists=false` when step 4 removed the file. Removing a file that is not there fails, following WeChat's `unlink` contract, so steps 4 and 5 must not be run twice in a row.
 
-13. Record which checks you observed and which you did not. A capability is recorded as host-verified in [PROJECT_FACTS-en.md](PROJECT_FACTS-en.md) only after a real-host run for that capability.
+13. Verify location. It is gated by three separate conditions, so the steps below walk the capability question, then the privacy contract, then the permission. Nothing reads a position while the page loads, so every step follows a tap.
+
+| Step | Tap | Expected |
+| --- | --- | --- |
+| 1 | `Check location capability` | `[kmp-miniapp-sdk] location capability: PASS wechat.location=Supported`, and the card shows the same state. `Unsupported` is a correct answer on a host without the API |
+| 2 | `Refresh privacy status` | `[kmp-miniapp-sdk] location privacy query: PASS requirement=REQUIRED`. The query has no side effect, so nothing was prompted |
+| 3 | `Get current location` before the contract is accepted | `[kmp-miniapp-sdk] location: PRIVACY_REQUIRED`. The call is refused before the host is asked, and no prompt appears |
+| 4 | `Request privacy authorization` and accept | `[kmp-miniapp-sdk] location privacy request: result=Authorized`, and the card then shows `NOT_REQUIRED` |
+| 5 | `Refresh location permission` | `[kmp-miniapp-sdk] location permission query: PASS state=NotRequested` on a host that has never been asked |
+| 6 | `Get current location` before the permission is granted | `[kmp-miniapp-sdk] location: DENIED permissionState=NotRequested`; the capability does not prompt for the permission on the consumer's behalf |
+| 7 | `Request location permission` and allow | `[kmp-miniapp-sdk] location permission request: PASS state=Granted` |
+| 8 | `Get current location` | `[kmp-miniapp-sdk] location: PASS coordinatesValid=true, accuracyValid=true` |
+| 9 | Deny the permission in the host's settings, then `Get current location` again | `[kmp-miniapp-sdk] location: DENIED permissionState=Denied`, distinct from the privacy precondition failure in step 3 |
+
+The page validates the shape of the answer — a finite latitude in `-90..90`, a finite longitude in `-180..180`, and a non-negative accuracy — and never renders or logs a coordinate, so step 8's line is the only evidence it prints. Steps 3 and 6 must not be reachable by accident: if the page load or the smoke test produces a prompt or a position read, that is a defect, not a configuration problem.
+
+Steps 1 and 8 only mean what they say. A supported capability says the host exposes the API, not that any position was read; a successful read says the host answered with a position the contract can carry, not that the position is accurate or current. The simulator derives its answer from IP rather than from a device receiver, so a Developer Tools run can exercise the whole flow but proves nothing about a real position; only a device can. On a device the operating system may also gate WeChat's own access to location, independently of `scope.userLocation`, so a granted scope can still fail until that is allowed.
+
+Three configuration requirements decide whether this works at all, and all three are outside the SDK: `getLocation` must be listed in `app.json.requiredPrivateInfos`, `scope.userLocation` must be declared in `app.json.permission` with a description, and the mini program must declare the location interface in the MP backend's interface settings. Without the last one the host refuses before the user sees anything, which is a configuration failure rather than an SDK defect.
+
+A mutation probe was executed and reverted for this capability: inverting the coordinate range check failed nine tests across the interop, adapter, and contract levels, so the shape validation is genuinely asserted rather than incidentally passing.
+
+14. Record which checks you observed and which you did not. A capability is recorded as host-verified in [PROJECT_FACTS-en.md](PROJECT_FACTS-en.md) only after a real-host run for that capability.
 
 The Storage check writes a dedicated test key, verifies overwrite, removes it, and confirms that the missing key reads as `null`. The network check issues a `GET` to `https://example.com/` and reports the status code and body length; point the example's `networkUrl` constant at any reachable HTTPS endpoint when verifying a different host.
 
