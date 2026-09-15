@@ -2,6 +2,7 @@ package io.github.bobcgn.miniapp.host
 
 import io.github.bobcgn.miniapp.capability.CapabilityKey
 import io.github.bobcgn.miniapp.capability.CapabilitySupport
+import io.github.bobcgn.miniapp.error.MiniAppException
 
 /**
  * Marker for a host-specific API escape hatch.
@@ -28,4 +29,26 @@ public interface MiniAppHost<out P : HostPlatformApi> {
 
     /** Returns whether this host currently provides [capability]. */
     public fun capabilitySupport(capability: CapabilityKey): CapabilitySupport
+}
+
+/**
+ * Fails unless this host currently provides [capability].
+ *
+ * A caller that cannot proceed without a capability uses this instead of reading
+ * [MiniAppHost.capabilitySupport] and inventing its own failure, so an unavailable
+ * host surfaces as [MiniAppException.UnsupportedCapability] rather than as
+ * whatever host failure happens to occur later.
+ *
+ * Every state other than [CapabilitySupport.Supported] fails, including
+ * [CapabilitySupport.VersionDependent] and [CapabilitySupport.PermissionDependent]:
+ * those describe what this host would need in order to help, which is not a
+ * capability the caller can use. Call [MiniAppHost.capabilitySupport] directly
+ * when the reason matters, because the thrown exception carries only the key.
+ *
+ * @throws MiniAppException.UnsupportedCapability when [capability] is not supported
+ */
+public fun MiniAppHost<*>.requireSupported(capability: CapabilityKey): Unit {
+    if (capabilitySupport(capability) != CapabilitySupport.Supported) {
+        throw MiniAppException.UnsupportedCapability(capability)
+    }
 }
