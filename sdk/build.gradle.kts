@@ -9,6 +9,7 @@ kotlin {
     explicitApi()
 
     js {
+        outputModuleName.set("kmp-miniapp-sdk-kotlin")
         nodejs()
         useCommonJs()
         binaries.library()
@@ -22,6 +23,7 @@ kotlin {
 
         commonTest.dependencies {
             implementation(kotlin("test"))
+            implementation(libs.kotlinx.coroutines.test)
         }
     }
 }
