@@ -4,6 +4,8 @@
 
 This document describes the two testing layers, the fakes each layer may use, and the reproducible checklist for a real WeChat Mini Program run.
 
+The two layers are the top-level automation and real-host categories. Release evidence is further classified as Unit, Contract, Node, DeveloperTools, RealDevice, and BackendRequired. See the [WeChat real-host verification matrix](platforms/wechat/WECHAT_HOST_VERIFICATION-en.md) for the minimum level per capability, evidence retention, and regression timing.
+
 ## 1. Two layers, two different claims
 
 | Layer | Runs on | Establishes | Does not establish |
@@ -66,6 +68,8 @@ cd examples/wechat-miniprogram && npm run smoke && npm run typecheck
 ## 3. Real-host layer
 
 ### Reproducible checklist
+
+The following procedure is the DeveloperTools checklist for currently implemented capabilities. It does not replace any RealDevice or BackendRequired checks in the verification matrix. After execution, use the matrix evidence template to record the commit, tool version, base-library version, result, and evidence reference.
 
 1. Prepare the artifacts from the repository root.
 

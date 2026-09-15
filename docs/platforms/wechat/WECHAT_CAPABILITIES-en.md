@@ -2,7 +2,7 @@
 
 [中文](WECHAT_CAPABILITIES-ch.md)
 
-This document is a factual index of WeChat host capability status, not a roadmap. Source code and executable Gradle configuration take precedence. A capability may be marked `Stable` only when implementation, automated tests, and the required host-verification evidence exist.
+This document is a factual index of WeChat host capability status, not a roadmap. Source code and executable Gradle configuration take precedence. A capability may be marked `Stable` only when implementation, automated tests, and the required host-verification evidence exist. See the [WeChat real-host verification matrix](WECHAT_HOST_VERIFICATION-en.md) for environments, procedures, evidence format, and regression frequency.
 
 ## Status and verification levels
 

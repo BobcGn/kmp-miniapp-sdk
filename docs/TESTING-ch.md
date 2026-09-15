@@ -4,6 +4,8 @@
 
 本文档描述两层测试体系、各层可使用的 fake，以及可复现的真实微信小程序运行检查清单。
 
+两层是“自动化”和“真实宿主”的最高层分类。发布证据进一步细分为 Unit、Contract、Node、DeveloperTools、RealDevice 和 BackendRequired。各能力最低需要哪个等级、如何留存证据以及何时回归，见 [微信真实宿主验证矩阵](platforms/wechat/WECHAT_HOST_VERIFICATION-ch.md)。
+
 ## 1. 两层，两类不同的结论
 
 | 层次 | 运行环境 | 能证明 | 不能证明 |
@@ -66,6 +68,8 @@ cd examples/wechat-miniprogram && npm run smoke && npm run typecheck
 ## 3. 真实宿主层
 
 ### 可复现检查清单
+
+以下步骤是当前已实现能力的 DeveloperTools 清单。它不替代验证矩阵要求的 RealDevice 或 BackendRequired 检查。执行后应使用验证矩阵中的证据模板记录 commit、工具版本、基础库版本、结果和证据引用。
 
 1. 在仓库根目录准备产物。
 

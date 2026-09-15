@@ -18,6 +18,8 @@ VS Code may be useful for files under `examples/wechat-miniprogram`. WeChat Deve
 
 Before starting or closing WeChat capability work, review the [WeChat capability matrix](platforms/wechat/WECHAT_CAPABILITIES-en.md). It distinguishes implemented, partial, planned, unsupported, and P3 presentation capabilities and records the verification levels required for each entry.
 
+When running WeChat host acceptance, use the [WeChat real-host verification matrix](platforms/wechat/WECHAT_HOST_VERIFICATION-en.md) to select the minimum environment and complete its evidence template. A DeveloperTools result must not replace real-device, permission, privacy, or backend-chain evidence.
+
 ## Commands
 
 ```shell
