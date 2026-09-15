@@ -26,6 +26,7 @@ const supportedSchemas = new Set([
   'vibrateLong',
   'getFileSystemManager',
   'getLocation',
+  'scanCode',
 ]);
 
 // Permission state this fake host holds, plus a record of what it was asked to
@@ -33,6 +34,7 @@ const supportedSchemas = new Set([
 const scopeDecisions = new Map();
 const authorizeCalls = [];
 let openSettingCalls = 0;
+let getSettingCalls = 0;
 
 // Privacy is a separate host condition from the permissions above, so it gets
 // its own state and its own record of what the host was asked to do.
@@ -67,6 +69,19 @@ const fileSystemCalls = [];
 let locationAnswer = { latitude: 31.5, longitude: 121.5, accuracy: 15.0 };
 let locationFailure = null;
 const locationCalls = [];
+
+// Scanning is a device capability driven entirely from a user gesture. The fake
+// records what it was asked for and answers with the shape its fields describe;
+// a field left undefined is one the host did not report.
+let scanAnswer = {
+  result: 'node-smoke-scan-payload',
+  scanType: 'QR_CODE',
+  charSet: 'utf-8',
+  rawData: 'node-smoke-raw',
+  path: '/node-sandbox/scanned.png',
+};
+let scanFailure = null;
+const scanCalls = [];
 
 function fileSystemManager() {
   return {
@@ -181,6 +196,7 @@ global.wx = {
     return { platform: 'devtools' };
   },
   getSetting(options) {
+    getSettingCalls += 1;
     options.success({ authSetting: authSettingSnapshot(), errMsg: 'getSetting:ok' });
   },
   authorize(options) {
@@ -232,6 +248,22 @@ global.wx = {
       errMsg: 'getLocation:ok',
     });
   },
+  scanCode(options) {
+    scanCalls.push({ onlyFromCamera: options.onlyFromCamera, scanType: options.scanType });
+    if (scanFailure !== null) {
+      options.fail({ errMsg: scanFailure });
+      return;
+    }
+    const answer = {
+      result: scanAnswer.result,
+      errMsg: 'scanCode:ok',
+    };
+    if (scanAnswer.scanType !== undefined) answer.scanType = scanAnswer.scanType;
+    if (scanAnswer.charSet !== undefined) answer.charSet = scanAnswer.charSet;
+    if (scanAnswer.rawData !== undefined) answer.rawData = scanAnswer.rawData;
+    if (scanAnswer.path !== undefined) answer.path = scanAnswer.path;
+    options.success(answer);
+  },
   env: {
     USER_DATA_PATH: sandboxRoot,
   },
@@ -266,6 +298,7 @@ async function main() {
     'wechatFileExists',
     'wechatRemoveFile',
     'wechatGetCurrentLocation',
+    'wechatScanCode',
     'networkRequest',
     'wechatAppOnLaunch',
     'wechatAppOnShow',
@@ -375,7 +408,8 @@ async function main() {
   assert.equal(runtimeInfo.isDeveloperTools, true);
 
   assert.equal(miniAppSdk.wechatCanIUse('getStorage'), true);
-  assert.equal(miniAppSdk.wechatCanIUse('scanCode'), false);
+  // A schema this fake base library does not confirm still answers false.
+  assert.equal(miniAppSdk.wechatCanIUse('chooseLocation'), false);
 
   assert.equal(miniAppSdk.capabilitySupport('storage').state, 'Supported');
   assert.equal(miniAppSdk.capabilitySupport('network').state, 'Supported');
@@ -590,6 +624,111 @@ async function main() {
   await assert.rejects(miniAppSdk.wechatGetCurrentLocation('gcj02'));
   locationFailure = null;
 
+  // Scanning opens WeChat's own interface, and only from a user gesture. Nothing
+  // opened it while the module loaded, and the SDK asks for no permission to do
+  // so, because no permission precondition for this API could be established.
+  assert.deepEqual(scanCalls, []);
+  assert.equal(miniAppSdk.capabilitySupport('wechat.scan-code').state, 'Supported');
+
+  const permissionQueriesBeforeScan = getSettingCalls;
+  const authorizationsBeforeScan = authorizeCalls.length;
+  const settingsVisitsBeforeScan = openSettingCalls;
+  const privacyAuthorizationsBeforeScan = privacyAuthorizations.length;
+
+  // An omitted request asks for every category the host supports. Leaving the
+  // category field unset is how that is expressed, not an empty array.
+  const scanned = await miniAppSdk.wechatScanCode();
+  assert.equal(scanned.text, 'node-smoke-scan-payload');
+  assert.equal(scanned.scanType, 'QR_CODE');
+  assert.equal(scanned.format, 'QR_CODE');
+  assert.equal(scanned.charSet, 'utf-8');
+  assert.equal(scanned.rawData, 'node-smoke-raw');
+  assert.equal(scanned.path, '/node-sandbox/scanned.png');
+  assert.equal(scanCalls[scanCalls.length - 1].onlyFromCamera, false);
+  assert.equal(scanCalls[scanCalls.length - 1].scanType, undefined);
+
+  // No permission was queried, requested, or opened, and no privacy consent was
+  // asked for, on the way to opening the interface.
+  assert.equal(getSettingCalls, permissionQueriesBeforeScan);
+  assert.equal(authorizeCalls.length, authorizationsBeforeScan);
+  assert.equal(openSettingCalls, settingsVisitsBeforeScan);
+  assert.equal(privacyAuthorizations.length, privacyAuthorizationsBeforeScan);
+
+  // The camera choice and the categories are forwarded in the caller's order.
+  await miniAppSdk.wechatScanCode(true, ['qrCode', 'barCode']);
+  assert.equal(scanCalls[scanCalls.length - 1].onlyFromCamera, true);
+  assert.deepEqual(scanCalls[scanCalls.length - 1].scanType, ['qrCode', 'barCode']);
+
+  // A format this SDK does not know is reported rather than turned into a failure:
+  // the host decoded something real and named it in its own vocabulary. The fields
+  // it did not report stay absent instead of becoming empty strings.
+  scanAnswer = { result: 'payload', scanType: 'BRAND_NEW_FORMAT' };
+  const unknownFormat = await miniAppSdk.wechatScanCode();
+  assert.equal(unknownFormat.text, 'payload');
+  assert.equal(unknownFormat.scanType, 'BRAND_NEW_FORMAT');
+  assert.equal(unknownFormat.format, null);
+  assert.equal(unknownFormat.charSet, null);
+  assert.equal(unknownFormat.rawData, null);
+  assert.equal(unknownFormat.path, null);
+
+  scanAnswer = {
+    result: 'node-smoke-scan-payload',
+    scanType: 'QR_CODE',
+    charSet: 'utf-8',
+    rawData: 'node-smoke-raw',
+    path: '/node-sandbox/scanned.png',
+  };
+
+  // A category this SDK does not know is a caller mistake, not a host condition.
+  await assert.rejects(
+    miniAppSdk.wechatScanCode(false, ['notACategory']),
+    /Unsupported scan category/,
+  );
+
+  // Dismissing the interface is the user's decision, and the SDK reports it as its
+  // own error type so a consumer never has to read a host message. Both forms the
+  // adapter recognizes are covered; nothing here matches on a substring.
+  scanFailure = 'scanCode:cancel';
+  await assert.rejects(
+    miniAppSdk.wechatScanCode(),
+    (error) => error.name === 'HostInteractionInterrupted',
+  );
+  scanFailure = 'scanCode:fail cancel';
+  await assert.rejects(
+    miniAppSdk.wechatScanCode(),
+    (error) => error.name === 'HostInteractionInterrupted',
+  );
+
+  // A failure that merely mentions cancelling is not a user decision.
+  scanFailure = 'scanCode:fail user cancel';
+  await assert.rejects(miniAppSdk.wechatScanCode(), (error) => error.name === 'HostFailure');
+  scanFailure = 'scanCode:fail system error';
+  await assert.rejects(miniAppSdk.wechatScanCode(), (error) => error.name === 'HostFailure');
+  scanFailure = null;
+
+  // Content the contract cannot carry is reported rather than becoming an empty
+  // scan the user never made.
+  scanAnswer = { result: undefined, scanType: 'QR_CODE' };
+  await assert.rejects(miniAppSdk.wechatScanCode(), (error) => error.name === 'InvalidResponse');
+  scanAnswer = { result: 'node-smoke-scan-payload', scanType: 'QR_CODE' };
+
+  // A host without the API fails through the capability path instead of throwing
+  // out of the JavaScript boundary. The API is removed from the fake host itself,
+  // which is the condition the adapter probes.
+  supportedSchemas.delete('scanCode');
+  const scanCodeImpl = global.wx.scanCode;
+  delete global.wx.scanCode;
+
+  assert.equal(miniAppSdk.wechatCanIUse('scanCode'), false);
+  assert.equal(miniAppSdk.capabilitySupport('wechat.scan-code').state, 'Unsupported');
+  await assert.rejects(
+    miniAppSdk.wechatScanCode(),
+    (error) => error.name === 'UnsupportedCapability',
+  );
+
+  global.wx.scanCode = scanCodeImpl;
+  supportedSchemas.add('scanCode');
+
   console.log('[node-smoke] sdkVersion:', miniAppSdk.sdkVersion());
   console.log('[node-smoke] storage: PASS');
   console.log('[node-smoke] auth bootstrap: PASS');
@@ -604,6 +743,7 @@ async function main() {
   console.log('[node-smoke] haptics: PASS');
   console.log('[node-smoke] filesystem: PASS');
   console.log('[node-smoke] location: PASS');
+  console.log('[node-smoke] scanner: PASS');
 }
 
 main().catch((error) => {

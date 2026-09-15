@@ -83,6 +83,23 @@ module.exports = {
         };
       });
   },
+  wechatScanCode: function wechatScanCode(onlyFromCamera, scanTypes) {
+    return miniAppExports
+      .wechatScanCode(
+        onlyFromCamera === undefined ? false : onlyFromCamera,
+        scanTypes === undefined ? [] : scanTypes,
+      )
+      .then(function (result) {
+        return {
+          text: result.text,
+          scanType: result.scanType,
+          format: result.format,
+          charSet: result.charSet,
+          rawData: result.rawData,
+          path: result.path,
+        };
+      });
+  },
   networkRequest: function networkRequest(url, init) {
     const options = init || {};
     return miniAppExports

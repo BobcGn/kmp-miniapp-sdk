@@ -2,82 +2,85 @@
   'use strict';
   //region block: imports
   var imul = Math.imul;
-  var protoOf = kotlin_kotlin.$_$.n3;
-  var initMetadataForInterface = kotlin_kotlin.$_$.g3;
+  var protoOf = kotlin_kotlin.$_$.q3;
+  var initMetadataForInterface = kotlin_kotlin.$_$.j3;
   var Unit_instance = kotlin_kotlin.$_$.j;
   var Companion_instance = kotlin_kotlin.$_$.i;
   var _Result___init__impl__xyqfz8 = kotlin_kotlin.$_$.c;
-  var createFailure = kotlin_kotlin.$_$.e4;
-  var CoroutineImpl = kotlin_kotlin.$_$.j2;
-  var intercepted = kotlin_kotlin.$_$.v1;
+  var createFailure = kotlin_kotlin.$_$.h4;
+  var CoroutineImpl = kotlin_kotlin.$_$.m2;
+  var intercepted = kotlin_kotlin.$_$.y1;
   var CancellableContinuationImpl = kotlin_org_jetbrains_kotlinx_kotlinx_coroutines_core.$_$.c;
   var returnIfSuspended = kotlin_kotlin.$_$.l;
-  var get_COROUTINE_SUSPENDED = kotlin_kotlin.$_$.t1;
-  var initMetadataForCoroutine = kotlin_kotlin.$_$.f3;
-  var getStringHashCode = kotlin_kotlin.$_$.b3;
-  var initMetadataForClass = kotlin_kotlin.$_$.d3;
-  var initMetadataForObject = kotlin_kotlin.$_$.i3;
-  var toString = kotlin_kotlin.$_$.l4;
-  var equals = kotlin_kotlin.$_$.x2;
-  var Enum = kotlin_kotlin.$_$.w3;
+  var get_COROUTINE_SUSPENDED = kotlin_kotlin.$_$.w1;
+  var initMetadataForCoroutine = kotlin_kotlin.$_$.i3;
+  var getStringHashCode = kotlin_kotlin.$_$.e3;
+  var initMetadataForClass = kotlin_kotlin.$_$.g3;
+  var initMetadataForObject = kotlin_kotlin.$_$.l3;
+  var toString = kotlin_kotlin.$_$.o4;
+  var equals = kotlin_kotlin.$_$.a3;
+  var Enum = kotlin_kotlin.$_$.z3;
   var VOID = kotlin_kotlin.$_$.a;
-  var initMetadataForCompanion = kotlin_kotlin.$_$.e3;
-  var enumEntries = kotlin_kotlin.$_$.l2;
-  var emptyMap = kotlin_kotlin.$_$.k1;
-  var captureStack = kotlin_kotlin.$_$.s2;
-  var Exception = kotlin_kotlin.$_$.y3;
+  var initMetadataForCompanion = kotlin_kotlin.$_$.h3;
+  var enumEntries = kotlin_kotlin.$_$.o2;
+  var emptyMap = kotlin_kotlin.$_$.m1;
+  var captureStack = kotlin_kotlin.$_$.v2;
+  var Exception = kotlin_kotlin.$_$.b4;
   var Exception_init_$Init$ = kotlin_kotlin.$_$.w;
-  var THROW_CCE = kotlin_kotlin.$_$.b4;
-  var isCharSequence = kotlin_kotlin.$_$.j3;
-  var trim = kotlin_kotlin.$_$.v3;
-  var toString_0 = kotlin_kotlin.$_$.o3;
+  var THROW_CCE = kotlin_kotlin.$_$.e4;
+  var isCharSequence = kotlin_kotlin.$_$.m3;
+  var trim = kotlin_kotlin.$_$.y3;
+  var toString_0 = kotlin_kotlin.$_$.r3;
   var _Char___init__impl__6a9atx = kotlin_kotlin.$_$.b;
-  var charArrayOf = kotlin_kotlin.$_$.t2;
-  var split = kotlin_kotlin.$_$.t3;
+  var charArrayOf = kotlin_kotlin.$_$.w2;
+  var split = kotlin_kotlin.$_$.w3;
   var ArrayList_init_$Create$ = kotlin_kotlin.$_$.n;
-  var toIntOrNull = kotlin_kotlin.$_$.u3;
-  var last = kotlin_kotlin.$_$.m1;
-  var get_lastIndex = kotlin_kotlin.$_$.l1;
-  var compareTo = kotlin_kotlin.$_$.u2;
-  var hashCode = kotlin_kotlin.$_$.c3;
+  var toIntOrNull = kotlin_kotlin.$_$.x3;
+  var last = kotlin_kotlin.$_$.o1;
+  var get_lastIndex = kotlin_kotlin.$_$.n1;
+  var compareTo = kotlin_kotlin.$_$.x2;
+  var hashCode = kotlin_kotlin.$_$.f3;
   var await_0 = kotlin_kotlin.$_$.k;
-  var noWhenBranchMatchedException = kotlin_kotlin.$_$.j4;
+  var noWhenBranchMatchedException = kotlin_kotlin.$_$.m4;
   var ArrayList_init_$Create$_0 = kotlin_kotlin.$_$.o;
-  var listOf = kotlin_kotlin.$_$.o1;
+  var listOf = kotlin_kotlin.$_$.q1;
   var addAll = kotlin_kotlin.$_$.h1;
-  var copyToArray = kotlin_kotlin.$_$.i1;
+  var copyToArray = kotlin_kotlin.$_$.j1;
   var IllegalArgumentException_init_$Create$ = kotlin_kotlin.$_$.x;
-  var promisify = kotlin_kotlin.$_$.w1;
+  var promisify = kotlin_kotlin.$_$.z1;
   var LinkedHashMap_init_$Create$ = kotlin_kotlin.$_$.q;
-  var defineProp = kotlin_kotlin.$_$.w2;
+  var defineProp = kotlin_kotlin.$_$.z2;
   var Companion_instance_0 = kotlin_kotlin.$_$.h;
-  var isBlank = kotlin_kotlin.$_$.s3;
-  var to = kotlin_kotlin.$_$.m4;
-  var mapOf = kotlin_kotlin.$_$.p1;
-  var contains = kotlin_kotlin.$_$.r3;
-  var constructCallableReference = kotlin_kotlin.$_$.v2;
-  var FunctionAdapter = kotlin_kotlin.$_$.q2;
-  var isInterface = kotlin_kotlin.$_$.k3;
-  var mapOf_0 = kotlin_kotlin.$_$.q1;
+  var emptyList = kotlin_kotlin.$_$.l1;
+  var distinct = kotlin_kotlin.$_$.k1;
+  var isBlank = kotlin_kotlin.$_$.v3;
+  var to = kotlin_kotlin.$_$.p4;
+  var mapOf = kotlin_kotlin.$_$.r1;
+  var contains = kotlin_kotlin.$_$.u3;
+  var setOf = kotlin_kotlin.$_$.u1;
+  var constructCallableReference = kotlin_kotlin.$_$.y2;
+  var FunctionAdapter = kotlin_kotlin.$_$.t2;
+  var isInterface = kotlin_kotlin.$_$.n3;
+  var mapOf_0 = kotlin_kotlin.$_$.s1;
   var CoroutineScope = kotlin_org_jetbrains_kotlinx_kotlinx_coroutines_core.$_$.e;
-  var initMetadataForLambda = kotlin_kotlin.$_$.h3;
+  var initMetadataForLambda = kotlin_kotlin.$_$.k3;
   var SupervisorJob = kotlin_org_jetbrains_kotlinx_kotlinx_coroutines_core.$_$.f;
   var Dispatchers_getInstance = kotlin_org_jetbrains_kotlinx_kotlinx_coroutines_core.$_$.a;
   var CoroutineScope_0 = kotlin_org_jetbrains_kotlinx_kotlinx_coroutines_core.$_$.d;
   var async = kotlin_org_jetbrains_kotlinx_kotlinx_coroutines_core.$_$.g;
-  var getNumberHashCode = kotlin_kotlin.$_$.z2;
-  var isNumber = kotlin_kotlin.$_$.l3;
-  var numberToDouble = kotlin_kotlin.$_$.m3;
-  var isNaN_0 = kotlin_kotlin.$_$.h4;
-  var isInfinite = kotlin_kotlin.$_$.g4;
-  var getBooleanHashCode = kotlin_kotlin.$_$.y2;
+  var collectionSizeOrDefault = kotlin_kotlin.$_$.i1;
+  var getNumberHashCode = kotlin_kotlin.$_$.c3;
+  var isNumber = kotlin_kotlin.$_$.o3;
+  var numberToDouble = kotlin_kotlin.$_$.p3;
+  var isNaN_0 = kotlin_kotlin.$_$.k4;
+  var isInfinite = kotlin_kotlin.$_$.j4;
+  var getBooleanHashCode = kotlin_kotlin.$_$.b3;
   var MutableStateFlow = kotlin_org_jetbrains_kotlinx_kotlinx_coroutines_core.$_$.b;
-  var emptyList = kotlin_kotlin.$_$.j1;
-  var listOf_0 = kotlin_kotlin.$_$.n1;
+  var listOf_0 = kotlin_kotlin.$_$.p1;
   var Collection = kotlin_kotlin.$_$.f1;
-  var KProperty1 = kotlin_kotlin.$_$.q3;
-  var getPropertyCallableRef = kotlin_kotlin.$_$.a3;
-  var lazy = kotlin_kotlin.$_$.i4;
+  var KProperty1 = kotlin_kotlin.$_$.t3;
+  var getPropertyCallableRef = kotlin_kotlin.$_$.d3;
+  var lazy = kotlin_kotlin.$_$.l4;
   //endregion
   //region block: pre-declaration
   initMetadataForInterface(HostOperationAborter, 'HostOperationAborter');
@@ -108,6 +111,7 @@
   initMetadataForClass(MiniAppException, 'MiniAppException', VOID, Exception);
   initMetadataForClass(UnsupportedCapability, 'UnsupportedCapability', VOID, MiniAppException);
   initMetadataForClass(PermissionDenied, 'PermissionDenied', VOID, MiniAppException);
+  initMetadataForClass(HostInteractionInterrupted, 'HostInteractionInterrupted', VOID, MiniAppException);
   initMetadataForClass(Timeout, 'Timeout', VOID, MiniAppException);
   initMetadataForClass(HostFailure, 'HostFailure', VOID, MiniAppException);
   initMetadataForClass(InvalidResponse, 'InvalidResponse', VOID, MiniAppException);
@@ -119,6 +123,7 @@
   initMetadataForClass(JsGeoPosition, 'JsGeoPosition');
   initMetadataForClass(JsPrivacyStatus, 'JsPrivacyStatus');
   initMetadataForClass(JsRuntimeInfo, 'JsRuntimeInfo');
+  initMetadataForClass(JsScanResult, 'JsScanResult');
   initMetadataForCoroutine($storageGet$suspendBridgeCOROUTINE$, CoroutineImpl);
   initMetadataForCoroutine($storageSet$suspendBridgeCOROUTINE$, CoroutineImpl);
   initMetadataForCoroutine($storageRemove$suspendBridgeCOROUTINE$, CoroutineImpl);
@@ -150,6 +155,8 @@
   initMetadataForCoroutine($wechatRemoveFile$suspendBridgeCOROUTINE$, CoroutineImpl);
   initMetadataForCoroutine($wechatGetCurrentLocationCOROUTINE$, CoroutineImpl);
   initMetadataForCoroutine($wechatGetCurrentLocation$suspendBridgeCOROUTINE$, CoroutineImpl);
+  initMetadataForCoroutine($wechatScanCodeCOROUTINE$, CoroutineImpl);
+  initMetadataForCoroutine($wechatScanCode$suspendBridgeCOROUTINE$, CoroutineImpl);
   initMetadataForCoroutine($requirePrivacySatisfied$suspendBridgeCOROUTINE$, CoroutineImpl);
   initMetadataForObject(MiniAppExports, 'MiniAppExports', VOID, VOID, VOID, [1, 2, 0, 5]);
   initMetadataForClass(MiniAppHttpResult, 'MiniAppHttpResult');
@@ -157,7 +164,12 @@
   initMetadataForClass(WeChatCoordinateSystem, 'WeChatCoordinateSystem', VOID, Enum);
   initMetadataForClass(WeChatGeoPosition, 'WeChatGeoPosition');
   initMetadataForClass(WeChatLoginResult, 'WeChatLoginResult');
+  initMetadataForClass(WeChatScanCategory, 'WeChatScanCategory', VOID, Enum);
   initMetadataForCompanion(Companion_6);
+  initMetadataForClass(WeChatScanFormat, 'WeChatScanFormat', VOID, Enum);
+  initMetadataForClass(WeChatScanRequest, 'WeChatScanRequest', WeChatScanRequest);
+  initMetadataForClass(WeChatScanResult, 'WeChatScanResult');
+  initMetadataForCompanion(Companion_7);
   initMetadataForClass(WeChatSessionState, 'WeChatSessionState', VOID, Enum);
   initMetadataForClass(WechatPlatformApi, 'WechatPlatformApi');
   initMetadataForClass(WechatHost, 'WechatHost', WechatHost);
@@ -197,7 +209,10 @@
   initMetadataForClass(WechatPrivacy, 'WechatPrivacy', WechatPrivacy, VOID, VOID, [0]);
   initMetadataForObject(WxPrivacyHost, 'WxPrivacyHost');
   initMetadataForObject(WxRuntimeInfoHost, 'WxRuntimeInfoHost');
-  initMetadataForCompanion(Companion_7);
+  initMetadataForCoroutine($scanCOROUTINE$, CoroutineImpl);
+  initMetadataForClass(WechatScanCode, 'WechatScanCode', WechatScanCode, VOID, VOID, [1]);
+  initMetadataForObject(WxScanCodeHost, 'WxScanCodeHost');
+  initMetadataForCompanion(Companion_8);
   initMetadataForClass(WechatStorage, 'WechatStorage', WechatStorage, VOID, VOID, [1, 2]);
   initMetadataForObject(WxStorageHost, 'WxStorageHost');
   initMetadataForClass(Present, 'Present');
@@ -212,12 +227,17 @@
   initMetadataForClass(Required, 'Required');
   initMetadataForClass(NotRequired, 'NotRequired');
   initMetadataForObject(Unreadable_3, 'Unreadable');
+  initMetadataForClass(Present_2, 'Present');
+  initMetadataForObject(Unreadable_4, 'Unreadable');
+  initMetadataForClass(Present_3, 'Present');
+  initMetadataForObject(Absent_0, 'Absent');
+  initMetadataForObject(WrongType, 'WrongType');
   initMetadataForClass(WechatAppLifecycle, 'WechatAppLifecycle', WechatAppLifecycle);
   initMetadataForClass(WechatCapabilityRequirement, 'WechatCapabilityRequirement', WechatCapabilityRequirement);
   initMetadataForObject(WechatCapabilityCatalog, 'WechatCapabilityCatalog');
   initMetadataForClass(WechatCapabilityGate, 'WechatCapabilityGate');
   initMetadataForClass(WechatPageLifecycle, 'WechatPageLifecycle', WechatPageLifecycle);
-  initMetadataForCompanion(Companion_8);
+  initMetadataForCompanion(Companion_9);
   initMetadataForClass(WechatRuntimeInfo, 'WechatRuntimeInfo');
   //endregion
   function HostOperationAborter() {
@@ -724,6 +744,14 @@
     captureStack(this, PermissionDenied);
     this.permission_1 = permission;
   }
+  function HostInteractionInterrupted(host, operation, hostMessage, cause) {
+    cause = cause === VOID ? null : cause;
+    MiniAppException.call(this, host + ' interaction interrupted during ' + operation, cause);
+    captureStack(this, HostInteractionInterrupted);
+    this.host_1 = host;
+    this.operation_1 = operation;
+    this.hostMessage_1 = hostMessage;
+  }
   function Timeout(operation, hostMessage, cause) {
     cause = cause === VOID ? null : cause;
     MiniAppException.call(this, operation + ' timed out: ' + hostMessage, cause);
@@ -932,6 +960,32 @@
   };
   protoOf(JsRuntimeInfo).get_isDeveloperTools_3vcog4_k$ = function () {
     return this.isDeveloperTools;
+  };
+  function JsScanResult(text, scanType, format, charSet, rawData, path) {
+    this.text = text;
+    this.scanType = scanType;
+    this.format = format;
+    this.charSet = charSet;
+    this.rawData = rawData;
+    this.path = path;
+  }
+  protoOf(JsScanResult).get_text_wouvsm_k$ = function () {
+    return this.text;
+  };
+  protoOf(JsScanResult).get_scanType_oi03z4_k$ = function () {
+    return this.scanType;
+  };
+  protoOf(JsScanResult).get_format_dfdtds_k$ = function () {
+    return this.format;
+  };
+  protoOf(JsScanResult).get_charSet_dhk7r7_k$ = function () {
+    return this.charSet;
+  };
+  protoOf(JsScanResult).get_rawData_hk5csp_k$ = function () {
+    return this.rawData;
+  };
+  protoOf(JsScanResult).get_path_wos8ry_k$ = function () {
+    return this.path;
   };
   function $storageGet$suspendBridgeCOROUTINE$(_this__u8e3s4, key, resultContinuation) {
     CoroutineImpl.call(this, resultContinuation);
@@ -2475,6 +2529,110 @@
       }
      while (true);
   };
+  function $wechatScanCodeCOROUTINE$(_this__u8e3s4, onlyFromCamera, scanTypes, resultContinuation) {
+    CoroutineImpl.call(this, resultContinuation);
+    this._this__u8e3s4__1 = _this__u8e3s4;
+    this.onlyFromCamera_1 = onlyFromCamera;
+    this.scanTypes_1 = scanTypes;
+  }
+  protoOf($wechatScanCodeCOROUTINE$).doResume_5yljmg_k$ = function () {
+    var suspendResult = this.result_1;
+    $sm: do
+      try {
+        var tmp = this.state_1;
+        switch (tmp) {
+          case 0:
+            this.exceptionState_1 = 2;
+            var this_0 = this.scanTypes_1;
+            var destination = ArrayList_init_$Create$(this_0.length);
+            var inductionVariable = 0;
+            var last = this_0.length;
+            while (inductionVariable < last) {
+              var item = this_0[inductionVariable];
+              inductionVariable = inductionVariable + 1 | 0;
+              destination.add_utx5q5_k$(scanCategory(item));
+            }
+
+            var request = new WeChatScanRequest(this.onlyFromCamera_1, destination);
+            this.state_1 = 1;
+            suspendResult = this._this__u8e3s4__1.host_1.platform_1.scanCode_1.scan_i72xbk_k$(request, this);
+            if (suspendResult === get_COROUTINE_SUSPENDED()) {
+              return suspendResult;
+            }
+
+            continue $sm;
+          case 1:
+            var result = suspendResult;
+            var tmp0_safe_receiver = result.format_1;
+            return new JsScanResult(result.text_1, result.scanType_1, tmp0_safe_receiver == null ? null : tmp0_safe_receiver.hostValue_1, result.charSet_1, result.rawData_1, result.path_1);
+          case 2:
+            throw this.exception_1;
+        }
+      } catch ($p) {
+        var e = $p;
+        if (this.exceptionState_1 === 2) {
+          throw e;
+        } else {
+          this.state_1 = this.exceptionState_1;
+          this.exception_1 = e;
+        }
+      }
+     while (true);
+  };
+  function $wechatScanCode$suspendBridgeCOROUTINE$(_this__u8e3s4, onlyFromCamera, scanTypes, resultContinuation) {
+    CoroutineImpl.call(this, resultContinuation);
+    this._this__u8e3s4__1 = _this__u8e3s4;
+    this.onlyFromCamera_1 = onlyFromCamera;
+    this.scanTypes_1 = scanTypes;
+  }
+  protoOf($wechatScanCode$suspendBridgeCOROUTINE$).doResume_5yljmg_k$ = function () {
+    var suspendResult = this.result_1;
+    $sm: do
+      try {
+        var tmp = this.state_1;
+        switch (tmp) {
+          case 0:
+            this.exceptionState_1 = 4;
+            if (this._this__u8e3s4__1.wechatScanCode === protoOf(MiniAppExports).wechatScanCode) {
+              this.state_1 = 2;
+              suspendResult = this._this__u8e3s4__1.wechatScanCode_8sdi3o_k$(this.onlyFromCamera_1, this.scanTypes_1, this);
+              if (suspendResult === get_COROUTINE_SUSPENDED()) {
+                return suspendResult;
+              }
+              continue $sm;
+            } else {
+              this.state_1 = 1;
+              suspendResult = await_0(this._this__u8e3s4__1.wechatScanCode(this.onlyFromCamera_1, this.scanTypes_1), this);
+              if (suspendResult === get_COROUTINE_SUSPENDED()) {
+                return suspendResult;
+              }
+              continue $sm;
+            }
+
+          case 1:
+            this.WHEN_RESULT0__1 = suspendResult;
+            this.state_1 = 3;
+            continue $sm;
+          case 2:
+            this.WHEN_RESULT0__1 = suspendResult;
+            this.state_1 = 3;
+            continue $sm;
+          case 3:
+            return this.WHEN_RESULT0__1;
+          case 4:
+            throw this.exception_1;
+        }
+      } catch ($p) {
+        var e = $p;
+        if (this.exceptionState_1 === 4) {
+          throw e;
+        } else {
+          this.state_1 = this.exceptionState_1;
+          this.exception_1 = e;
+        }
+      }
+     while (true);
+  };
   function $requirePrivacySatisfied$suspendBridgeCOROUTINE$(_this__u8e3s4, resultContinuation) {
     CoroutineImpl.call(this, resultContinuation);
     this._this__u8e3s4__1 = _this__u8e3s4;
@@ -2944,6 +3102,24 @@
     tmp.exception_1 = null;
     return tmp.doResume_5yljmg_k$();
   };
+  protoOf(MiniAppExports).wechatScanCode_8sdi3o_k$ = function (onlyFromCamera, scanTypes, $completion) {
+    var tmp = new $wechatScanCodeCOROUTINE$(this, onlyFromCamera, scanTypes, $completion);
+    tmp.result_1 = Unit_instance;
+    tmp.exception_1 = null;
+    return tmp.doResume_5yljmg_k$();
+  };
+  protoOf(MiniAppExports).wechatScanCode = function (onlyFromCamera, scanTypes) {
+    var tmp = this;
+    return promisify(function ($completion) {
+      return tmp.wechatScanCode_8sdi3o_k$(onlyFromCamera, scanTypes, $completion);
+    });
+  };
+  protoOf(MiniAppExports).wechatScanCode$suspendBridge_9z709x_k$ = function (onlyFromCamera, scanTypes, $completion) {
+    var tmp = new $wechatScanCode$suspendBridgeCOROUTINE$(this, onlyFromCamera, scanTypes, $completion);
+    tmp.result_1 = Unit_instance;
+    tmp.exception_1 = null;
+    return tmp.doResume_5yljmg_k$();
+  };
   protoOf(MiniAppExports).requirePrivacySatisfied_m2jemw_k$ = function ($completion) {
     return this.privacy_1.requireSatisfied_farkra_k$($completion);
   };
@@ -3069,6 +3245,30 @@
     }
     return tmp;
   }
+  function scanCategory(name) {
+    var tmp0 = get_entries_0();
+    var tmp$ret$0;
+    $l$block: {
+      // Inline function 'kotlin.collections.firstOrNull' call
+      var _iterator__ex2g4s = tmp0.iterator_jk1svi_k$();
+      while (_iterator__ex2g4s.hasNext_bitz1p_k$()) {
+        var element = _iterator__ex2g4s.next_20eer_k$();
+        if (element.hostValue_1 === name) {
+          tmp$ret$0 = element;
+          break $l$block;
+        }
+      }
+      tmp$ret$0 = null;
+    }
+    var tmp0_elvis_lhs = tmp$ret$0;
+    var tmp;
+    if (tmp0_elvis_lhs == null) {
+      throw IllegalArgumentException_init_$Create$("Unsupported scan category: '" + name + "'");
+    } else {
+      tmp = tmp0_elvis_lhs;
+    }
+    return tmp;
+  }
   function MiniAppHttpResult(statusCode, headers, body) {
     this.statusCode = statusCode;
     this.headers = headers;
@@ -3095,6 +3295,7 @@
     this.FileSystemRemove_1 = new CapabilityKey('wechat.filesystem-remove');
     this.FileSystemSandboxPath_1 = new CapabilityKey('wechat.filesystem-sandbox-path');
     this.Location_1 = new CapabilityKey('wechat.location');
+    this.ScanCode_1 = new CapabilityKey('wechat.scan-code');
   }
   var WeChatDeviceCapabilities_instance;
   function WeChatDeviceCapabilities_getInstance() {
@@ -3141,36 +3342,257 @@
     if (static_init_called_3)
       return Unit_instance;
     static_init_called_3 = true;
-    WeChatSessionState_VALID_instance = new WeChatSessionState('VALID', 0);
-    WeChatSessionState_INVALID_instance = new WeChatSessionState('INVALID', 1);
+    WeChatScanCategory_BAR_CODE_instance = new WeChatScanCategory('BAR_CODE', 0, 'barCode');
+    WeChatScanCategory_QR_CODE_instance = new WeChatScanCategory('QR_CODE', 1, 'qrCode');
+    WeChatScanCategory_DATA_MATRIX_instance = new WeChatScanCategory('DATA_MATRIX', 2, 'datamatrix');
+    WeChatScanCategory_PDF_417_instance = new WeChatScanCategory('PDF_417', 3, 'pdf417');
+  }
+  var WeChatScanCategory_BAR_CODE_instance;
+  var WeChatScanCategory_QR_CODE_instance;
+  var WeChatScanCategory_DATA_MATRIX_instance;
+  var WeChatScanCategory_PDF_417_instance;
+  function values_0() {
+    static_init_3();
+    return [WeChatScanCategory_BAR_CODE_getInstance(), WeChatScanCategory_QR_CODE_getInstance(), WeChatScanCategory_DATA_MATRIX_getInstance(), WeChatScanCategory_PDF_417_getInstance()];
+  }
+  function get_entries_0() {
+    static_init_3();
+    if ($ENTRIES_0 == null)
+      $ENTRIES_0 = enumEntries(values_0());
+    return $ENTRIES_0;
+  }
+  var $ENTRIES_0;
+  function WeChatScanCategory(name, ordinal, hostValue) {
+    Enum.call(this, name, ordinal);
+    this.hostValue_1 = hostValue;
+  }
+  var static_init_called_4;
+  function static_init_4() {
+    if (static_init_called_4)
+      return Unit_instance;
+    static_init_called_4 = true;
+    WeChatScanFormat_QR_CODE_instance = new WeChatScanFormat('QR_CODE', 0, 'QR_CODE');
+    WeChatScanFormat_AZTEC_instance = new WeChatScanFormat('AZTEC', 1, 'AZTEC');
+    WeChatScanFormat_CODABAR_instance = new WeChatScanFormat('CODABAR', 2, 'CODABAR');
+    WeChatScanFormat_CODE_39_instance = new WeChatScanFormat('CODE_39', 3, 'CODE_39');
+    WeChatScanFormat_CODE_93_instance = new WeChatScanFormat('CODE_93', 4, 'CODE_93');
+    WeChatScanFormat_CODE_128_instance = new WeChatScanFormat('CODE_128', 5, 'CODE_128');
+    WeChatScanFormat_DATA_MATRIX_instance = new WeChatScanFormat('DATA_MATRIX', 6, 'DATA_MATRIX');
+    WeChatScanFormat_EAN_8_instance = new WeChatScanFormat('EAN_8', 7, 'EAN_8');
+    WeChatScanFormat_EAN_13_instance = new WeChatScanFormat('EAN_13', 8, 'EAN_13');
+    WeChatScanFormat_ITF_instance = new WeChatScanFormat('ITF', 9, 'ITF');
+    WeChatScanFormat_MAXICODE_instance = new WeChatScanFormat('MAXICODE', 10, 'MAXICODE');
+    WeChatScanFormat_PDF_417_instance = new WeChatScanFormat('PDF_417', 11, 'PDF_417');
+    WeChatScanFormat_RSS_14_instance = new WeChatScanFormat('RSS_14', 12, 'RSS_14');
+    WeChatScanFormat_RSS_EXPANDED_instance = new WeChatScanFormat('RSS_EXPANDED', 13, 'RSS_EXPANDED');
+    WeChatScanFormat_UPC_A_instance = new WeChatScanFormat('UPC_A', 14, 'UPC_A');
+    WeChatScanFormat_UPC_E_instance = new WeChatScanFormat('UPC_E', 15, 'UPC_E');
+    WeChatScanFormat_UPC_EAN_EXTENSION_instance = new WeChatScanFormat('UPC_EAN_EXTENSION', 16, 'UPC_EAN_EXTENSION');
+    WeChatScanFormat_WX_CODE_instance = new WeChatScanFormat('WX_CODE', 17, 'WX_CODE');
+    WeChatScanFormat_CODE_25_instance = new WeChatScanFormat('CODE_25', 18, 'CODE_25');
     if (Companion_instance_8 == null) {
       Companion_instance_0;
       new Companion_6();
     }
   }
-  var WeChatSessionState_VALID_instance;
-  var WeChatSessionState_INVALID_instance;
+  var WeChatScanFormat_QR_CODE_instance;
+  var WeChatScanFormat_AZTEC_instance;
+  var WeChatScanFormat_CODABAR_instance;
+  var WeChatScanFormat_CODE_39_instance;
+  var WeChatScanFormat_CODE_93_instance;
+  var WeChatScanFormat_CODE_128_instance;
+  var WeChatScanFormat_DATA_MATRIX_instance;
+  var WeChatScanFormat_EAN_8_instance;
+  var WeChatScanFormat_EAN_13_instance;
+  var WeChatScanFormat_ITF_instance;
+  var WeChatScanFormat_MAXICODE_instance;
+  var WeChatScanFormat_PDF_417_instance;
+  var WeChatScanFormat_RSS_14_instance;
+  var WeChatScanFormat_RSS_EXPANDED_instance;
+  var WeChatScanFormat_UPC_A_instance;
+  var WeChatScanFormat_UPC_E_instance;
+  var WeChatScanFormat_UPC_EAN_EXTENSION_instance;
+  var WeChatScanFormat_WX_CODE_instance;
+  var WeChatScanFormat_CODE_25_instance;
   function Companion_6() {
-    Companion_instance_8 = this;
-    this.Key_1 = new CapabilityKey('wechat.check-session');
   }
+  protoOf(Companion_6).fromHostValue_thokcm_k$ = function (hostValue) {
+    var tmp0 = get_entries_1();
+    var tmp$ret$0;
+    $l$block: {
+      // Inline function 'kotlin.collections.firstOrNull' call
+      var _iterator__ex2g4s = tmp0.iterator_jk1svi_k$();
+      while (_iterator__ex2g4s.hasNext_bitz1p_k$()) {
+        var element = _iterator__ex2g4s.next_20eer_k$();
+        if (element.hostValue_1 === hostValue) {
+          tmp$ret$0 = element;
+          break $l$block;
+        }
+      }
+      tmp$ret$0 = null;
+    }
+    return tmp$ret$0;
+  };
   var Companion_instance_8;
   function Companion_getInstance_6() {
-    static_init_3();
     return Companion_instance_8;
+  }
+  function values_1() {
+    static_init_4();
+    return [WeChatScanFormat_QR_CODE_getInstance(), WeChatScanFormat_AZTEC_getInstance(), WeChatScanFormat_CODABAR_getInstance(), WeChatScanFormat_CODE_39_getInstance(), WeChatScanFormat_CODE_93_getInstance(), WeChatScanFormat_CODE_128_getInstance(), WeChatScanFormat_DATA_MATRIX_getInstance(), WeChatScanFormat_EAN_8_getInstance(), WeChatScanFormat_EAN_13_getInstance(), WeChatScanFormat_ITF_getInstance(), WeChatScanFormat_MAXICODE_getInstance(), WeChatScanFormat_PDF_417_getInstance(), WeChatScanFormat_RSS_14_getInstance(), WeChatScanFormat_RSS_EXPANDED_getInstance(), WeChatScanFormat_UPC_A_getInstance(), WeChatScanFormat_UPC_E_getInstance(), WeChatScanFormat_UPC_EAN_EXTENSION_getInstance(), WeChatScanFormat_WX_CODE_getInstance(), WeChatScanFormat_CODE_25_getInstance()];
+  }
+  function get_entries_1() {
+    static_init_4();
+    if ($ENTRIES_1 == null)
+      $ENTRIES_1 = enumEntries(values_1());
+    return $ENTRIES_1;
+  }
+  var $ENTRIES_1;
+  function WeChatScanFormat(name, ordinal, hostValue) {
+    Enum.call(this, name, ordinal);
+    this.hostValue_1 = hostValue;
+  }
+  function WeChatScanRequest(onlyFromCamera, allowedCategories) {
+    onlyFromCamera = onlyFromCamera === VOID ? false : onlyFromCamera;
+    allowedCategories = allowedCategories === VOID ? emptyList() : allowedCategories;
+    this.onlyFromCamera_1 = onlyFromCamera;
+    this.allowedCategories_1 = distinct(allowedCategories);
+  }
+  function WeChatScanResult(text, format, scanType, charSet, rawData, path) {
+    this.text_1 = text;
+    this.format_1 = format;
+    this.scanType_1 = scanType;
+    this.charSet_1 = charSet;
+    this.rawData_1 = rawData;
+    this.path_1 = path;
+  }
+  function WeChatScanCategory_BAR_CODE_getInstance() {
+    static_init_3();
+    return WeChatScanCategory_BAR_CODE_instance;
+  }
+  function WeChatScanCategory_QR_CODE_getInstance() {
+    static_init_3();
+    return WeChatScanCategory_QR_CODE_instance;
+  }
+  function WeChatScanCategory_DATA_MATRIX_getInstance() {
+    static_init_3();
+    return WeChatScanCategory_DATA_MATRIX_instance;
+  }
+  function WeChatScanCategory_PDF_417_getInstance() {
+    static_init_3();
+    return WeChatScanCategory_PDF_417_instance;
+  }
+  function WeChatScanFormat_QR_CODE_getInstance() {
+    static_init_4();
+    return WeChatScanFormat_QR_CODE_instance;
+  }
+  function WeChatScanFormat_AZTEC_getInstance() {
+    static_init_4();
+    return WeChatScanFormat_AZTEC_instance;
+  }
+  function WeChatScanFormat_CODABAR_getInstance() {
+    static_init_4();
+    return WeChatScanFormat_CODABAR_instance;
+  }
+  function WeChatScanFormat_CODE_39_getInstance() {
+    static_init_4();
+    return WeChatScanFormat_CODE_39_instance;
+  }
+  function WeChatScanFormat_CODE_93_getInstance() {
+    static_init_4();
+    return WeChatScanFormat_CODE_93_instance;
+  }
+  function WeChatScanFormat_CODE_128_getInstance() {
+    static_init_4();
+    return WeChatScanFormat_CODE_128_instance;
+  }
+  function WeChatScanFormat_DATA_MATRIX_getInstance() {
+    static_init_4();
+    return WeChatScanFormat_DATA_MATRIX_instance;
+  }
+  function WeChatScanFormat_EAN_8_getInstance() {
+    static_init_4();
+    return WeChatScanFormat_EAN_8_instance;
+  }
+  function WeChatScanFormat_EAN_13_getInstance() {
+    static_init_4();
+    return WeChatScanFormat_EAN_13_instance;
+  }
+  function WeChatScanFormat_ITF_getInstance() {
+    static_init_4();
+    return WeChatScanFormat_ITF_instance;
+  }
+  function WeChatScanFormat_MAXICODE_getInstance() {
+    static_init_4();
+    return WeChatScanFormat_MAXICODE_instance;
+  }
+  function WeChatScanFormat_PDF_417_getInstance() {
+    static_init_4();
+    return WeChatScanFormat_PDF_417_instance;
+  }
+  function WeChatScanFormat_RSS_14_getInstance() {
+    static_init_4();
+    return WeChatScanFormat_RSS_14_instance;
+  }
+  function WeChatScanFormat_RSS_EXPANDED_getInstance() {
+    static_init_4();
+    return WeChatScanFormat_RSS_EXPANDED_instance;
+  }
+  function WeChatScanFormat_UPC_A_getInstance() {
+    static_init_4();
+    return WeChatScanFormat_UPC_A_instance;
+  }
+  function WeChatScanFormat_UPC_E_getInstance() {
+    static_init_4();
+    return WeChatScanFormat_UPC_E_instance;
+  }
+  function WeChatScanFormat_UPC_EAN_EXTENSION_getInstance() {
+    static_init_4();
+    return WeChatScanFormat_UPC_EAN_EXTENSION_instance;
+  }
+  function WeChatScanFormat_WX_CODE_getInstance() {
+    static_init_4();
+    return WeChatScanFormat_WX_CODE_instance;
+  }
+  function WeChatScanFormat_CODE_25_getInstance() {
+    static_init_4();
+    return WeChatScanFormat_CODE_25_instance;
+  }
+  var static_init_called_5;
+  function static_init_5() {
+    if (static_init_called_5)
+      return Unit_instance;
+    static_init_called_5 = true;
+    WeChatSessionState_VALID_instance = new WeChatSessionState('VALID', 0);
+    WeChatSessionState_INVALID_instance = new WeChatSessionState('INVALID', 1);
+    if (Companion_instance_9 == null) {
+      Companion_instance_0;
+      new Companion_7();
+    }
+  }
+  var WeChatSessionState_VALID_instance;
+  var WeChatSessionState_INVALID_instance;
+  function Companion_7() {
+    Companion_instance_9 = this;
+    this.Key_1 = new CapabilityKey('wechat.check-session');
+  }
+  var Companion_instance_9;
+  function Companion_getInstance_7() {
+    static_init_5();
+    return Companion_instance_9;
   }
   function WeChatSessionState(name, ordinal) {
     Enum.call(this, name, ordinal);
   }
   function WeChatSessionState_VALID_getInstance() {
-    static_init_3();
+    static_init_5();
     return WeChatSessionState_VALID_instance;
   }
   function WeChatSessionState_INVALID_getInstance() {
-    static_init_3();
+    static_init_5();
     return WeChatSessionState_INVALID_instance;
   }
-  function WechatPlatformApi(auth, navigation, appLifecycle, pageLifecycle, runtimeInfo, clipboard, haptics, fileSystem, location) {
+  function WechatPlatformApi(auth, navigation, appLifecycle, pageLifecycle, runtimeInfo, clipboard, haptics, fileSystem, location, scanCode) {
     this.auth_1 = auth;
     this.navigation_1 = navigation;
     this.appLifecycle_1 = appLifecycle;
@@ -3180,8 +3602,9 @@
     this.haptics_1 = haptics;
     this.fileSystem_1 = fileSystem;
     this.location_1 = location;
+    this.scanCode_1 = scanCode;
   }
-  function WechatHost(storageHost, authHost, networkHost, navigationHost, runtimeInfoHost, permissionHost, privacyHost, clipboardHost, hapticsHost, fileSystemHost, locationHost) {
+  function WechatHost(storageHost, authHost, networkHost, navigationHost, runtimeInfoHost, permissionHost, privacyHost, clipboardHost, hapticsHost, fileSystemHost, locationHost, scanCodeHost) {
     storageHost = storageHost === VOID ? WxStorageHost_instance : storageHost;
     authHost = authHost === VOID ? WxAuthHost_instance : authHost;
     networkHost = networkHost === VOID ? WxNetworkHost_instance : networkHost;
@@ -3193,12 +3616,13 @@
     hapticsHost = hapticsHost === VOID ? WxHapticsHost_instance : hapticsHost;
     fileSystemHost = fileSystemHost === VOID ? WxFileSystemHost_instance : fileSystemHost;
     locationHost = locationHost === VOID ? WxLocationHost_instance : locationHost;
+    scanCodeHost = scanCodeHost === VOID ? WxScanCodeHost_instance : scanCodeHost;
     this.appLifecycle_1 = new WechatAppLifecycle();
     this.runtimeInfo_1 = new WechatRuntimeInfo(runtimeInfoHost);
     this.capabilityGate_1 = new WechatCapabilityGate(this.runtimeInfo_1, runtimeInfoHost);
     this.privacyAdapter_1 = new WechatPrivacy(privacyHost);
     this.permissionsAdapter_1 = new WechatPermissions(permissionHost);
-    this.platform_1 = new WechatPlatformApi(new WechatAuth(authHost), new WechatNavigation(navigationHost), this.appLifecycle_1, new WechatPageLifecycle(), this.runtimeInfo_1, new WechatClipboard(clipboardHost), new WechatHaptics(hapticsHost), new WechatFileSystem(fileSystemHost), new WechatLocation(locationHost, this.privacyAdapter_1, this.permissionsAdapter_1));
+    this.platform_1 = new WechatPlatformApi(new WechatAuth(authHost), new WechatNavigation(navigationHost), this.appLifecycle_1, new WechatPageLifecycle(), this.runtimeInfo_1, new WechatClipboard(clipboardHost), new WechatHaptics(hapticsHost), new WechatFileSystem(fileSystemHost), new WechatLocation(locationHost, this.privacyAdapter_1, this.permissionsAdapter_1), new WechatScanCode(scanCodeHost));
     this.storage_1 = new WechatStorage(storageHost);
     this.network_1 = new WechatNetwork(networkHost);
     this.lifecycle_1 = this.appLifecycle_1;
@@ -3261,7 +3685,7 @@
   };
   protoOf(WechatAuth).checkSession_drbyba_k$ = function ($completion) {
     if (!this.host_1.isSessionCheckSupported_ka7vpq_k$()) {
-      throw new UnsupportedCapability(Companion_getInstance_6().Key_1);
+      throw new UnsupportedCapability(Companion_getInstance_7().Key_1);
     }
     return awaitHostCallback(WechatAuth$checkSession$lambda(this), $completion);
   };
@@ -3432,11 +3856,18 @@
   function WxClipboardHost_getInstance() {
     return WxClipboardHost_instance;
   }
+  function get_SCAN_INTERRUPTED_ERRMSGS() {
+    _init_properties_WechatErrorMapper_kt__k1e0a9();
+    return SCAN_INTERRUPTED_ERRMSGS;
+  }
+  var SCAN_INTERRUPTED_ERRMSGS;
   function mapWechatHostFailure(operation, result, code) {
     code = code === VOID ? null : code;
+    _init_properties_WechatErrorMapper_kt__k1e0a9();
     return new HostFailure('wechat', code, result.errMsg, mapOf(to('operation', operation)));
   }
   function mapWechatRequestFailure(result) {
+    _init_properties_WechatErrorMapper_kt__k1e0a9();
     var tmp;
     if (contains(result.errMsg, 'timeout', true)) {
       tmp = new Timeout('request', result.errMsg);
@@ -3447,11 +3878,22 @@
     return tmp;
   }
   function mapWechatAuthorizeFailure(permission, result) {
+    _init_properties_WechatErrorMapper_kt__k1e0a9();
     var tmp;
     if (contains(result.errMsg, 'auth deny', true)) {
       tmp = new PermissionDenied(permission.value_1, result.errMsg);
     } else {
       tmp = mapWechatHostFailure('authorize', result);
+    }
+    return tmp;
+  }
+  function mapWechatScanFailure(result) {
+    _init_properties_WechatErrorMapper_kt__k1e0a9();
+    var tmp;
+    if (get_SCAN_INTERRUPTED_ERRMSGS().contains_aljjnj_k$(result.errMsg)) {
+      tmp = new HostInteractionInterrupted('wechat', 'scanCode', result.errMsg);
+    } else {
+      tmp = mapWechatHostFailure('scanCode', result);
     }
     return tmp;
   }
@@ -3493,6 +3935,7 @@
     return true;
   };
   function mapWechatPrivacyAuthorizeFailure(result) {
+    _init_properties_WechatErrorMapper_kt__k1e0a9();
     var tmp;
     if (contains(result.errMsg, 'privacy permission is not authorized', true)) {
       tmp = Refused_instance_0;
@@ -3539,6 +3982,7 @@
     return true;
   };
   function mapWechatFileSystemFailure(operation, result) {
+    _init_properties_WechatErrorMapper_kt__k1e0a9();
     var tmp;
     if (contains(result.errMsg, 'no such file or directory', true)) {
       tmp = NotFound_instance;
@@ -3546,6 +3990,13 @@
       tmp = new Failed_0(mapWechatHostFailure(operation, result));
     }
     return tmp;
+  }
+  var properties_initialized_WechatErrorMapper_kt_3r9urx;
+  function _init_properties_WechatErrorMapper_kt__k1e0a9() {
+    if (!properties_initialized_WechatErrorMapper_kt_3r9urx) {
+      properties_initialized_WechatErrorMapper_kt_3r9urx = true;
+      SCAN_INTERRUPTED_ERRMSGS = setOf(['scanCode:cancel', 'scanCode:fail cancel']);
+    }
   }
   function requireSupported_0($this, capability, isSupported) {
     if (!isSupported()) {
@@ -5010,12 +5461,126 @@
   function WxRuntimeInfoHost_getInstance() {
     return WxRuntimeInfoHost_instance;
   }
-  function Companion_7() {
+  function WechatScanCode$scan$lambda$lambda($success) {
+    return function (result) {
+      $success(wxScanSample(result));
+      return Unit_instance;
+    };
+  }
+  function WechatScanCode$scan$lambda$lambda_0($failure) {
+    return function (result) {
+      $failure(mapWechatScanFailure(result));
+      return Unit_instance;
+    };
+  }
+  function WechatScanCode$scan$lambda(this$0, $request) {
+    return function (success, failure) {
+      // Inline function 'kotlin.collections.map' call
+      var this_0 = $request.allowedCategories_1;
+      // Inline function 'kotlin.collections.mapTo' call
+      var destination = ArrayList_init_$Create$(collectionSizeOrDefault(this_0, 10));
+      var _iterator__ex2g4s = this_0.iterator_jk1svi_k$();
+      while (_iterator__ex2g4s.hasNext_bitz1p_k$()) {
+        var item = _iterator__ex2g4s.next_20eer_k$();
+        var tmp$ret$2 = item.hostValue_1;
+        destination.add_utx5q5_k$(tmp$ret$2);
+      }
+      var tmp = destination;
+      var tmp_0 = WechatScanCode$scan$lambda$lambda(success);
+      this$0.host_1.scan_z2flfo_k$($request.onlyFromCamera_1, tmp, tmp_0, WechatScanCode$scan$lambda$lambda_0(failure));
+      return null;
+    };
+  }
+  function $scanCOROUTINE$(_this__u8e3s4, request, resultContinuation) {
+    CoroutineImpl.call(this, resultContinuation);
+    this._this__u8e3s4__1 = _this__u8e3s4;
+    this.request_1 = request;
+  }
+  protoOf($scanCOROUTINE$).doResume_5yljmg_k$ = function () {
+    var suspendResult = this.result_1;
+    $sm: do
+      try {
+        var tmp = this.state_1;
+        switch (tmp) {
+          case 0:
+            this.exceptionState_1 = 2;
+            if (!this._this__u8e3s4__1.host_1.isSupported_j5t6ec_k$()) {
+              throw new UnsupportedCapability(WeChatDeviceCapabilities_getInstance().ScanCode_1);
+            }
+
+            this.state_1 = 1;
+            suspendResult = awaitHostCallback(WechatScanCode$scan$lambda(this._this__u8e3s4__1, this.request_1), this);
+            if (suspendResult === get_COROUTINE_SUSPENDED()) {
+              return suspendResult;
+            }
+
+            continue $sm;
+          case 1:
+            var sample = suspendResult;
+            var tmp_0;
+            if (sample instanceof Present_2) {
+              var tmp1_safe_receiver = sample.scanType_1;
+              var tmp_1;
+              if (tmp1_safe_receiver == null) {
+                tmp_1 = null;
+              } else {
+                tmp_1 = Companion_instance_8.fromHostValue_thokcm_k$(tmp1_safe_receiver);
+              }
+              tmp_0 = new WeChatScanResult(sample.text_1, tmp_1, sample.scanType_1, sample.charSet_1, sample.rawData_1, sample.path_1);
+            } else {
+              if (equals(sample, Unreadable_instance_4)) {
+                throw new InvalidResponse('The WeChat host answered scanCode with a result the SDK cannot read');
+              } else {
+                noWhenBranchMatchedException();
+              }
+            }
+
+            return tmp_0;
+          case 2:
+            throw this.exception_1;
+        }
+      } catch ($p) {
+        var e = $p;
+        if (this.exceptionState_1 === 2) {
+          throw e;
+        } else {
+          this.state_1 = this.exceptionState_1;
+          this.exception_1 = e;
+        }
+      }
+     while (true);
+  };
+  function WechatScanCode(host) {
+    host = host === VOID ? WxScanCodeHost_instance : host;
+    this.host_1 = host;
+  }
+  protoOf(WechatScanCode).scan_i72xbk_k$ = function (request, $completion) {
+    var tmp = new $scanCOROUTINE$(this, request, $completion);
+    tmp.result_1 = Unit_instance;
+    tmp.exception_1 = null;
+    return tmp.doResume_5yljmg_k$();
+  };
+  function WxScanCodeHost() {
+  }
+  protoOf(WxScanCodeHost).isSupported_j5t6ec_k$ = function () {
+    return hasWxScanCode();
+  };
+  protoOf(WxScanCodeHost).scan_z2flfo_k$ = function (onlyFromCamera, scanCategories, success, failure) {
+    var options = wxScanCodeOptions(onlyFromCamera, scanCategories);
+    options.success = success;
+    options.fail = failure;
+    wx.scanCode(options);
+  };
+  var WxScanCodeHost_instance;
+  function WxScanCodeHost_getInstance() {
+    return WxScanCodeHost_instance;
+  }
+  function Companion_8() {
     this.MISSING_KEY_ERROR_1 = 'getStorage:fail data not found';
   }
-  var Companion_instance_9;
-  function Companion_getInstance_7() {
-    return Companion_instance_9;
+  var Companion_instance_10;
+  function Companion_getInstance_8() {
+    return Companion_instance_10;
   }
   function WechatStorage$get$lambda$lambda($success, $failure, $key) {
     return function (value) {
@@ -5654,6 +6219,163 @@
   function hasWxGetDeviceInfo() {
     return typeof wx !== 'undefined' && typeof wx.getDeviceInfo === 'function';
   }
+  function Present_2(text, scanType, charSet, rawData, path) {
+    this.text_1 = text;
+    this.scanType_1 = scanType;
+    this.charSet_1 = charSet;
+    this.rawData_1 = rawData;
+    this.path_1 = path;
+  }
+  protoOf(Present_2).toString = function () {
+    return 'Present(text=' + this.text_1 + ', scanType=' + this.scanType_1 + ', charSet=' + this.charSet_1 + ', rawData=' + this.rawData_1 + ', path=' + this.path_1 + ')';
+  };
+  protoOf(Present_2).hashCode = function () {
+    var result = getStringHashCode(this.text_1);
+    result = imul(result, 31) + (this.scanType_1 == null ? 0 : getStringHashCode(this.scanType_1)) | 0;
+    result = imul(result, 31) + (this.charSet_1 == null ? 0 : getStringHashCode(this.charSet_1)) | 0;
+    result = imul(result, 31) + (this.rawData_1 == null ? 0 : getStringHashCode(this.rawData_1)) | 0;
+    result = imul(result, 31) + (this.path_1 == null ? 0 : getStringHashCode(this.path_1)) | 0;
+    return result;
+  };
+  protoOf(Present_2).equals = function (other) {
+    if (this === other)
+      return true;
+    if (!(other instanceof Present_2))
+      return false;
+    if (!(this.text_1 === other.text_1))
+      return false;
+    if (!(this.scanType_1 == other.scanType_1))
+      return false;
+    if (!(this.charSet_1 == other.charSet_1))
+      return false;
+    if (!(this.rawData_1 == other.rawData_1))
+      return false;
+    if (!(this.path_1 == other.path_1))
+      return false;
+    return true;
+  };
+  function Unreadable_4() {
+  }
+  protoOf(Unreadable_4).toString = function () {
+    return 'Unreadable';
+  };
+  protoOf(Unreadable_4).hashCode = function () {
+    return 684483554;
+  };
+  protoOf(Unreadable_4).equals = function (other) {
+    if (this === other)
+      return true;
+    if (!(other instanceof Unreadable_4))
+      return false;
+    return true;
+  };
+  var Unreadable_instance_4;
+  function Unreadable_getInstance_4() {
+    return Unreadable_instance_4;
+  }
+  function wxScanSample(result) {
+    var text = result.result;
+    if (!(!(text == null) ? typeof text === 'string' : false))
+      return Unreadable_instance_4;
+    var scanType = optionalText(result.scanType);
+    var charSet = optionalText(result.charSet);
+    var rawData = optionalText(result.rawData);
+    var path = optionalText(result.path);
+    if (get_isWrongType(scanType) || get_isWrongType(charSet) || get_isWrongType(rawData) || get_isWrongType(path)) {
+      return Unreadable_instance_4;
+    }
+    return new Present_2(text, get_textOrNull(scanType), get_textOrNull(charSet), get_textOrNull(rawData), get_textOrNull(path));
+  }
+  function Present_3(text) {
+    this.text_1 = text;
+  }
+  protoOf(Present_3).toString = function () {
+    return 'Present(text=' + this.text_1 + ')';
+  };
+  protoOf(Present_3).hashCode = function () {
+    return getStringHashCode(this.text_1);
+  };
+  protoOf(Present_3).equals = function (other) {
+    if (this === other)
+      return true;
+    if (!(other instanceof Present_3))
+      return false;
+    if (!(this.text_1 === other.text_1))
+      return false;
+    return true;
+  };
+  function Absent_0() {
+  }
+  protoOf(Absent_0).toString = function () {
+    return 'Absent';
+  };
+  protoOf(Absent_0).hashCode = function () {
+    return -1883809620;
+  };
+  protoOf(Absent_0).equals = function (other) {
+    if (this === other)
+      return true;
+    if (!(other instanceof Absent_0))
+      return false;
+    return true;
+  };
+  var Absent_instance_0;
+  function Absent_getInstance_0() {
+    return Absent_instance_0;
+  }
+  function WrongType() {
+  }
+  protoOf(WrongType).toString = function () {
+    return 'WrongType';
+  };
+  protoOf(WrongType).hashCode = function () {
+    return -528513996;
+  };
+  protoOf(WrongType).equals = function (other) {
+    if (this === other)
+      return true;
+    if (!(other instanceof WrongType))
+      return false;
+    return true;
+  };
+  var WrongType_instance;
+  function WrongType_getInstance() {
+    return WrongType_instance;
+  }
+  function optionalText(value) {
+    var tmp;
+    if (value == null || typeof value === 'undefined') {
+      tmp = Absent_instance_0;
+    } else {
+      if (typeof value === 'string') {
+        tmp = new Present_3(value);
+      } else {
+        tmp = WrongType_instance;
+      }
+    }
+    return tmp;
+  }
+  function get_isWrongType(_this__u8e3s4) {
+    return _this__u8e3s4 instanceof WrongType;
+  }
+  function get_textOrNull(_this__u8e3s4) {
+    var tmp0_safe_receiver = _this__u8e3s4 instanceof Present_3 ? _this__u8e3s4 : null;
+    return tmp0_safe_receiver == null ? null : tmp0_safe_receiver.text_1;
+  }
+  function hasWxScanCode() {
+    return typeof wx !== 'undefined' && typeof wx.scanCode === 'function';
+  }
+  function wxScanCodeOptions(onlyFromCamera, scanCategories) {
+    var options = {};
+    options.onlyFromCamera = onlyFromCamera;
+    // Inline function 'kotlin.collections.isNotEmpty' call
+    if (!scanCategories.isEmpty_y1axqb_k$()) {
+      // Inline function 'kotlin.collections.toTypedArray' call
+      var categories = copyToArray(scanCategories);
+      options.scanType = categories;
+    }
+    return options;
+  }
   function wxGetStorageOptions(key) {
     var options = {};
     options.key = key;
@@ -5741,7 +6463,7 @@
     var tmp_2 = to(Companion_getInstance_0().Key_1, new WechatCapabilityRequirement(listOf_0('request')));
     var tmp_3 = to(Companion_getInstance().Key_1, new WechatCapabilityRequirement());
     var tmp_4 = to(Companion_getInstance_1().Key_1, new WechatCapabilityRequirement(listOf(['getSetting', 'authorize', 'openSetting'])));
-    var tmp_5 = to(Companion_getInstance_6().Key_1, new WechatCapabilityRequirement(listOf_0('checkSession')));
+    var tmp_5 = to(Companion_getInstance_7().Key_1, new WechatCapabilityRequirement(listOf_0('checkSession')));
     var tmp_6 = WeChatDeviceCapabilities_getInstance().FileSystemRead_1;
     var tmp_7 = to(tmp_6, new WechatCapabilityRequirement(VOID, this.FILESYSTEM_MINIMUM_1, WechatCapabilityCatalog$requirements$lambda));
     var tmp_8 = WeChatDeviceCapabilities_getInstance().FileSystemWrite_1;
@@ -5753,8 +6475,9 @@
     var tmp_14 = WeChatDeviceCapabilities_getInstance().FileSystemSandboxPath_1;
     var tmp_15 = to(tmp_14, new WechatCapabilityRequirement(VOID, this.FILESYSTEM_MINIMUM_1, WechatCapabilityCatalog$requirements$lambda_3));
     var tmp_16 = to(WeChatDeviceCapabilities_getInstance().Location_1, new WechatCapabilityRequirement(listOf_0('getLocation')));
-    var tmp_17 = WeChatDeviceCapabilities_getInstance().ClipboardRead_1;
-    var tmp_18 = listOf_0('getClipboardData');
+    var tmp_17 = to(WeChatDeviceCapabilities_getInstance().ScanCode_1, new WechatCapabilityRequirement(listOf_0('scanCode')));
+    var tmp_18 = WeChatDeviceCapabilities_getInstance().ClipboardRead_1;
+    var tmp_19 = listOf_0('getClipboardData');
     var tmp0_0 = Companion_instance_7.parse_pc1q8p_k$('1.1.0');
     var tmp$ret$2;
     $l$block_0: {
@@ -5767,9 +6490,9 @@
         break $l$block_0;
       }
     }
-    var tmp_19 = to(tmp_17, new WechatCapabilityRequirement(tmp_18, tmp$ret$2));
-    var tmp_20 = WeChatDeviceCapabilities_getInstance().ClipboardWrite_1;
-    var tmp_21 = listOf_0('setClipboardData');
+    var tmp_20 = to(tmp_18, new WechatCapabilityRequirement(tmp_19, tmp$ret$2));
+    var tmp_21 = WeChatDeviceCapabilities_getInstance().ClipboardWrite_1;
+    var tmp_22 = listOf_0('setClipboardData');
     var tmp0_1 = Companion_instance_7.parse_pc1q8p_k$('1.1.0');
     var tmp$ret$4;
     $l$block_1: {
@@ -5782,9 +6505,9 @@
         break $l$block_1;
       }
     }
-    var tmp_22 = to(tmp_20, new WechatCapabilityRequirement(tmp_21, tmp$ret$4));
-    var tmp_23 = WeChatDeviceCapabilities_getInstance().VibrateShort_1;
-    var tmp_24 = listOf_0('vibrateShort');
+    var tmp_23 = to(tmp_21, new WechatCapabilityRequirement(tmp_22, tmp$ret$4));
+    var tmp_24 = WeChatDeviceCapabilities_getInstance().VibrateShort_1;
+    var tmp_25 = listOf_0('vibrateShort');
     var tmp0_2 = Companion_instance_7.parse_pc1q8p_k$('1.2.0');
     var tmp$ret$6;
     $l$block_2: {
@@ -5797,9 +6520,9 @@
         break $l$block_2;
       }
     }
-    var tmp_25 = to(tmp_23, new WechatCapabilityRequirement(tmp_24, tmp$ret$6));
-    var tmp_26 = WeChatDeviceCapabilities_getInstance().VibrateLong_1;
-    var tmp_27 = listOf_0('vibrateLong');
+    var tmp_26 = to(tmp_24, new WechatCapabilityRequirement(tmp_25, tmp$ret$6));
+    var tmp_27 = WeChatDeviceCapabilities_getInstance().VibrateLong_1;
+    var tmp_28 = listOf_0('vibrateLong');
     var tmp0_3 = Companion_instance_7.parse_pc1q8p_k$('1.2.0');
     var tmp$ret$8;
     $l$block_3: {
@@ -5812,9 +6535,9 @@
         break $l$block_3;
       }
     }
-    var tmp_28 = to(tmp_26, new WechatCapabilityRequirement(tmp_27, tmp$ret$8));
-    var tmp_29 = Companion_getInstance_3().Key_1;
-    var tmp_30 = listOf(['getPrivacySetting', 'requirePrivacyAuthorize']);
+    var tmp_29 = to(tmp_27, new WechatCapabilityRequirement(tmp_28, tmp$ret$8));
+    var tmp_30 = Companion_getInstance_3().Key_1;
+    var tmp_31 = listOf(['getPrivacySetting', 'requirePrivacyAuthorize']);
     var tmp0_4 = Companion_instance_7.parse_pc1q8p_k$('2.32.3');
     var tmp$ret$10;
     $l$block_4: {
@@ -5827,8 +6550,8 @@
         break $l$block_4;
       }
     }
-    var tmp_31 = to(tmp_29, new WechatCapabilityRequirement(tmp_30, tmp$ret$10));
-    var tmp_32 = listOf_0('getAppBaseInfo');
+    var tmp_32 = to(tmp_30, new WechatCapabilityRequirement(tmp_31, tmp$ret$10));
+    var tmp_33 = listOf_0('getAppBaseInfo');
     var tmp0_5 = Companion_instance_7.parse_pc1q8p_k$('2.20.1');
     var tmp$ret$12;
     $l$block_5: {
@@ -5841,7 +6564,7 @@
         break $l$block_5;
       }
     }
-    tmp_0.requirements_1 = mapOf_0([tmp_1, tmp_2, tmp_3, tmp_4, tmp_5, tmp_7, tmp_9, tmp_11, tmp_13, tmp_15, tmp_16, tmp_19, tmp_22, tmp_25, tmp_28, tmp_31, to(this.RuntimeDetectionKey_1, new WechatCapabilityRequirement(tmp_32, tmp$ret$12))]);
+    tmp_0.requirements_1 = mapOf_0([tmp_1, tmp_2, tmp_3, tmp_4, tmp_5, tmp_7, tmp_9, tmp_11, tmp_13, tmp_15, tmp_16, tmp_17, tmp_20, tmp_23, tmp_26, tmp_29, tmp_32, to(this.RuntimeDetectionKey_1, new WechatCapabilityRequirement(tmp_33, tmp$ret$12))]);
   }
   protoOf(WechatCapabilityCatalog).requirementFor_k8c79s_k$ = function (key) {
     return this.requirements_1.get_wei43m_k$(key);
@@ -5938,12 +6661,12 @@
     getPropertyCallableRef('reportedPlatform', 1, tmp, WechatRuntimeInfo$_get_reportedPlatform_$ref_mmka14(), null);
     return tmp0.get_value_j01efc_k$();
   }
-  function Companion_8() {
+  function Companion_9() {
     this.DEVELOPER_TOOLS_PLATFORM_1 = 'devtools';
   }
-  var Companion_instance_10;
-  function Companion_getInstance_8() {
-    return Companion_instance_10;
+  var Companion_instance_11;
+  function Companion_getInstance_9() {
+    return Companion_instance_11;
   }
   function WechatRuntimeInfo$parsedBaseLibraryVersion$delegate$lambda(this$0) {
     return function () {
@@ -6001,6 +6724,7 @@
   Authorized_instance = new Authorized();
   Refused_instance = new Refused();
   Companion_instance_7 = new Companion_5();
+  Companion_instance_8 = new Companion_6();
   WxAuthHost_instance = new WxAuthHost();
   WxClipboardHost_instance = new WxClipboardHost();
   Refused_instance_0 = new Refused_0();
@@ -6013,7 +6737,8 @@
   WxPermissionHost_instance = new WxPermissionHost();
   WxPrivacyHost_instance = new WxPrivacyHost();
   WxRuntimeInfoHost_instance = new WxRuntimeInfoHost();
-  Companion_instance_9 = new Companion_7();
+  WxScanCodeHost_instance = new WxScanCodeHost();
+  Companion_instance_10 = new Companion_8();
   WxStorageHost_instance = new WxStorageHost();
   Unreadable_instance = new Unreadable();
   Unreadable_instance_0 = new Unreadable_0();
@@ -6021,7 +6746,10 @@
   Absent_instance = new Absent();
   Unreadable_instance_2 = new Unreadable_2();
   Unreadable_instance_3 = new Unreadable_3();
-  Companion_instance_10 = new Companion_8();
+  Unreadable_instance_4 = new Unreadable_4();
+  Absent_instance_0 = new Absent_0();
+  WrongType_instance = new WrongType();
+  Companion_instance_11 = new Companion_9();
   //endregion
   //region block: exports
   function $jsExportAll$(_) {
@@ -6054,18 +6782,24 @@
     var bobcgn_3 = github_3.bobcgn || (github_3.bobcgn = {});
     var miniapp_3 = bobcgn_3.miniapp || (bobcgn_3.miniapp = {});
     var export_4 = miniapp_3.export || (miniapp_3.export = {});
-    defineProp(export_4, 'MiniAppExports', MiniAppExports_getInstance, VOID, true);
+    export_4.JsScanResult = JsScanResult;
     var io_4 = _.io || (_.io = {});
     var github_4 = io_4.github || (io_4.github = {});
     var bobcgn_4 = github_4.bobcgn || (github_4.bobcgn = {});
     var miniapp_4 = bobcgn_4.miniapp || (bobcgn_4.miniapp = {});
     var export_5 = miniapp_4.export || (miniapp_4.export = {});
-    export_5.MiniAppHttpResult = MiniAppHttpResult;
+    defineProp(export_5, 'MiniAppExports', MiniAppExports_getInstance, VOID, true);
     var io_5 = _.io || (_.io = {});
     var github_5 = io_5.github || (io_5.github = {});
     var bobcgn_5 = github_5.bobcgn || (github_5.bobcgn = {});
     var miniapp_5 = bobcgn_5.miniapp || (bobcgn_5.miniapp = {});
-    var host = miniapp_5.host || (miniapp_5.host = {});
+    var export_6 = miniapp_5.export || (miniapp_5.export = {});
+    export_6.MiniAppHttpResult = MiniAppHttpResult;
+    var io_6 = _.io || (_.io = {});
+    var github_6 = io_6.github || (io_6.github = {});
+    var bobcgn_6 = github_6.bobcgn || (github_6.bobcgn = {});
+    var miniapp_6 = bobcgn_6.miniapp || (bobcgn_6.miniapp = {});
+    var host = miniapp_6.host || (miniapp_6.host = {});
     var wechat = host.wechat || (host.wechat = {});
     wechat.WeChatLoginResult = WeChatLoginResult;
   }

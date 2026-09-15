@@ -56,6 +56,8 @@ interface IndexPageData {
   locationPrivacy: string;
   locationStatus: string;
   locationDetails: string;
+  scannerStatus: string;
+  scannerDetails: string;
 }
 
 type IndexPage = MiniProgramPageInstance<IndexPageData>;
@@ -598,6 +600,82 @@ async function getCurrentLocation(this: IndexPage): Promise<void> {
   }
 }
 
+/**
+ * Reports how the gate answers for the scanning capability.
+ *
+ * This is a smaller question than the location card's three: scanning needs no
+ * permission the SDK could establish, so the API answer is the whole answer.
+ */
+function checkScannerCapability(this: IndexPage): void {
+  try {
+    const support: MiniAppSdk.CapabilitySupportResult =
+      MiniAppSdk.capabilitySupport('wechat.scan-code');
+    console.log('[kmp-miniapp-sdk] scanner capability: PASS wechat.scan-code=' + support.state);
+    this.setData({
+      scannerStatus: support.state,
+      scannerDetails: 'wechat.scan-code=' + support.state,
+    });
+  } catch (error) {
+    console.error('[kmp-miniapp-sdk] scanner capability: FAIL', error);
+    this.setData({ scannerStatus: 'FAIL', scannerDetails: String(error) });
+  }
+}
+
+/**
+ * Opens WeChat's scanning interface and checks the shape of what came back.
+ *
+ * The decoded content, the character set, the raw bytes, and the image path are
+ * never displayed or logged: what the user scanned is theirs, and this check only
+ * needs to know that the SDK handed over a result of the contract's type and
+ * whether the format the host named is one the SDK recognizes. Both are recomputed
+ * here rather than assumed, so they are evidence about the value and not a
+ * formality. An empty payload still counts as present, because that is what the
+ * host decoded.
+ */
+async function runScan(page: IndexPage, onlyFromCamera: boolean): Promise<void> {
+  try {
+    const result: MiniAppSdk.ScanResult = await MiniAppSdk.wechatScanCode(onlyFromCamera, []);
+
+    const resultPresent = typeof result.text === 'string';
+    const typeRecognized = result.format !== null && result.format !== undefined;
+
+    const details = `resultPresent=${resultPresent}, typeRecognized=${typeRecognized}`;
+    console.log('[kmp-miniapp-sdk] scan: PASS', details);
+    page.setData({ scannerStatus: 'PASS', scannerDetails: details });
+  } catch (error) {
+    // The real host uses one signal for both dismissal and a camera restriction.
+    // The SDK preserves that uncertainty instead of assigning intent to the user.
+    if (isHostInteractionInterrupted(error)) {
+      console.log('[kmp-miniapp-sdk] scan: INTERRUPTED cause=indeterminate');
+      page.setData({
+        scannerStatus: 'INTERRUPTED',
+        scannerDetails: 'The host did not distinguish cancellation from camera restriction.',
+      });
+      return;
+    }
+
+    console.error('[kmp-miniapp-sdk] scan: FAIL', error);
+    page.setData({ scannerStatus: 'FAIL', scannerDetails: String(error) });
+  }
+}
+
+async function scanCode(this: IndexPage): Promise<void> {
+  await runScan(this, false);
+}
+
+/** Forces the real-device acceptance path through the camera rather than an album fallback. */
+async function scanCodeFromCamera(this: IndexPage): Promise<void> {
+  await runScan(this, true);
+}
+
+/** Whether the value is the SDK's user-cancelled error rather than a failure. */
+function isHostInteractionInterrupted(error: unknown): boolean {
+  if (typeof error !== 'object' || error === null) {
+    return false;
+  }
+  return (error as { name?: unknown }).name === 'HostInteractionInterrupted';
+}
+
 async function runStorageCheck(page: IndexPage): Promise<void> {
   try {
     await MiniAppSdk.storageSet(storageKey, 'first');
@@ -742,6 +820,8 @@ Page<IndexPageData>({
     locationPrivacy: 'NOT RUN',
     locationStatus: 'NOT RUN',
     locationDetails: 'Tap a button; nothing requests a position on load.',
+    scannerStatus: 'NOT RUN',
+    scannerDetails: 'Tap a button; nothing opens the scanning interface on load.',
     permissionStatus: 'UNKNOWN',
     permissionDetails:
       'Permission is never requested on load. Tap a button to query or request it.',
@@ -772,4 +852,7 @@ Page<IndexPageData>({
   refreshLocationPrivacy,
   requestLocationPrivacy,
   getCurrentLocation,
+  checkScannerCapability,
+  scanCode,
+  scanCodeFromCamera,
 });

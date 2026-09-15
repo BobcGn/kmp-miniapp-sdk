@@ -98,6 +98,16 @@
   </view>
 
   <view class="card">
+    <text class="eyebrow">Scanner</text>
+    <text class="status status--{{scannerStatus}}">{{scannerStatus}}</text>
+    <text class="details">{{scannerDetails}}</text>
+    <text class="security-note">The scanned content is never shown or logged; no scan starts on load.</text>
+    <button class="action" bindtap="checkScannerCapability">Check scanner capability</button>
+    <button class="action" bindtap="scanCode">Scan code</button>
+    <button class="action" bindtap="scanCodeFromCamera">Scan from camera only</button>
+  </view>
+
+  <view class="card">
     <text class="eyebrow">First Host Capability</text>
     <text class="label">Storage verification</text>
     <text class="status status--{{storageStatus}}">{{storageStatus}}</text>

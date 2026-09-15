@@ -52,6 +52,87 @@ export function wechatGetCurrentLocation(
 ): Promise<GeoPosition>;
 
 /**
+ * A scan category `wechatScanCode` can ask for.
+ *
+ * These are the coarse categories the request accepts. They are not what a
+ * completed scan reports: {@link ScanResult.scanType} names the specific format
+ * the host decoded, which {@link ScanFormat} lists.
+ */
+export type ScanCategory = 'barCode' | 'qrCode' | 'datamatrix' | 'pdf417';
+
+/**
+ * A scan format this SDK recognizes.
+ *
+ * The host's vocabulary is open, so a decoded format it reports may not be a
+ * member. That is not a failure: {@link ScanResult.scanType} then carries the
+ * host's own name while {@link ScanResult.format} is `null`.
+ */
+export type ScanFormat =
+  | 'QR_CODE'
+  | 'AZTEC'
+  | 'CODABAR'
+  | 'CODE_39'
+  | 'CODE_93'
+  | 'CODE_128'
+  | 'DATA_MATRIX'
+  | 'EAN_8'
+  | 'EAN_13'
+  | 'ITF'
+  | 'MAXICODE'
+  | 'PDF_417'
+  | 'RSS_14'
+  | 'RSS_EXPANDED'
+  | 'UPC_A'
+  | 'UPC_E'
+  | 'UPC_EAN_EXTENSION'
+  | 'WX_CODE'
+  | 'CODE_25';
+
+/** One scan WeChat reported. */
+export interface ScanResult {
+  /**
+   * The decoded content.
+   *
+   * This is the user's data, handed over because the caller asked to scan. The SDK
+   * never logs, stores, or uploads it, and a caller that does takes on the
+   * responsibility that comes with content the user chose to scan.
+   */
+  readonly text: string;
+  /** The host's own name for the format, verbatim, when it reported one. */
+  readonly scanType: string | null | undefined;
+  /** `scanType` resolved against {@link ScanFormat}, or `null` when unrecognized. */
+  readonly format: ScanFormat | null | undefined;
+  /** The character set of the decoded content, when the host reported one. */
+  readonly charSet: string | null | undefined;
+  /** The decoded bytes as the host reports them, when it reported them. */
+  readonly rawData: string | null | undefined;
+  /** A path to the scanned image, when the host reported one. */
+  readonly path: string | null | undefined;
+}
+
+/**
+ * Asks WeChat to scan through its own scanning interface.
+ *
+ * Resolves with what the host decoded. A host cancel signal rejects with
+ * `HostInteractionInterrupted`: a real device uses that same signal for a user
+ * dismissal and for camera access preventing launch, so the SDK does not infer
+ * which cause occurred. Other failures reject as host failures or invalid responses.
+ *
+ * This call asks the host for no permission. `wx.scanCode` drives WeChat's own
+ * interface, and no permission precondition for it could be established from the
+ * host contract, so nothing is prompted for.
+ *
+ * @param onlyFromCamera whether the host must scan through its camera rather than
+ *   also accepting an image the user already has; defaults to `false`
+ * @param scanTypes categories to ask for; an empty or omitted array asks for every
+ *   category the host supports, which is not the same as asking for none
+ */
+export function wechatScanCode(
+  onlyFromCamera?: boolean,
+  scanTypes?: readonly ScanCategory[],
+): Promise<ScanResult>;
+
+/**
  * Reads the system clipboard as text.
  *
  * An empty clipboard resolves with an empty string. The clipboard belongs to the

@@ -58,6 +58,23 @@ export declare namespace io.github.bobcgn.miniapp.export {
     }
 }
 export declare namespace io.github.bobcgn.miniapp.export {
+    class JsScanResult {
+        private constructor();
+        get text(): string;
+        get scanType(): Nullable<string>;
+        get format(): Nullable<string>;
+        get charSet(): Nullable<string>;
+        get rawData(): Nullable<string>;
+        get path(): Nullable<string>;
+    }
+    namespace JsScanResult {
+        /** @deprecated $metadata$ is used for internal purposes, please don't use it in your code, because it can be removed at any moment */
+        namespace $metadata$ {
+            const constructor: abstract new () => JsScanResult;
+        }
+    }
+}
+export declare namespace io.github.bobcgn.miniapp.export {
     abstract class MiniAppExports extends KtSingleton<MiniAppExports.$metadata$.constructor>() {
         private constructor();
     }
@@ -102,6 +119,7 @@ export declare namespace io.github.bobcgn.miniapp.export {
                 wechatFileExists(path: string): Promise<boolean>;
                 wechatRemoveFile(path: string): Promise<void>;
                 wechatGetCurrentLocation(coordinateSystem: string): Promise<io.github.bobcgn.miniapp.export.JsGeoPosition>;
+                wechatScanCode(onlyFromCamera: boolean, scanTypes: Array<string>): Promise<io.github.bobcgn.miniapp.export.JsScanResult>;
                 requirePrivacySatisfied(): Promise<void>;
                 private constructor();
             }
