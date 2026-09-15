@@ -22,6 +22,8 @@ import io.github.bobcgn.miniapp.host.wechat.adapter.WechatFileSystem
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatFileSystemHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatHaptics
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatHapticsHost
+import io.github.bobcgn.miniapp.host.wechat.adapter.WechatLocation
+import io.github.bobcgn.miniapp.host.wechat.adapter.WechatLocationHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatNavigation
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatNavigationHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatNetwork
@@ -37,6 +39,7 @@ import io.github.bobcgn.miniapp.host.wechat.adapter.WxAuthHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WxClipboardHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WxFileSystemHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WxHapticsHost
+import io.github.bobcgn.miniapp.host.wechat.adapter.WxLocationHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WxNavigationHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WxNetworkHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WxPermissionHost
@@ -73,6 +76,8 @@ internal class WechatPlatformApi(
     internal val haptics: WechatHaptics,
     /** WeChat file-sandbox access. */
     internal val fileSystem: WechatFileSystem,
+    /** WeChat position access. */
+    internal val location: WechatLocation,
 ) : HostPlatformApi
 
 /** First concrete [MiniAppHost], backed by the WeChat Mini Program runtime. */
@@ -87,6 +92,7 @@ internal class WechatHost(
     clipboardHost: WechatClipboardHost = WxClipboardHost,
     hapticsHost: WechatHapticsHost = WxHapticsHost,
     fileSystemHost: WechatFileSystemHost = WxFileSystemHost,
+    locationHost: WechatLocationHost = WxLocationHost,
 ) : MiniAppHost<WechatPlatformApi>,
     StorageCapabilityProvider,
     NetworkCapabilityProvider,
@@ -100,6 +106,14 @@ internal class WechatHost(
     private val capabilityGate: WechatCapabilityGate =
         WechatCapabilityGate(runtimeInfo = runtimeInfo, runtimeHost = runtimeInfoHost)
 
+    // One privacy instance, because the location adapter enforces the privacy
+    // precondition on the same state the caller queries through the capability.
+    private val privacyAdapter: WechatPrivacy = WechatPrivacy(privacyHost)
+
+    // One permission instance, so location observes the same live host state the
+    // public permission capability reports and never starts a prompt itself.
+    private val permissionsAdapter: WechatPermissions = WechatPermissions(permissionHost)
+
     override val platform: WechatPlatformApi = WechatPlatformApi(
         auth = WechatAuth(authHost),
         navigation = WechatNavigation(navigationHost),
@@ -109,6 +123,7 @@ internal class WechatHost(
         clipboard = WechatClipboard(clipboardHost),
         haptics = WechatHaptics(hapticsHost),
         fileSystem = WechatFileSystem(fileSystemHost),
+        location = WechatLocation(locationHost, privacyAdapter, permissionsAdapter),
     )
 
     override val storage: MiniAppStorage = WechatStorage(storageHost)
@@ -117,9 +132,9 @@ internal class WechatHost(
 
     override val lifecycle: MiniAppLifecycle = appLifecycle
 
-    override val permissions: MiniAppPermissions = WechatPermissions(permissionHost)
+    override val permissions: MiniAppPermissions = permissionsAdapter
 
-    override val privacy: MiniAppPrivacy = WechatPrivacy(privacyHost)
+    override val privacy: MiniAppPrivacy = privacyAdapter
 
     override fun capabilitySupport(capability: CapabilityKey): CapabilitySupport =
         capabilityGate.supportFor(capability)

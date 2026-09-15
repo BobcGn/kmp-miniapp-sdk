@@ -5,6 +5,7 @@ import io.github.bobcgn.miniapp.host.wechat.interop.WxGetSettingSuccessResult
 import io.github.bobcgn.miniapp.host.wechat.interop.WxLoginFailureResult
 import io.github.bobcgn.miniapp.host.wechat.interop.WxLoginSuccessResult
 import io.github.bobcgn.miniapp.host.wechat.interop.WxGetClipboardDataSuccessResult
+import io.github.bobcgn.miniapp.host.wechat.interop.WxGetLocationSuccessResult
 import io.github.bobcgn.miniapp.host.wechat.interop.WxGetPrivacySettingSuccessResult
 import io.github.bobcgn.miniapp.host.wechat.interop.WxOpenSettingSuccessResult
 import io.github.bobcgn.miniapp.host.wechat.interop.WxReadFileSuccessResult
@@ -131,6 +132,25 @@ internal fun fakeReadFileSuccess(data: Any?): WxReadFileSuccessResult {
     val result: WxReadFileSuccessResult = js("({})")
     js("result.errMsg = 'readFile:ok'")
     js("result.data = data")
+    return result
+}
+
+/**
+ * Builds a `wx.getLocation` success result.
+ *
+ * Every field is supplied as `Any?` so a test can produce the shapes the contract
+ * must reject, such as a missing coordinate or a non-finite one.
+ */
+internal fun fakeGetLocationSuccess(
+    latitude: Any?,
+    longitude: Any?,
+    accuracy: Any?,
+): WxGetLocationSuccessResult {
+    val result: WxGetLocationSuccessResult = js("({})")
+    js("result.errMsg = 'getLocation:ok'")
+    js("result.latitude = latitude")
+    js("result.longitude = longitude")
+    js("result.accuracy = accuracy")
     return result
 }
 

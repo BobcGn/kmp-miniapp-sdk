@@ -112,6 +112,13 @@ internal object WechatCapabilityCatalog {
             minimumBaseLibraryVersion = FILESYSTEM_MINIMUM,
             presence = { host -> host.hasUserDataPath() },
         ),
+        // WeChat documents no introduction version for getLocation itself, so no
+        // number is recorded and the probe is the authority; a version figure the
+        // repository cannot cite would be a guess. Permission and privacy are
+        // separate questions and are not answered here.
+        WeChatDeviceCapabilities.Location to WechatCapabilityRequirement(
+            canIUseSchemas = listOf("getLocation"),
+        ),
         // The four device capabilities are gated separately: a host may expose one
         // clipboard direction or one vibration length without the other. WeChat
         // documents 1.1.0 for the clipboard APIs and 1.2.0 for the vibration APIs,

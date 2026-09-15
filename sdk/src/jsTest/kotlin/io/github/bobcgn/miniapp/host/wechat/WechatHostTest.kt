@@ -76,6 +76,12 @@ internal class WechatHostTest {
             CapabilitySupport.Supported,
             host.capabilitySupport(WeChatDeviceCapabilities.FileSystemRemove),
         )
+        // Location availability is gated on its own; the permission it needs and
+        // the host's privacy contract are separate questions.
+        assertEquals(
+            CapabilitySupport.Supported,
+            host.capabilitySupport(WeChatDeviceCapabilities.Location),
+        )
         assertEquals(
             CapabilitySupport.Unsupported,
             host.capabilitySupport(CapabilityKey("unknown")),

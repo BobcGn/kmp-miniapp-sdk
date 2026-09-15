@@ -17,5 +17,8 @@ public data class PermissionKey(public val value: String) {
     public companion object {
         /** Permission to capture audio through the host. */
         public val Microphone: PermissionKey = PermissionKey("microphone")
+
+        /** Permission to read the device's position. */
+        public val Location: PermissionKey = PermissionKey("location")
     }
 }

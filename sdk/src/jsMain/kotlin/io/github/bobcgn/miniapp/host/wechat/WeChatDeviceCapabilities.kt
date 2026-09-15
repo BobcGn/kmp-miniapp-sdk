@@ -12,7 +12,7 @@ import io.github.bobcgn.miniapp.capability.CapabilityKey
  *
  * Each entry is gated on its own, because each is a separate host API and a host
  * may offer any subset: the two clipboard directions, the two vibration lengths,
- * and the four file operations the file manager exposes.
+ * the four file operations the file manager exposes, and the position API.
  */
 internal object WeChatDeviceCapabilities {
     /** Reading system clipboard text. */
@@ -46,4 +46,13 @@ internal object WeChatDeviceCapabilities {
      * without the other and it is gated on its own.
      */
     val FileSystemSandboxPath: CapabilityKey = CapabilityKey("wechat.filesystem-sandbox-path")
+
+    /**
+     * Reading the device's current position.
+     *
+     * Its API availability, its `scope.userLocation` permission, and the host's
+     * privacy contract are three separate questions, so only the first is answered
+     * by this key.
+     */
+    val Location: CapabilityKey = CapabilityKey("wechat.location")
 }

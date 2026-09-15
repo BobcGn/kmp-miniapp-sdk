@@ -17,6 +17,7 @@ import io.github.bobcgn.miniapp.capability.privacy.PrivacyAuthorizationRequireme
 import io.github.bobcgn.miniapp.capability.privacy.PrivacyStatus
 import io.github.bobcgn.miniapp.capability.storage.MiniAppStorage
 import io.github.bobcgn.miniapp.host.requireSupported
+import io.github.bobcgn.miniapp.host.wechat.WeChatCoordinateSystem
 import io.github.bobcgn.miniapp.host.wechat.WeChatLoginResult
 import io.github.bobcgn.miniapp.host.wechat.WeChatSessionState
 import io.github.bobcgn.miniapp.host.wechat.WechatHost
@@ -347,6 +348,43 @@ public object MiniAppExports {
         host.platform.fileSystem.remove(path)
 
     /**
+     * Obtains the device's current position.
+     *
+     * The coordinates are returned in [coordinateSystem], which defaults to `gcj02`
+     * because that is the system WeChat's own map views accept; `wgs84` is the raw
+     * satellite fix. They are not interchangeable.
+     *
+     * Three separate conditions decide whether this resolves: whether WeChat
+     * exposes the API at all, whether `scope.userLocation` is granted, and whether
+     * the host's privacy contract has been accepted. Use the capability query and
+     * the permission and privacy functions above to observe each on its own. This
+     * call never prompts for a permission and never accepts a privacy contract on
+     * the user's behalf.
+     *
+     * @param coordinateSystem `wgs84` or `gcj02`
+     * @throws IllegalArgumentException when [coordinateSystem] is neither
+     */
+    public suspend fun wechatGetCurrentLocation(
+        coordinateSystem: String,
+    ): JsGeoPosition {
+        val system = when (coordinateSystem) {
+            WGS84_NAME -> WeChatCoordinateSystem.WGS84
+            GCJ02_NAME -> WeChatCoordinateSystem.GCJ02
+            else -> throw IllegalArgumentException(
+                "Unsupported coordinate system: '$coordinateSystem'",
+            )
+        }
+
+        val position = host.platform.location.currentPosition(system)
+        return JsGeoPosition(
+            latitude = position.latitude,
+            longitude = position.longitude,
+            accuracyMeters = position.accuracyMeters,
+            coordinateSystem = position.coordinateSystem.hostValue,
+        )
+    }
+
+    /**
      * Fails unless the host currently requires no privacy authorization.
      *
      * This is the precondition point for capabilities the host gates behind its
@@ -392,6 +430,8 @@ private fun PrivacyStatus.toJs(): JsPrivacyStatus = JsPrivacyStatus(
     contractName = contractName,
 )
 
+private const val WGS84_NAME: String = "wgs84"
+private const val GCJ02_NAME: String = "gcj02"
 private const val SESSION_VALID: String = "Valid"
 private const val SESSION_INVALID: String = "Invalid"
 private const val PRIVACY_REQUIRED: String = "REQUIRED"
