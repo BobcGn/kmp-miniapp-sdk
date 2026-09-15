@@ -52,6 +52,10 @@ interface IndexPageData {
   fileAccessStatus: string;
   fileRemoveStatus: string;
   fileSystemDetails: string;
+  locationPermission: string;
+  locationPrivacy: string;
+  locationStatus: string;
+  locationDetails: string;
 }
 
 type IndexPage = MiniProgramPageInstance<IndexPageData>;
@@ -432,6 +436,168 @@ async function checkRemovedFile(this: IndexPage): Promise<void> {
   }
 }
 
+/**
+ * Reports how the gate answers for the location capability.
+ *
+ * This is a different question from the permission and the privacy requirement
+ * the other buttons report: the API can exist while the permission is refused,
+ * and the answer is read from the host rather than from a version table.
+ */
+function checkLocationCapability(this: IndexPage): void {
+  try {
+    const support: MiniAppSdk.CapabilitySupportResult =
+      MiniAppSdk.capabilitySupport('wechat.location');
+    console.log('[kmp-miniapp-sdk] location capability: PASS wechat.location=' + support.state);
+    this.setData({
+      locationStatus: support.state,
+      locationDetails: 'wechat.location=' + support.state,
+    });
+  } catch (error) {
+    console.error('[kmp-miniapp-sdk] location capability: FAIL', error);
+    this.setData({ locationStatus: 'FAIL', locationDetails: String(error) });
+  }
+}
+
+/**
+ * Reports the location permission the host currently holds.
+ *
+ * This is a query only. The location capability needs `scope.userLocation`, and
+ * the permission lifecycle is a separate question from whether the API exists.
+ */
+async function refreshLocationPermission(this: IndexPage): Promise<void> {
+  try {
+    const state = await MiniAppSdk.permissionState('location');
+    console.log('[kmp-miniapp-sdk] location permission query: PASS state=' + state);
+    this.setData({ locationPermission: state, locationDetails: 'permission=' + state });
+  } catch (error) {
+    const details = String(error);
+    console.error('[kmp-miniapp-sdk] location permission query: FAIL', error);
+    this.setData({ locationPermission: 'FAIL', locationDetails: details });
+  }
+}
+
+/** Asks the host for the location permission. A tap is required. */
+async function requestLocationPermission(this: IndexPage): Promise<void> {
+  try {
+    const state = await MiniAppSdk.requestPermission('location');
+    console.log('[kmp-miniapp-sdk] location permission request: PASS state=' + state);
+    this.setData({ locationPermission: state, locationDetails: 'permission=' + state });
+  } catch (error) {
+    // A refusal and a host failure both reject, so the host's own state decides
+    // which one this was.
+    try {
+      const state = await MiniAppSdk.permissionState('location');
+      if (state === 'Denied') {
+        console.error('[kmp-miniapp-sdk] location permission request: DENIED state=' + state);
+        this.setData({ locationPermission: state, locationDetails: 'permission=' + state });
+        return;
+      }
+    } catch (stateError) {
+      console.error('[kmp-miniapp-sdk] location permission state after failure: FAIL', stateError);
+    }
+
+    const details = String(error);
+    console.error('[kmp-miniapp-sdk] location permission request: FAIL', error);
+    this.setData({ locationPermission: 'FAIL', locationDetails: details });
+  }
+}
+
+/**
+ * Reports what the host currently requires for its privacy contract.
+ *
+ * Takes the page rather than binding `this`, so the privacy request handler can
+ * reuse it without working around a bound receiver.
+ */
+async function readLocationPrivacy(page: IndexPage): Promise<void> {
+  try {
+    const status: MiniAppSdk.PrivacyStatusResult = await MiniAppSdk.privacyStatus();
+    console.log('[kmp-miniapp-sdk] location privacy query: PASS requirement=' + status.requirement);
+    page.setData({ locationPrivacy: status.requirement });
+  } catch (error) {
+    const details = String(error);
+    console.error('[kmp-miniapp-sdk] location privacy query: FAIL', error);
+    page.setData({ locationPrivacy: 'FAIL', locationDetails: details });
+  }
+}
+
+async function refreshLocationPrivacy(this: IndexPage): Promise<void> {
+  await readLocationPrivacy(this);
+}
+
+/**
+ * Asks the host to obtain the user's acceptance of its privacy contract.
+ *
+ * A tap is required. Resolving does not mean the contract was accepted.
+ */
+async function requestLocationPrivacy(this: IndexPage): Promise<void> {
+  try {
+    const result: MiniAppSdk.PrivacyAuthorizationResult =
+      await MiniAppSdk.requestPrivacyAuthorization();
+    console.log('[kmp-miniapp-sdk] location privacy request: result=' + result);
+    await readLocationPrivacy(this);
+  } catch (error) {
+    const details = String(error);
+    console.error('[kmp-miniapp-sdk] location privacy request: FAIL', error);
+    this.setData({ locationPrivacy: 'FAIL', locationDetails: details });
+  }
+}
+
+/**
+ * Reads the current position and checks the shape of what came back.
+ *
+ * The coordinates themselves are never displayed or logged: a precise position is
+ * the user's, and this check only needs to know that the SDK handed over a
+ * well-formed result. `coordinatesValid` and `accuracyValid` are recomputed here
+ * rather than assumed, so they are evidence about the value and not a formality.
+ */
+async function getCurrentLocation(this: IndexPage): Promise<void> {
+  try {
+    const position: MiniAppSdk.GeoPosition = await MiniAppSdk.wechatGetCurrentLocation('gcj02');
+
+    const coordinatesValid =
+      Number.isFinite(position.latitude) &&
+      Number.isFinite(position.longitude) &&
+      Math.abs(position.latitude) <= 90 &&
+      Math.abs(position.longitude) <= 180;
+    const accuracyValid =
+      Number.isFinite(position.accuracyMeters) && position.accuracyMeters >= 0;
+
+    const details = `coordinatesValid=${coordinatesValid}, accuracyValid=${accuracyValid}`;
+    if (coordinatesValid && accuracyValid) {
+      console.log('[kmp-miniapp-sdk] location: PASS', details);
+      this.setData({ locationStatus: 'PASS', locationDetails: details });
+    } else {
+      console.error('[kmp-miniapp-sdk] location: FAIL', details);
+      this.setData({ locationStatus: 'FAIL', locationDetails: details });
+    }
+  } catch (error) {
+    // Re-read the two preconditions so the acceptance log can distinguish a
+    // permission refusal from an unsatisfied privacy contract without exposing
+    // any coordinate or relying on a localized exception message.
+    try {
+      const privacy = await MiniAppSdk.privacyStatus();
+      if (privacy.requirement === 'REQUIRED') {
+        console.error('[kmp-miniapp-sdk] location: PRIVACY_REQUIRED');
+        this.setData({ locationStatus: 'PRIVACY_REQUIRED', locationDetails: 'privacy=REQUIRED' });
+        return;
+      }
+
+      const permission = await MiniAppSdk.permissionState('location');
+      if (permission !== 'Granted') {
+        console.error('[kmp-miniapp-sdk] location: DENIED permissionState=' + permission);
+        this.setData({ locationStatus: 'DENIED', locationDetails: 'permission=' + permission });
+        return;
+      }
+    } catch (preconditionError) {
+      console.error('[kmp-miniapp-sdk] location precondition query: FAIL', preconditionError);
+    }
+
+    const details = String(error);
+    console.error('[kmp-miniapp-sdk] location: FAIL', error);
+    this.setData({ locationStatus: 'FAIL', locationDetails: details });
+  }
+}
+
 async function runStorageCheck(page: IndexPage): Promise<void> {
   try {
     await MiniAppSdk.storageSet(storageKey, 'first');
@@ -572,6 +738,10 @@ Page<IndexPageData>({
     fileAccessStatus: 'READY',
     fileRemoveStatus: 'READY',
     fileSystemDetails: 'Tap a button; nothing touches the file system on load.',
+    locationPermission: 'NOT RUN',
+    locationPrivacy: 'NOT RUN',
+    locationStatus: 'NOT RUN',
+    locationDetails: 'Tap a button; nothing requests a position on load.',
     permissionStatus: 'UNKNOWN',
     permissionDetails:
       'Permission is never requested on load. Tap a button to query or request it.',
@@ -596,4 +766,10 @@ Page<IndexPageData>({
   checkTestFile,
   removeTestFile,
   checkRemovedFile,
+  checkLocationCapability,
+  refreshLocationPermission,
+  requestLocationPermission,
+  refreshLocationPrivacy,
+  requestLocationPrivacy,
+  getCurrentLocation,
 });

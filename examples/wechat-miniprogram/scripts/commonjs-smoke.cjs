@@ -25,6 +25,7 @@ const supportedSchemas = new Set([
   'vibrateShort',
   'vibrateLong',
   'getFileSystemManager',
+  'getLocation',
 ]);
 
 // Permission state this fake host holds, plus a record of what it was asked to
@@ -59,6 +60,13 @@ const vibrateCalls = [];
 const sandboxRoot = '/node-sandbox';
 const sandboxFiles = new Map();
 const fileSystemCalls = [];
+
+// Location is a device capability with its own permission scope, its own privacy
+// precondition, and its own coordinate system. The fake returns a fixed position
+// and records what it was asked for.
+let locationAnswer = { latitude: 31.5, longitude: 121.5, accuracy: 15.0 };
+let locationFailure = null;
+const locationCalls = [];
 
 function fileSystemManager() {
   return {
@@ -211,6 +219,19 @@ global.wx = {
   getFileSystemManager() {
     return fileSystemManager();
   },
+  getLocation(options) {
+    locationCalls.push({ type: options.type });
+    if (locationFailure !== null) {
+      options.fail({ errMsg: locationFailure });
+      return;
+    }
+    options.success({
+      latitude: locationAnswer.latitude,
+      longitude: locationAnswer.longitude,
+      accuracy: locationAnswer.accuracy,
+      errMsg: 'getLocation:ok',
+    });
+  },
   env: {
     USER_DATA_PATH: sandboxRoot,
   },
@@ -244,6 +265,7 @@ async function main() {
     'wechatWriteTextFile',
     'wechatFileExists',
     'wechatRemoveFile',
+    'wechatGetCurrentLocation',
     'networkRequest',
     'wechatAppOnLaunch',
     'wechatAppOnShow',
@@ -521,6 +543,53 @@ async function main() {
   // Removing a file that is not there follows the host contract and fails.
   await assert.rejects(miniAppSdk.wechatRemoveFile(testPath));
 
+  // Loading the module must not have asked for a position.
+  assert.deepEqual(locationCalls, []);
+
+  // Location availability, its permission, and the privacy contract are three
+  // separate answers, and the gate reports only the first.
+  assert.equal(miniAppSdk.capabilitySupport('wechat.location').state, 'Supported');
+  assert.equal(await miniAppSdk.permissionState('location'), 'NotRequested');
+
+  // The privacy precondition is enforced before the host is asked.
+  privacyRequired = true;
+  await assert.rejects(miniAppSdk.wechatGetCurrentLocation('gcj02'));
+  assert.equal(locationCalls.length, 0);
+
+  privacyRequired = false;
+  assert.equal(await miniAppSdk.requestPermission('location'), 'Granted');
+  assert.equal(await miniAppSdk.permissionState('location'), 'Granted');
+
+  const position = await miniAppSdk.wechatGetCurrentLocation('gcj02');
+  assert.ok(Number.isFinite(position.latitude));
+  assert.ok(Number.isFinite(position.longitude));
+  assert.ok(position.accuracyMeters >= 0);
+  assert.equal(position.coordinateSystem, 'gcj02');
+
+  // The SDK never lets the host pick a coordinate system on its own.
+  assert.equal(locationCalls[locationCalls.length - 1].type, 'gcj02');
+
+  const wgs = await miniAppSdk.wechatGetCurrentLocation('wgs84');
+  assert.equal(wgs.coordinateSystem, 'wgs84');
+  assert.equal(locationCalls[locationCalls.length - 1].type, 'wgs84');
+
+  // An unknown coordinate system is a caller mistake, not a host condition.
+  await assert.rejects(miniAppSdk.wechatGetCurrentLocation('mars'), /Unsupported coordinate system/);
+
+  // A host answer that is not a usable coordinate is reported rather than
+  // defaulted to zero.
+  locationAnswer = { latitude: Number.NaN, longitude: 121.5, accuracy: 15.0 };
+  await assert.rejects(miniAppSdk.wechatGetCurrentLocation('gcj02'));
+
+  locationAnswer = { latitude: 31.5, longitude: 200.0, accuracy: 15.0 };
+  await assert.rejects(miniAppSdk.wechatGetCurrentLocation('gcj02'));
+
+  // An ordinary host failure stays a failure.
+  locationAnswer = { latitude: 31.5, longitude: 121.5, accuracy: 15.0 };
+  locationFailure = 'getLocation:fail system error';
+  await assert.rejects(miniAppSdk.wechatGetCurrentLocation('gcj02'));
+  locationFailure = null;
+
   console.log('[node-smoke] sdkVersion:', miniAppSdk.sdkVersion());
   console.log('[node-smoke] storage: PASS');
   console.log('[node-smoke] auth bootstrap: PASS');
@@ -534,6 +603,7 @@ async function main() {
   console.log('[node-smoke] clipboard: PASS');
   console.log('[node-smoke] haptics: PASS');
   console.log('[node-smoke] filesystem: PASS');
+  console.log('[node-smoke] location: PASS');
 }
 
 main().catch((error) => {

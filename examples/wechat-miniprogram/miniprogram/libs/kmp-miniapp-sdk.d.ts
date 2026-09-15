@@ -12,6 +12,46 @@ export interface WeChatLoginResult {
 export function wechatLogin(): Promise<WeChatLoginResult>;
 
 /**
+ * Coordinate system a WeChat position is reported in.
+ *
+ * `wgs84` is the raw satellite fix; `gcj02` is the offset system Chinese map data
+ * uses. They are not interchangeable, and a coordinate used in the wrong one
+ * lands hundreds of metres away.
+ */
+export type GeoCoordinateSystem = 'wgs84' | 'gcj02';
+
+/** One position WeChat reported, in the system that was requested. */
+export interface GeoPosition {
+  /** Degrees, in -90..90; negative is south. */
+  readonly latitude: number;
+  /** Degrees, in -180..180; negative is west. */
+  readonly longitude: number;
+  /** Radius of the horizontal uncertainty in metres; never negative. */
+  readonly accuracyMeters: number;
+  /** The system the coordinates are in. */
+  readonly coordinateSystem: GeoCoordinateSystem;
+}
+
+/**
+ * Obtains the device's current position.
+ *
+ * The coordinates default to `gcj02`, because that is the system WeChat's own map
+ * views accept.
+ *
+ * Three separate conditions decide whether this resolves: whether WeChat exposes
+ * the API, whether `scope.userLocation` is granted, and whether the host's privacy
+ * contract has been accepted. Use {@link capabilitySupport}, {@link permissionState}
+ * and {@link privacyStatus} to observe each on its own. This call never prompts for
+ * a permission and never accepts a privacy contract on the user's behalf.
+ *
+ * The result is a precise position: do not render it, log it, or send it anywhere
+ * the user has not agreed to.
+ */
+export function wechatGetCurrentLocation(
+  coordinateSystem?: GeoCoordinateSystem,
+): Promise<GeoPosition>;
+
+/**
  * Reads the system clipboard as text.
  *
  * An empty clipboard resolves with an empty string. The clipboard belongs to the
@@ -258,7 +298,7 @@ export function wechatCanIUse(schema: string): boolean;
 export type PermissionState = 'NotRequested' | 'Granted' | 'Denied';
 
 /** Permissions this SDK maps to a host scope. */
-export type PermissionName = 'microphone';
+export type PermissionName = 'microphone' | 'location';
 
 /**
  * Returns the host's current state for `permission`.

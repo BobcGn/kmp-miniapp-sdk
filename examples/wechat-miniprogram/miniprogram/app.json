@@ -10,5 +10,13 @@
     "navigationBarTextStyle": "black",
     "backgroundColor": "#f5f7fa"
   },
+  "requiredPrivateInfos": [
+    "getLocation"
+  ],
+  "permission": {
+    "scope.userLocation": {
+      "desc": "用于在示例页面获取当前定位，验证 SDK 的定位能力"
+    }
+  },
   "sitemapLocation": "sitemap.json"
 }

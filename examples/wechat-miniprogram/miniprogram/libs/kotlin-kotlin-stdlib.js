@@ -1532,6 +1532,10 @@ if (typeof Math.clz32 === 'undefined') {
     }
     return tmp;
   }
+  function numberToDouble(a) {
+    // Inline function 'kotlin.js.unsafeCast' call
+    return Number(a);
+  }
   function numberRangeToNumber(start, endInclusive) {
     return new IntRange(start, endInclusive);
   }
@@ -1768,6 +1772,9 @@ if (typeof Math.clz32 === 'undefined') {
       tmp = 1 << (31 - clz32(_this__u8e3s4) | 0);
     }
     return tmp;
+  }
+  function isInfinite(_this__u8e3s4) {
+    return _this__u8e3s4 === Infinity || _this__u8e3s4 === -Infinity;
   }
   function Unit() {
   }
@@ -6216,41 +6223,46 @@ if (typeof Math.clz32 === 'undefined') {
   _.$_$.w2 = defineProp;
   _.$_$.x2 = equals;
   _.$_$.y2 = getBooleanHashCode;
-  _.$_$.z2 = getPropertyCallableRef;
-  _.$_$.a3 = getStringHashCode;
-  _.$_$.b3 = hashCode_0;
-  _.$_$.c3 = initMetadataForClass;
-  _.$_$.d3 = initMetadataForCompanion;
-  _.$_$.e3 = initMetadataForCoroutine;
-  _.$_$.f3 = initMetadataForInterface;
-  _.$_$.g3 = initMetadataForLambda;
-  _.$_$.h3 = initMetadataForObject;
-  _.$_$.i3 = isCharSequence;
-  _.$_$.j3 = isInterface;
-  _.$_$.k3 = protoOf;
-  _.$_$.l3 = toString_1;
-  _.$_$.m3 = getKClassFromExpression;
-  _.$_$.n3 = KProperty1;
-  _.$_$.o3 = contains_0;
-  _.$_$.p3 = isBlank;
-  _.$_$.q3 = split;
-  _.$_$.r3 = toIntOrNull;
-  _.$_$.s3 = trim;
-  _.$_$.t3 = Enum;
-  _.$_$.u3 = Error_0;
-  _.$_$.v3 = Exception;
-  _.$_$.w3 = Long;
-  _.$_$.x3 = RuntimeException;
-  _.$_$.y3 = THROW_CCE;
-  _.$_$.z3 = UnsupportedOperationException;
-  _.$_$.a4 = addSuppressed;
-  _.$_$.b4 = createFailure;
-  _.$_$.c4 = ensureNotNull;
-  _.$_$.d4 = lazy;
-  _.$_$.e4 = noWhenBranchMatchedException;
-  _.$_$.f4 = stackTraceToString;
-  _.$_$.g4 = toString_0;
-  _.$_$.h4 = to;
+  _.$_$.z2 = getNumberHashCode;
+  _.$_$.a3 = getPropertyCallableRef;
+  _.$_$.b3 = getStringHashCode;
+  _.$_$.c3 = hashCode_0;
+  _.$_$.d3 = initMetadataForClass;
+  _.$_$.e3 = initMetadataForCompanion;
+  _.$_$.f3 = initMetadataForCoroutine;
+  _.$_$.g3 = initMetadataForInterface;
+  _.$_$.h3 = initMetadataForLambda;
+  _.$_$.i3 = initMetadataForObject;
+  _.$_$.j3 = isCharSequence;
+  _.$_$.k3 = isInterface;
+  _.$_$.l3 = isNumber;
+  _.$_$.m3 = numberToDouble;
+  _.$_$.n3 = protoOf;
+  _.$_$.o3 = toString_1;
+  _.$_$.p3 = getKClassFromExpression;
+  _.$_$.q3 = KProperty1;
+  _.$_$.r3 = contains_0;
+  _.$_$.s3 = isBlank;
+  _.$_$.t3 = split;
+  _.$_$.u3 = toIntOrNull;
+  _.$_$.v3 = trim;
+  _.$_$.w3 = Enum;
+  _.$_$.x3 = Error_0;
+  _.$_$.y3 = Exception;
+  _.$_$.z3 = Long;
+  _.$_$.a4 = RuntimeException;
+  _.$_$.b4 = THROW_CCE;
+  _.$_$.c4 = UnsupportedOperationException;
+  _.$_$.d4 = addSuppressed;
+  _.$_$.e4 = createFailure;
+  _.$_$.f4 = ensureNotNull;
+  _.$_$.g4 = isInfinite;
+  _.$_$.h4 = isNaN_0;
+  _.$_$.i4 = lazy;
+  _.$_$.j4 = noWhenBranchMatchedException;
+  _.$_$.k4 = stackTraceToString;
+  _.$_$.l4 = toString_0;
+  _.$_$.m4 = to;
   //endregion
   return _;
 }(module.exports));

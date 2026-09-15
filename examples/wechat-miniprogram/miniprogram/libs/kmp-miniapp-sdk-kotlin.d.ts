@@ -16,6 +16,21 @@ export declare namespace io.github.bobcgn.miniapp.export {
     }
 }
 export declare namespace io.github.bobcgn.miniapp.export {
+    class JsGeoPosition {
+        private constructor();
+        get latitude(): number;
+        get longitude(): number;
+        get accuracyMeters(): number;
+        get coordinateSystem(): string;
+    }
+    namespace JsGeoPosition {
+        /** @deprecated $metadata$ is used for internal purposes, please don't use it in your code, because it can be removed at any moment */
+        namespace $metadata$ {
+            const constructor: abstract new () => JsGeoPosition;
+        }
+    }
+}
+export declare namespace io.github.bobcgn.miniapp.export {
     class JsPrivacyStatus {
         private constructor();
         get requirement(): string;
@@ -86,6 +101,7 @@ export declare namespace io.github.bobcgn.miniapp.export {
                 wechatWriteTextFile(path: string, content: string): Promise<void>;
                 wechatFileExists(path: string): Promise<boolean>;
                 wechatRemoveFile(path: string): Promise<void>;
+                wechatGetCurrentLocation(coordinateSystem: string): Promise<io.github.bobcgn.miniapp.export.JsGeoPosition>;
                 requirePrivacySatisfied(): Promise<void>;
                 private constructor();
             }

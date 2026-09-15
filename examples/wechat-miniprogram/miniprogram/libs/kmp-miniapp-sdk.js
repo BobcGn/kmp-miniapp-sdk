@@ -71,6 +71,18 @@ module.exports = {
   wechatRemoveFile: function wechatRemoveFile(path) {
     return miniAppExports.wechatRemoveFile(path);
   },
+  wechatGetCurrentLocation: function wechatGetCurrentLocation(coordinateSystem) {
+    return miniAppExports
+      .wechatGetCurrentLocation(coordinateSystem === undefined ? 'gcj02' : coordinateSystem)
+      .then(function (position) {
+        return {
+          latitude: position.latitude,
+          longitude: position.longitude,
+          accuracyMeters: position.accuracyMeters,
+          coordinateSystem: position.coordinateSystem,
+        };
+      });
+  },
   networkRequest: function networkRequest(url, init) {
     const options = init || {};
     return miniAppExports

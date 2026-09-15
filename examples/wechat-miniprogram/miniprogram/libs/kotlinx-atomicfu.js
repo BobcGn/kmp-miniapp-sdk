@@ -1,11 +1,11 @@
 (function (_, kotlin_kotlin) {
   'use strict';
   //region block: imports
-  var protoOf = kotlin_kotlin.$_$.k3;
-  var initMetadataForObject = kotlin_kotlin.$_$.h3;
+  var protoOf = kotlin_kotlin.$_$.n3;
+  var initMetadataForObject = kotlin_kotlin.$_$.i3;
   var VOID = kotlin_kotlin.$_$.a;
-  var initMetadataForClass = kotlin_kotlin.$_$.c3;
-  var toString = kotlin_kotlin.$_$.g4;
+  var initMetadataForClass = kotlin_kotlin.$_$.d3;
+  var toString = kotlin_kotlin.$_$.l4;
   //endregion
   //region block: pre-declaration
   initMetadataForClass(atomicfu$TraceBase, 'TraceBase');

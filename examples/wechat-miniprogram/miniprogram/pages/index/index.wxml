@@ -18,7 +18,7 @@
     <text class="label">Base library and capability support</text>
     <text class="status status--{{runtimeStatus}}">{{runtimeStatus}}</text>
     <text class="details">{{runtimeDetails}}</text>
-    <text class="security-note">Lower the debug base library below 2.20.1 to see VersionDependent.</text>
+    <text class="security-note">VersionDependent cannot be produced here: the lowest debug base library is 2.21.4, above the 2.20.1 boundary.</text>
   </view>
 
   <view class="card">
@@ -80,6 +80,21 @@
     <button class="action" bindtap="readTestFile">Read test file</button>
     <button class="action" bindtap="removeTestFile">Remove test file</button>
     <button class="action" bindtap="checkRemovedFile">Check removed file</button>
+  </view>
+
+  <view class="card">
+    <text class="eyebrow">Location</text>
+    <text class="label">Permission: {{locationPermission}}</text>
+    <text class="label">Privacy: {{locationPrivacy}}</text>
+    <text class="status status--{{locationStatus}}">{{locationStatus}}</text>
+    <text class="details">{{locationDetails}}</text>
+    <text class="security-note">Coordinates are never shown or logged; no position is requested on load.</text>
+    <button class="action" bindtap="checkLocationCapability">Check location capability</button>
+    <button class="action" bindtap="refreshLocationPermission">Refresh location permission</button>
+    <button class="action" bindtap="requestLocationPermission">Request location permission</button>
+    <button class="action" bindtap="refreshLocationPrivacy">Refresh privacy status</button>
+    <button class="action" bindtap="requestLocationPrivacy">Request privacy authorization</button>
+    <button class="action" bindtap="getCurrentLocation">Get current location</button>
   </view>
 
   <view class="card">

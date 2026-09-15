@@ -2,77 +2,82 @@
   'use strict';
   //region block: imports
   var imul = Math.imul;
-  var protoOf = kotlin_kotlin.$_$.k3;
-  var initMetadataForInterface = kotlin_kotlin.$_$.f3;
+  var protoOf = kotlin_kotlin.$_$.n3;
+  var initMetadataForInterface = kotlin_kotlin.$_$.g3;
   var Unit_instance = kotlin_kotlin.$_$.j;
   var Companion_instance = kotlin_kotlin.$_$.i;
   var _Result___init__impl__xyqfz8 = kotlin_kotlin.$_$.c;
-  var createFailure = kotlin_kotlin.$_$.b4;
+  var createFailure = kotlin_kotlin.$_$.e4;
   var CoroutineImpl = kotlin_kotlin.$_$.j2;
   var intercepted = kotlin_kotlin.$_$.v1;
   var CancellableContinuationImpl = kotlin_org_jetbrains_kotlinx_kotlinx_coroutines_core.$_$.c;
   var returnIfSuspended = kotlin_kotlin.$_$.l;
   var get_COROUTINE_SUSPENDED = kotlin_kotlin.$_$.t1;
-  var initMetadataForCoroutine = kotlin_kotlin.$_$.e3;
-  var getStringHashCode = kotlin_kotlin.$_$.a3;
-  var initMetadataForClass = kotlin_kotlin.$_$.c3;
-  var initMetadataForObject = kotlin_kotlin.$_$.h3;
-  var toString = kotlin_kotlin.$_$.g4;
+  var initMetadataForCoroutine = kotlin_kotlin.$_$.f3;
+  var getStringHashCode = kotlin_kotlin.$_$.b3;
+  var initMetadataForClass = kotlin_kotlin.$_$.d3;
+  var initMetadataForObject = kotlin_kotlin.$_$.i3;
+  var toString = kotlin_kotlin.$_$.l4;
   var equals = kotlin_kotlin.$_$.x2;
-  var Enum = kotlin_kotlin.$_$.t3;
+  var Enum = kotlin_kotlin.$_$.w3;
   var VOID = kotlin_kotlin.$_$.a;
-  var initMetadataForCompanion = kotlin_kotlin.$_$.d3;
+  var initMetadataForCompanion = kotlin_kotlin.$_$.e3;
   var enumEntries = kotlin_kotlin.$_$.l2;
   var emptyMap = kotlin_kotlin.$_$.k1;
   var captureStack = kotlin_kotlin.$_$.s2;
-  var Exception = kotlin_kotlin.$_$.v3;
+  var Exception = kotlin_kotlin.$_$.y3;
   var Exception_init_$Init$ = kotlin_kotlin.$_$.w;
-  var THROW_CCE = kotlin_kotlin.$_$.y3;
-  var isCharSequence = kotlin_kotlin.$_$.i3;
-  var trim = kotlin_kotlin.$_$.s3;
-  var toString_0 = kotlin_kotlin.$_$.l3;
+  var THROW_CCE = kotlin_kotlin.$_$.b4;
+  var isCharSequence = kotlin_kotlin.$_$.j3;
+  var trim = kotlin_kotlin.$_$.v3;
+  var toString_0 = kotlin_kotlin.$_$.o3;
   var _Char___init__impl__6a9atx = kotlin_kotlin.$_$.b;
   var charArrayOf = kotlin_kotlin.$_$.t2;
-  var split = kotlin_kotlin.$_$.q3;
+  var split = kotlin_kotlin.$_$.t3;
   var ArrayList_init_$Create$ = kotlin_kotlin.$_$.n;
-  var toIntOrNull = kotlin_kotlin.$_$.r3;
+  var toIntOrNull = kotlin_kotlin.$_$.u3;
   var last = kotlin_kotlin.$_$.m1;
   var get_lastIndex = kotlin_kotlin.$_$.l1;
   var compareTo = kotlin_kotlin.$_$.u2;
-  var hashCode = kotlin_kotlin.$_$.b3;
+  var hashCode = kotlin_kotlin.$_$.c3;
   var await_0 = kotlin_kotlin.$_$.k;
-  var noWhenBranchMatchedException = kotlin_kotlin.$_$.e4;
+  var noWhenBranchMatchedException = kotlin_kotlin.$_$.j4;
   var ArrayList_init_$Create$_0 = kotlin_kotlin.$_$.o;
   var listOf = kotlin_kotlin.$_$.o1;
   var addAll = kotlin_kotlin.$_$.h1;
   var copyToArray = kotlin_kotlin.$_$.i1;
-  var promisify = kotlin_kotlin.$_$.w1;
   var IllegalArgumentException_init_$Create$ = kotlin_kotlin.$_$.x;
+  var promisify = kotlin_kotlin.$_$.w1;
   var LinkedHashMap_init_$Create$ = kotlin_kotlin.$_$.q;
   var defineProp = kotlin_kotlin.$_$.w2;
   var Companion_instance_0 = kotlin_kotlin.$_$.h;
-  var isBlank = kotlin_kotlin.$_$.p3;
-  var to = kotlin_kotlin.$_$.h4;
+  var isBlank = kotlin_kotlin.$_$.s3;
+  var to = kotlin_kotlin.$_$.m4;
   var mapOf = kotlin_kotlin.$_$.p1;
-  var contains = kotlin_kotlin.$_$.o3;
+  var contains = kotlin_kotlin.$_$.r3;
   var constructCallableReference = kotlin_kotlin.$_$.v2;
   var FunctionAdapter = kotlin_kotlin.$_$.q2;
-  var isInterface = kotlin_kotlin.$_$.j3;
+  var isInterface = kotlin_kotlin.$_$.k3;
+  var mapOf_0 = kotlin_kotlin.$_$.q1;
   var CoroutineScope = kotlin_org_jetbrains_kotlinx_kotlinx_coroutines_core.$_$.e;
-  var initMetadataForLambda = kotlin_kotlin.$_$.g3;
+  var initMetadataForLambda = kotlin_kotlin.$_$.h3;
   var SupervisorJob = kotlin_org_jetbrains_kotlinx_kotlinx_coroutines_core.$_$.f;
   var Dispatchers_getInstance = kotlin_org_jetbrains_kotlinx_kotlinx_coroutines_core.$_$.a;
   var CoroutineScope_0 = kotlin_org_jetbrains_kotlinx_kotlinx_coroutines_core.$_$.d;
   var async = kotlin_org_jetbrains_kotlinx_kotlinx_coroutines_core.$_$.g;
+  var getNumberHashCode = kotlin_kotlin.$_$.z2;
+  var isNumber = kotlin_kotlin.$_$.l3;
+  var numberToDouble = kotlin_kotlin.$_$.m3;
+  var isNaN_0 = kotlin_kotlin.$_$.h4;
+  var isInfinite = kotlin_kotlin.$_$.g4;
   var getBooleanHashCode = kotlin_kotlin.$_$.y2;
   var MutableStateFlow = kotlin_org_jetbrains_kotlinx_kotlinx_coroutines_core.$_$.b;
   var emptyList = kotlin_kotlin.$_$.j1;
   var listOf_0 = kotlin_kotlin.$_$.n1;
-  var mapOf_0 = kotlin_kotlin.$_$.q1;
   var Collection = kotlin_kotlin.$_$.f1;
-  var KProperty1 = kotlin_kotlin.$_$.n3;
-  var getPropertyCallableRef = kotlin_kotlin.$_$.z2;
-  var lazy = kotlin_kotlin.$_$.d4;
+  var KProperty1 = kotlin_kotlin.$_$.q3;
+  var getPropertyCallableRef = kotlin_kotlin.$_$.a3;
+  var lazy = kotlin_kotlin.$_$.i4;
   //endregion
   //region block: pre-declaration
   initMetadataForInterface(HostOperationAborter, 'HostOperationAborter');
@@ -111,6 +116,7 @@
   initMetadataForCompanion(Companion_5);
   initMetadataForClass(HostVersion, 'HostVersion');
   initMetadataForClass(JsCapabilitySupport, 'JsCapabilitySupport');
+  initMetadataForClass(JsGeoPosition, 'JsGeoPosition');
   initMetadataForClass(JsPrivacyStatus, 'JsPrivacyStatus');
   initMetadataForClass(JsRuntimeInfo, 'JsRuntimeInfo');
   initMetadataForCoroutine($storageGet$suspendBridgeCOROUTINE$, CoroutineImpl);
@@ -142,10 +148,14 @@
   initMetadataForCoroutine($wechatWriteTextFile$suspendBridgeCOROUTINE$, CoroutineImpl);
   initMetadataForCoroutine($wechatFileExists$suspendBridgeCOROUTINE$, CoroutineImpl);
   initMetadataForCoroutine($wechatRemoveFile$suspendBridgeCOROUTINE$, CoroutineImpl);
+  initMetadataForCoroutine($wechatGetCurrentLocationCOROUTINE$, CoroutineImpl);
+  initMetadataForCoroutine($wechatGetCurrentLocation$suspendBridgeCOROUTINE$, CoroutineImpl);
   initMetadataForCoroutine($requirePrivacySatisfied$suspendBridgeCOROUTINE$, CoroutineImpl);
   initMetadataForObject(MiniAppExports, 'MiniAppExports', VOID, VOID, VOID, [1, 2, 0, 5]);
   initMetadataForClass(MiniAppHttpResult, 'MiniAppHttpResult');
   initMetadataForObject(WeChatDeviceCapabilities, 'WeChatDeviceCapabilities');
+  initMetadataForClass(WeChatCoordinateSystem, 'WeChatCoordinateSystem', VOID, Enum);
+  initMetadataForClass(WeChatGeoPosition, 'WeChatGeoPosition');
   initMetadataForClass(WeChatLoginResult, 'WeChatLoginResult');
   initMetadataForCompanion(Companion_6);
   initMetadataForClass(WeChatSessionState, 'WeChatSessionState', VOID, Enum);
@@ -166,6 +176,9 @@
   initMetadataForObject(WxFileSystemHost, 'WxFileSystemHost');
   initMetadataForClass(WechatHaptics, 'WechatHaptics', WechatHaptics, VOID, VOID, [0]);
   initMetadataForObject(WxHapticsHost, 'WxHapticsHost');
+  initMetadataForCoroutine($currentPositionCOROUTINE$, CoroutineImpl);
+  initMetadataForClass(WechatLocation, 'WechatLocation', VOID, VOID, VOID, [1]);
+  initMetadataForObject(WxLocationHost, 'WxLocationHost');
   initMetadataForClass(WechatNavigation, 'WechatNavigation', WechatNavigation, VOID, VOID, [1]);
   initMetadataForObject(WxNavigationHost, 'WxNavigationHost');
   initMetadataForClass(sam$io_github_bobcgn_miniapp_async_HostOperationAborter$0, 'sam$io_github_bobcgn_miniapp_async_HostOperationAborter$0', VOID, VOID, [HostOperationAborter, FunctionAdapter]);
@@ -191,12 +204,14 @@
   initMetadataForObject(Unreadable, 'Unreadable');
   initMetadataForClass(Present_0, 'Present');
   initMetadataForObject(Unreadable_0, 'Unreadable');
+  initMetadataForClass(Present_1, 'Present');
+  initMetadataForObject(Unreadable_1, 'Unreadable');
   initMetadataForObject(Absent, 'Absent');
   initMetadataForClass(Decided, 'Decided');
-  initMetadataForObject(Unreadable_1, 'Unreadable');
+  initMetadataForObject(Unreadable_2, 'Unreadable');
   initMetadataForClass(Required, 'Required');
   initMetadataForClass(NotRequired, 'NotRequired');
-  initMetadataForObject(Unreadable_2, 'Unreadable');
+  initMetadataForObject(Unreadable_3, 'Unreadable');
   initMetadataForClass(WechatAppLifecycle, 'WechatAppLifecycle', WechatAppLifecycle);
   initMetadataForClass(WechatCapabilityRequirement, 'WechatCapabilityRequirement', WechatCapabilityRequirement);
   initMetadataForObject(WechatCapabilityCatalog, 'WechatCapabilityCatalog');
@@ -587,6 +602,7 @@
   function Companion_2() {
     Companion_instance_4 = this;
     this.Microphone_1 = new PermissionKey('microphone');
+    this.Location_1 = new PermissionKey('location');
   }
   var Companion_instance_4;
   function Companion_getInstance_2() {
@@ -874,6 +890,24 @@
   };
   protoOf(JsCapabilitySupport).get_permission_sqffe0_k$ = function () {
     return this.permission;
+  };
+  function JsGeoPosition(latitude, longitude, accuracyMeters, coordinateSystem) {
+    this.latitude = latitude;
+    this.longitude = longitude;
+    this.accuracyMeters = accuracyMeters;
+    this.coordinateSystem = coordinateSystem;
+  }
+  protoOf(JsGeoPosition).get_latitude_feukvp_k$ = function () {
+    return this.latitude;
+  };
+  protoOf(JsGeoPosition).get_longitude_asb1fq_k$ = function () {
+    return this.longitude;
+  };
+  protoOf(JsGeoPosition).get_accuracyMeters_vcj9w_k$ = function () {
+    return this.accuracyMeters;
+  };
+  protoOf(JsGeoPosition).get_coordinateSystem_u4nki8_k$ = function () {
+    return this.coordinateSystem;
   };
   function JsPrivacyStatus(requirement, contractName) {
     this.requirement = requirement;
@@ -2338,6 +2372,109 @@
       }
      while (true);
   };
+  function $wechatGetCurrentLocationCOROUTINE$(_this__u8e3s4, coordinateSystem, resultContinuation) {
+    CoroutineImpl.call(this, resultContinuation);
+    this._this__u8e3s4__1 = _this__u8e3s4;
+    this.coordinateSystem_1 = coordinateSystem;
+  }
+  protoOf($wechatGetCurrentLocationCOROUTINE$).doResume_5yljmg_k$ = function () {
+    var suspendResult = this.result_1;
+    $sm: do
+      try {
+        var tmp = this.state_1;
+        switch (tmp) {
+          case 0:
+            this.exceptionState_1 = 2;
+            var tmp_0;
+            switch (this.coordinateSystem_1) {
+              case 'wgs84':
+                tmp_0 = WeChatCoordinateSystem_WGS84_getInstance();
+                break;
+              case 'gcj02':
+                tmp_0 = WeChatCoordinateSystem_GCJ02_getInstance();
+                break;
+              default:
+                throw IllegalArgumentException_init_$Create$("Unsupported coordinate system: '" + this.coordinateSystem_1 + "'");
+            }
+
+            var system = tmp_0;
+            this.state_1 = 1;
+            suspendResult = this._this__u8e3s4__1.host_1.platform_1.location_1.currentPosition_cwot7b_k$(system, this);
+            if (suspendResult === get_COROUTINE_SUSPENDED()) {
+              return suspendResult;
+            }
+
+            continue $sm;
+          case 1:
+            var position = suspendResult;
+            return new JsGeoPosition(position.latitude_1, position.longitude_1, position.accuracyMeters_1, position.coordinateSystem_1.hostValue_1);
+          case 2:
+            throw this.exception_1;
+        }
+      } catch ($p) {
+        var e = $p;
+        if (this.exceptionState_1 === 2) {
+          throw e;
+        } else {
+          this.state_1 = this.exceptionState_1;
+          this.exception_1 = e;
+        }
+      }
+     while (true);
+  };
+  function $wechatGetCurrentLocation$suspendBridgeCOROUTINE$(_this__u8e3s4, coordinateSystem, resultContinuation) {
+    CoroutineImpl.call(this, resultContinuation);
+    this._this__u8e3s4__1 = _this__u8e3s4;
+    this.coordinateSystem_1 = coordinateSystem;
+  }
+  protoOf($wechatGetCurrentLocation$suspendBridgeCOROUTINE$).doResume_5yljmg_k$ = function () {
+    var suspendResult = this.result_1;
+    $sm: do
+      try {
+        var tmp = this.state_1;
+        switch (tmp) {
+          case 0:
+            this.exceptionState_1 = 4;
+            if (this._this__u8e3s4__1.wechatGetCurrentLocation === protoOf(MiniAppExports).wechatGetCurrentLocation) {
+              this.state_1 = 2;
+              suspendResult = this._this__u8e3s4__1.wechatGetCurrentLocation_tzx0it_k$(this.coordinateSystem_1, this);
+              if (suspendResult === get_COROUTINE_SUSPENDED()) {
+                return suspendResult;
+              }
+              continue $sm;
+            } else {
+              this.state_1 = 1;
+              suspendResult = await_0(this._this__u8e3s4__1.wechatGetCurrentLocation(this.coordinateSystem_1), this);
+              if (suspendResult === get_COROUTINE_SUSPENDED()) {
+                return suspendResult;
+              }
+              continue $sm;
+            }
+
+          case 1:
+            this.WHEN_RESULT0__1 = suspendResult;
+            this.state_1 = 3;
+            continue $sm;
+          case 2:
+            this.WHEN_RESULT0__1 = suspendResult;
+            this.state_1 = 3;
+            continue $sm;
+          case 3:
+            return this.WHEN_RESULT0__1;
+          case 4:
+            throw this.exception_1;
+        }
+      } catch ($p) {
+        var e = $p;
+        if (this.exceptionState_1 === 4) {
+          throw e;
+        } else {
+          this.state_1 = this.exceptionState_1;
+          this.exception_1 = e;
+        }
+      }
+     while (true);
+  };
   function $requirePrivacySatisfied$suspendBridgeCOROUTINE$(_this__u8e3s4, resultContinuation) {
     CoroutineImpl.call(this, resultContinuation);
     this._this__u8e3s4__1 = _this__u8e3s4;
@@ -2789,6 +2926,24 @@
     tmp.exception_1 = null;
     return tmp.doResume_5yljmg_k$();
   };
+  protoOf(MiniAppExports).wechatGetCurrentLocation_tzx0it_k$ = function (coordinateSystem, $completion) {
+    var tmp = new $wechatGetCurrentLocationCOROUTINE$(this, coordinateSystem, $completion);
+    tmp.result_1 = Unit_instance;
+    tmp.exception_1 = null;
+    return tmp.doResume_5yljmg_k$();
+  };
+  protoOf(MiniAppExports).wechatGetCurrentLocation = function (coordinateSystem) {
+    var tmp = this;
+    return promisify(function ($completion) {
+      return tmp.wechatGetCurrentLocation_tzx0it_k$(coordinateSystem, $completion);
+    });
+  };
+  protoOf(MiniAppExports).wechatGetCurrentLocation$suspendBridge_6xktwc_k$ = function (coordinateSystem, $completion) {
+    var tmp = new $wechatGetCurrentLocation$suspendBridgeCOROUTINE$(this, coordinateSystem, $completion);
+    tmp.result_1 = Unit_instance;
+    tmp.exception_1 = null;
+    return tmp.doResume_5yljmg_k$();
+  };
   protoOf(MiniAppExports).requirePrivacySatisfied_m2jemw_k$ = function ($completion) {
     return this.privacy_1.requireSatisfied_farkra_k$($completion);
   };
@@ -2939,6 +3094,7 @@
     this.FileSystemAccess_1 = new CapabilityKey('wechat.filesystem-access');
     this.FileSystemRemove_1 = new CapabilityKey('wechat.filesystem-remove');
     this.FileSystemSandboxPath_1 = new CapabilityKey('wechat.filesystem-sandbox-path');
+    this.Location_1 = new CapabilityKey('wechat.location');
   }
   var WeChatDeviceCapabilities_instance;
   function WeChatDeviceCapabilities_getInstance() {
@@ -2946,17 +3102,45 @@
       new WeChatDeviceCapabilities();
     return WeChatDeviceCapabilities_instance;
   }
+  var static_init_called_2;
+  function static_init_2() {
+    if (static_init_called_2)
+      return Unit_instance;
+    static_init_called_2 = true;
+    WeChatCoordinateSystem_WGS84_instance = new WeChatCoordinateSystem('WGS84', 0, 'wgs84');
+    WeChatCoordinateSystem_GCJ02_instance = new WeChatCoordinateSystem('GCJ02', 1, 'gcj02');
+  }
+  var WeChatCoordinateSystem_WGS84_instance;
+  var WeChatCoordinateSystem_GCJ02_instance;
+  function WeChatCoordinateSystem(name, ordinal, hostValue) {
+    Enum.call(this, name, ordinal);
+    this.hostValue_1 = hostValue;
+  }
+  function WeChatGeoPosition(latitude, longitude, accuracyMeters, coordinateSystem) {
+    this.latitude_1 = latitude;
+    this.longitude_1 = longitude;
+    this.accuracyMeters_1 = accuracyMeters;
+    this.coordinateSystem_1 = coordinateSystem;
+  }
+  function WeChatCoordinateSystem_WGS84_getInstance() {
+    static_init_2();
+    return WeChatCoordinateSystem_WGS84_instance;
+  }
+  function WeChatCoordinateSystem_GCJ02_getInstance() {
+    static_init_2();
+    return WeChatCoordinateSystem_GCJ02_instance;
+  }
   function WeChatLoginResult(code) {
     this.code = code;
   }
   protoOf(WeChatLoginResult).get_code_wok7xy_k$ = function () {
     return this.code;
   };
-  var static_init_called_2;
-  function static_init_2() {
-    if (static_init_called_2)
+  var static_init_called_3;
+  function static_init_3() {
+    if (static_init_called_3)
       return Unit_instance;
-    static_init_called_2 = true;
+    static_init_called_3 = true;
     WeChatSessionState_VALID_instance = new WeChatSessionState('VALID', 0);
     WeChatSessionState_INVALID_instance = new WeChatSessionState('INVALID', 1);
     if (Companion_instance_8 == null) {
@@ -2972,21 +3156,21 @@
   }
   var Companion_instance_8;
   function Companion_getInstance_6() {
-    static_init_2();
+    static_init_3();
     return Companion_instance_8;
   }
   function WeChatSessionState(name, ordinal) {
     Enum.call(this, name, ordinal);
   }
   function WeChatSessionState_VALID_getInstance() {
-    static_init_2();
+    static_init_3();
     return WeChatSessionState_VALID_instance;
   }
   function WeChatSessionState_INVALID_getInstance() {
-    static_init_2();
+    static_init_3();
     return WeChatSessionState_INVALID_instance;
   }
-  function WechatPlatformApi(auth, navigation, appLifecycle, pageLifecycle, runtimeInfo, clipboard, haptics, fileSystem) {
+  function WechatPlatformApi(auth, navigation, appLifecycle, pageLifecycle, runtimeInfo, clipboard, haptics, fileSystem, location) {
     this.auth_1 = auth;
     this.navigation_1 = navigation;
     this.appLifecycle_1 = appLifecycle;
@@ -2995,8 +3179,9 @@
     this.clipboard_1 = clipboard;
     this.haptics_1 = haptics;
     this.fileSystem_1 = fileSystem;
+    this.location_1 = location;
   }
-  function WechatHost(storageHost, authHost, networkHost, navigationHost, runtimeInfoHost, permissionHost, privacyHost, clipboardHost, hapticsHost, fileSystemHost) {
+  function WechatHost(storageHost, authHost, networkHost, navigationHost, runtimeInfoHost, permissionHost, privacyHost, clipboardHost, hapticsHost, fileSystemHost, locationHost) {
     storageHost = storageHost === VOID ? WxStorageHost_instance : storageHost;
     authHost = authHost === VOID ? WxAuthHost_instance : authHost;
     networkHost = networkHost === VOID ? WxNetworkHost_instance : networkHost;
@@ -3007,15 +3192,18 @@
     clipboardHost = clipboardHost === VOID ? WxClipboardHost_instance : clipboardHost;
     hapticsHost = hapticsHost === VOID ? WxHapticsHost_instance : hapticsHost;
     fileSystemHost = fileSystemHost === VOID ? WxFileSystemHost_instance : fileSystemHost;
+    locationHost = locationHost === VOID ? WxLocationHost_instance : locationHost;
     this.appLifecycle_1 = new WechatAppLifecycle();
     this.runtimeInfo_1 = new WechatRuntimeInfo(runtimeInfoHost);
     this.capabilityGate_1 = new WechatCapabilityGate(this.runtimeInfo_1, runtimeInfoHost);
-    this.platform_1 = new WechatPlatformApi(new WechatAuth(authHost), new WechatNavigation(navigationHost), this.appLifecycle_1, new WechatPageLifecycle(), this.runtimeInfo_1, new WechatClipboard(clipboardHost), new WechatHaptics(hapticsHost), new WechatFileSystem(fileSystemHost));
+    this.privacyAdapter_1 = new WechatPrivacy(privacyHost);
+    this.permissionsAdapter_1 = new WechatPermissions(permissionHost);
+    this.platform_1 = new WechatPlatformApi(new WechatAuth(authHost), new WechatNavigation(navigationHost), this.appLifecycle_1, new WechatPageLifecycle(), this.runtimeInfo_1, new WechatClipboard(clipboardHost), new WechatHaptics(hapticsHost), new WechatFileSystem(fileSystemHost), new WechatLocation(locationHost, this.privacyAdapter_1, this.permissionsAdapter_1));
     this.storage_1 = new WechatStorage(storageHost);
     this.network_1 = new WechatNetwork(networkHost);
     this.lifecycle_1 = this.appLifecycle_1;
-    this.permissions_1 = new WechatPermissions(permissionHost);
-    this.privacy_1 = new WechatPrivacy(privacyHost);
+    this.permissions_1 = this.permissionsAdapter_1;
+    this.privacy_1 = this.privacyAdapter_1;
   }
   protoOf(WechatHost).capabilitySupport_p8flwh_k$ = function (capability) {
     return this.capabilityGate_1.supportFor_tmznfg_k$(capability);
@@ -3774,6 +3962,130 @@
   function WxHapticsHost_getInstance() {
     return WxHapticsHost_instance;
   }
+  function WechatLocation$currentPosition$lambda$lambda($success) {
+    return function (result) {
+      $success(wxLocationSample(result));
+      return Unit_instance;
+    };
+  }
+  function WechatLocation$currentPosition$lambda$lambda_0($failure) {
+    return function (result) {
+      $failure(mapWechatHostFailure('getLocation', result));
+      return Unit_instance;
+    };
+  }
+  function WechatLocation$currentPosition$lambda(this$0, $coordinateSystem) {
+    return function (success, failure) {
+      var tmp = WechatLocation$currentPosition$lambda$lambda(success);
+      this$0.host_1.currentPosition_ct1hkh_k$($coordinateSystem, tmp, WechatLocation$currentPosition$lambda$lambda_0(failure));
+      return null;
+    };
+  }
+  function $currentPositionCOROUTINE$(_this__u8e3s4, coordinateSystem, resultContinuation) {
+    CoroutineImpl.call(this, resultContinuation);
+    this._this__u8e3s4__1 = _this__u8e3s4;
+    this.coordinateSystem_1 = coordinateSystem;
+  }
+  protoOf($currentPositionCOROUTINE$).doResume_5yljmg_k$ = function () {
+    var suspendResult = this.result_1;
+    $sm: do
+      try {
+        var tmp = this.state_1;
+        switch (tmp) {
+          case 0:
+            this.exceptionState_1 = 4;
+            if (!this._this__u8e3s4__1.host_1.isSupported_j5t6ec_k$()) {
+              throw new UnsupportedCapability(WeChatDeviceCapabilities_getInstance().Location_1);
+            }
+
+            this.state_1 = 1;
+            suspendResult = this._this__u8e3s4__1.privacy_1.requireSatisfied_farkra_k$(this);
+            if (suspendResult === get_COROUTINE_SUSPENDED()) {
+              return suspendResult;
+            }
+
+            continue $sm;
+          case 1:
+            this.state_1 = 2;
+            suspendResult = this._this__u8e3s4__1.permissions_1.stateOf_asu77n_k$(Companion_getInstance_2().Location_1, this);
+            if (suspendResult === get_COROUTINE_SUSPENDED()) {
+              return suspendResult;
+            }
+
+            continue $sm;
+          case 2:
+            var tmp0_subject = suspendResult;
+            if (!equals(tmp0_subject, Granted_instance))
+              if (equals(tmp0_subject, NotRequested_instance))
+                throw new PermissionDenied(Companion_getInstance_2().Location_1.value_1, 'Location permission has not been requested');
+              else if (equals(tmp0_subject, Denied_instance))
+                throw new PermissionDenied(Companion_getInstance_2().Location_1.value_1, 'Location permission was denied');
+              else {
+                noWhenBranchMatchedException();
+              }
+
+            this.state_1 = 3;
+            suspendResult = awaitHostCallback(WechatLocation$currentPosition$lambda(this._this__u8e3s4__1, this.coordinateSystem_1), this);
+            if (suspendResult === get_COROUTINE_SUSPENDED()) {
+              return suspendResult;
+            }
+
+            continue $sm;
+          case 3:
+            var sample = suspendResult;
+            var tmp_0;
+            if (sample instanceof Present_1) {
+              tmp_0 = new WeChatGeoPosition(sample.latitude_1, sample.longitude_1, sample.accuracyMeters_1, this.coordinateSystem_1);
+            } else {
+              if (equals(sample, Unreadable_instance_1)) {
+                throw new InvalidResponse('The WeChat host answered getLocation with coordinates the SDK cannot read');
+              } else {
+                noWhenBranchMatchedException();
+              }
+            }
+
+            return tmp_0;
+          case 4:
+            throw this.exception_1;
+        }
+      } catch ($p) {
+        var e = $p;
+        if (this.exceptionState_1 === 4) {
+          throw e;
+        } else {
+          this.state_1 = this.exceptionState_1;
+          this.exception_1 = e;
+        }
+      }
+     while (true);
+  };
+  function WechatLocation(host, privacy, permissions) {
+    host = host === VOID ? WxLocationHost_instance : host;
+    this.host_1 = host;
+    this.privacy_1 = privacy;
+    this.permissions_1 = permissions;
+  }
+  protoOf(WechatLocation).currentPosition_cwot7b_k$ = function (coordinateSystem, $completion) {
+    var tmp = new $currentPositionCOROUTINE$(this, coordinateSystem, $completion);
+    tmp.result_1 = Unit_instance;
+    tmp.exception_1 = null;
+    return tmp.doResume_5yljmg_k$();
+  };
+  function WxLocationHost() {
+  }
+  protoOf(WxLocationHost).isSupported_j5t6ec_k$ = function () {
+    return hasWxGetLocation();
+  };
+  protoOf(WxLocationHost).currentPosition_ct1hkh_k$ = function (coordinateSystem, success, failure) {
+    var options = wxGetLocationOptions(coordinateSystem.hostValue_1);
+    options.success = success;
+    options.fail = failure;
+    wx.getLocation(options);
+  };
+  var WxLocationHost_instance;
+  function WxLocationHost_getInstance() {
+    return WxLocationHost_instance;
+  }
   function WechatNavigation$navigateTo$lambda$lambda($success) {
     return function () {
       $success(Unit_instance);
@@ -4006,7 +4318,7 @@
   }
   function WechatPermissionScopes() {
     WechatPermissionScopes_instance = this;
-    this.scopes_1 = mapOf(to(Companion_getInstance_2().Microphone_1, 'scope.record'));
+    this.scopes_1 = mapOf_0([to(Companion_getInstance_2().Microphone_1, 'scope.record'), to(Companion_getInstance_2().Location_1, 'scope.userLocation')]);
   }
   protoOf(WechatPermissionScopes).scopeFor_g1473i_k$ = function (permission) {
     var tmp0_elvis_lhs = this.scopes_1.get_wei43m_k$(permission);
@@ -4046,7 +4358,7 @@
     if (equals(entry, Absent_instance)) {
       tmp = NotRequested_instance;
     } else {
-      if (equals(entry, Unreadable_instance_1)) {
+      if (equals(entry, Unreadable_instance_2)) {
         tmp = null;
       } else {
         if (entry instanceof Decided) {
@@ -4528,7 +4840,7 @@
               if (requirement instanceof NotRequired) {
                 tmp_0 = new PrivacyStatus(PrivacyAuthorizationRequirement_NOT_REQUIRED_getInstance(), requirement.contractName_1);
               } else {
-                if (equals(requirement, Unreadable_instance_2)) {
+                if (equals(requirement, Unreadable_instance_3)) {
                   throw new InvalidResponse('The WeChat host answered getPrivacySetting with a value the SDK cannot read');
                 } else {
                   noWhenBranchMatchedException();
@@ -5013,6 +5325,103 @@
     }
     return headers;
   }
+  function Present_1(latitude, longitude, accuracyMeters) {
+    this.latitude_1 = latitude;
+    this.longitude_1 = longitude;
+    this.accuracyMeters_1 = accuracyMeters;
+  }
+  protoOf(Present_1).toString = function () {
+    return 'Present(latitude=' + this.latitude_1 + ', longitude=' + this.longitude_1 + ', accuracyMeters=' + this.accuracyMeters_1 + ')';
+  };
+  protoOf(Present_1).hashCode = function () {
+    var result = getNumberHashCode(this.latitude_1);
+    result = imul(result, 31) + getNumberHashCode(this.longitude_1) | 0;
+    result = imul(result, 31) + getNumberHashCode(this.accuracyMeters_1) | 0;
+    return result;
+  };
+  protoOf(Present_1).equals = function (other) {
+    if (this === other)
+      return true;
+    if (!(other instanceof Present_1))
+      return false;
+    if (!equals(this.latitude_1, other.latitude_1))
+      return false;
+    if (!equals(this.longitude_1, other.longitude_1))
+      return false;
+    if (!equals(this.accuracyMeters_1, other.accuracyMeters_1))
+      return false;
+    return true;
+  };
+  function Unreadable_1() {
+  }
+  protoOf(Unreadable_1).toString = function () {
+    return 'Unreadable';
+  };
+  protoOf(Unreadable_1).hashCode = function () {
+    return 1463261354;
+  };
+  protoOf(Unreadable_1).equals = function (other) {
+    if (this === other)
+      return true;
+    if (!(other instanceof Unreadable_1))
+      return false;
+    return true;
+  };
+  var Unreadable_instance_1;
+  function Unreadable_getInstance_1() {
+    return Unreadable_instance_1;
+  }
+  function hasWxGetLocation() {
+    return typeof wx !== 'undefined' && typeof wx.getLocation === 'function';
+  }
+  function wxLocationSample(result) {
+    var tmp0_elvis_lhs = finiteDoubleOrNull(result.latitude);
+    var tmp;
+    if (tmp0_elvis_lhs == null) {
+      return Unreadable_instance_1;
+    } else {
+      tmp = tmp0_elvis_lhs;
+    }
+    var latitude = tmp;
+    var tmp1_elvis_lhs = finiteDoubleOrNull(result.longitude);
+    var tmp_0;
+    if (tmp1_elvis_lhs == null) {
+      return Unreadable_instance_1;
+    } else {
+      tmp_0 = tmp1_elvis_lhs;
+    }
+    var longitude = tmp_0;
+    var tmp2_elvis_lhs = finiteDoubleOrNull(result.accuracy);
+    var tmp_1;
+    if (tmp2_elvis_lhs == null) {
+      return Unreadable_instance_1;
+    } else {
+      tmp_1 = tmp2_elvis_lhs;
+    }
+    var accuracy = tmp_1;
+    if (!(-90.0 <= latitude ? latitude <= 90.0 : false))
+      return Unreadable_instance_1;
+    if (!(-180.0 <= longitude ? longitude <= 180.0 : false))
+      return Unreadable_instance_1;
+    if (accuracy < 0.0)
+      return Unreadable_instance_1;
+    return new Present_1(latitude, longitude, accuracy);
+  }
+  function finiteDoubleOrNull(value) {
+    if (value == null || typeof value === 'undefined')
+      return null;
+    if (!isNumber(value))
+      return null;
+    var number = numberToDouble(value);
+    if (isNaN_0(number) || isInfinite(number))
+      return null;
+    return number;
+  }
+  function wxGetLocationOptions(coordinateSystem) {
+    var options = {};
+    options.type = coordinateSystem;
+    return options;
+  }
   function wxLoginOptions(timeoutMillis) {
     timeoutMillis = timeoutMillis === VOID ? null : timeoutMillis;
     var options = {};
@@ -5076,30 +5485,30 @@
       return false;
     return true;
   };
-  function Unreadable_1() {
+  function Unreadable_2() {
   }
-  protoOf(Unreadable_1).toString = function () {
+  protoOf(Unreadable_2).toString = function () {
     return 'Unreadable';
   };
-  protoOf(Unreadable_1).hashCode = function () {
+  protoOf(Unreadable_2).hashCode = function () {
     return 59014027;
   };
-  protoOf(Unreadable_1).equals = function (other) {
+  protoOf(Unreadable_2).equals = function (other) {
     if (this === other)
       return true;
-    if (!(other instanceof Unreadable_1))
+    if (!(other instanceof Unreadable_2))
       return false;
     return true;
   };
-  var Unreadable_instance_1;
-  function Unreadable_getInstance_1() {
-    return Unreadable_instance_1;
+  var Unreadable_instance_2;
+  function Unreadable_getInstance_2() {
+    return Unreadable_instance_2;
   }
   function wxScopeEntry(authSetting, scope) {
     if (authSetting == null)
-      return Unreadable_instance_1;
+      return Unreadable_instance_2;
     if (!(typeof authSetting === 'object'))
-      return Unreadable_instance_1;
+      return Unreadable_instance_2;
     var present = Object.prototype.hasOwnProperty.call(authSetting, scope);
     if (!present)
       return Absent_instance;
@@ -5108,7 +5517,7 @@
     if (!(value == null) ? typeof value === 'boolean' : false) {
       tmp = new Decided(value);
     } else {
-      tmp = Unreadable_instance_1;
+      tmp = Unreadable_instance_2;
     }
     return tmp;
   }
@@ -5161,29 +5570,29 @@
       return false;
     return true;
   };
-  function Unreadable_2() {
+  function Unreadable_3() {
   }
-  protoOf(Unreadable_2).toString = function () {
+  protoOf(Unreadable_3).toString = function () {
     return 'Unreadable';
   };
-  protoOf(Unreadable_2).hashCode = function () {
+  protoOf(Unreadable_3).hashCode = function () {
     return 497866830;
   };
-  protoOf(Unreadable_2).equals = function (other) {
+  protoOf(Unreadable_3).equals = function (other) {
     if (this === other)
       return true;
-    if (!(other instanceof Unreadable_2))
+    if (!(other instanceof Unreadable_3))
       return false;
     return true;
   };
-  var Unreadable_instance_2;
-  function Unreadable_getInstance_2() {
-    return Unreadable_instance_2;
+  var Unreadable_instance_3;
+  function Unreadable_getInstance_3() {
+    return Unreadable_instance_3;
   }
   function wxPrivacyRequirement(result) {
     var needAuthorization = result.needAuthorization;
     if (!(!(needAuthorization == null) ? typeof needAuthorization === 'boolean' : false))
-      return Unreadable_instance_2;
+      return Unreadable_instance_3;
     var rawName = result.privacyContractName;
     var tmp;
     if (rawName == null) {
@@ -5192,7 +5601,7 @@
       if (typeof rawName === 'string') {
         tmp = rawName;
       } else {
-        return Unreadable_instance_2;
+        return Unreadable_instance_3;
       }
     }
     var contractName = tmp;
@@ -5343,8 +5752,9 @@
     var tmp_13 = to(tmp_12, new WechatCapabilityRequirement(VOID, this.FILESYSTEM_MINIMUM_1, WechatCapabilityCatalog$requirements$lambda_2));
     var tmp_14 = WeChatDeviceCapabilities_getInstance().FileSystemSandboxPath_1;
     var tmp_15 = to(tmp_14, new WechatCapabilityRequirement(VOID, this.FILESYSTEM_MINIMUM_1, WechatCapabilityCatalog$requirements$lambda_3));
-    var tmp_16 = WeChatDeviceCapabilities_getInstance().ClipboardRead_1;
-    var tmp_17 = listOf_0('getClipboardData');
+    var tmp_16 = to(WeChatDeviceCapabilities_getInstance().Location_1, new WechatCapabilityRequirement(listOf_0('getLocation')));
+    var tmp_17 = WeChatDeviceCapabilities_getInstance().ClipboardRead_1;
+    var tmp_18 = listOf_0('getClipboardData');
     var tmp0_0 = Companion_instance_7.parse_pc1q8p_k$('1.1.0');
     var tmp$ret$2;
     $l$block_0: {
@@ -5357,9 +5767,9 @@
         break $l$block_0;
       }
     }
-    var tmp_18 = to(tmp_16, new WechatCapabilityRequirement(tmp_17, tmp$ret$2));
-    var tmp_19 = WeChatDeviceCapabilities_getInstance().ClipboardWrite_1;
-    var tmp_20 = listOf_0('setClipboardData');
+    var tmp_19 = to(tmp_17, new WechatCapabilityRequirement(tmp_18, tmp$ret$2));
+    var tmp_20 = WeChatDeviceCapabilities_getInstance().ClipboardWrite_1;
+    var tmp_21 = listOf_0('setClipboardData');
     var tmp0_1 = Companion_instance_7.parse_pc1q8p_k$('1.1.0');
     var tmp$ret$4;
     $l$block_1: {
@@ -5372,9 +5782,9 @@
         break $l$block_1;
       }
     }
-    var tmp_21 = to(tmp_19, new WechatCapabilityRequirement(tmp_20, tmp$ret$4));
-    var tmp_22 = WeChatDeviceCapabilities_getInstance().VibrateShort_1;
-    var tmp_23 = listOf_0('vibrateShort');
+    var tmp_22 = to(tmp_20, new WechatCapabilityRequirement(tmp_21, tmp$ret$4));
+    var tmp_23 = WeChatDeviceCapabilities_getInstance().VibrateShort_1;
+    var tmp_24 = listOf_0('vibrateShort');
     var tmp0_2 = Companion_instance_7.parse_pc1q8p_k$('1.2.0');
     var tmp$ret$6;
     $l$block_2: {
@@ -5387,9 +5797,9 @@
         break $l$block_2;
       }
     }
-    var tmp_24 = to(tmp_22, new WechatCapabilityRequirement(tmp_23, tmp$ret$6));
-    var tmp_25 = WeChatDeviceCapabilities_getInstance().VibrateLong_1;
-    var tmp_26 = listOf_0('vibrateLong');
+    var tmp_25 = to(tmp_23, new WechatCapabilityRequirement(tmp_24, tmp$ret$6));
+    var tmp_26 = WeChatDeviceCapabilities_getInstance().VibrateLong_1;
+    var tmp_27 = listOf_0('vibrateLong');
     var tmp0_3 = Companion_instance_7.parse_pc1q8p_k$('1.2.0');
     var tmp$ret$8;
     $l$block_3: {
@@ -5402,9 +5812,9 @@
         break $l$block_3;
       }
     }
-    var tmp_27 = to(tmp_25, new WechatCapabilityRequirement(tmp_26, tmp$ret$8));
-    var tmp_28 = Companion_getInstance_3().Key_1;
-    var tmp_29 = listOf(['getPrivacySetting', 'requirePrivacyAuthorize']);
+    var tmp_28 = to(tmp_26, new WechatCapabilityRequirement(tmp_27, tmp$ret$8));
+    var tmp_29 = Companion_getInstance_3().Key_1;
+    var tmp_30 = listOf(['getPrivacySetting', 'requirePrivacyAuthorize']);
     var tmp0_4 = Companion_instance_7.parse_pc1q8p_k$('2.32.3');
     var tmp$ret$10;
     $l$block_4: {
@@ -5417,8 +5827,8 @@
         break $l$block_4;
       }
     }
-    var tmp_30 = to(tmp_28, new WechatCapabilityRequirement(tmp_29, tmp$ret$10));
-    var tmp_31 = listOf_0('getAppBaseInfo');
+    var tmp_31 = to(tmp_29, new WechatCapabilityRequirement(tmp_30, tmp$ret$10));
+    var tmp_32 = listOf_0('getAppBaseInfo');
     var tmp0_5 = Companion_instance_7.parse_pc1q8p_k$('2.20.1');
     var tmp$ret$12;
     $l$block_5: {
@@ -5431,7 +5841,7 @@
         break $l$block_5;
       }
     }
-    tmp_0.requirements_1 = mapOf_0([tmp_1, tmp_2, tmp_3, tmp_4, tmp_5, tmp_7, tmp_9, tmp_11, tmp_13, tmp_15, tmp_18, tmp_21, tmp_24, tmp_27, tmp_30, to(this.RuntimeDetectionKey_1, new WechatCapabilityRequirement(tmp_31, tmp$ret$12))]);
+    tmp_0.requirements_1 = mapOf_0([tmp_1, tmp_2, tmp_3, tmp_4, tmp_5, tmp_7, tmp_9, tmp_11, tmp_13, tmp_15, tmp_16, tmp_19, tmp_22, tmp_25, tmp_28, tmp_31, to(this.RuntimeDetectionKey_1, new WechatCapabilityRequirement(tmp_32, tmp$ret$12))]);
   }
   protoOf(WechatCapabilityCatalog).requirementFor_k8c79s_k$ = function (key) {
     return this.requirements_1.get_wei43m_k$(key);
@@ -5597,6 +6007,7 @@
   NotFound_instance = new NotFound();
   WxFileSystemHost_instance = new WxFileSystemHost();
   WxHapticsHost_instance = new WxHapticsHost();
+  WxLocationHost_instance = new WxLocationHost();
   WxNavigationHost_instance = new WxNavigationHost();
   WxNetworkHost_instance = new WxNetworkHost();
   WxPermissionHost_instance = new WxPermissionHost();
@@ -5606,9 +6017,10 @@
   WxStorageHost_instance = new WxStorageHost();
   Unreadable_instance = new Unreadable();
   Unreadable_instance_0 = new Unreadable_0();
-  Absent_instance = new Absent();
   Unreadable_instance_1 = new Unreadable_1();
+  Absent_instance = new Absent();
   Unreadable_instance_2 = new Unreadable_2();
+  Unreadable_instance_3 = new Unreadable_3();
   Companion_instance_10 = new Companion_8();
   //endregion
   //region block: exports
@@ -5624,30 +6036,36 @@
     var bobcgn_0 = github_0.bobcgn || (github_0.bobcgn = {});
     var miniapp_0 = bobcgn_0.miniapp || (bobcgn_0.miniapp = {});
     var export_1 = miniapp_0.export || (miniapp_0.export = {});
-    export_1.JsPrivacyStatus = JsPrivacyStatus;
+    export_1.JsGeoPosition = JsGeoPosition;
     var io_1 = _.io || (_.io = {});
     var github_1 = io_1.github || (io_1.github = {});
     var bobcgn_1 = github_1.bobcgn || (github_1.bobcgn = {});
     var miniapp_1 = bobcgn_1.miniapp || (bobcgn_1.miniapp = {});
     var export_2 = miniapp_1.export || (miniapp_1.export = {});
-    export_2.JsRuntimeInfo = JsRuntimeInfo;
+    export_2.JsPrivacyStatus = JsPrivacyStatus;
     var io_2 = _.io || (_.io = {});
     var github_2 = io_2.github || (io_2.github = {});
     var bobcgn_2 = github_2.bobcgn || (github_2.bobcgn = {});
     var miniapp_2 = bobcgn_2.miniapp || (bobcgn_2.miniapp = {});
     var export_3 = miniapp_2.export || (miniapp_2.export = {});
-    defineProp(export_3, 'MiniAppExports', MiniAppExports_getInstance, VOID, true);
+    export_3.JsRuntimeInfo = JsRuntimeInfo;
     var io_3 = _.io || (_.io = {});
     var github_3 = io_3.github || (io_3.github = {});
     var bobcgn_3 = github_3.bobcgn || (github_3.bobcgn = {});
     var miniapp_3 = bobcgn_3.miniapp || (bobcgn_3.miniapp = {});
     var export_4 = miniapp_3.export || (miniapp_3.export = {});
-    export_4.MiniAppHttpResult = MiniAppHttpResult;
+    defineProp(export_4, 'MiniAppExports', MiniAppExports_getInstance, VOID, true);
     var io_4 = _.io || (_.io = {});
     var github_4 = io_4.github || (io_4.github = {});
     var bobcgn_4 = github_4.bobcgn || (github_4.bobcgn = {});
     var miniapp_4 = bobcgn_4.miniapp || (bobcgn_4.miniapp = {});
-    var host = miniapp_4.host || (miniapp_4.host = {});
+    var export_5 = miniapp_4.export || (miniapp_4.export = {});
+    export_5.MiniAppHttpResult = MiniAppHttpResult;
+    var io_5 = _.io || (_.io = {});
+    var github_5 = io_5.github || (io_5.github = {});
+    var bobcgn_5 = github_5.bobcgn || (github_5.bobcgn = {});
+    var miniapp_5 = bobcgn_5.miniapp || (bobcgn_5.miniapp = {});
+    var host = miniapp_5.host || (miniapp_5.host = {});
     var wechat = host.wechat || (host.wechat = {});
     wechat.WeChatLoginResult = WeChatLoginResult;
   }
