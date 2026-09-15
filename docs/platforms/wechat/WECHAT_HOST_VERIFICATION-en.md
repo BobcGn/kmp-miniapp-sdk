@@ -130,6 +130,7 @@ Copy this template for each verification run. One record may cover multiple capa
 | `WDT-2026-09-14-B` | 2026-09-14 | WeChat Developer Tools | Authentication Bootstrap | User-provided visual evidence; page showed received and length only | No Backend code exchange; raw code absent. |
 | `WDT-2026-09-14-C` | 2026-09-14 | WeChat Developer Tools | HTTP Request | User confirmed Network card passed in real runtime | Domain-check setting and original screenshot are not committed. |
 | `WDT-2026-09-15-A` | 2026-09-15 | WeChat Developer Tools | App foreground, Page Lifecycle, Navigation | User confirmed foreground, route, and three navigation operations | No App-background device transition; `switchTab` not implemented. |
+| `WDT-2026-09-15-B` | 2026-09-15 | WeChat Developer Tools, debug base library 3.17.3 | Consumer Bridge, Storage, Authentication Bootstrap, HTTP Request, App foreground, Page Lifecycle, Navigation | Independent user rerun screenshots: all baseline page checks passed; Console recorded `navigateTo`, second-page unload, third-page show, `redirectTo`, and `navigateBack` PASS | Documentation baseline commit `59c7db6`; full tool version follows the existing Stable 2.01.2510290 project record; excludes App-background device transition and `switchTab`. |
 
 These rows index existing facts without inventing missing fields. The next run must use the full template rather than citing this table alone.
 

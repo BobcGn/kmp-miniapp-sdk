@@ -130,6 +130,7 @@
 | `WDT-2026-09-14-B` | 2026-09-14 | WeChat Developer Tools | Authentication Bootstrap | 用户提供的视觉证据；页面只显示 received 和 length | 未验证 Backend code exchange；原始 code 不在证据中。 |
 | `WDT-2026-09-14-C` | 2026-09-14 | WeChat Developer Tools | HTTP Request | 用户确认真实 runtime 的 Network 卡片通过 | 域名校验设置和原始截图未纳入仓库记录。 |
 | `WDT-2026-09-15-A` | 2026-09-15 | WeChat Developer Tools | App foreground, Page Lifecycle, Navigation | 用户确认前台状态、route 与三种导航通过 | 不包含 App background 真机迁移；`switchTab` 未实现。 |
+| `WDT-2026-09-15-B` | 2026-09-15 | WeChat Developer Tools，调试基础库 3.17.3 | Consumer Bridge、Storage、Authentication Bootstrap、HTTP Request、App foreground、Page Lifecycle、Navigation | 独立用户复跑截图：页面显示全部基础检查 PASS；Console 记录 `navigateTo`、第二页卸载、第三页显示、`redirectTo` 和 `navigateBack` PASS | 对应文档基线 commit `59c7db6`；工具完整版本沿用现有 Stable 2.01.2510290 项目记录；不包含 App background 真机迁移或 `switchTab`。 |
 
 这些记录是既有事实的索引，不补造缺失字段。下一次复测必须使用完整模板，不能仅引用本表。
 
