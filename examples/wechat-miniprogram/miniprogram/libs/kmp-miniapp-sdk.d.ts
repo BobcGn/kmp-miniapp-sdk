@@ -12,6 +12,37 @@ export interface WeChatLoginResult {
 export function wechatLogin(): Promise<WeChatLoginResult>;
 
 /**
+ * Reads the system clipboard as text.
+ *
+ * An empty clipboard resolves with an empty string. The clipboard belongs to the
+ * user: the SDK neither stores nor logs what it reads.
+ */
+export function wechatGetClipboardText(): Promise<string>;
+
+/**
+ * Replaces the system clipboard with `value`.
+ *
+ * @param value text to place on the clipboard
+ */
+export function wechatSetClipboardText(value: string): Promise<void>;
+
+/**
+ * Performs WeChat's short vibration.
+ *
+ * Resolving means the host accepted and performed the call. It is not evidence
+ * that anyone felt a vibration, which no software check can confirm.
+ */
+export function wechatVibrateShort(): Promise<void>;
+
+/**
+ * Performs WeChat's long vibration.
+ *
+ * A separate host API from the short one, and it may be absent while the short
+ * one is present.
+ */
+export function wechatVibrateLong(): Promise<void>;
+
+/**
  * Whether WeChat still holds a usable client login session.
  *
  * `Valid` says only that WeChat's own client login state is intact. It is not an

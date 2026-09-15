@@ -20,6 +20,10 @@ const supportedSchemas = new Set([
   'getPrivacySetting',
   'requirePrivacyAuthorize',
   'checkSession',
+  'getClipboardData',
+  'setClipboardData',
+  'vibrateShort',
+  'vibrateLong',
 ]);
 
 // Permission state this fake host holds, plus a record of what it was asked to
@@ -40,6 +44,13 @@ const privacyContractName = '《node smoke privacy contract》';
 let sessionFailure = null;
 const sessionCheckCalls = [];
 let loginCalls = 0;
+
+// Clipboard and haptics are WeChat device capabilities. The fake records what it
+// was asked to do; it cannot show that anything vibrated, and this test does not
+// claim otherwise.
+let clipboardText = '';
+const clipboardWrites = [];
+const vibrateCalls = [];
 
 function authSettingSnapshot() {
   const authSetting = {};
@@ -133,6 +144,22 @@ global.wx = {
       errMsg: 'getPrivacySetting:ok',
     });
   },
+  getClipboardData(options) {
+    options.success({ data: clipboardText, errMsg: 'getClipboardData:ok' });
+  },
+  setClipboardData(options) {
+    clipboardWrites.push(options.data);
+    clipboardText = options.data;
+    options.success({ errMsg: 'setClipboardData:ok' });
+  },
+  vibrateShort(options) {
+    vibrateCalls.push('short');
+    options.success({ errMsg: 'vibrateShort:ok' });
+  },
+  vibrateLong(options) {
+    vibrateCalls.push('long');
+    options.success({ errMsg: 'vibrateLong:ok' });
+  },
   requirePrivacyAuthorize(options) {
     privacyAuthorizations.push(1);
     if (privacyAuthorizeFails) {
@@ -154,6 +181,10 @@ async function main() {
     'storageRemove',
     'wechatLogin',
     'wechatCheckSession',
+    'wechatGetClipboardText',
+    'wechatSetClipboardText',
+    'wechatVibrateShort',
+    'wechatVibrateLong',
     'networkRequest',
     'wechatAppOnLaunch',
     'wechatAppOnShow',
@@ -358,6 +389,39 @@ async function main() {
   assert.equal(loginCalls, loginsBeforeSessionCheck);
   sessionFailure = null;
 
+  // Loading the module must not have touched the clipboard or the vibrator.
+  assert.deepEqual(clipboardWrites, []);
+  assert.deepEqual(vibrateCalls, []);
+
+  // The four device capabilities are gated separately and all read Supported here.
+  for (const capability of [
+    'wechat.clipboard-read',
+    'wechat.clipboard-write',
+    'wechat.vibrate-short',
+    'wechat.vibrate-long',
+  ]) {
+    assert.equal(miniAppSdk.capabilitySupport(capability).state, 'Supported');
+  }
+
+  // The write reaches the host with the exact text, and the read returns it.
+  const clipboardTestText = 'kmp-miniapp-sdk clipboard test';
+  await miniAppSdk.wechatSetClipboardText(clipboardTestText);
+  assert.deepEqual(clipboardWrites, [clipboardTestText]);
+  assert.equal(await miniAppSdk.wechatGetClipboardText(), clipboardTestText);
+
+  // An empty clipboard reads as an empty string rather than failing.
+  clipboardText = '';
+  assert.equal(await miniAppSdk.wechatGetClipboardText(), '');
+
+  // A host answer that is not text is reported rather than silently coerced.
+  clipboardText = 42;
+  await assert.rejects(miniAppSdk.wechatGetClipboardText());
+
+  // Each vibration reaches its own host API exactly once.
+  await miniAppSdk.wechatVibrateShort();
+  await miniAppSdk.wechatVibrateLong();
+  assert.deepEqual(vibrateCalls, ['short', 'long']);
+
   console.log('[node-smoke] sdkVersion:', miniAppSdk.sdkVersion());
   console.log('[node-smoke] storage: PASS');
   console.log('[node-smoke] auth bootstrap: PASS');
@@ -368,6 +432,8 @@ async function main() {
   console.log('[node-smoke] permission: PASS');
   console.log('[node-smoke] privacy: PASS');
   console.log('[node-smoke] session check: PASS');
+  console.log('[node-smoke] clipboard: PASS');
+  console.log('[node-smoke] haptics: PASS');
 }
 
 main().catch((error) => {

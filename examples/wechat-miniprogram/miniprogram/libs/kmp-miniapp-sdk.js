@@ -44,6 +44,18 @@ module.exports = {
   wechatCheckSession: function wechatCheckSession() {
     return miniAppExports.wechatCheckSession();
   },
+  wechatGetClipboardText: function wechatGetClipboardText() {
+    return miniAppExports.wechatGetClipboardText();
+  },
+  wechatSetClipboardText: function wechatSetClipboardText(value) {
+    return miniAppExports.wechatSetClipboardText(value);
+  },
+  wechatVibrateShort: function wechatVibrateShort() {
+    return miniAppExports.wechatVibrateShort();
+  },
+  wechatVibrateLong: function wechatVibrateLong() {
+    return miniAppExports.wechatVibrateLong();
+  },
   networkRequest: function networkRequest(url, init) {
     const options = init || {};
     return miniAppExports

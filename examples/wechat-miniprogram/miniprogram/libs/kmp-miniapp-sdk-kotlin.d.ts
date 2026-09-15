@@ -77,6 +77,10 @@ export declare namespace io.github.bobcgn.miniapp.export {
                 openPermissionSettings(permission: string): Promise<string>;
                 privacyStatus(): Promise<io.github.bobcgn.miniapp.export.JsPrivacyStatus>;
                 requestPrivacyAuthorization(): Promise<string>;
+                wechatGetClipboardText(): Promise<string>;
+                wechatSetClipboardText(value: string): Promise<void>;
+                wechatVibrateShort(): Promise<void>;
+                wechatVibrateLong(): Promise<void>;
                 requirePrivacySatisfied(): Promise<void>;
                 private constructor();
             }

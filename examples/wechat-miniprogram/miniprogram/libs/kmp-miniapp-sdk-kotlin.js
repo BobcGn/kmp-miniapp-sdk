@@ -134,9 +134,14 @@
   initMetadataForCoroutine($privacyStatus$suspendBridgeCOROUTINE$, CoroutineImpl);
   initMetadataForCoroutine($requestPrivacyAuthorizationCOROUTINE$, CoroutineImpl);
   initMetadataForCoroutine($requestPrivacyAuthorization$suspendBridgeCOROUTINE$, CoroutineImpl);
+  initMetadataForCoroutine($wechatGetClipboardText$suspendBridgeCOROUTINE$, CoroutineImpl);
+  initMetadataForCoroutine($wechatSetClipboardText$suspendBridgeCOROUTINE$, CoroutineImpl);
+  initMetadataForCoroutine($wechatVibrateShort$suspendBridgeCOROUTINE$, CoroutineImpl);
+  initMetadataForCoroutine($wechatVibrateLong$suspendBridgeCOROUTINE$, CoroutineImpl);
   initMetadataForCoroutine($requirePrivacySatisfied$suspendBridgeCOROUTINE$, CoroutineImpl);
   initMetadataForObject(MiniAppExports, 'MiniAppExports', VOID, VOID, VOID, [1, 2, 0, 5]);
   initMetadataForClass(MiniAppHttpResult, 'MiniAppHttpResult');
+  initMetadataForObject(WeChatDeviceCapabilities, 'WeChatDeviceCapabilities');
   initMetadataForClass(WeChatLoginResult, 'WeChatLoginResult');
   initMetadataForCompanion(Companion_6);
   initMetadataForClass(WeChatSessionState, 'WeChatSessionState', VOID, Enum);
@@ -144,8 +149,13 @@
   initMetadataForClass(WechatHost, 'WechatHost', WechatHost);
   initMetadataForClass(WechatAuth, 'WechatAuth', WechatAuth, VOID, VOID, [0]);
   initMetadataForObject(WxAuthHost, 'WxAuthHost');
+  initMetadataForCoroutine($readTextCOROUTINE$, CoroutineImpl);
+  initMetadataForClass(WechatClipboard, 'WechatClipboard', WechatClipboard, VOID, VOID, [0, 1]);
+  initMetadataForObject(WxClipboardHost, 'WxClipboardHost');
   initMetadataForObject(Refused_0, 'Refused');
   initMetadataForClass(Failed, 'Failed');
+  initMetadataForClass(WechatHaptics, 'WechatHaptics', WechatHaptics, VOID, VOID, [0]);
+  initMetadataForObject(WxHapticsHost, 'WxHapticsHost');
   initMetadataForClass(WechatNavigation, 'WechatNavigation', WechatNavigation, VOID, VOID, [1]);
   initMetadataForObject(WxNavigationHost, 'WxNavigationHost');
   initMetadataForClass(sam$io_github_bobcgn_miniapp_async_HostOperationAborter$0, 'sam$io_github_bobcgn_miniapp_async_HostOperationAborter$0', VOID, VOID, [HostOperationAborter, FunctionAdapter]);
@@ -167,12 +177,14 @@
   initMetadataForCompanion(Companion_7);
   initMetadataForClass(WechatStorage, 'WechatStorage', WechatStorage, VOID, VOID, [1, 2]);
   initMetadataForObject(WxStorageHost, 'WxStorageHost');
+  initMetadataForClass(Present, 'Present');
+  initMetadataForObject(Unreadable, 'Unreadable');
   initMetadataForObject(Absent, 'Absent');
   initMetadataForClass(Decided, 'Decided');
-  initMetadataForObject(Unreadable, 'Unreadable');
+  initMetadataForObject(Unreadable_0, 'Unreadable');
   initMetadataForClass(Required, 'Required');
   initMetadataForClass(NotRequired, 'NotRequired');
-  initMetadataForObject(Unreadable_0, 'Unreadable');
+  initMetadataForObject(Unreadable_1, 'Unreadable');
   initMetadataForClass(WechatAppLifecycle, 'WechatAppLifecycle', WechatAppLifecycle);
   initMetadataForClass(WechatCapabilityRequirement, 'WechatCapabilityRequirement', WechatCapabilityRequirement);
   initMetadataForObject(WechatCapabilityCatalog, 'WechatCapabilityCatalog');
@@ -1902,6 +1914,209 @@
       }
      while (true);
   };
+  function $wechatGetClipboardText$suspendBridgeCOROUTINE$(_this__u8e3s4, resultContinuation) {
+    CoroutineImpl.call(this, resultContinuation);
+    this._this__u8e3s4__1 = _this__u8e3s4;
+  }
+  protoOf($wechatGetClipboardText$suspendBridgeCOROUTINE$).doResume_5yljmg_k$ = function () {
+    var suspendResult = this.result_1;
+    $sm: do
+      try {
+        var tmp = this.state_1;
+        switch (tmp) {
+          case 0:
+            this.exceptionState_1 = 4;
+            if (this._this__u8e3s4__1.wechatGetClipboardText === protoOf(MiniAppExports).wechatGetClipboardText) {
+              this.state_1 = 2;
+              suspendResult = this._this__u8e3s4__1.wechatGetClipboardText_o789ww_k$(this);
+              if (suspendResult === get_COROUTINE_SUSPENDED()) {
+                return suspendResult;
+              }
+              continue $sm;
+            } else {
+              this.state_1 = 1;
+              suspendResult = await_0(this._this__u8e3s4__1.wechatGetClipboardText(), this);
+              if (suspendResult === get_COROUTINE_SUSPENDED()) {
+                return suspendResult;
+              }
+              continue $sm;
+            }
+
+          case 1:
+            this.WHEN_RESULT0__1 = suspendResult;
+            this.state_1 = 3;
+            continue $sm;
+          case 2:
+            this.WHEN_RESULT0__1 = suspendResult;
+            this.state_1 = 3;
+            continue $sm;
+          case 3:
+            return this.WHEN_RESULT0__1;
+          case 4:
+            throw this.exception_1;
+        }
+      } catch ($p) {
+        var e = $p;
+        if (this.exceptionState_1 === 4) {
+          throw e;
+        } else {
+          this.state_1 = this.exceptionState_1;
+          this.exception_1 = e;
+        }
+      }
+     while (true);
+  };
+  function $wechatSetClipboardText$suspendBridgeCOROUTINE$(_this__u8e3s4, value, resultContinuation) {
+    CoroutineImpl.call(this, resultContinuation);
+    this._this__u8e3s4__1 = _this__u8e3s4;
+    this.value_1 = value;
+  }
+  protoOf($wechatSetClipboardText$suspendBridgeCOROUTINE$).doResume_5yljmg_k$ = function () {
+    var suspendResult = this.result_1;
+    $sm: do
+      try {
+        var tmp = this.state_1;
+        switch (tmp) {
+          case 0:
+            this.exceptionState_1 = 4;
+            if (this._this__u8e3s4__1.wechatSetClipboardText === protoOf(MiniAppExports).wechatSetClipboardText) {
+              this.state_1 = 2;
+              suspendResult = this._this__u8e3s4__1.wechatSetClipboardText_sebon0_k$(this.value_1, this);
+              if (suspendResult === get_COROUTINE_SUSPENDED()) {
+                return suspendResult;
+              }
+              continue $sm;
+            } else {
+              this.state_1 = 1;
+              suspendResult = await_0(this._this__u8e3s4__1.wechatSetClipboardText(this.value_1), this);
+              if (suspendResult === get_COROUTINE_SUSPENDED()) {
+                return suspendResult;
+              }
+              continue $sm;
+            }
+
+          case 1:
+            this.state_1 = 3;
+            continue $sm;
+          case 2:
+            this.state_1 = 3;
+            continue $sm;
+          case 3:
+            return Unit_instance;
+          case 4:
+            throw this.exception_1;
+        }
+      } catch ($p) {
+        var e = $p;
+        if (this.exceptionState_1 === 4) {
+          throw e;
+        } else {
+          this.state_1 = this.exceptionState_1;
+          this.exception_1 = e;
+        }
+      }
+     while (true);
+  };
+  function $wechatVibrateShort$suspendBridgeCOROUTINE$(_this__u8e3s4, resultContinuation) {
+    CoroutineImpl.call(this, resultContinuation);
+    this._this__u8e3s4__1 = _this__u8e3s4;
+  }
+  protoOf($wechatVibrateShort$suspendBridgeCOROUTINE$).doResume_5yljmg_k$ = function () {
+    var suspendResult = this.result_1;
+    $sm: do
+      try {
+        var tmp = this.state_1;
+        switch (tmp) {
+          case 0:
+            this.exceptionState_1 = 4;
+            if (this._this__u8e3s4__1.wechatVibrateShort === protoOf(MiniAppExports).wechatVibrateShort) {
+              this.state_1 = 2;
+              suspendResult = this._this__u8e3s4__1.wechatVibrateShort_xz7yuc_k$(this);
+              if (suspendResult === get_COROUTINE_SUSPENDED()) {
+                return suspendResult;
+              }
+              continue $sm;
+            } else {
+              this.state_1 = 1;
+              suspendResult = await_0(this._this__u8e3s4__1.wechatVibrateShort(), this);
+              if (suspendResult === get_COROUTINE_SUSPENDED()) {
+                return suspendResult;
+              }
+              continue $sm;
+            }
+
+          case 1:
+            this.state_1 = 3;
+            continue $sm;
+          case 2:
+            this.state_1 = 3;
+            continue $sm;
+          case 3:
+            return Unit_instance;
+          case 4:
+            throw this.exception_1;
+        }
+      } catch ($p) {
+        var e = $p;
+        if (this.exceptionState_1 === 4) {
+          throw e;
+        } else {
+          this.state_1 = this.exceptionState_1;
+          this.exception_1 = e;
+        }
+      }
+     while (true);
+  };
+  function $wechatVibrateLong$suspendBridgeCOROUTINE$(_this__u8e3s4, resultContinuation) {
+    CoroutineImpl.call(this, resultContinuation);
+    this._this__u8e3s4__1 = _this__u8e3s4;
+  }
+  protoOf($wechatVibrateLong$suspendBridgeCOROUTINE$).doResume_5yljmg_k$ = function () {
+    var suspendResult = this.result_1;
+    $sm: do
+      try {
+        var tmp = this.state_1;
+        switch (tmp) {
+          case 0:
+            this.exceptionState_1 = 4;
+            if (this._this__u8e3s4__1.wechatVibrateLong === protoOf(MiniAppExports).wechatVibrateLong) {
+              this.state_1 = 2;
+              suspendResult = this._this__u8e3s4__1.wechatVibrateLong_6hhu6m_k$(this);
+              if (suspendResult === get_COROUTINE_SUSPENDED()) {
+                return suspendResult;
+              }
+              continue $sm;
+            } else {
+              this.state_1 = 1;
+              suspendResult = await_0(this._this__u8e3s4__1.wechatVibrateLong(), this);
+              if (suspendResult === get_COROUTINE_SUSPENDED()) {
+                return suspendResult;
+              }
+              continue $sm;
+            }
+
+          case 1:
+            this.state_1 = 3;
+            continue $sm;
+          case 2:
+            this.state_1 = 3;
+            continue $sm;
+          case 3:
+            return Unit_instance;
+          case 4:
+            throw this.exception_1;
+        }
+      } catch ($p) {
+        var e = $p;
+        if (this.exceptionState_1 === 4) {
+          throw e;
+        } else {
+          this.state_1 = this.exceptionState_1;
+          this.exception_1 = e;
+        }
+      }
+     while (true);
+  };
   function $requirePrivacySatisfied$suspendBridgeCOROUTINE$(_this__u8e3s4, resultContinuation) {
     CoroutineImpl.call(this, resultContinuation);
     this._this__u8e3s4__1 = _this__u8e3s4;
@@ -2230,6 +2445,66 @@
     tmp.exception_1 = null;
     return tmp.doResume_5yljmg_k$();
   };
+  protoOf(MiniAppExports).wechatGetClipboardText_o789ww_k$ = function ($completion) {
+    return this.host_1.platform_1.clipboard_1.readText_iovdk0_k$($completion);
+  };
+  protoOf(MiniAppExports).wechatGetClipboardText = function () {
+    var tmp = this;
+    return promisify(function ($completion) {
+      return tmp.wechatGetClipboardText_o789ww_k$($completion);
+    });
+  };
+  protoOf(MiniAppExports).wechatGetClipboardText$suspendBridge_swn2fl_k$ = function ($completion) {
+    var tmp = new $wechatGetClipboardText$suspendBridgeCOROUTINE$(this, $completion);
+    tmp.result_1 = Unit_instance;
+    tmp.exception_1 = null;
+    return tmp.doResume_5yljmg_k$();
+  };
+  protoOf(MiniAppExports).wechatSetClipboardText_sebon0_k$ = function (value, $completion) {
+    return this.host_1.platform_1.clipboard_1.writeText_hlinex_k$(value, $completion);
+  };
+  protoOf(MiniAppExports).wechatSetClipboardText = function (value) {
+    var tmp = this;
+    return promisify(function ($completion) {
+      return tmp.wechatSetClipboardText_sebon0_k$(value, $completion);
+    });
+  };
+  protoOf(MiniAppExports).wechatSetClipboardText$suspendBridge_592b7p_k$ = function (value, $completion) {
+    var tmp = new $wechatSetClipboardText$suspendBridgeCOROUTINE$(this, value, $completion);
+    tmp.result_1 = Unit_instance;
+    tmp.exception_1 = null;
+    return tmp.doResume_5yljmg_k$();
+  };
+  protoOf(MiniAppExports).wechatVibrateShort_xz7yuc_k$ = function ($completion) {
+    return this.host_1.platform_1.haptics_1.vibrateShort_ict1au_k$($completion);
+  };
+  protoOf(MiniAppExports).wechatVibrateShort = function () {
+    var tmp = this;
+    return promisify(function ($completion) {
+      return tmp.wechatVibrateShort_xz7yuc_k$($completion);
+    });
+  };
+  protoOf(MiniAppExports).wechatVibrateShort$suspendBridge_snp0jn_k$ = function ($completion) {
+    var tmp = new $wechatVibrateShort$suspendBridgeCOROUTINE$(this, $completion);
+    tmp.result_1 = Unit_instance;
+    tmp.exception_1 = null;
+    return tmp.doResume_5yljmg_k$();
+  };
+  protoOf(MiniAppExports).wechatVibrateLong_6hhu6m_k$ = function ($completion) {
+    return this.host_1.platform_1.haptics_1.vibrateLong_7v53xo_k$($completion);
+  };
+  protoOf(MiniAppExports).wechatVibrateLong = function () {
+    var tmp = this;
+    return promisify(function ($completion) {
+      return tmp.wechatVibrateLong_6hhu6m_k$($completion);
+    });
+  };
+  protoOf(MiniAppExports).wechatVibrateLong$suspendBridge_phnsr5_k$ = function ($completion) {
+    var tmp = new $wechatVibrateLong$suspendBridgeCOROUTINE$(this, $completion);
+    tmp.result_1 = Unit_instance;
+    tmp.exception_1 = null;
+    return tmp.doResume_5yljmg_k$();
+  };
   protoOf(MiniAppExports).requirePrivacySatisfied_m2jemw_k$ = function ($completion) {
     return this.privacy_1.requireSatisfied_farkra_k$($completion);
   };
@@ -2369,6 +2644,19 @@
   protoOf(MiniAppHttpResult).get_body_wojkyz_k$ = function () {
     return this.body;
   };
+  function WeChatDeviceCapabilities() {
+    WeChatDeviceCapabilities_instance = this;
+    this.ClipboardRead_1 = new CapabilityKey('wechat.clipboard-read');
+    this.ClipboardWrite_1 = new CapabilityKey('wechat.clipboard-write');
+    this.VibrateShort_1 = new CapabilityKey('wechat.vibrate-short');
+    this.VibrateLong_1 = new CapabilityKey('wechat.vibrate-long');
+  }
+  var WeChatDeviceCapabilities_instance;
+  function WeChatDeviceCapabilities_getInstance() {
+    if (WeChatDeviceCapabilities_instance == null)
+      new WeChatDeviceCapabilities();
+    return WeChatDeviceCapabilities_instance;
+  }
   function WeChatLoginResult(code) {
     this.code = code;
   }
@@ -2409,14 +2697,16 @@
     static_init_2();
     return WeChatSessionState_INVALID_instance;
   }
-  function WechatPlatformApi(auth, navigation, appLifecycle, pageLifecycle, runtimeInfo) {
+  function WechatPlatformApi(auth, navigation, appLifecycle, pageLifecycle, runtimeInfo, clipboard, haptics) {
     this.auth_1 = auth;
     this.navigation_1 = navigation;
     this.appLifecycle_1 = appLifecycle;
     this.pageLifecycle_1 = pageLifecycle;
     this.runtimeInfo_1 = runtimeInfo;
+    this.clipboard_1 = clipboard;
+    this.haptics_1 = haptics;
   }
-  function WechatHost(storageHost, authHost, networkHost, navigationHost, runtimeInfoHost, permissionHost, privacyHost) {
+  function WechatHost(storageHost, authHost, networkHost, navigationHost, runtimeInfoHost, permissionHost, privacyHost, clipboardHost, hapticsHost) {
     storageHost = storageHost === VOID ? WxStorageHost_instance : storageHost;
     authHost = authHost === VOID ? WxAuthHost_instance : authHost;
     networkHost = networkHost === VOID ? WxNetworkHost_instance : networkHost;
@@ -2424,10 +2714,12 @@
     runtimeInfoHost = runtimeInfoHost === VOID ? WxRuntimeInfoHost_instance : runtimeInfoHost;
     permissionHost = permissionHost === VOID ? WxPermissionHost_instance : permissionHost;
     privacyHost = privacyHost === VOID ? WxPrivacyHost_instance : privacyHost;
+    clipboardHost = clipboardHost === VOID ? WxClipboardHost_instance : clipboardHost;
+    hapticsHost = hapticsHost === VOID ? WxHapticsHost_instance : hapticsHost;
     this.appLifecycle_1 = new WechatAppLifecycle();
     this.runtimeInfo_1 = new WechatRuntimeInfo(runtimeInfoHost);
     this.capabilityGate_1 = new WechatCapabilityGate(this.runtimeInfo_1, runtimeInfoHost);
-    this.platform_1 = new WechatPlatformApi(new WechatAuth(authHost), new WechatNavigation(navigationHost), this.appLifecycle_1, new WechatPageLifecycle(), this.runtimeInfo_1);
+    this.platform_1 = new WechatPlatformApi(new WechatAuth(authHost), new WechatNavigation(navigationHost), this.appLifecycle_1, new WechatPageLifecycle(), this.runtimeInfo_1, new WechatClipboard(clipboardHost), new WechatHaptics(hapticsHost));
     this.storage_1 = new WechatStorage(storageHost);
     this.network_1 = new WechatNetwork(networkHost);
     this.lifecycle_1 = this.appLifecycle_1;
@@ -2521,6 +2813,146 @@
   function WxAuthHost_getInstance() {
     return WxAuthHost_instance;
   }
+  function requireReadSupported($this) {
+    if (!$this.host_1.isReadSupported_3yqram_k$()) {
+      throw new UnsupportedCapability(WeChatDeviceCapabilities_getInstance().ClipboardRead_1);
+    }
+  }
+  function requireWriteSupported($this) {
+    if (!$this.host_1.isWriteSupported_mpjazd_k$()) {
+      throw new UnsupportedCapability(WeChatDeviceCapabilities_getInstance().ClipboardWrite_1);
+    }
+  }
+  function WechatClipboard$readText$lambda$lambda($success) {
+    return function (result) {
+      $success(wxClipboardText(result));
+      return Unit_instance;
+    };
+  }
+  function WechatClipboard$readText$lambda$lambda_0($failure) {
+    return function (result) {
+      $failure(mapWechatHostFailure('getClipboardData', result));
+      return Unit_instance;
+    };
+  }
+  function WechatClipboard$readText$lambda(this$0) {
+    return function (success, failure) {
+      var tmp = WechatClipboard$readText$lambda$lambda(success);
+      this$0.host_1.read_e6b6c_k$(tmp, WechatClipboard$readText$lambda$lambda_0(failure));
+      return null;
+    };
+  }
+  function WechatClipboard$writeText$lambda$lambda($success) {
+    return function () {
+      $success(Unit_instance);
+      return Unit_instance;
+    };
+  }
+  function WechatClipboard$writeText$lambda$lambda_0($failure) {
+    return function (result) {
+      $failure(mapWechatHostFailure('setClipboardData', result));
+      return Unit_instance;
+    };
+  }
+  function WechatClipboard$writeText$lambda(this$0, $data) {
+    return function (success, failure) {
+      var tmp = WechatClipboard$writeText$lambda$lambda(success);
+      this$0.host_1.write_yfy6my_k$($data, tmp, WechatClipboard$writeText$lambda$lambda_0(failure));
+      return null;
+    };
+  }
+  function $readTextCOROUTINE$(_this__u8e3s4, resultContinuation) {
+    CoroutineImpl.call(this, resultContinuation);
+    this._this__u8e3s4__1 = _this__u8e3s4;
+  }
+  protoOf($readTextCOROUTINE$).doResume_5yljmg_k$ = function () {
+    var suspendResult = this.result_1;
+    $sm: do
+      try {
+        var tmp = this.state_1;
+        switch (tmp) {
+          case 0:
+            this.exceptionState_1 = 2;
+            requireReadSupported(this._this__u8e3s4__1);
+            this.state_1 = 1;
+            suspendResult = awaitHostCallback(WechatClipboard$readText$lambda(this._this__u8e3s4__1), this);
+            if (suspendResult === get_COROUTINE_SUSPENDED()) {
+              return suspendResult;
+            }
+
+            continue $sm;
+          case 1:
+            var text = suspendResult;
+            var tmp_0;
+            if (text instanceof Present) {
+              tmp_0 = text.text_1;
+            } else {
+              if (equals(text, Unreadable_instance)) {
+                throw new InvalidResponse('The WeChat host answered getClipboardData with a value the SDK cannot read');
+              } else {
+                noWhenBranchMatchedException();
+              }
+            }
+
+            return tmp_0;
+          case 2:
+            throw this.exception_1;
+        }
+      } catch ($p) {
+        var e = $p;
+        if (this.exceptionState_1 === 2) {
+          throw e;
+        } else {
+          this.state_1 = this.exceptionState_1;
+          this.exception_1 = e;
+        }
+      }
+     while (true);
+  };
+  function WechatClipboard(host) {
+    host = host === VOID ? WxClipboardHost_instance : host;
+    this.host_1 = host;
+  }
+  protoOf(WechatClipboard).readText_iovdk0_k$ = function ($completion) {
+    var tmp = new $readTextCOROUTINE$(this, $completion);
+    tmp.result_1 = Unit_instance;
+    tmp.exception_1 = null;
+    return tmp.doResume_5yljmg_k$();
+  };
+  protoOf(WechatClipboard).writeText_hlinex_k$ = function (data, $completion) {
+    requireWriteSupported(this);
+    return awaitHostCallback(WechatClipboard$writeText$lambda(this, data), $completion);
+  };
+  function WxClipboardHost$write$lambda($success) {
+    return function (it) {
+      $success();
+      return Unit_instance;
+    };
+  }
+  function WxClipboardHost() {
+  }
+  protoOf(WxClipboardHost).isReadSupported_3yqram_k$ = function () {
+    return hasWxGetClipboardData();
+  };
+  protoOf(WxClipboardHost).isWriteSupported_mpjazd_k$ = function () {
+    return hasWxSetClipboardData();
+  };
+  protoOf(WxClipboardHost).read_e6b6c_k$ = function (success, failure) {
+    var options = wxGetClipboardDataOptions();
+    options.success = success;
+    options.fail = failure;
+    wx.getClipboardData(options);
+  };
+  protoOf(WxClipboardHost).write_yfy6my_k$ = function (data, success, failure) {
+    var options = wxSetClipboardDataOptions(data);
+    options.success = WxClipboardHost$write$lambda(success);
+    options.fail = failure;
+    wx.setClipboardData(options);
+  };
+  var WxClipboardHost_instance;
+  function WxClipboardHost_getInstance() {
+    return WxClipboardHost_instance;
+  }
   function mapWechatHostFailure(operation, result, code) {
     code = code === VOID ? null : code;
     return new HostFailure('wechat', code, result.errMsg, mapOf(to('operation', operation)));
@@ -2589,6 +3021,102 @@
       tmp = new Failed(mapWechatHostFailure('requirePrivacyAuthorize', result));
     }
     return tmp;
+  }
+  function requireShortSupported($this) {
+    if (!$this.host_1.isShortSupported_dw0eck_k$()) {
+      throw new UnsupportedCapability(WeChatDeviceCapabilities_getInstance().VibrateShort_1);
+    }
+  }
+  function requireLongSupported($this) {
+    if (!$this.host_1.isLongSupported_dhs5mw_k$()) {
+      throw new UnsupportedCapability(WeChatDeviceCapabilities_getInstance().VibrateLong_1);
+    }
+  }
+  function WechatHaptics$vibrateShort$lambda$lambda($success) {
+    return function () {
+      $success(Unit_instance);
+      return Unit_instance;
+    };
+  }
+  function WechatHaptics$vibrateShort$lambda$lambda_0($failure) {
+    return function (result) {
+      $failure(mapWechatHostFailure('vibrateShort', result));
+      return Unit_instance;
+    };
+  }
+  function WechatHaptics$vibrateShort$lambda(this$0) {
+    return function (success, failure) {
+      var tmp = WechatHaptics$vibrateShort$lambda$lambda(success);
+      this$0.host_1.vibrateShort_mp2zw8_k$(tmp, WechatHaptics$vibrateShort$lambda$lambda_0(failure));
+      return null;
+    };
+  }
+  function WechatHaptics$vibrateLong$lambda$lambda($success) {
+    return function () {
+      $success(Unit_instance);
+      return Unit_instance;
+    };
+  }
+  function WechatHaptics$vibrateLong$lambda$lambda_0($failure) {
+    return function (result) {
+      $failure(mapWechatHostFailure('vibrateLong', result));
+      return Unit_instance;
+    };
+  }
+  function WechatHaptics$vibrateLong$lambda(this$0) {
+    return function (success, failure) {
+      var tmp = WechatHaptics$vibrateLong$lambda$lambda(success);
+      this$0.host_1.vibrateLong_4cnbcm_k$(tmp, WechatHaptics$vibrateLong$lambda$lambda_0(failure));
+      return null;
+    };
+  }
+  function WechatHaptics(host) {
+    host = host === VOID ? WxHapticsHost_instance : host;
+    this.host_1 = host;
+  }
+  protoOf(WechatHaptics).vibrateShort_ict1au_k$ = function ($completion) {
+    requireShortSupported(this);
+    return awaitHostCallback(WechatHaptics$vibrateShort$lambda(this), $completion);
+  };
+  protoOf(WechatHaptics).vibrateLong_7v53xo_k$ = function ($completion) {
+    requireLongSupported(this);
+    return awaitHostCallback(WechatHaptics$vibrateLong$lambda(this), $completion);
+  };
+  function WxHapticsHost$vibrateShort$lambda($success) {
+    return function (it) {
+      $success();
+      return Unit_instance;
+    };
+  }
+  function WxHapticsHost$vibrateLong$lambda($success) {
+    return function (it) {
+      $success();
+      return Unit_instance;
+    };
+  }
+  function WxHapticsHost() {
+  }
+  protoOf(WxHapticsHost).isShortSupported_dw0eck_k$ = function () {
+    return hasWxVibrateShort();
+  };
+  protoOf(WxHapticsHost).isLongSupported_dhs5mw_k$ = function () {
+    return hasWxVibrateLong();
+  };
+  protoOf(WxHapticsHost).vibrateShort_mp2zw8_k$ = function (success, failure) {
+    var options = wxVibrateOptions();
+    options.success = WxHapticsHost$vibrateShort$lambda(success);
+    options.fail = failure;
+    wx.vibrateShort(options);
+  };
+  protoOf(WxHapticsHost).vibrateLong_4cnbcm_k$ = function (success, failure) {
+    var options = wxVibrateOptions();
+    options.success = WxHapticsHost$vibrateLong$lambda(success);
+    options.fail = failure;
+    wx.vibrateLong(options);
+  };
+  var WxHapticsHost_instance;
+  function WxHapticsHost_getInstance() {
+    return WxHapticsHost_instance;
   }
   function WechatNavigation$navigateTo$lambda$lambda($success) {
     return function () {
@@ -2862,7 +3390,7 @@
     if (equals(entry, Absent_instance)) {
       tmp = NotRequested_instance;
     } else {
-      if (equals(entry, Unreadable_instance)) {
+      if (equals(entry, Unreadable_instance_0)) {
         tmp = null;
       } else {
         if (entry instanceof Decided) {
@@ -3344,7 +3872,7 @@
               if (requirement instanceof NotRequired) {
                 tmp_0 = new PrivacyStatus(PrivacyAuthorizationRequirement_NOT_REQUIRED_getInstance(), requirement.contractName_1);
               } else {
-                if (equals(requirement, Unreadable_instance_0)) {
+                if (equals(requirement, Unreadable_instance_1)) {
                   throw new InvalidResponse('The WeChat host answered getPrivacySetting with a value the SDK cannot read');
                 } else {
                   noWhenBranchMatchedException();
@@ -3644,6 +4172,72 @@
     var options = {};
     return options;
   }
+  function Present(text) {
+    this.text_1 = text;
+  }
+  protoOf(Present).toString = function () {
+    return 'Present(text=' + this.text_1 + ')';
+  };
+  protoOf(Present).hashCode = function () {
+    return getStringHashCode(this.text_1);
+  };
+  protoOf(Present).equals = function (other) {
+    if (this === other)
+      return true;
+    if (!(other instanceof Present))
+      return false;
+    if (!(this.text_1 === other.text_1))
+      return false;
+    return true;
+  };
+  function Unreadable() {
+  }
+  protoOf(Unreadable).toString = function () {
+    return 'Unreadable';
+  };
+  protoOf(Unreadable).hashCode = function () {
+    return -1461035294;
+  };
+  protoOf(Unreadable).equals = function (other) {
+    if (this === other)
+      return true;
+    if (!(other instanceof Unreadable))
+      return false;
+    return true;
+  };
+  var Unreadable_instance;
+  function Unreadable_getInstance() {
+    return Unreadable_instance;
+  }
+  function wxClipboardText(result) {
+    var data = result.data;
+    var tmp;
+    if (data == null || typeof data === 'undefined') {
+      tmp = Unreadable_instance;
+    } else {
+      if (typeof data === 'string') {
+        tmp = new Present(data);
+      } else {
+        tmp = Unreadable_instance;
+      }
+    }
+    return tmp;
+  }
+  function hasWxGetClipboardData() {
+    return typeof wx !== 'undefined' && typeof wx.getClipboardData === 'function';
+  }
+  function hasWxSetClipboardData() {
+    return typeof wx !== 'undefined' && typeof wx.setClipboardData === 'function';
+  }
+  function wxGetClipboardDataOptions() {
+    var options = {};
+    return options;
+  }
+  function wxSetClipboardDataOptions(data) {
+    var options = {};
+    options.data = data;
+    return options;
+  }
   function wxRequestHeader(headers) {
     var header = {};
     // Inline function 'kotlin.collections.iterator' call
@@ -3740,30 +4334,30 @@
       return false;
     return true;
   };
-  function Unreadable() {
+  function Unreadable_0() {
   }
-  protoOf(Unreadable).toString = function () {
+  protoOf(Unreadable_0).toString = function () {
     return 'Unreadable';
   };
-  protoOf(Unreadable).hashCode = function () {
+  protoOf(Unreadable_0).hashCode = function () {
     return 59014027;
   };
-  protoOf(Unreadable).equals = function (other) {
+  protoOf(Unreadable_0).equals = function (other) {
     if (this === other)
       return true;
-    if (!(other instanceof Unreadable))
+    if (!(other instanceof Unreadable_0))
       return false;
     return true;
   };
-  var Unreadable_instance;
-  function Unreadable_getInstance() {
-    return Unreadable_instance;
+  var Unreadable_instance_0;
+  function Unreadable_getInstance_0() {
+    return Unreadable_instance_0;
   }
   function wxScopeEntry(authSetting, scope) {
     if (authSetting == null)
-      return Unreadable_instance;
+      return Unreadable_instance_0;
     if (!(typeof authSetting === 'object'))
-      return Unreadable_instance;
+      return Unreadable_instance_0;
     var present = Object.prototype.hasOwnProperty.call(authSetting, scope);
     if (!present)
       return Absent_instance;
@@ -3772,7 +4366,7 @@
     if (!(value == null) ? typeof value === 'boolean' : false) {
       tmp = new Decided(value);
     } else {
-      tmp = Unreadable_instance;
+      tmp = Unreadable_instance_0;
     }
     return tmp;
   }
@@ -3825,29 +4419,29 @@
       return false;
     return true;
   };
-  function Unreadable_0() {
+  function Unreadable_1() {
   }
-  protoOf(Unreadable_0).toString = function () {
+  protoOf(Unreadable_1).toString = function () {
     return 'Unreadable';
   };
-  protoOf(Unreadable_0).hashCode = function () {
+  protoOf(Unreadable_1).hashCode = function () {
     return 497866830;
   };
-  protoOf(Unreadable_0).equals = function (other) {
+  protoOf(Unreadable_1).equals = function (other) {
     if (this === other)
       return true;
-    if (!(other instanceof Unreadable_0))
+    if (!(other instanceof Unreadable_1))
       return false;
     return true;
   };
-  var Unreadable_instance_0;
-  function Unreadable_getInstance_0() {
-    return Unreadable_instance_0;
+  var Unreadable_instance_1;
+  function Unreadable_getInstance_1() {
+    return Unreadable_instance_1;
   }
   function wxPrivacyRequirement(result) {
     var needAuthorization = result.needAuthorization;
     if (!(!(needAuthorization == null) ? typeof needAuthorization === 'boolean' : false))
-      return Unreadable_instance_0;
+      return Unreadable_instance_1;
     var rawName = result.privacyContractName;
     var tmp;
     if (rawName == null) {
@@ -3856,7 +4450,7 @@
       if (typeof rawName === 'string') {
         tmp = rawName;
       } else {
-        return Unreadable_instance_0;
+        return Unreadable_instance_1;
       }
     }
     var contractName = tmp;
@@ -3925,6 +4519,16 @@
     options.key = key;
     return options;
   }
+  function hasWxVibrateShort() {
+    return typeof wx !== 'undefined' && typeof wx.vibrateShort === 'function';
+  }
+  function hasWxVibrateLong() {
+    return typeof wx !== 'undefined' && typeof wx.vibrateLong === 'function';
+  }
+  function wxVibrateOptions() {
+    var options = {};
+    return options;
+  }
   function WechatAppLifecycle() {
     this.lifecycleState_1 = MutableStateFlow(MiniAppLifecycleState_BACKGROUND_getInstance());
     this.stateChanges_1 = this.lifecycleState_1;
@@ -3956,9 +4560,9 @@
     var tmp_2 = to(Companion_getInstance().Key_1, new WechatCapabilityRequirement());
     var tmp_3 = to(Companion_getInstance_1().Key_1, new WechatCapabilityRequirement(listOf(['getSetting', 'authorize', 'openSetting'])));
     var tmp_4 = to(Companion_getInstance_6().Key_1, new WechatCapabilityRequirement(listOf_0('checkSession')));
-    var tmp_5 = Companion_getInstance_3().Key_1;
-    var tmp_6 = listOf(['getPrivacySetting', 'requirePrivacyAuthorize']);
-    var tmp0 = Companion_instance_7.parse_pc1q8p_k$('2.32.3');
+    var tmp_5 = WeChatDeviceCapabilities_getInstance().ClipboardRead_1;
+    var tmp_6 = listOf_0('getClipboardData');
+    var tmp0 = Companion_instance_7.parse_pc1q8p_k$('1.1.0');
     var tmp$ret$0;
     $l$block: {
       // Inline function 'kotlin.requireNotNull' call
@@ -3971,8 +4575,9 @@
       }
     }
     var tmp_7 = to(tmp_5, new WechatCapabilityRequirement(tmp_6, tmp$ret$0));
-    var tmp_8 = listOf_0('getAppBaseInfo');
-    var tmp0_0 = Companion_instance_7.parse_pc1q8p_k$('2.20.1');
+    var tmp_8 = WeChatDeviceCapabilities_getInstance().ClipboardWrite_1;
+    var tmp_9 = listOf_0('setClipboardData');
+    var tmp0_0 = Companion_instance_7.parse_pc1q8p_k$('1.1.0');
     var tmp$ret$2;
     $l$block_0: {
       // Inline function 'kotlin.requireNotNull' call
@@ -3984,7 +4589,66 @@
         break $l$block_0;
       }
     }
-    tmp.requirements_1 = mapOf_0([tmp_0, tmp_1, tmp_2, tmp_3, tmp_4, tmp_7, to(this.RuntimeDetectionKey_1, new WechatCapabilityRequirement(tmp_8, tmp$ret$2))]);
+    var tmp_10 = to(tmp_8, new WechatCapabilityRequirement(tmp_9, tmp$ret$2));
+    var tmp_11 = WeChatDeviceCapabilities_getInstance().VibrateShort_1;
+    var tmp_12 = listOf_0('vibrateShort');
+    var tmp0_1 = Companion_instance_7.parse_pc1q8p_k$('1.2.0');
+    var tmp$ret$4;
+    $l$block_1: {
+      // Inline function 'kotlin.requireNotNull' call
+      if (tmp0_1 == null) {
+        var message_1 = 'The recorded minimum base-library version must be a dotted numeric version';
+        throw IllegalArgumentException_init_$Create$(toString_0(message_1));
+      } else {
+        tmp$ret$4 = tmp0_1;
+        break $l$block_1;
+      }
+    }
+    var tmp_13 = to(tmp_11, new WechatCapabilityRequirement(tmp_12, tmp$ret$4));
+    var tmp_14 = WeChatDeviceCapabilities_getInstance().VibrateLong_1;
+    var tmp_15 = listOf_0('vibrateLong');
+    var tmp0_2 = Companion_instance_7.parse_pc1q8p_k$('1.2.0');
+    var tmp$ret$6;
+    $l$block_2: {
+      // Inline function 'kotlin.requireNotNull' call
+      if (tmp0_2 == null) {
+        var message_2 = 'The recorded minimum base-library version must be a dotted numeric version';
+        throw IllegalArgumentException_init_$Create$(toString_0(message_2));
+      } else {
+        tmp$ret$6 = tmp0_2;
+        break $l$block_2;
+      }
+    }
+    var tmp_16 = to(tmp_14, new WechatCapabilityRequirement(tmp_15, tmp$ret$6));
+    var tmp_17 = Companion_getInstance_3().Key_1;
+    var tmp_18 = listOf(['getPrivacySetting', 'requirePrivacyAuthorize']);
+    var tmp0_3 = Companion_instance_7.parse_pc1q8p_k$('2.32.3');
+    var tmp$ret$8;
+    $l$block_3: {
+      // Inline function 'kotlin.requireNotNull' call
+      if (tmp0_3 == null) {
+        var message_3 = 'The recorded minimum base-library version must be a dotted numeric version';
+        throw IllegalArgumentException_init_$Create$(toString_0(message_3));
+      } else {
+        tmp$ret$8 = tmp0_3;
+        break $l$block_3;
+      }
+    }
+    var tmp_19 = to(tmp_17, new WechatCapabilityRequirement(tmp_18, tmp$ret$8));
+    var tmp_20 = listOf_0('getAppBaseInfo');
+    var tmp0_4 = Companion_instance_7.parse_pc1q8p_k$('2.20.1');
+    var tmp$ret$10;
+    $l$block_4: {
+      // Inline function 'kotlin.requireNotNull' call
+      if (tmp0_4 == null) {
+        var message_4 = 'The recorded minimum base-library version must be a dotted numeric version';
+        throw IllegalArgumentException_init_$Create$(toString_0(message_4));
+      } else {
+        tmp$ret$10 = tmp0_4;
+        break $l$block_4;
+      }
+    }
+    tmp.requirements_1 = mapOf_0([tmp_0, tmp_1, tmp_2, tmp_3, tmp_4, tmp_7, tmp_10, tmp_13, tmp_16, tmp_19, to(this.RuntimeDetectionKey_1, new WechatCapabilityRequirement(tmp_20, tmp$ret$10))]);
   }
   protoOf(WechatCapabilityCatalog).requirementFor_k8c79s_k$ = function (key) {
     return this.requirements_1.get_wei43m_k$(key);
@@ -4142,7 +4806,9 @@
   Refused_instance = new Refused();
   Companion_instance_7 = new Companion_5();
   WxAuthHost_instance = new WxAuthHost();
+  WxClipboardHost_instance = new WxClipboardHost();
   Refused_instance_0 = new Refused_0();
+  WxHapticsHost_instance = new WxHapticsHost();
   WxNavigationHost_instance = new WxNavigationHost();
   WxNetworkHost_instance = new WxNetworkHost();
   WxPermissionHost_instance = new WxPermissionHost();
@@ -4150,9 +4816,10 @@
   WxRuntimeInfoHost_instance = new WxRuntimeInfoHost();
   Companion_instance_9 = new Companion_7();
   WxStorageHost_instance = new WxStorageHost();
-  Absent_instance = new Absent();
   Unreadable_instance = new Unreadable();
+  Absent_instance = new Absent();
   Unreadable_instance_0 = new Unreadable_0();
+  Unreadable_instance_1 = new Unreadable_1();
   Companion_instance_10 = new Companion_8();
   //endregion
   //region block: exports

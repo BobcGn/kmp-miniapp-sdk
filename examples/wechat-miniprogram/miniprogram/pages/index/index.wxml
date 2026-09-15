@@ -52,6 +52,21 @@
   </view>
 
   <view class="card">
+    <text class="eyebrow">Clipboard and Haptics</text>
+    <text class="label">Clipboard write: {{clipboardWriteStatus}}</text>
+    <text class="label">Clipboard read: {{clipboardReadStatus}}</text>
+    <text class="details">{{clipboardDetails}}</text>
+    <text class="label">Short vibration: {{hapticsShortStatus}}</text>
+    <text class="label">Long vibration: {{hapticsLongStatus}}</text>
+    <text class="details">{{hapticsDetails}}</text>
+    <text class="security-note">Vibration is felt on a device; the log only records that WeChat accepted the call.</text>
+    <button class="action" bindtap="writeClipboardTest">Write test text</button>
+    <button class="action" bindtap="readClipboard">Read clipboard</button>
+    <button class="action" bindtap="vibrateShort">Short vibration</button>
+    <button class="action" bindtap="vibrateLong">Long vibration</button>
+  </view>
+
+  <view class="card">
     <text class="eyebrow">First Host Capability</text>
     <text class="label">Storage verification</text>
     <text class="status status--{{storageStatus}}">{{storageStatus}}</text>

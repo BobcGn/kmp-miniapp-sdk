@@ -266,6 +266,41 @@ public object MiniAppExports {
         }
 
     /**
+     * Reads the system clipboard as text.
+     *
+     * An empty clipboard is returned as an empty string: we only ever look at our
+     * own clipboard text when explicitly asked. The clipboard is the user's, and
+     * the SDK neither stores nor logs what it reads.
+     *
+     * @throws MiniAppException.UnsupportedCapability when the host has no clipboard read API
+     */
+    public suspend fun wechatGetClipboardText(): String = host.platform.clipboard.readText()
+
+    /**
+     * Replaces the system clipboard with [value].
+     *
+     * @param value text to place on the clipboard
+     */
+    public suspend fun wechatSetClipboardText(value: String): Unit =
+        host.platform.clipboard.writeText(value)
+
+    /**
+     * Performs WeChat's short vibration.
+     *
+     * A resolved call means the host accepted and performed the vibration. It is
+     * not evidence that a user felt anything, which no software check can confirm.
+     */
+    public suspend fun wechatVibrateShort(): Unit = host.platform.haptics.vibrateShort()
+
+    /**
+     * Performs WeChat's long vibration.
+     *
+     * The long vibration is a separate host API from the short one and may be
+     * absent while the short one is present.
+     */
+    public suspend fun wechatVibrateLong(): Unit = host.platform.haptics.vibrateLong()
+
+    /**
      * Fails unless the host currently requires no privacy authorization.
      *
      * This is the precondition point for capabilities the host gates behind its

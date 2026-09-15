@@ -8,6 +8,9 @@ const networkUrl = 'https://example.com/';
 const secondPageRoute = '/pages/second/index';
 // The only permission this SDK maps today. It is requested only from a button.
 const permissionName: MiniAppSdk.PermissionName = 'microphone';
+// A fixed, non-sensitive string this page writes itself. The page only ever
+// compares against what it wrote; it never shows or logs clipboard contents.
+const clipboardTestText = 'kmp-miniapp-sdk clipboard test';
 
 interface IndexPageData {
   sdkVersion: string;
@@ -33,6 +36,12 @@ interface IndexPageData {
   sessionStatus: string;
   sessionDetails: string;
   sessionChecks: number;
+  clipboardWriteStatus: string;
+  clipboardReadStatus: string;
+  clipboardDetails: string;
+  hapticsShortStatus: string;
+  hapticsLongStatus: string;
+  hapticsDetails: string;
 }
 
 type IndexPage = MiniProgramPageInstance<IndexPageData>;
@@ -250,6 +259,80 @@ async function checkSession(this: IndexPage): Promise<void> {
   await runSessionCheck(this);
 }
 
+/**
+ * Writes a fixed test string to the clipboard.
+ *
+ * Nothing touches the clipboard while the page loads; every clipboard and
+ * haptics action below is triggered by a tap.
+ */
+async function writeClipboardTest(this: IndexPage): Promise<void> {
+  try {
+    await MiniAppSdk.wechatSetClipboardText(clipboardTestText);
+    console.log('[kmp-miniapp-sdk] clipboard write: PASS');
+    this.setData({
+      clipboardWriteStatus: 'PASS',
+      clipboardDetails: `wrote ${clipboardTestText.length} characters`,
+    });
+  } catch (error) {
+    const details = String(error);
+    console.error('[kmp-miniapp-sdk] clipboard write: FAIL', error);
+    this.setData({ clipboardWriteStatus: 'FAIL', clipboardDetails: details });
+  }
+}
+
+/**
+ * Reads the clipboard and compares it with the test string this page wrote.
+ *
+ * Only the comparison result is reported. Whatever else the clipboard may hold is
+ * the user's, so it is never displayed or logged.
+ */
+async function readClipboard(this: IndexPage): Promise<void> {
+  try {
+    const value = await MiniAppSdk.wechatGetClipboardText();
+    const matched = value === clipboardTestText;
+    const details = `matched=${matched}`;
+
+    if (matched) {
+      console.log('[kmp-miniapp-sdk] clipboard read: PASS matched=true');
+    } else {
+      // The mismatch is reported without revealing either side.
+      console.error('[kmp-miniapp-sdk] clipboard read: FAIL matched=false');
+    }
+
+    this.setData({ clipboardReadStatus: matched ? 'PASS' : 'FAIL', clipboardDetails: details });
+  } catch (error) {
+    const details = String(error);
+    console.error('[kmp-miniapp-sdk] clipboard read: FAIL', error);
+    this.setData({ clipboardReadStatus: 'FAIL', clipboardDetails: details });
+  }
+}
+
+async function vibrateShort(this: IndexPage): Promise<void> {
+  try {
+    await MiniAppSdk.wechatVibrateShort();
+    // The host accepted the call. Whether a vibration was felt is for the person
+    // holding the device to say, not for this log to claim.
+    console.log('[kmp-miniapp-sdk] haptics short: PASS');
+    this.setData({ hapticsShortStatus: 'PASS', hapticsDetails: 'host accepted the short call' });
+  } catch (error) {
+    const details = String(error);
+    console.error('[kmp-miniapp-sdk] haptics short: FAIL', error);
+    this.setData({ hapticsShortStatus: 'FAIL', hapticsDetails: details });
+  }
+}
+
+async function vibrateLong(this: IndexPage): Promise<void> {
+  try {
+    await MiniAppSdk.wechatVibrateLong();
+    console.log('[kmp-miniapp-sdk] haptics long: PASS');
+    this.setData({ hapticsLongStatus: 'PASS', hapticsDetails: 'host accepted the long call' });
+  } catch (error) {
+    const details = String(error);
+    console.error('[kmp-miniapp-sdk] haptics long: FAIL', error);
+    this.setData({ hapticsLongStatus: 'FAIL', hapticsDetails: details });
+  }
+}
+
 async function runStorageCheck(page: IndexPage): Promise<void> {
   try {
     await MiniAppSdk.storageSet(storageKey, 'first');
@@ -378,6 +461,12 @@ Page<IndexPageData>({
     sessionStatus: 'UNKNOWN',
     sessionDetails: 'Not checked yet.',
     sessionChecks: 0,
+    clipboardWriteStatus: 'READY',
+    clipboardReadStatus: 'READY',
+    clipboardDetails: 'Tap a button; nothing touches the clipboard on load.',
+    hapticsShortStatus: 'READY',
+    hapticsLongStatus: 'READY',
+    hapticsDetails: 'Tap a button; nothing vibrates on load.',
     permissionStatus: 'UNKNOWN',
     permissionDetails:
       'Permission is never requested on load. Tap a button to query or request it.',
@@ -393,4 +482,8 @@ Page<IndexPageData>({
   refreshPrivacy,
   requestPrivacy,
   checkSession,
+  writeClipboardTest,
+  readClipboard,
+  vibrateShort,
+  vibrateLong,
 });
