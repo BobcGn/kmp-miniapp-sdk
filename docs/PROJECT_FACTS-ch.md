@@ -34,6 +34,7 @@
 - 权限生命周期已实现，并通过微信开发者工具与真机验证
 - 隐私授权已实现，并通过自动化检查覆盖
 - 微信会话有效性检查已实现，并通过自动化检查与 Android 真机验证
+- 微信剪贴板读写与短/长震动已实现，并通过自动化检查、开发者工具与 Android 真机验证
 
 构建基线与第一条端到端消费链路均已通过验证。Common layer 包含最小 Host identity、Capability support 与强类型 platform escape-hatch contracts。Production code 通过 Host 与 adapter boundaries 调用 typed 微信 Storage contracts，完整 Storage 链路已通过真实宿主验证。
 
@@ -126,7 +127,7 @@ Kotlin/JS platform variants 及其传递依赖由 Gradle 在依赖解析期间�
 - `host/wechat/runtime`：宿主 lifecycle 和 runtime integration
 - `export`：宿主无关的 Kotlin 到 JavaScript / TypeScript public boundary
 
-`export` 边界包含版本 facade、Promise-based Storage functions、微信专属 login bootstrap、Promise-based HTTP transport function、供消费者转发的 App 与 Page lifecycle 入口、微信导航函数、capability support 与 runtime inspection 查询、权限生命周期函数，以及微信专属的会话检查。Interop 边界包含 `login`、`showToast`、Storage、`request`、三个页面栈导航方法，以及带 presence guard 的 runtime inspection 成员的 internal 契约；production adapters 通过 `WechatHost` 调用 login、Storage、HTTP transport、导航、runtime inspection 与权限生命周期，`showToast` 仍仅为 interop contract。`runtime` 边界包含实现公共 lifecycle capability 的 `WechatAppLifecycle`、跟踪 runtime 报告为已显示页面的 `WechatPageLifecycle`，以及依据 runtime 报告判定支持状态的能力目录表与 gate。`adapter` 边界另外包含 `WechatPermissionScopes`，这是微信 scope 字符串唯一存在的地方。
+`export` 边界包含版本 facade、Promise-based Storage functions、微信专属 login bootstrap、Promise-based HTTP transport function、供消费者转发的 App 与 Page lifecycle 入口、微信导航函数、capability support 与 runtime inspection 查询、权限生命周期函数、微信专属的会话检查，以及四项微信设备能力函数。Interop 边界包含 `login`、`showToast`、Storage、`request`、三个页面栈导航方法，以及带 presence guard 的 runtime inspection 成员的 internal 契约；production adapters 通过 `WechatHost` 调用 login、Storage、HTTP transport、导航、runtime inspection 与权限生命周期，`showToast` 仍仅为 interop contract。`runtime` 边界包含实现公共 lifecycle capability 的 `WechatAppLifecycle`、跟踪 runtime 报告为已显示页面的 `WechatPageLifecycle`，以及依据 runtime 报告判定支持状态的能力目录表与 gate。`adapter` 边界另外包含 `WechatPermissionScopes`，这是微信 scope 字符串唯一存在的地方。
 
 ## 9. 当前能力
 
@@ -185,6 +186,11 @@ Kotlin/JS platform variants 及其传递依赖由 Gradle 在依赖解析期间�
 - `wx.checkSession` 的 success/fail callback 本身分别映射为 `VALID`/`INVALID`，不解析可能随语言或基础库变化的 `errMsg`。
 - 会话检查只是查询：`INVALID` 结果不会获取 code、不交换 session、不刷新 token、不做任何重试。有效结果只说明微信客户端登录态完好，不代表用户已认证或后端 session 有效。
 - JavaScript / TypeScript facade 暴露 `wechatCheckSession`，使用 `Valid` / `Invalid` union，不依赖 `any`。
+- `WeChatDeviceCapabilities` 命名四项微信专属设备能力：`wechat.clipboard-read`、`wechat.clipboard-write`、`wechat.vibrate-short` 与 `wechat.vibrate-long`。每项独立门控，因为宿主可能只提供其中一个剪贴板方向或一种震动时长。
+- `WechatClipboard` 读写系统剪贴板文本。空剪贴板读取为空字符串；缺失或非字符串的答案映射为 `InvalidResponse`；两个方向都不保存读取到的内容。
+- `WechatHaptics` 把短震动与长震动实现为两次独立调用。二者都不报告强度，也都不声称设备发生了震动。
+- 剪贴板 API 以基础库 1.1.0 为最低版本、震动 API 以 1.2.0 为最低版本，且各自都通过 `wx.canIUse` 探测。`wx.vibrateShort` 的可选 `type` 字段（heavy / medium / light，基础库 2.13.0）有意未建模。
+- JavaScript / TypeScript facade 暴露不依赖 `any` 的 `wechatGetClipboardText`、`wechatSetClipboardText`、`wechatVibrateShort` 与 `wechatVibrateLong`。
 - 自动测试覆盖版本比较与解析、四种支持状态、版本边界本身、版本不可读时的回退、完全无法探测的宿主、runtime 只读取一次，以及 `UnsupportedCapability` guard。
 - 微信开发者工具已验证前台 lifecycle 状态、页面 route，以及 `navigateTo` → `redirectTo` → `navigateBack` 的完整页面栈路径。
 - [TESTING-ch.md](TESTING-ch.md) 记录了两层测试体系、各层可用的 fake，以及可复现的真实宿主检查清单。
@@ -223,7 +229,8 @@ Kotlin/JS platform variants 及其传递依赖由 Gradle 在依赖解析期间�
 | 在 `examples/wechat-miniprogram` 执行 `npm run smoke` | VERIFIED |
 | 在 `examples/wechat-miniprogram` 执行 `npm run typecheck` | VERIFIED |
 | 微信开发者工具加载、console、页面渲染、lifecycle 与导航 | VERIFIED — 用户确认前台状态、页面 route 与三种导航操作验收通过 |
-| 微信真机调试（Android） | VERIFIED — OnePlus PLQ110 / Android 36 / 微信 8.0.76；Runtime Detection、Storage、Authentication Bootstrap、HTTP Request 与三项导航操作均 PASS，`platform=android` |
+| 微信真机调试（Android） | VERIFIED — OnePlus PLQ110 / Android 36 / 微信 8.0.76 / 基础库 3.17.3 [1641]；Runtime Detection、Storage、Authentication Bootstrap、HTTP Request、Clipboard 读写与短/长震动均 PASS，`platform=android` |
+| 微信开发者工具中的 Clipboard | VERIFIED — 基础库 3.17.2；写入 PASS，读回 `matched=true` |
 | 微信开发者工具中的 Permission | VERIFIED — 基础库 3.17.2；卡片显示 `Granted` 与 `Denied`，设置页返回的是宿主的决定 |
 | 真机中的 Permission | VERIFIED — 完整走通 `Granted` → `Denied` → `DENIED` → `Granted`，拒绝后未出现第二次弹窗 |
 
@@ -232,6 +239,8 @@ Kotlin/JS platform variants 及其传递依赖由 Gradle 在依赖解析期间�
 隐私授权 capability 通过微信 adapter 适配 typed `wx.getPrivacySetting` 与 `wx.requirePrivacyAuthorize`，并报告宿主对其自身隐私协议的要求。它与权限有意分离：二者不共享任何状态，隐私拒绝是 `MiniAppException.PrivacyAuthorizationRequired` 而不是 `PermissionDenied`。可查询的要求、一次尝试的结果与 SDK 错误分别建模。Kotlin/JS、fake-host、CommonJS 与 TypeScript 自动检查均已通过。真实宿主隐私验收尚未进行：该要求取决于小程序的后台隐私配置与用户，只有开发者工具与真机运行才能确认。无论哪种情况都拿不到「用户已同意」的证明，因为宿主在用户已同意与小程序未声明任何收集类型时都会报告无需授权。
 
 微信会话检查通过认证链路适配 typed `wx.checkSession`，报告 `WeChatSessionState.VALID` 或 `INVALID`。它有意保持微信专属，而不是一个宿主无关的认证概念；它只是查询：结果为失效时不会获取 code、不交换 session、不刷新 token。其结果只说明微信自身的客户端登录态仍然完好——不代表用户已认证、不代表消费者后端 session 有效、也不代表任何凭证仍被接受。success/fail callback 按微信 contract 分别映射为 `VALID`/`INVALID`，不解析 raw `errMsg`。自动化检查已通过；Android 真机已验证取得新 code 前为 `INVALID`、`wx.login` 成功后为 `VALID`。
+
+微信剪贴板与震动 capability 适配 typed `wx.getClipboardData`、`wx.setClipboardData`、`wx.vibrateShort` 与 `wx.vibrateLong`。它们是微信专属设备能力，而不是宿主无关能力，因此各自以命名空间化的 key 独立门控（`wechat.clipboard-read`、`wechat.clipboard-write`、`wechat.vibrate-short`、`wechat.vibrate-long`），并通过 platform escape hatch 可达。剪贴板读取原样返回文本（包括空字符串），缺失或非字符串的答案报告为 `InvalidResponse` 而不是被强制转换。震动调用成功只表示微信接受了该调用；真机震动由握持设备的测试者确认。Kotlin/JS、fake-host、CommonJS 与 TypeScript 自动检查均已通过。开发者工具与 Android 真机已验证剪贴板读写，Android 真机已验证短震动与长震动。
 
 运行时能力检测已于 2026-09-15 完成开发者工具与真机验收。开发者工具在基础库 3.17.2 下报告 `baseLibrary=3.17.2, platform=devtools, runtime-detection=Supported, storage=Supported, ungated=Unsupported`；Android 真机（OnePlus PLQ110、Android 36、微信 8.0.76）报告同样的状态而 `platform=android`。开发者工具当前可选的最低调试基础库为 2.21.4，无法在该环境中构造低于 2.20.1 的宿主，因此 `VersionDependent` 没有真实宿主截图；该边界由 `HostVersion` 单元测试、Fake Host 契约检查、边界测试与已执行的变异探针覆盖。3.17.2 是当前主要兼容验证版本，不是已验证的最低支持版本。权限生命周期已于 2026-09-15 完成开发者工具（基础库 3.17.2）与 Android 真机验收，覆盖 `Granted`、`Denied`、设置页返回以及拒绝后的再次请求。`NotRequested` 无法在所用账号上复现，改由自动化测试覆盖。当前只映射麦克风权限。
 

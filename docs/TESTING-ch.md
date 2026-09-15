@@ -95,6 +95,7 @@ cd examples/wechat-miniprogram && npm run smoke && npm run typecheck
 | Permission | `Permission Lifecycle` 卡片在下述步骤后显示权限名与状态 | `[kmp-miniapp-sdk] permission query: PASS permission=microphone, state=…` |
 | Privacy | `Privacy Authorization` 卡片显示宿主的要求与其协议名 | `[kmp-miniapp-sdk] privacy query: PASS requirement=…, contract=…` |
 | Session check | `WeChat Session Check` 卡片显示 `VALID`、`INVALID` 或 `FAIL` | `[kmp-miniapp-sdk] session check: PASS check #N, state=Valid\|Invalid` |
+| Clipboard 与震动 | `Clipboard and Haptics` 卡片的写入、读取、短震动、长震动四项均为 `PASS` | `[kmp-miniapp-sdk] clipboard write: PASS`、`clipboard read: PASS matched=true`、`haptics short: PASS`、`haptics long: PASS` |
 | Storage | `Storage verification: PASS` | `[kmp-miniapp-sdk] storage: PASS first=first, overwritten=second, missing=null` |
 | Client login code | `Client login code: PASS` | `[kmp-miniapp-sdk] auth bootstrap: PASS codeReceived=true, length=<正整数>` |
 | Network | `Network verification: PASS` | `[kmp-miniapp-sdk] network: PASS status=200, bytes=<正整数>` |
@@ -164,7 +165,18 @@ cd examples/wechat-miniprogram && npm run smoke && npm run typecheck
 
 `wx.checkSession` 的 fail callback 按宿主契约就是登录态失效，因此页面报告 `INVALID`，并且不依赖 `errMsg` 的语言或具体文本。只有 API 不存在或调用无法注册时才会拒绝 Promise，而不会伪装成 `VALID`。
 
-11. 记录你观察到了哪些检查项、哪些没有观察到。只有在某项 capability 完成真实宿主运行后，才会在 [PROJECT_FACTS-ch.md](PROJECT_FACTS-ch.md) 中被记录为已通过宿主验证。
+11. 验证剪贴板与震动。页面加载期间不会触碰剪贴板或震动器，因此以下每一步都由点击触发。剪贴板步骤只与页面自己写入的固定测试字符串比较；页面从不显示或记录剪贴板里可能存在的其他内容，那属于用户。
+
+| 步骤 | 点击 | 预期 |
+| --- | --- | --- |
+| 1 | `Write test text` | `[kmp-miniapp-sdk] clipboard write: PASS`，卡片显示 `Clipboard write: PASS` |
+| 2 | `Read clipboard` | `[kmp-miniapp-sdk] clipboard read: PASS matched=true`，卡片显示 `Clipboard read: PASS`。不匹配时打印 `matched=false`，且不暴露任何一侧的内容 |
+| 3 | `Short vibration` | `[kmp-miniapp-sdk] haptics short: PASS` |
+| 4 | `Long vibration` | `[kmp-miniapp-sdk] haptics long: PASS` |
+
+第 3、4 步必须在真机上执行。Console 行只记录微信接受了该调用；震动是否真的被感知，要由握持设备的人确认，任何自动化检查都无法证明。`getClipboardData` 不属于 `app.json.requiredPrivateInfos` 允许的字段，不应在该数组中声明。
+
+12. 记录你观察到了哪些检查项、哪些没有观察到。只有在某项 capability 完成真实宿主运行后，才会在 [PROJECT_FACTS-ch.md](PROJECT_FACTS-ch.md) 中被记录为已通过宿主验证。
 
 Storage 检查会写入专用测试 key、验证覆盖、删除该 key，并确认 missing key 读取为 `null`。Network 检查会向 `https://example.com/` 发起 `GET`，并报告 status code 与 body 长度；验证其他 host 时请修改示例中的 `networkUrl` 常量。
 

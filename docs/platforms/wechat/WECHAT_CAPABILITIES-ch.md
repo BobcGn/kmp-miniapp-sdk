@@ -53,6 +53,8 @@ SDK 从 `wx.getAppBaseInfo` 读取基础库版本，并在早于它的基础库�
 - [微信 `RequestTask.abort` 文档](https://developers.weixin.qq.com/miniprogram/dev/api/network/request/RequestTask.abort.html)：基础库 1.4.0 起支持。
 - [微信 `wx.getSetting` 文档](https://developers.weixin.qq.com/miniprogram/dev/api/open-api/setting/wx.getSetting.html) 与 [`wx.authorize` 文档](https://developers.weixin.qq.com/miniprogram/dev/api/open-api/authorize/wx.authorize.html)：基础库 1.2.0 起支持。
 - [微信 `wx.openSetting` 文档](https://developers.weixin.qq.com/miniprogram/dev/api/open-api/setting/wx.openSetting.html)：基础库 1.1.0 起支持，且自基础库 2.3.0 起只能由用户手势调用。
+- [微信 `wx.getClipboardData` 文档](https://developers.weixin.qq.com/miniprogram/dev/api/device/clipboard/wx.getClipboardData.html) 与 [`wx.setClipboardData` 文档](https://developers.weixin.qq.com/miniprogram/dev/api/device/clipboard/wx.setClipboardData.html)：基础库 1.1.0 起支持。
+- [微信 `wx.vibrateShort` 文档](https://developers.weixin.qq.com/miniprogram/dev/api/device/vibrate/wx.vibrateShort.html) 与 [`wx.vibrateLong` 文档](https://developers.weixin.qq.com/miniprogram/dev/api/device/vibrate/wx.vibrateLong.html)：基础库 1.2.0 起支持。`wx.vibrateShort` 文档中的 `type` 字段（heavy / medium / light）自基础库 2.13.0 起支持，有意未建模。
 - [微信 `wx.checkSession` 文档](https://developers.weixin.qq.com/miniprogram/dev/api/open-api/login/wx.checkSession.html)：未标注最低基础库，因此该项依靠 `wx.canIUse` 而不是记录下来的数字。该文档把 success/fail 分别定义为登录态有效/过期，因此 adapter 使用 callback 本身，不解析 `errMsg`。
 
 标为 `Planned` 的条目在上述 production source 和 export surface 中没有实现；对应 Tracking 只表示缺口已进入 Multica，不表示能力存在。
@@ -89,8 +91,10 @@ SDK 从 `wx.getAppBaseInfo` 读取基础库版本，并在早于它的基础库�
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | Location | `Planned` | `getLocation`;按需评估 choose/open location | Location permission + Privacy | Not established | 尚无 | 尚无 interop、adapter、export 或真机证据。 | BOB-66 |
 | Scanner | `Planned` | `scanCode` | Camera/Privacy | Not established | 尚无 | 取消必须独立于权限拒绝和宿主失败。 | BOB-61 |
-| Clipboard | `Planned` | clipboard get/set | 按宿主规则 | Not established | 尚无 | 尚未实现。 | BOB-65 |
-| Haptics | `Planned` | short/long vibration | 真机硬件 | Not established | 尚无 | 必须补 RealDevice 证据。 | BOB-65 |
+| Clipboard Read | `Stable` | `getClipboardData` | 用户手势；微信开发者工具需有剪贴板访问权限 | 1.1.0 | Unit、Contract、Node、DeveloperTools、RealDevice | 原样返回剪贴板文本（含空字符串）；缺失或非字符串的答案映射为 `InvalidResponse`。SDK 不保存也不记录读取到的内容。`getClipboardData` 不属于 `requiredPrivateInfos` 允许的字段。 | BOB-65 |
+| Clipboard Write | `Stable` | `setClipboardData` | 用户手势；微信开发者工具需有剪贴板访问权限 | 1.1.0 | Unit、Contract、Node、DeveloperTools、RealDevice | 与读取分别门控，因为宿主可能只提供其中一个方向。真实宿主已验证写入后读回匹配。 | BOB-65 |
+| Short Vibration | `Stable` | `vibrateShort` | 用户手势；具备震动硬件的设备 | 1.2.0 | Unit、Contract、Node、RealDevice | Android 真机调用 PASS，且测试者确认感知短震动。可选 `type` 字段（2.13.0）未建模。 | BOB-65 |
+| Long Vibration | `Stable` | `vibrateLong` | 用户手势；具备震动硬件的设备 | 1.2.0 | Unit、Contract、Node、RealDevice | 与短震动是独立宿主 API。Android 真机调用 PASS，且测试者确认感知长震动。 | BOB-65 |
 | Media | `Planned` | `chooseMedia` | Album/Camera permission + Privacy | Not established | 尚无 | 不包含 Camera 或 Video 原生组件。 | BOB-63 |
 | File System | `Planned` | `getFileSystemManager` read/write/access/remove | 小程序文件沙箱 | Not established | 尚无 | P1 只要求基础文件能力。 | BOB-72 |
 | Bluetooth / BLE | `Planned` | adapter/discovery/event/connect APIs | Bluetooth permission + Privacy + RealDevice | Not established | 尚无 | 计划用 PoC 验证 Flow、取消和 listener cleanup；尚无实现，不能标为 Experimental。 | BOB-69 |

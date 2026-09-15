@@ -55,6 +55,8 @@
 | Permission | Unit + Contract + Node + DeveloperTools + RealDevice | 已完成 `buildMiniAppSdk`；具备一台可手动改变权限决定的宿主 | 运行测试；打开 index，使用 Permission Lifecycle 卡片：刷新 → 请求 → 在宿主自身设置中关闭 → 刷新 → 再次请求 → 打开设置并重新允许 | 允许后为 `Granted`；关闭后为 `Denied`；再次请求报告 `DENIED` 且不出现第二次弹窗；设置页返回后重新为 `Granted` | `WDT-2026-09-15-D`；`DEVICE-2026-09-15-B`；见 PROJECT_FACTS | 每次权限 interop、adapter、scope 映射或 export 变更 |
 | Privacy | Unit + Contract + Node + DeveloperTools + RealDevice | 已完成 `buildMiniAppSdk`；小程序已在 MP 后台隐私指引中声明收集类型 | 运行测试；打开 index，使用 Privacy Authorization 卡片：刷新后请求；清除该账号的同意记录后再重复一次 | 卡片先显示 `REQUIRED` 与宿主返回的协议名，同意后显示 `NOT_REQUIRED`；拒绝会报告为 `REFUSED` 且要求保持存在 | Pending | 每次隐私 interop、adapter 或 export 变更 |
 | Check Session | Unit + Contract + Node + DeveloperTools + RealDevice | 已完成 `buildMiniAppSdk`；具备一台可清除登录态的宿主 | 运行测试；打开 index 读取 WeChat Session Check 卡片；清除登录态后重新加载以看到 `Invalid`；取得新的 login code 后再次检查得到 `Valid` | 卡片在取得 code 前报告 `INVALID`、之后报告 `VALID`，且 Console 行一致 | Verified 2026-09-15 — Android、OnePlus PLQ110、微信 8.0.76、基础库 3.17.3 [1641] | 每次会话检查 interop、adapter 或 export 变更 |
+| Clipboard | Unit + Contract + Node + DeveloperTools + RealDevice | 已完成 `buildMiniAppSdk`；具备剪贴板访问权限 | 运行测试；打开 index，使用 Clipboard and Haptics 卡片：先写入测试文本，再读回 | `clipboard write: PASS` 与 `clipboard read: PASS matched=true`；页面两项均为 `PASS` | Verified 2026-09-15 — DeveloperTools 3.17.2；Android、OnePlus PLQ110、微信 8.0.76、基础库 3.17.3 [1641] | 每次剪贴板 interop、adapter 或 export 变更 |
+| Haptics | Unit + Contract + Node + RealDevice | 具备震动硬件的设备 | 运行测试；打开 index，依次点击 `Short vibration` 与 `Long vibration` | Console 出现 `haptics short: PASS` 与 `haptics long: PASS`，且测试人员实际感受到两种震动 | Verified 2026-09-15 — Android、OnePlus PLQ110、微信 8.0.76、基础库 3.17.3 [1641]；短/长震动均感知 | 每次震动 interop、adapter 或 export 变更 |
 | Platform Escape Hatch | Unit + Node + capability consumer 的宿主等级 | 使用 `WechatPlatformApi` | 运行相关测试，并由具体微信专属能力执行宿主验证 | 微信 API 可达且未被描述为通用 capability | 由 Auth、Page Lifecycle、Navigation 间接覆盖 | 每次 platform API surface 变更 |
 
 `VersionDependent` 无法在开发者工具中产出：其可选的最低调试基础库为 2.21.4，高于 Runtime Detection 记录的 2.20.1 边界。该状态仅由自动化测试覆盖。这属于验证环境限制，不是未实现功能。
@@ -78,8 +80,6 @@
 
 | Tracking | Capability | Minimum Verification |
 | --- | --- | --- |
-| BOB-65 | Clipboard | Unit + Contract + DeveloperTools；真机抽查读写。 |
-| BOB-65 | Haptics | Unit + RealDevice；短震动和长震动分别验证。 |
 | BOB-72 | File System | Unit + Contract + DeveloperTools；真机抽查沙箱路径、编码和删除。 |
 | BOB-66 | Location | Unit + Contract + RealDevice；覆盖权限、隐私、成功与拒绝。 |
 | BOB-61 | Scanner | Unit + Contract + RealDevice；覆盖二维码/条码、取消和权限/隐私。 |

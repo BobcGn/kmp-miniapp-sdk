@@ -32,7 +32,7 @@ npm run typecheck
 
 ## WeChat Developer Tools
 
-Import this directory as a Mini Program project and compile it. The index page must display `0.1.0-SNAPSHOT`, a `FOREGROUND` lifecycle state with a page route, the base-library version, and a `PASS` status for Runtime detection, Storage, the client login code, and the network check. The console must contain:
+Import this directory as a Mini Program project and compile it. The clipboard and vibration card needs a device for the vibration checks, and the clipboard checks need clipboard access. The index page must display `0.1.0-SNAPSHOT`, a `FOREGROUND` lifecycle state with a page route, the base-library version, and a `PASS` status for Runtime detection, Storage, the client login code, and the network check. The console must contain:
 
 ```text
 [kmp-miniapp-sdk] sdkVersion: 0.1.0-SNAPSHOT
@@ -41,11 +41,17 @@ Import this directory as a Mini Program project and compile it. The index page m
 [kmp-miniapp-sdk] auth bootstrap: PASS codeReceived=true, length=<positive integer>
 [kmp-miniapp-sdk] network: PASS status=200, bytes=<positive integer>
 [kmp-miniapp-sdk] session check: PASS check #N, state=Valid
+[kmp-miniapp-sdk] clipboard write: PASS
+[kmp-miniapp-sdk] clipboard read: PASS matched=true
+[kmp-miniapp-sdk] haptics short: PASS
+[kmp-miniapp-sdk] haptics long: PASS
 ```
 
 The network check issues a `GET` to `https://example.com/`. WeChat requires that host to be listed in the request domain whitelist, or the project must be compiled with domain checking disabled. Change the `networkUrl` constant to verify a different endpoint.
 
 Navigation needs interaction rather than a single page load. Tapping through the second and third pages prints `[kmp-miniapp-sdk] navigation: PASS <action>` for `wx.navigateTo`, `wx.redirectTo`, and `wx.navigateBack`; the tap sequence is in the checklist.
+
+The Clipboard and Haptics card writes a fixed, non-sensitive test string, reads the clipboard back to compare, and triggers the short and long vibrations. Nothing touches the clipboard or the vibrator while the page loads; every action follows a tap. The read only ever compares against the string this page wrote, and the page never displays or logs whatever else the clipboard holds. A successful vibration line means WeChat accepted the call, not that a vibration was felt — that can only be checked on a real device. `getClipboardData` is not an allowed `app.json.requiredPrivateInfos` entry, so the example does not declare it there.
 
 The WeChat Session Check card asks WeChat whether its own client login state is still usable. It runs once while the page loads, deliberately before the login bootstrap: acquiring a code refreshes the client login state and would hide an expired session, so the startup order is check first, acquire later. A valid answer is not an authenticated user or a backend session, and an invalid one acquires no code by itself.
 

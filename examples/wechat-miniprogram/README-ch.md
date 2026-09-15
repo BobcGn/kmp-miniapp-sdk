@@ -32,7 +32,7 @@ npm run typecheck
 
 ## 微信开发者工具
 
-将本目录作为小程序项目导入并编译。index 页面必须显示 `0.1.0-SNAPSHOT`、`FOREGROUND` 生命周期状态与页面 route、基础库版本，以及 Runtime detection、Storage、Client login code、Network 四项 `PASS`。Console 必须包含：
+将本目录作为小程序项目导入并编译。剪贴板与震动卡片需要真机才能验证震动，剪贴板检查需要剪贴板访问权限。index 页面必须显示 `0.1.0-SNAPSHOT`、`FOREGROUND` 生命周期状态与页面 route、基础库版本，以及 Runtime detection、Storage、Client login code、Network 四项 `PASS`。Console 必须包含：
 
 ```text
 [kmp-miniapp-sdk] sdkVersion: 0.1.0-SNAPSHOT
@@ -41,11 +41,17 @@ npm run typecheck
 [kmp-miniapp-sdk] auth bootstrap: PASS codeReceived=true, length=<正整数>
 [kmp-miniapp-sdk] network: PASS status=200, bytes=<正整数>
 [kmp-miniapp-sdk] session check: PASS check #N, state=Valid
+[kmp-miniapp-sdk] clipboard write: PASS
+[kmp-miniapp-sdk] clipboard read: PASS matched=true
+[kmp-miniapp-sdk] haptics short: PASS
+[kmp-miniapp-sdk] haptics long: PASS
 ```
 
 Network 检查会向 `https://example.com/` 发起 `GET`。微信要求该 host 已列入 request domain 白名单，或编译时关闭域名校验。验证其他 endpoint 时请修改 `networkUrl` 常量。
 
 导航需要交互，无法只靠一次页面加载验证。依次点击第二、第三页会为 `wx.navigateTo`、`wx.redirectTo`、`wx.navigateBack` 分别打印 `[kmp-miniapp-sdk] navigation: PASS <action>`；点击顺序见检查清单。
+
+Clipboard and Haptics 卡片会写入一段固定的非敏感测试文本、读回剪贴板进行比对，并触发短震动与长震动。页面加载期间不会触碰剪贴板或震动器，每个动作都由点击触发。读取只与页面自己写入的字符串比较，页面从不显示或记录剪贴板里可能存在的其他内容。震动日志行只表示微信接受了该调用，不代表震动被感知——那只能在真机上确认。`getClipboardData` 不属于 `app.json.requiredPrivateInfos` 允许的字段，示例不声明它。
 
 WeChat Session Check 卡片向微信询问其自身的客户端登录态是否仍然可用。它在页面加载时执行一次，且刻意位于 login bootstrap 之前：获取 code 会刷新客户端登录态并掩盖已过期的会话，因此启动顺序是先检查、后获取。有效结果不是已认证用户或后端 session，失效结果本身也不会获取 code。
 

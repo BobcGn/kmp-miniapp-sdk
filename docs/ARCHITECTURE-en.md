@@ -95,6 +95,12 @@ A refusal is an outcome rather than an error. Declining and dismissing enter the
 
 The precondition point queries the host and never shows anything: only a consumer can prompt, and only from a user gesture.
 
+### Device capabilities
+
+A device capability reaches the user through the platform escape hatch, not through a common capability, unless its semantics are genuinely shared across hosts. The clipboard and the two vibration lengths follow that rule: `WechatClipboard` and `WechatHaptics` live under `host/wechat`, and the capability catalogue gates them individually under namespaced keys, because a host may expose one clipboard direction or one vibration length without the other.
+
+A device call resolving means the host accepted and performed it. It never means more than that: a vibration in particular can only be confirmed by someone holding the device, so nothing in the SDK reports one as having been felt.
+
 ## 4. JS Interop Boundary
 
 JavaScript-specific constructs such as `external`, `dynamic`, and `js()` may exist only in `jsMain`. Raw platform contracts are restricted to `jsMain/.../host/wechat/interop`.

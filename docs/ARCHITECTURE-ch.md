@@ -95,6 +95,12 @@ Page 级生命周期与页面栈导航不是 capability。页面、页面 route 
 
 前置条件判定点只查询宿主，从不展示任何界面：只有消费者能弹窗，且必须在用户手势中。
 
+### 设备能力
+
+设备能力通过 platform escape hatch 到达用户，而不是通过公共 capability——除非其语义确实跨宿主共享。剪贴板与两种震动时长遵循该规则：`WechatClipboard` 与 `WechatHaptics` 位于 `host/wechat` 下，能力目录表以命名空间化的 key 逐项门控，因为宿主可能只提供其中一个剪贴板方向或一种震动时长。
+
+设备调用成功只表示宿主接受并执行了它，仅此而已：尤其是震动，只能由实际握持设备的人确认，因此 SDK 中没有任何部分把震动报告为「已被感知」。
+
 ## 4. JS Interop 边界
 
 `external`、`dynamic` 和 `js()` 等 JavaScript-specific constructs 只能存在于 `jsMain`。原始 platform contracts 限制在 `jsMain/.../host/wechat/interop`。

@@ -95,6 +95,7 @@ The following procedure is the DeveloperTools checklist for currently implemente
 | Permission | The `Permission Lifecycle` card shows the permission name and its state after the steps below | `[kmp-miniapp-sdk] permission query: PASS permission=microphone, state=…` |
 | Privacy | The `Privacy Authorization` card shows the host's requirement and its contract name | `[kmp-miniapp-sdk] privacy query: PASS requirement=…, contract=…` |
 | Session check | The `WeChat Session Check` card shows `VALID`, `INVALID`, or `FAIL` | `[kmp-miniapp-sdk] session check: PASS check #N, state=Valid\|Invalid` |
+| Clipboard and haptics | The `Clipboard and Haptics` card shows `PASS` for write, read, short vibration, and long vibration | `[kmp-miniapp-sdk] clipboard write: PASS`, `clipboard read: PASS matched=true`, `haptics short: PASS`, `haptics long: PASS` |
 | Storage | `Storage verification: PASS` | `[kmp-miniapp-sdk] storage: PASS first=first, overwritten=second, missing=null` |
 | Client login code | `Client login code: PASS` | `[kmp-miniapp-sdk] auth bootstrap: PASS codeReceived=true, length=<positive integer>` |
 | Network | `Network verification: PASS` | `[kmp-miniapp-sdk] network: PASS status=200, bytes=<positive integer>` |
@@ -164,7 +165,18 @@ Step 5 is one state, not two: WeChat publishes no field that distinguishes decli
 
 Under the host contract, the `wx.checkSession` failure callback means the login state is invalid, so the page reports `INVALID` without depending on the language or exact text of `errMsg`. Only a missing API or a call that cannot be registered rejects the Promise rather than masquerading as `VALID`.
 
-11. Record which checks you observed and which you did not. A capability is recorded as host-verified in [PROJECT_FACTS-en.md](PROJECT_FACTS-en.md) only after a real-host run for that capability.
+11. Verify the clipboard and haptics. Nothing touches the clipboard or the vibrator while the page loads, so every step follows a tap. The clipboard steps only ever compare against the fixed test string this page wrote; the page never displays or logs whatever else the clipboard holds, because that is the user's.
+
+| Step | Tap | Expected |
+| --- | --- | --- |
+| 1 | `Write test text` | `[kmp-miniapp-sdk] clipboard write: PASS`, and the card shows `Clipboard write: PASS` |
+| 2 | `Read clipboard` | `[kmp-miniapp-sdk] clipboard read: PASS matched=true`, and the card shows `Clipboard read: PASS`. A mismatch prints `matched=false` without revealing either value |
+| 3 | `Short vibration` | `[kmp-miniapp-sdk] haptics short: PASS` |
+| 4 | `Long vibration` | `[kmp-miniapp-sdk] haptics long: PASS` |
+
+Steps 3 and 4 must be run on a real device. The console line records only that WeChat accepted the call; whether a vibration was actually felt is for the person holding the device to confirm, and no automated check can show it. `getClipboardData` is not an allowed `app.json.requiredPrivateInfos` entry and must not be declared in that array.
+
+12. Record which checks you observed and which you did not. A capability is recorded as host-verified in [PROJECT_FACTS-en.md](PROJECT_FACTS-en.md) only after a real-host run for that capability.
 
 The Storage check writes a dedicated test key, verifies overwrite, removes it, and confirms that the missing key reads as `null`. The network check issues a `GET` to `https://example.com/` and reports the status code and body length; point the example's `networkUrl` constant at any reachable HTTPS endpoint when verifying a different host.
 
