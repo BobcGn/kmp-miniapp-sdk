@@ -60,6 +60,10 @@ npm run typecheck
 [kmp-miniapp-sdk] media capability: PASS wechat.choose-media=Supported
 [kmp-miniapp-sdk] media choose: PASS count=1, typesValid=true, metadataValid=true
 [kmp-miniapp-sdk] media choose: INTERRUPTED cause=indeterminate
+[kmp-miniapp-sdk] subscription capability: PASS wechat.request-subscribe-message=Supported
+[kmp-miniapp-sdk] subscription request: NOT CONFIGURED templateCount=0
+[kmp-miniapp-sdk] subscription request: PASS accepted=1, otherStatuses=0, signals=accept
+[kmp-miniapp-sdk] subscription request: FAIL reason=HostFailure, signal=fail-cancel
 ```
 
 Network 检查会向 `https://example.com/` 发起 `GET`。微信要求该 host 已列入 request domain 白名单，或编译时关闭域名校验。验证其他 endpoint 时请修改 `networkUrl` 常量。
@@ -83,6 +87,8 @@ Location 卡片是唯一由能力自身强制前置条件的卡片。`Check loca
 Scanner 卡片打开微信自身的扫码界面，只报告返回结果而从不显示扫码内容。`Check scanner capability` 报告门控；`Scan code` 允许相册入口，`Scan from camera only` 设置 `onlyFromCamera=true`。真机证明主动取消和系统相机权限阻止界面启动产生相同信号，因此二者都打印 `INTERRUPTED cause=indeterminate`，不声称是用户取消或权限拒绝；其他失败打印 `FAIL`。页面从不显示或记录解码内容、`rawData`、字符集或图片路径，也不为扫码建立未经证实的 SDK 权限前置条件。
 
 Media 卡片打开微信自身的选择界面，只报告返回结果而从不显示所选内容。`Check media capability` 报告门控对 `wechat.choose-media` 的判定；四个选择按钮分别打开图片、视频、任一类型，以及仅相机。页面加载期间不会打开选择界面。Console 只打印文件数量、类别是否被识别及元数据是否可用；不会记录所选媒体、base64、文件名、完整临时路径或原始失败对象。开发者工具的精确关闭信号（`chooseMedia:cancel`）与 Android 的关闭信号（`chooseMedia:fail cancel`）都打印 `INTERRUPTED cause=indeterminate`；其他失败只打印安全的 SDK 错误名与诊断类别。媒体选择不请求任何 SDK 权限。宿主返回的路径是临时资源，如需在本次运行后继续使用，应复制到调用方拥有的存储中。
+
+Subscription Message 卡片请微信把消息模板呈现给用户。`Check subscription capability` 报告门控对 `wechat.request-subscribe-message` 的判定；`Request subscription` **只从该按钮触发**，因为微信要求用户手势，并且只有在本地配置了测试模板时才会执行。模板 ID 属于本小程序的账号，因此仓库里不写入任何真实值：卡片中的列表在仓库中为空，页面在本地粘贴你自己的测试 ID 之前会报告 `NOT CONFIGURED` 且完全不调用宿主，页面也从不显示或记录 ID。Console 只打印计数与封闭的状态标签（`accept`、`reject`、`ban`、`filter` 或 `other`），从不打印原始答案。本 SDK 只识别 `accept`，因为可离线来源没有确立其他取值；其他非空白状态原样保留在 `hostStatus`。缺少、多出、空白或非文本答案均无效。在真机运行确立精确的关闭信号之前，失败保持为 `HostFailure`，页面只打印封闭的诊断标签，从不打印原始错误。同意订阅是订阅状态，绝不表示消息已发送或已送达。详见 [../../docs/DEVELOPMENT-ch.md](../../docs/DEVELOPMENT-ch.md) 的订阅消息一节。
 
 Node 与 TypeScript 检查不能替代真实宿主验证。[../../docs/TESTING-ch.md](../../docs/TESTING-ch.md) 是权威检查清单与两层测试模型的来源。
 

@@ -111,6 +111,10 @@ The host's own interface can also be the capability itself. Scanning is that cas
 
 Media selection is the second such case, and it adds one boundary of its own: what the host returns are temporary resources. The SDK reports the paths it was given and keeps no copy, so it makes no claim about how long they live and copies nothing on the caller's behalf; a caller that needs the media later owns that decision. The request model follows the same rule as every other capability — the SDK validates what WeChat states exactly, such as the required media type and the documented duration range, and leaves what depends on the running host, such as how many files it will accept, to the host.
 
+Subscription requests add a different kind of boundary: one where the host's own vocabulary could not be established. The SDK names the statuses it can evidence and preserves every other one verbatim rather than mapping it onto a status it did not observe, which is the same shape the scan-format and media-kind vocabularies take — the difference here is only how little could be named. That is a deliberate consequence of the rule that the SDK does not encode facts it cannot cite: an unverified vocabulary produces a narrow recognized set and a wide preserved one, never a guess.
+
+A capability can also require something of the caller rather than of the host. A subscription request is only valid after a user gesture, and the SDK cannot manufacture one, so it never triggers the request itself and never retries a refusal that followed none; the requirement is documented on the capability and enforced by leaving the trigger entirely to the caller.
+
 A device call resolving means the host accepted and performed it. It never means more than that: a vibration in particular can only be confirmed by someone holding the device, so nothing in the SDK reports one as having been felt.
 
 ## 4. JS Interop Boundary

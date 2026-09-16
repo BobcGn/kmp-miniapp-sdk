@@ -26,7 +26,7 @@
 
 `Minimum Host Version` 记录提供该能力的最低基础库，共有三种取值：
 
-- `Resolved at runtime` —— SDK 对该能力做了门控，通过 `wx.canIUse` 询问宿主，而不是与记录下来的数字比较。当前 Storage API、`wx.request`、`wx.getLocation`、`wx.scanCode` 与 `wx.chooseMedia` 的官方入口页没有标注 API 本身的引入版本，因此不从开发机表现反推数字。这是针对当前真正运行的宿主的实时答案，而不是缺失值。
+- `Resolved at runtime` —— SDK 对该能力做了门控，通过 `wx.canIUse` 询问宿主，而不是与记录下来的数字比较。当前 Storage API、`wx.request`、`wx.getLocation`、`wx.scanCode`、`wx.chooseMedia` 与 `wx.requestSubscribeMessage` 的官方入口页没有标注 API 本身的引入版本，因此不从开发机表现反推数字。这是针对当前真正运行的宿主的实时答案，而不是缺失值。
 - 版本号 —— 微信有文档记载的边界。仓库只在能够引用来源时才记录。
 - `Not established` —— 尚未确立最低版本，原因或是该能力尚未实现，或是 SDK 未对其做门控。
 
@@ -58,6 +58,7 @@ SDK 从 `wx.getAppBaseInfo` 读取基础库版本，并在早于它的基础库�
 - [微信 `wx.vibrateShort` 文档](https://developers.weixin.qq.com/miniprogram/dev/api/device/vibrate/wx.vibrateShort.html) 与 [`wx.vibrateLong` 文档](https://developers.weixin.qq.com/miniprogram/dev/api/device/vibrate/wx.vibrateLong.html)：基础库 1.2.0 起支持。`wx.vibrateShort` 文档中的 `type` 字段（heavy / medium / light）自基础库 2.13.0 起支持，有意未建模。
 - [微信 `wx.checkSession` 文档](https://developers.weixin.qq.com/miniprogram/dev/api/open-api/login/wx.checkSession.html)：未标注最低基础库，因此该项依靠 `wx.canIUse` 而不是记录下来的数字。该文档把 success/fail 分别定义为登录态有效/过期，因此 adapter 使用 callback 本身，不解析 `errMsg`。
 - 微信开发者工具所带基础库的实测契约（`package.nw/core.wxvpkg`）：`wx.scanCode` 的请求选项 `onlyFromCamera` 与四个请求类别（`barCode`、`qrCode`、`datamatrix`、`pdf417`）；其 success 字段 `result`、`scanType`、`charSet`、`path` 与 `rawData`；其结果格式（`QR_CODE`、`AZTEC`、`CODABAR`、`CODE_39`、`CODE_93`、`CODE_128`、`DATA_MATRIX`、`EAN_8`、`EAN_13`、`ITF`、`MAXICODE`、`PDF_417`、`RSS_14`、`RSS_EXPANDED`、`UPC_A`、`UPC_E`、`UPC_EAN_EXTENSION`、`WX_CODE`、`CODE_25`）；以及其模拟路径与「用户关闭选图弹窗」都会产出的取消消息 `scanCode:cancel`。这属于宿主契约证据而不是文档页面证据，因此本条把取消分类记为限制而不是有文档保证的行为。同一基础库的授权 scope 列表中也存在 `scope.camera`，但其中没有任何内容把它与 `wx.scanCode` 绑定，因此 SDK 不为该能力映射任何权限。
+- 同一基础库中 `wx.requestSubscribeMessage` 的实测契约：其元数据表声明了选项 `tmplIds`，以及以模板 ID 为键、旁边带 `errMsg` 的 success 结果（`"success":{"errMsg":1,"TEMPLATE_ID":1}`）。该 bundle 中**没有该 API 的实现，也没有参数 schema**，因此与上面的 `wx.scanCode`、`wx.chooseMedia` 不同，它没有给出任何逐模板状态取值，也没有给出关闭消息。整个 bundle 中唯一观察到的状态字符串是模拟器订阅弹窗预览载荷里的 `accept`（`WxaSubscribeStatusString:"accept"`），那属于弹窗渲染数据而不是 API 结果。因此只识别这一状态；在真机运行提供证据之前不分类任何关闭形式。
 - 同一基础库中 `wx.chooseMedia` 的实测契约：其参数 schema（`IChooseMediaOption`）把 `mediaType` 标为 required，取值为 `image`、`mix`、`video`；`sourceType` 为 `album`、`camera`；`camera` 为 `back`、`front`；`maxDuration` 为「3s 至 60s，不限制相册」；`count` 未标注上限；`sizeType` 是字符串数组且自身没有 enum。其模拟实现为每个 `tempFiles` 条目给出 `tempFilePath`、`size` 与 `fileType`，仅对视频补充 `duration`、`width`、`height` 与 `thumbTempFilePath`，并把主动关闭报告为 `chooseMedia:cancel`。`scope.writePhotosAlbum` 存在于该基础库的 scope 列表，但其中没有任何内容把它与 `chooseMedia` 绑定；相册保存 API 在本轮未实现，因此该能力不映射任何权限。
 - [微信 `wx.getLocation` 文档](https://developers.weixin.qq.com/miniprogram/dev/api/location/wx.getLocation.html)：`type` 的取值 `wgs84` 与 `gcj02`，SDK 只转发而不解释；以及宿主作答前必须具备的声明 —— `app.json.requiredPrivateInfos`、`permission.scope.userLocation`，以及 MP 后台开启的接口权限。该文档未标注 API 的引入基础库版本，因此该项依靠 `wx.canIUse` 而不是记录下来的数字。[`wx.chooseLocation`](https://developers.weixin.qq.com/miniprogram/dev/api/location/wx.chooseLocation.html) 有意未实现：其当前参数表没有 `cancel` callback，取消会以 `fail` 到达，从而无法与权限拒绝或宿主失败区分。
 
@@ -82,7 +83,7 @@ SDK 从 `wx.getAppBaseInfo` 读取基础库版本，并在早于它的基础库�
 | Check Session | `Stable` | `checkSession` | 无 | Resolved at runtime | Unit、Contract、Node、RealDevice | 报告微信自身客户端登录态是否仍然完好。属微信专属并带命名空间；有效不代表用户已认证、不代表后端 session 或 token。success/fail callback 分别映射为 `Valid`/`Invalid`，不解析 raw `errMsg`。微信该 API 页面未标注最低基础库，因此由 capability gate 探测。Android 真机已验证 `Invalid → wx.login → Valid`。 | BOB-58 |
 | Standard Payment | `Planned` | `requestPayment` | 合法商户、Backend 下单与签名、真机 | Not established | 尚无 | 客户端成功不能作为最终订单事实。 | BOB-59 |
 | Virtual Payment | `Planned` | `requestVirtualPayment` | 平台资格与 Backend | Not established | 尚无 | 必须独立于 Standard Payment。 | BOB-74 |
-| Subscription Message | `Planned` | `requestSubscribeMessage` | 用户主动触发、模板与 Backend | Not established | 尚无 | 微信专属，不是通用 push notification。 | BOB-73 |
+| Subscription Message | `Partial` | `requestSubscribeMessage` | 由调用方提供的用户手势；同一 AppID 后台中真实存在的模板；端到端送达还需要可信后端，属于 `BackendRequired`。没有可确立的权限 | Resolved at runtime | Unit、Contract、Node、RealDevice（部分） | 请宿主把消息模板呈现给用户，并按模板逐条作答。**这是本项目证据最薄的一处：** 已安装基础库声明了选项（`tmplIds`）以及「结果以模板 ID 为键、旁边带 `errMsg`」，但没有该 API 的实现也没有 schema，因此无法核实任何状态词汇或关闭消息。SDK 只识别 `accept`（观察自模拟器弹窗预览载荷，属于渲染数据而不是 API 结果），其余状态一律原样保留。同意是订阅状态，永远不是送达。自动化检查通过；Android 真机已验证 `Supported` 与零模板不调用宿主的保护。缺少有效配置模板时，弹窗结果仍为阻塞。 | BOB-73 |
 | Navigation | `Partial` | `navigateTo`, `redirectTo`, `navigateBack` | 有效页面 route | Not established | Unit, Node, DeveloperTools | 三项操作已验证；`switchTab` 尚未实现。 | BOB-49 |
 | App Lifecycle | `Partial` | consumer-forwarded launch/show/hide | 消费者转发宿主钩子 | Resolved at runtime | Unit, Contract, Node, DeveloperTools | 前台已验证；后台迁移缺 RealDevice 证据。 | BOB-49 |
 | Page Lifecycle | `Partial` | consumer-forwarded show/hide/unload | 消费者转发宿主钩子 | Not applicable | Unit, Node, DeveloperTools | 微信 escape hatch；Page load 未作为公共 capability，见 ADR-0006。 | BOB-49 |

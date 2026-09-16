@@ -100,6 +100,7 @@ The following procedure is the DeveloperTools checklist for currently implemente
 | Location | The `Location` card shows the capability answer, the permission, the privacy requirement, and `PASS` for a position | `[kmp-miniapp-sdk] location capability: PASS wechat.location=…`, `location permission query: PASS state=…`, `location privacy query: PASS requirement=…`, `location: PASS coordinatesValid=true, accuracyValid=true` |
 | Scanner | The `Scanner` card shows the capability answer and `PASS`, `INTERRUPTED`, or `FAIL` for a scan | `[kmp-miniapp-sdk] scanner capability: PASS wechat.scan-code=…`, `scan: PASS resultPresent=true, typeRecognized=true`, `scan: INTERRUPTED cause=indeterminate` |
 | Media | The `Media` card shows the capability answer and `PASS`, `INTERRUPTED`, or `FAIL` for a selection | `[kmp-miniapp-sdk] media capability: PASS wechat.choose-media=…`, `media choose: PASS count=1, typesValid=true, metadataValid=true`, `media choose: INTERRUPTED cause=indeterminate` |
+| Subscription Message | The `Subscription Message` card shows the capability answer and the request's `PASS`, `NOT CONFIGURED`, or `FAIL` | `[kmp-miniapp-sdk] subscription capability: PASS wechat.request-subscribe-message=…`, `subscription request: PASS accepted=N, otherStatuses=N, signals=…`, `subscription request: FAIL reason=HostFailure, signal=…` |
 | Storage | `Storage verification: PASS` | `[kmp-miniapp-sdk] storage: PASS first=first, overwritten=second, missing=null` |
 | Client login code | `Client login code: PASS` | `[kmp-miniapp-sdk] auth bootstrap: PASS codeReceived=true, length=<positive integer>` |
 | Network | `Network verification: PASS` | `[kmp-miniapp-sdk] network: PASS status=200, bytes=<positive integer>` |
@@ -249,7 +250,27 @@ Step 3 proves only that the SDK handed over files the contract can carry, not th
 
 The page reads no media itself, and nothing in the example copies the temporary files anywhere. The paths the host returns belong to the session that produced them, so treat them as short-lived: copy the media to storage you own if it has to outlive the run.
 
-16. Record which checks you observed and which you did not. A capability is recorded as host-verified in [PROJECT_FACTS-en.md](PROJECT_FACTS-en.md) only after a real-host run for that capability.
+16. Verify subscription requests. WeChat requires a user gesture, so nothing asks the host while the page loads and every step below follows a tap. The page prints counts and never a template id: which templates a user subscribed to is between the user and the mini program, and a screenshot must not carry it.
+
+| Step | Tap | Expected |
+| --- | --- | --- |
+| 1 | `Check subscription capability` | `[kmp-miniapp-sdk] subscription capability: PASS wechat.request-subscribe-message=Supported` |
+| 2 | After the page loads, check the console and the card | No prompt appeared and there is no `subscription request:` line; the card still reads `NOT RUN` |
+| 3 | `Request subscription` with no test template configured locally | `[kmp-miniapp-sdk] subscription request: NOT CONFIGURED templateCount=0`, and no prompt: the page makes no host call at all |
+| 4 | Configure one test template id locally (do not commit it), then `Request subscription` and allow it | `[kmp-miniapp-sdk] subscription request: PASS accepted=1, otherStatuses=0, signals=accept` if the host answers `accept` |
+| 5 | `Request subscription` and refuse it | The same summary with different counts. **Record the status string the host used for a refusal**, because this SDK has no evidence for it and preserves it verbatim |
+| 6 | `Request subscription` and dismiss the prompt | `subscription request: FAIL reason=HostFailure, signal=…`; report the closed `signal` label (`cancel`, `fail-cancel`, `cancel-like`, or `other`) so an exact mapping can be added only from evidence |
+| 7 | Configure two test templates, allow one and refuse the other, then `Request subscription` | `PASS` with counts summing to 2, and one entry per requested template in the order given |
+
+`templateCount=0` is not a host refusal and does not exercise `wx.requestSubscribeMessage`; consequently no consent prompt can appear in step 3. To run steps 4–7, first add a subscription-message template under the exact AppID used for the test, then place that template id only in the example's local `subscriptionTemplateIds` fixture. Never invent an id, reuse one from another AppID, or commit it. If the account cannot provide a valid template, record steps 4–7 as `NOT RUN — blocked by AppID template configuration`.
+
+Step 5 and step 6 are the ones that carry information this repository does not have. This capability's status vocabulary could not be verified from the offline sources, so the SDK recognizes only `accept` and preserves every other non-blank status verbatim. Step 6 deliberately remains `HostFailure`; its safe label tells us whether an exact interruption mapping is justified without exposing raw host data. Report both rather than recording the step as passing.
+
+Step 4 proves only that the SDK handed over the host's per-template answers, not that any message exists. Accepting a subscription is a subscription state; whether a message is ever sent or delivered is a `BackendRequired` question with a WeChat backend template and a trusted backend behind it.
+
+The adapter requires exact correlation: missing or unexpected template keys and blank or non-text statuses are `InvalidResponse`, never a successful “silent” answer.
+
+17. Record which checks you observed and which you did not. A capability is recorded as host-verified in [PROJECT_FACTS-en.md](PROJECT_FACTS-en.md) only after a real-host run for that capability.
 
 The Storage check writes a dedicated test key, verifies overwrite, removes it, and confirms that the missing key reads as `null`. The network check issues a `GET` to `https://example.com/` and reports the status code and body length; point the example's `networkUrl` constant at any reachable HTTPS endpoint when verifying a different host.
 

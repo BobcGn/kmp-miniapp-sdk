@@ -99,6 +99,7 @@ cd examples/wechat-miniprogram && npm run smoke && npm run typecheck
 | Location | `Location` 卡片显示能力判定、权限、隐私要求，以及定位读取的 `PASS` | `[kmp-miniapp-sdk] location capability: PASS wechat.location=…`、`location permission query: PASS state=…`、`location privacy query: PASS requirement=…`、`location: PASS coordinatesValid=true, accuracyValid=true` |
 | Scanner | `Scanner` 卡片显示能力判定，以及扫码的 `PASS`、`INTERRUPTED` 或 `FAIL` | `[kmp-miniapp-sdk] scanner capability: PASS wechat.scan-code=…`、`scan: PASS resultPresent=true, typeRecognized=true`、`scan: INTERRUPTED cause=indeterminate` |
 | Media | `Media` 卡片显示能力判定，以及选择的 `PASS`、`INTERRUPTED` 或 `FAIL` | `[kmp-miniapp-sdk] media capability: PASS wechat.choose-media=…`、`media choose: PASS count=1, typesValid=true, metadataValid=true`、`media choose: INTERRUPTED cause=indeterminate` |
+| Subscription Message | `Subscription Message` 卡片显示能力判定，以及请求的 `PASS`、`NOT CONFIGURED` 或 `FAIL` | `[kmp-miniapp-sdk] subscription capability: PASS wechat.request-subscribe-message=…`、`subscription request: PASS accepted=N, otherStatuses=N, signals=…`、`subscription request: FAIL reason=HostFailure, signal=…` |
 | Clipboard 与震动 | `Clipboard and Haptics` 卡片的写入、读取、短震动、长震动四项均为 `PASS` | `[kmp-miniapp-sdk] clipboard write: PASS`、`clipboard read: PASS matched=true`、`haptics short: PASS`、`haptics long: PASS` |
 | Storage | `Storage verification: PASS` | `[kmp-miniapp-sdk] storage: PASS first=first, overwritten=second, missing=null` |
 | Client login code | `Client login code: PASS` | `[kmp-miniapp-sdk] auth bootstrap: PASS codeReceived=true, length=<正整数>` |
@@ -249,7 +250,27 @@ cd examples/wechat-miniprogram && npm run smoke && npm run typecheck
 
 页面不自行读取媒体，示例也不把临时文件复制到任何地方。宿主返回的路径属于产生它的那次会话，请按短期资源对待：如果媒体需要在本次运行之后仍然存在，请自行复制到你拥有的存储中。
 
-16. 记录你观察到了哪些检查项、哪些没有观察到。只有在某项 capability 完成真实宿主运行后，才会在 [PROJECT_FACTS-ch.md](PROJECT_FACTS-ch.md) 中被记录为已通过宿主验证。
+16. 验证订阅消息请求。微信要求用户手势，因此页面加载期间不会询问宿主，以下每一步都由点击触发。页面只打印计数，从不打印模板 ID：用户订阅了哪些模板，是用户与小程序之间的事，截图不得携带它。
+
+| 步骤 | 点击 | 预期 |
+| --- | --- | --- |
+| 1 | `Check subscription capability` | `[kmp-miniapp-sdk] subscription capability: PASS wechat.request-subscribe-message=Supported` |
+| 2 | 页面加载后确认 Console 与页面 | 没有出现弹窗，也没有任何 `subscription request:` 行；卡片保持 `NOT RUN` |
+| 3 | 本地未配置测试模板时点击 `Request subscription` | `[kmp-miniapp-sdk] subscription request: NOT CONFIGURED templateCount=0`，且不出现弹窗：页面完全不调用宿主 |
+| 4 | 在本地配置一个测试模板 ID（不要提交它），点击 `Request subscription` 并同意 | 若宿主返回 `accept`，为 `[kmp-miniapp-sdk] subscription request: PASS accepted=1, otherStatuses=0, signals=accept` |
+| 5 | 点击 `Request subscription` 并拒绝 | 同一摘要但计数不同。**记录宿主用于拒绝的状态字符串**，因为本 SDK 没有它的证据，只能原样保留 |
+| 6 | 点击 `Request subscription` 后主动关闭弹窗 | `subscription request: FAIL reason=HostFailure, signal=…`；反馈封闭的 `signal` 标签（`cancel`、`fail-cancel`、`cancel-like` 或 `other`），仅在有证据后增加精确映射 |
+| 7 | 配置两个测试模板，同意其中一个并拒绝另一个，然后点击 `Request subscription` | `PASS`，计数之和为 2，且按给定顺序为每个请求的模板各给一条 |
+
+`templateCount=0` 不是宿主拒绝，也没有执行 `wx.requestSubscribeMessage`，因此第 3 步不可能出现订阅同意弹窗。要执行第 4–7 步，必须先在本次测试所用的同一 AppID 下添加订阅消息模板，再仅把该模板 ID 放入示例本地的 `subscriptionTemplateIds` fixture。不得编造 ID、复用其他 AppID 的 ID 或提交该值。如果账号无法提供有效模板，将第 4–7 步记录为 `NOT RUN — blocked by AppID template configuration`。
+
+第 5、6 步承载的正是本仓库目前没有的信息。该能力的状态词汇无法从可离线来源核实，因此 SDK 只识别 `accept`，其余非空白状态一律原样保留。第 6 步有意保持 `HostFailure`；其安全标签用于判断是否有依据增加精确的中断映射，同时不暴露原始宿主数据。请把两者都报告出来，而不是直接把该步记为通过。
+
+第 4 步只证明 SDK 交回了宿主的逐模板答案，不证明存在任何消息。同意订阅是一种订阅状态；消息是否被发送或送达属于 `BackendRequired` 问题，背后需要微信后台模板与可信后端。
+
+Adapter 要求精确关联：缺少或多出的模板键、空白或非文本状态均为 `InvalidResponse`，绝不会被当成成功的“沉默”答案。
+
+17. 记录你观察到了哪些检查项、哪些没有观察到。只有在某项 capability 完成真实宿主运行后，才会在 [PROJECT_FACTS-ch.md](PROJECT_FACTS-ch.md) 中被记录为已通过宿主验证。
 
 Storage 检查会写入专用测试 key、验证覆盖、删除该 key，并确认 missing key 读取为 `null`。Network 检查会向 `https://example.com/` 发起 `GET`，并报告 status code 与 body 长度；验证其他 host 时请修改示例中的 `networkUrl` 常量。
 

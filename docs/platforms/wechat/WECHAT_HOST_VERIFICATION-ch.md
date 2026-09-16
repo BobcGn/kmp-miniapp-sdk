@@ -62,10 +62,13 @@
 | Scanner | Unit + Contract + Node + DeveloperTools + RealDevice | 已完成 `buildMiniAppSdk`；可用的测试二维码；可限制相机访问的设备 | 检查能力、扫描测试码、主动取消；限制相机后分别运行普通与 camera-only 扫码 | `Supported`；成功为 `PASS resultPresent=true, typeRecognized=true`；取消与相机受限均为 `INTERRUPTED cause=indeterminate`；不出现扫码内容 | 已于 2026-09-15 验证 —— Android、OnePlus PLQ110、微信 8.0.76、运行时基础库 3.17.2；宿主歧义以 `HostInteractionInterrupted` 保留 | 每次扫码 interop、adapter、catalog 或 export 变更 |
 | Media | Unit + Contract + Node + DeveloperTools + RealDevice | 已完成 `buildMiniAppSdk`；设备上有测试图片与测试视频；可限制照片访问的设备 | 运行测试；打开 index，使用 Media 卡片：检查能力、选择图片、选择视频、选择任一类型、从相机拍摄、主动关闭选择界面，最后限制照片访问后再选择一次 | `wechat.choose-media=Supported`；图片选择报告 `media choose: PASS count=1, typesValid=true, metadataValid=true`；视频选择报告其时长与尺寸，若宿主未发送则报告为缺失；主动关闭与受限访问均报告 `media choose: INTERRUPTED cause=indeterminate`；页面与 Console 中都不出现媒体内容与完整临时路径 | 已于 2026-09-16 验证 —— 开发者工具与 Android OnePlus PLQ110、微信 8.0.76、基础库 3.17.2 已覆盖支持、图片、视频、混合、拍摄、主动关闭与受限访问；宿主歧义以 `HostInteractionInterrupted` 保留 | 每次媒体 interop、adapter、catalog 或 export 变更 |
 | Platform Escape Hatch | Unit + Node + capability consumer 的宿主等级 | 使用 `WechatPlatformApi` | 运行相关测试，并由具体微信专属能力执行宿主验证 | 微信 API 可达且未被描述为通用 capability | 由 Auth、Page Lifecycle、Navigation 间接覆盖 | 每次 platform API surface 变更 |
+| Subscription Message | Unit + Contract + Node + DeveloperTools + RealDevice | 已完成 `buildMiniAppSdk`；在同一 AppID 后台真实存在、仅在本地配置且从不提交的测试模板；任何送达结论都需要可信后端及其模板条件 | 运行测试；打开 index，使用 Subscription Message 卡片：检查能力、未配置模板时请求、在本地配置一个后请求并分别同意与拒绝、主动关闭弹窗、最后用两个模板重试 | `wechat.request-subscribe-message=Supported`；未配置时报告 `NOT CONFIGURED` 且不弹窗；合法响应对每个请求模板精确给出一个非空白文本状态；`accept` 被识别，**其他非空白状态原样保留**；在精确宿主消息得到证据之前，主动关闭保持 `HostFailure` 且只报告封闭的 signal 标签；页面与 Console 中都不出现模板 ID 或原始失败 | `DEVICE-2026-09-16-A` 已部分验证：能力支持与零模板不调用宿主的保护通过。当前 AppID 获得有效模板前，弹窗结果为**阻塞**而非失败。接受订阅只表示订阅状态；送达属于 `BackendRequired`，此处不声称 | 每次订阅消息 interop、adapter、catalog 或 export 变更 |
 
 `VersionDependent` 无法在开发者工具中产出：其可选的最低调试基础库为 2.21.4，高于 Runtime Detection 记录的 2.20.1 边界。该状态仅由自动化测试覆盖。这属于验证环境限制，不是未实现功能。
 
 麦克风运行所用账号无法产出 `NotRequested`，但后续位置运行已在宿主中产出该状态，并完成 `NotRequested` → `Granted` → `Denied` → 恢复后成功读取的闭环。尚未查询过的页面会显示 `UNKNOWN`，那是示例页面的占位值，刻意不属于公共 `PermissionState`。
+
+订阅消息验收有一半属于 `BackendRequired`：客户端只能确立订阅状态，消息是否真正发送或送达取决于微信后台模板与可信后端。该部分单独记录，且绝不从一次成功的客户端请求推断出来。
 
 详细页面和 Console 断言继续以 [TESTING-ch.md](../../TESTING-ch.md) 为准。本表负责选择环境和管理证据，不复制完整页面操作说明。
 
@@ -84,7 +87,6 @@
 
 | Tracking | Capability | Minimum Verification |
 | --- | --- | --- |
-| BOB-73 | Subscription Message | Unit + Contract + RealDevice；用户主动触发；端到端发送时 BackendRequired。 |
 | BOB-68 | Upload / Download | Unit + Contract + RealDevice + BackendRequired；覆盖进度、成功、失败、abort 和文件结果。 |
 | BOB-68 | Network Status | Unit + Contract + RealDevice；网络切换；取消订阅后不得继续收到事件。 |
 | BOB-74 | Virtual Payment Boundary | 架构与文档审查；如实现则 RealDevice + BackendRequired。 |
@@ -146,6 +148,7 @@
 | `WDT-2026-09-15-F` | 2026-09-15 | WeChat Developer Tools Stable 2.01.2510290，调试基础库 3.17.2 | Location capability、permission、privacy precondition | Console 记录 `wechat.location=Supported`、`state=NotRequested`、显式请求后的 `state=Granted` 与定位结果形状 PASS；页面仅在点击后请求，不显示或记录坐标 | 当前 AppID 报告隐私要求 `NOT_REQUIRED`，因此本次不声称验证了隐私弹窗；该条件仍由 BOB-60 单独跟踪。 |
 | `DEVICE-2026-09-15-D` | 2026-09-15 | RealDevice：Android，基础库运行时报告 3.17.2 | Location permission refusal、guard 与恢复 | Console 记录 `state=Denied`、`location: DENIED permissionState=Denied`，随后恢复权限并再次记录 `location: PASS coordinatesValid=true, accuracyValid=true` | 拒绝时 adapter 在调用 `getLocation` 前阻断；成功日志不含经纬度。当前完成范围仅为 `getLocation`，不包含 `chooseLocation`、`openLocation` 或位置选择取消分类。 |
 | `DEVICE-2026-09-15-C` | 2026-09-15 | RealDevice：Android，运行时基础库 3.17.2 | File System Read、Write、Access、Remove | Console 记录 `filesystem write: PASS`、`filesystem read: PASS matched=true`、`filesystem access: PASS exists=true`、`filesystem remove: PASS`、`filesystem access: PASS exists=false` | 设备具体型号和微信版本未在本次文本证据中重复提供；Console 的 `[wxapplib]` privacy/ad errors 来自微信运行环境，与文件系统链路无关。 |
+| `DEVICE-2026-09-16-A` | 2026-09-16 | RealDevice：OnePlus PLQ110、Android 36、微信 8.0.76、运行时基础库 3.17.2 | Subscription capability 与未配置请求保护 | 截图与 Console 记录 `subscription capability: PASS wechat.request-subscribe-message=Supported` 和 `subscription request: NOT CONFIGURED templateCount=0`；未暴露模板 ID | 此路径有意不调用 `wx.requestSubscribeMessage`，因此不会出现订阅同意弹窗。同意、拒绝、关闭、多模板关联与送达因当前 AppID 没有已配置的有效测试模板而记为 NOT RUN。可见的 `[wxapplib]` background-fetch 与广告优化错误是与该能力无关的运行时噪声。 |
 
 这些记录是既有事实的索引，不补造缺失字段。下一次复测必须使用完整模板，不能仅引用本表。
 

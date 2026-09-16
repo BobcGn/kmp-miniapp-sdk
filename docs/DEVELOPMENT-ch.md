@@ -32,7 +32,7 @@ VS Code 可用于处理 `examples/wechat-miniprogram` 下的文件。Consumer Br
 
 这些命令有效，并已于 2026-09-15 完成验证。
 
-`:sdk:jsTest` suite 覆盖 Host boundary、error model、callback adaptation、cancellation、double completion、可选 abort、微信 error mapping、包含取消时宿主中止的 HTTP transport adaptation、生命周期状态迁移、导航适配、capability support 状态与版本门控、包含并发请求合并的权限生命周期行为、包含拒绝分类的隐私授权、包含过期分类的微信会话检查、包含逐项门控的微信剪贴板与震动 adapter、包含沙箱与文本边界的微信文件系统 adapter、包含坐标校验与隐私前置条件的微信定位 adapter、包含不可归因中断分类与结果校验的微信扫码 adapter、包含请求边界、结果校验与中断分类的微信媒体 adapter，以及 interop object construction。这些测试使用 fake callbacks，不代表能够访问真实 `wx` runtime。
+`:sdk:jsTest` suite 覆盖 Host boundary、error model、callback adaptation、cancellation、double completion、可选 abort、微信 error mapping、包含取消时宿主中止的 HTTP transport adaptation、生命周期状态迁移、导航适配、capability support 状态与版本门控、包含并发请求合并的权限生命周期行为、包含拒绝分类的隐私授权、包含过期分类的微信会话检查、包含逐项门控的微信剪贴板与震动 adapter、包含沙箱与文本边界的微信文件系统 adapter、包含坐标校验与隐私前置条件的微信定位 adapter、包含不可归因中断分类与结果校验的微信扫码 adapter、包含请求边界、结果校验与中断分类的微信媒体 adapter、包含模板校验与逐模板结果策略的微信订阅消息 adapter，以及 interop object construction。这些测试使用 fake callbacks，不代表能够访问真实 `wx` runtime。
 
 ## Consumer Bridge
 
@@ -71,7 +71,7 @@ npm run smoke
 npm run typecheck
 ```
 
-smoke test 加载 consumer-facing CommonJS 模块、调用 `sdkVersion()`，并安装 fake global `wx` 验证 Storage、微信 login bootstrap、HTTP transport、lifecycle 转发、三种导航调用、运行时能力检测、权限生命周期、隐私授权、微信会话检查、剪贴板与震动能力、文件系统、定位、扫码，以及媒体选择。它还会断言 HTTP transport 交给 fake host 的内容，包括原始文本响应模式、导航收到的绝对页面路径，以及每个纳入门控的能力所报告的支持状态。该测试还会断言扫码与媒体选择都不查询、不请求任何权限，并覆盖交互中断与相似失败文本的分类。该测试验证 module 与 adapter behavior，但不构成真实 Host 证据。TypeScript 使用 strict mode，并在不依赖 `any` 的情况下验证 Promise-based Storage、typed `WeChatLoginResult`、HTTP transport、lifecycle、导航、capability support、权限、隐私、会话检查、剪贴板、震动、文件系统、定位、扫码与媒体选择 exports。
+smoke test 加载 consumer-facing CommonJS 模块、调用 `sdkVersion()`，并安装 fake global `wx` 验证 Storage、微信 login bootstrap、HTTP transport、lifecycle 转发、三种导航调用、运行时能力检测、权限生命周期、隐私授权、微信会话检查、剪贴板与震动能力、文件系统、定位、扫码、媒体选择，以及订阅消息请求。它还会断言 HTTP transport 交给 fake host 的内容，包括原始文本响应模式、导航收到的绝对页面路径，以及每个纳入门控的能力所报告的支持状态。该测试还会断言扫码、媒体选择与订阅消息请求都不查询、不请求任何权限，覆盖交互中断与相似失败文本的分类，并确认宿主自身的状态行永远不会被当作模板 ID。该测试验证 module 与 adapter behavior，但不构成真实 Host 证据。TypeScript 使用 strict mode，并在不依赖 `any` 的情况下验证 Promise-based Storage、typed `WeChatLoginResult`、HTTP transport、lifecycle、导航、capability support、权限、隐私、会话检查、剪贴板、震动、文件系统、定位、扫码、媒体选择与订阅消息请求 exports。
 
 真实宿主验证按 [TESTING-ch.md](TESTING-ch.md) 中的检查清单执行，该清单是页面取值、console 输出与准备步骤的权威来源。只有在完成该运行后，某项 capability 才会在 [PROJECT_FACTS-ch.md](PROJECT_FACTS-ch.md) 中被记录为已通过宿主验证。
 
@@ -149,6 +149,22 @@ SDK 只校验微信能精确陈述的部分，其余一律拒绝：`mediaType` �
 选择返回的路径是宿主临时资源。SDK 不保留副本、不声称其生命周期，因此之后需要这份媒体的调用方必须自行复制到自己拥有的存储中。
 
 微信媒体选择已于 2026-09-16 完成真实宿主验收。自动化检查、开发者工具与 Android 真机覆盖了 `wechat.choose-media=Supported`、图片、视频、混合、拍摄、主动关闭与媒体访问受限路径，且未记录媒体内容或完整临时路径。该宿主上的主动关闭与受限访问产生相同的不可归因中断；由于这项歧义被显式保留，该能力为 `Stable`。
+
+### 微信订阅消息请求
+
+`wx.requestSubscribeMessage` 把微信自身的弹窗放到用户面前，因此 SDK 不实现弹窗、也不发送消息。示例的 Subscription Message 卡片只在点击按钮时请求宿主，并且只有在本地配置了测试模板时才会请求；未配置时报告 `NOT CONFIGURED`，完全不调用宿主。模板 ID 是归属于小程序账号的宿主标识，因此仓库里不写入任何真实值：卡片中的列表在仓库中为空，页面也从不显示或记录 ID。
+
+**该能力是本项目证据最薄的一处，代码形态正源于此。** 已安装开发者工具所带的基础库在元数据表中声明了该 API——选项 `tmplIds`，以及以模板 ID 为键、旁边带 `errMsg` 的 success 结果——但其中没有该 API 的实现，也没有文档 schema。因此可离线来源没有给出该 API 的状态词汇，也没有给出它的关闭消息。整个 bundle 中唯一观察到的状态字符串是模拟器订阅弹窗预览载荷里的 `accept`，那属于弹窗渲染数据而不是 API 结果。SDK 只识别这一个状态，并原样保留其他非空白状态。目前不分类任何关闭信号：在该 API 产出真实宿主证据之前，类似 cancel 的失败仍为 `HostFailure`。示例只记录封闭的诊断标签，从不记录原始消息或模板 ID。
+
+SDK 校验模板与响应关联，而不猜测答案词汇：ID 必须非空白，重复项折叠并保留调用方顺序，不施加数量上限，因为可离线来源没有给出上限。响应必须精确包含所请求的模板键，且每项都是非空白文本状态；缺少、多出、空白或非文本条目均为 `InvalidResponse`。
+
+用户手势由调用方负责，而且这是硬性要求：微信在没有手势时会拒绝该请求。SDK 与示例都不会在加载时触发它，也不会重试一次拒绝。
+
+该能力不查询也不请求任何权限，因为没有可离线来源把某个 scope 或隐私条件与该 API 绑定。这是关于证据的结论，不等于认定其不存在，因此人工运行需要观察是否出现弹窗而不是预先假设任一方向；BOB-60 的隐私工作尚未完成，既不表示这里一定有条件，也不表示一定没有。也没有添加任何 `app.json` 声明。
+
+「同意」是订阅状态，永远不是送达。端到端送达需要微信后台模板与可信后端，属于 `BackendRequired`，也超出任何 adapter 测试所能证明的范围。
+
+微信订阅消息请求已有自动化覆盖与部分真机证据。2026-09-16 的 Android 运行验证了运行时支持与 `templateCount=0` 保护。该保护有意不调用宿主，因此没有出现订阅同意弹窗是预期结果，不是权限失败。同意、拒绝、关闭、多模板关联与消息送达仍**阻塞**于为同一 AppID 配置的有效测试模板。该能力为 `Partial`。
 
 
 微信文件系统已于 2026-09-15 完成真实宿主验收。微信开发者工具与 Android 真机均在基础库 3.17.2 上验证了固定测试文件的写入、读取匹配、存在检查、删除与删除后不存在；沙箱根和文件内容均未被显示或记录。自动化 Kotlin/JS、fake-host、CommonJS 与 TypeScript 检查也已通过。
