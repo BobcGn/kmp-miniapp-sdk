@@ -26,7 +26,7 @@
 
 `Minimum Host Version` 记录提供该能力的最低基础库，共有三种取值：
 
-- `Resolved at runtime` —— SDK 对该能力做了门控，通过 `wx.canIUse` 询问宿主，而不是与记录下来的数字比较。当前 Storage API、`wx.request`、`wx.getLocation` 与 `wx.scanCode` 的官方入口页没有标注 API 本身的引入版本，因此不从开发机表现反推数字。这是针对当前真正运行的宿主的实时答案，而不是缺失值。
+- `Resolved at runtime` —— SDK 对该能力做了门控，通过 `wx.canIUse` 询问宿主，而不是与记录下来的数字比较。当前 Storage API、`wx.request`、`wx.getLocation`、`wx.scanCode` 与 `wx.chooseMedia` 的官方入口页没有标注 API 本身的引入版本，因此不从开发机表现反推数字。这是针对当前真正运行的宿主的实时答案，而不是缺失值。
 - 版本号 —— 微信有文档记载的边界。仓库只在能够引用来源时才记录。
 - `Not established` —— 尚未确立最低版本，原因或是该能力尚未实现，或是 SDK 未对其做门控。
 
@@ -58,6 +58,7 @@ SDK 从 `wx.getAppBaseInfo` 读取基础库版本，并在早于它的基础库�
 - [微信 `wx.vibrateShort` 文档](https://developers.weixin.qq.com/miniprogram/dev/api/device/vibrate/wx.vibrateShort.html) 与 [`wx.vibrateLong` 文档](https://developers.weixin.qq.com/miniprogram/dev/api/device/vibrate/wx.vibrateLong.html)：基础库 1.2.0 起支持。`wx.vibrateShort` 文档中的 `type` 字段（heavy / medium / light）自基础库 2.13.0 起支持，有意未建模。
 - [微信 `wx.checkSession` 文档](https://developers.weixin.qq.com/miniprogram/dev/api/open-api/login/wx.checkSession.html)：未标注最低基础库，因此该项依靠 `wx.canIUse` 而不是记录下来的数字。该文档把 success/fail 分别定义为登录态有效/过期，因此 adapter 使用 callback 本身，不解析 `errMsg`。
 - 微信开发者工具所带基础库的实测契约（`package.nw/core.wxvpkg`）：`wx.scanCode` 的请求选项 `onlyFromCamera` 与四个请求类别（`barCode`、`qrCode`、`datamatrix`、`pdf417`）；其 success 字段 `result`、`scanType`、`charSet`、`path` 与 `rawData`；其结果格式（`QR_CODE`、`AZTEC`、`CODABAR`、`CODE_39`、`CODE_93`、`CODE_128`、`DATA_MATRIX`、`EAN_8`、`EAN_13`、`ITF`、`MAXICODE`、`PDF_417`、`RSS_14`、`RSS_EXPANDED`、`UPC_A`、`UPC_E`、`UPC_EAN_EXTENSION`、`WX_CODE`、`CODE_25`）；以及其模拟路径与「用户关闭选图弹窗」都会产出的取消消息 `scanCode:cancel`。这属于宿主契约证据而不是文档页面证据，因此本条把取消分类记为限制而不是有文档保证的行为。同一基础库的授权 scope 列表中也存在 `scope.camera`，但其中没有任何内容把它与 `wx.scanCode` 绑定，因此 SDK 不为该能力映射任何权限。
+- 同一基础库中 `wx.chooseMedia` 的实测契约：其参数 schema（`IChooseMediaOption`）把 `mediaType` 标为 required，取值为 `image`、`mix`、`video`；`sourceType` 为 `album`、`camera`；`camera` 为 `back`、`front`；`maxDuration` 为「3s 至 60s，不限制相册」；`count` 未标注上限；`sizeType` 是字符串数组且自身没有 enum。其模拟实现为每个 `tempFiles` 条目给出 `tempFilePath`、`size` 与 `fileType`，仅对视频补充 `duration`、`width`、`height` 与 `thumbTempFilePath`，并把主动关闭报告为 `chooseMedia:cancel`。`scope.writePhotosAlbum` 存在于该基础库的 scope 列表，但其中没有任何内容把它与 `chooseMedia` 绑定；相册保存 API 在本轮未实现，因此该能力不映射任何权限。
 - [微信 `wx.getLocation` 文档](https://developers.weixin.qq.com/miniprogram/dev/api/location/wx.getLocation.html)：`type` 的取值 `wgs84` 与 `gcj02`，SDK 只转发而不解释；以及宿主作答前必须具备的声明 —— `app.json.requiredPrivateInfos`、`permission.scope.userLocation`，以及 MP 后台开启的接口权限。该文档未标注 API 的引入基础库版本，因此该项依靠 `wx.canIUse` 而不是记录下来的数字。[`wx.chooseLocation`](https://developers.weixin.qq.com/miniprogram/dev/api/location/wx.chooseLocation.html) 有意未实现：其当前参数表没有 `cancel` callback，取消会以 `fail` 到达，从而无法与权限拒绝或宿主失败区分。
 
 标为 `Planned` 的条目在上述 production source 和 export surface 中没有实现；对应 Tracking 只表示缺口已进入 Multica，不表示能力存在。
@@ -98,7 +99,7 @@ SDK 从 `wx.getAppBaseInfo` 读取基础库版本，并在早于它的基础库�
 | Clipboard Write | `Stable` | `setClipboardData` | 用户手势；微信开发者工具需有剪贴板访问权限 | 1.1.0 | Unit、Contract、Node、DeveloperTools、RealDevice | 与读取分别门控，因为宿主可能只提供其中一个方向。真实宿主已验证写入后读回匹配。 | BOB-65 |
 | Short Vibration | `Stable` | `vibrateShort` | 用户手势；具备震动硬件的设备 | 1.2.0 | Unit、Contract、Node、RealDevice | Android 真机调用 PASS，且测试者确认感知短震动。可选 `type` 字段（2.13.0）未建模。 | BOB-65 |
 | Long Vibration | `Stable` | `vibrateLong` | 用户手势；具备震动硬件的设备 | 1.2.0 | Unit、Contract、Node、RealDevice | 与短震动是独立宿主 API。Android 真机调用 PASS，且测试者确认感知长震动。 | BOB-65 |
-| Media | `Planned` | `chooseMedia` | Album/Camera permission + Privacy | Not established | 尚无 | 不包含 Camera 或 Video 原生组件。 | BOB-63 |
+| Media | `Stable` | `chooseMedia` | 未确立：微信自身的选择界面不需要 SDK 权限 | Resolved at runtime | Unit、Contract、Node、DeveloperTools、RealDevice | 选择图片或视频并校验必填字段与安全整数字节数。未知类别保留宿主原名；未报告的视频元数据保持缺失。开发者工具与 Android 的主动关闭信号按精确匹配映射为 `HostInteractionInterrupted`；其他失败保持 `HostFailure`。真实宿主已覆盖 Supported、图片、视频、混合选择、拍摄、关闭与媒体访问受限。已验证的 Android 宿主上，关闭与受限访问产生相同的不可归因中断。相册保存是另一项未实现能力。 | BOB-63 |
 | File System Read | `Stable` | `getFileSystemManager().readFile` | 小程序文件沙箱；`encoding` 始终为 UTF-8 | 1.9.9 | Unit、Contract、Node、DeveloperTools、RealDevice | 读取文本；空文件为空字符串，二进制内容映射为 `InvalidResponse`。基础库 3.17.2 的开发者工具与 Android 真机均验证读回内容匹配。 | BOB-72 |
 | File System Write | `Stable` | `getFileSystemManager().writeFile` | 小程序文件沙箱；父目录必须已存在 | 1.9.9 | Unit、Contract、Node、DeveloperTools、RealDevice | 写入 UTF-8 文本并替换原有内容；基础库 3.17.2 的两个真实宿主环境均验证成功。 | BOB-72 |
 | File System Access | `Stable` | `getFileSystemManager().access` | 小程序文件沙箱 | 1.9.9 | Unit、Contract、Node、DeveloperTools、RealDevice | 仅在微信为「路径不存在」提供文档依据的失败文本上返回 `false`；其他失败一律抛出。真实宿主已验证删除前 `true`、删除后 `false`。 | BOB-72 |

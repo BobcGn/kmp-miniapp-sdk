@@ -32,7 +32,7 @@ VS Code 可用于处理 `examples/wechat-miniprogram` 下的文件。Consumer Br
 
 这些命令有效，并已于 2026-09-15 完成验证。
 
-`:sdk:jsTest` suite 覆盖 Host boundary、error model、callback adaptation、cancellation、double completion、可选 abort、微信 error mapping、包含取消时宿主中止的 HTTP transport adaptation、生命周期状态迁移、导航适配、capability support 状态与版本门控、包含并发请求合并的权限生命周期行为、包含拒绝分类的隐私授权、包含过期分类的微信会话检查、包含逐项门控的微信剪贴板与震动 adapter、包含沙箱与文本边界的微信文件系统 adapter、包含坐标校验与隐私前置条件的微信定位 adapter、包含不可归因中断分类与结果校验的微信扫码 adapter，以及 interop object construction。这些测试使用 fake callbacks，不代表能够访问真实 `wx` runtime。
+`:sdk:jsTest` suite 覆盖 Host boundary、error model、callback adaptation、cancellation、double completion、可选 abort、微信 error mapping、包含取消时宿主中止的 HTTP transport adaptation、生命周期状态迁移、导航适配、capability support 状态与版本门控、包含并发请求合并的权限生命周期行为、包含拒绝分类的隐私授权、包含过期分类的微信会话检查、包含逐项门控的微信剪贴板与震动 adapter、包含沙箱与文本边界的微信文件系统 adapter、包含坐标校验与隐私前置条件的微信定位 adapter、包含不可归因中断分类与结果校验的微信扫码 adapter、包含请求边界、结果校验与中断分类的微信媒体 adapter，以及 interop object construction。这些测试使用 fake callbacks，不代表能够访问真实 `wx` runtime。
 
 ## Consumer Bridge
 
@@ -71,7 +71,7 @@ npm run smoke
 npm run typecheck
 ```
 
-smoke test 加载 consumer-facing CommonJS 模块、调用 `sdkVersion()`，并安装 fake global `wx` 验证 Storage、微信 login bootstrap、HTTP transport、lifecycle 转发、三种导航调用、运行时能力检测、权限生命周期、隐私授权、微信会话检查、剪贴板与震动能力、文件系统、定位，以及扫码。它还会断言 HTTP transport 交给 fake host 的内容，包括原始文本响应模式、导航收到的绝对页面路径，以及每个纳入门控的能力所报告的支持状态。该测试还会断言扫码不查询、不请求任何权限，并覆盖取消与相似失败文本的分类。该测试验证 module 与 adapter behavior，但不构成真实 Host 证据。TypeScript 使用 strict mode，并在不依赖 `any` 的情况下验证 Promise-based Storage、typed `WeChatLoginResult`、HTTP transport、lifecycle、导航、capability support、权限、隐私、会话检查、剪贴板、震动、文件系统、定位与扫码 exports。
+smoke test 加载 consumer-facing CommonJS 模块、调用 `sdkVersion()`，并安装 fake global `wx` 验证 Storage、微信 login bootstrap、HTTP transport、lifecycle 转发、三种导航调用、运行时能力检测、权限生命周期、隐私授权、微信会话检查、剪贴板与震动能力、文件系统、定位、扫码，以及媒体选择。它还会断言 HTTP transport 交给 fake host 的内容，包括原始文本响应模式、导航收到的绝对页面路径，以及每个纳入门控的能力所报告的支持状态。该测试还会断言扫码与媒体选择都不查询、不请求任何权限，并覆盖交互中断与相似失败文本的分类。该测试验证 module 与 adapter behavior，但不构成真实 Host 证据。TypeScript 使用 strict mode，并在不依赖 `any` 的情况下验证 Promise-based Storage、typed `WeChatLoginResult`、HTTP transport、lifecycle、导航、capability support、权限、隐私、会话检查、剪贴板、震动、文件系统、定位、扫码与媒体选择 exports。
 
 真实宿主验证按 [TESTING-ch.md](TESTING-ch.md) 中的检查清单执行，该清单是页面取值、console 输出与准备步骤的权威来源。只有在完成该运行后，某项 capability 才会在 [PROJECT_FACTS-ch.md](PROJECT_FACTS-ch.md) 中被记录为已通过宿主验证。
 
@@ -134,7 +134,22 @@ SDK 只做告知与把关；它不生成隐私政策、不判断业务是否合�
 
 页面不得自行读取扫码内容：示例只报告内容是否存在、宿主报出的格式是否被 SDK 识别，以及取消与失败的区别。
 
-微信扫码已在开发者工具与 Android 真机覆盖 `Supported` 和成功扫描；真机还证明主动取消与相机受限产生相同的不可归因中断。BOB-61 仍为 `Partial`，因为原验收标准要求两者独立，而真实宿主未提供足以完成这种分类的信息。
+微信扫码已在开发者工具与 Android 真机覆盖 `Supported` 和成功扫描；真机还证明主动取消与相机受限产生相同的不可归因中断，因此该能力不声称能区分二者。它在能力矩阵中记为 `Stable`：实现、自动化测试与规定的宿主验证证据三者齐备，而宿主的不可区分性由错误模型显式保留，而不是被描述成宿主并不做出的区分。
+
+### 微信媒体选择
+
+`wx.chooseMedia` 打开的是微信自身的选择界面，因此 SDK 不实现界面，也不建模相机。示例的 Media 卡片只在点击后调用，且从不显示或记录所选内容或媒体所在的临时路径。
+
+SDK 只校验微信能精确陈述的部分，其余一律拒绝：`mediaType` 必填，因为微信自己的 schema 把它标为 required；`maxDurationSeconds` 必须落在微信文档给出的 3 至 60 秒内；字节数必须是完整的非负数；临时路径必须是非空字符串。宿主的 `count` 上限刻意不在 SDK 里复制一份，因为它取决于基础库，因此 SDK 只按调用方要求发送，并如实报告返回结果。
+
+已安装的开发者工具基础库在模拟选择器关闭时报告 `chooseMedia:cancel`，Android 真机在主动关闭时报告 `chooseMedia:fail cancel`；两者都没有结构化原因。因此这两条精确信号映射为 `HostInteractionInterrupted`，但不推断用户意图；其他失败保持为 `HostFailure`。在已验证的 Android 宿主上，限制媒体访问与主动关闭产生相同的不可归因中断，因此 SDK 不虚构宿主无法支持的权限分类。
+
+该能力不查询也不请求任何权限：微信自身的选择界面不需要权限，宿主的 scope 列表里也没有读取媒体库的 scope。写入相册是另一项能力，有它自己的 API（`saveImageToPhotosAlbum` 与 `saveVideoToPhotosAlbum`）；本轮未实现它，因为本任务没有该需求，也没有可引用来源把 `scope.writePhotosAlbum` 与它绑定。
+
+选择返回的路径是宿主临时资源。SDK 不保留副本、不声称其生命周期，因此之后需要这份媒体的调用方必须自行复制到自己拥有的存储中。
+
+微信媒体选择已于 2026-09-16 完成真实宿主验收。自动化检查、开发者工具与 Android 真机覆盖了 `wechat.choose-media=Supported`、图片、视频、混合、拍摄、主动关闭与媒体访问受限路径，且未记录媒体内容或完整临时路径。该宿主上的主动关闭与受限访问产生相同的不可归因中断；由于这项歧义被显式保留，该能力为 `Stable`。
+
 
 微信文件系统已于 2026-09-15 完成真实宿主验收。微信开发者工具与 Android 真机均在基础库 3.17.2 上验证了固定测试文件的写入、读取匹配、存在检查、删除与删除后不存在；沙箱根和文件内容均未被显示或记录。自动化 Kotlin/JS、fake-host、CommonJS 与 TypeScript 检查也已通过。
 

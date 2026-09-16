@@ -57,6 +57,9 @@ npm run typecheck
 [kmp-miniapp-sdk] scanner capability: PASS wechat.scan-code=Supported
 [kmp-miniapp-sdk] scan: PASS resultPresent=true, typeRecognized=true
 [kmp-miniapp-sdk] scan: INTERRUPTED cause=indeterminate
+[kmp-miniapp-sdk] media capability: PASS wechat.choose-media=Supported
+[kmp-miniapp-sdk] media choose: PASS count=1, typesValid=true, metadataValid=true
+[kmp-miniapp-sdk] media choose: INTERRUPTED cause=indeterminate
 ```
 
 Network 检查会向 `https://example.com/` 发起 `GET`。微信要求该 host 已列入 request domain 白名单，或编译时关闭域名校验。验证其他 endpoint 时请修改 `networkUrl` 常量。
@@ -78,6 +81,8 @@ Runtime detection 卡片的期望状态来自宿主而不是固定表格。未�
 Location 卡片是唯一由能力自身强制前置条件的卡片。`Check location capability` 报告门控对 `wechat.location` 的判定；权限与隐私要求分别报告，因为 API 是否存在与用户是否放行是两个不同问题。页面加载期间不会读取位置。在隐私协议被接受前尝试读取会以 SDK 的隐私前置条件错误失败，且不触及宿主；在权限授予前尝试读取会被拒绝，而不是代替消费者弹窗——驱动该弹窗需要用户手势，因此它始终留在 `Request location permission` 按钮之后。页面只校验返回值的形状并打印 `coordinatesValid` 与 `accuracyValid`，从不显示或记录经纬度。`app.json` 的两处声明必须就位，且接口必须在 MP 后台开启，否则宿主会在用户看到任何东西之前就拒绝。开发者工具的结果由 IP 推导而非来自设备定位模块，且只支持 `gcj02`，因此可以在其中走通流程，但只有真机能证明真实定位。详见 [../../docs/DEVELOPMENT-ch.md](../../docs/DEVELOPMENT-ch.md) 的定位配置一节。
 
 Scanner 卡片打开微信自身的扫码界面，只报告返回结果而从不显示扫码内容。`Check scanner capability` 报告门控；`Scan code` 允许相册入口，`Scan from camera only` 设置 `onlyFromCamera=true`。真机证明主动取消和系统相机权限阻止界面启动产生相同信号，因此二者都打印 `INTERRUPTED cause=indeterminate`，不声称是用户取消或权限拒绝；其他失败打印 `FAIL`。页面从不显示或记录解码内容、`rawData`、字符集或图片路径，也不为扫码建立未经证实的 SDK 权限前置条件。
+
+Media 卡片打开微信自身的选择界面，只报告返回结果而从不显示所选内容。`Check media capability` 报告门控对 `wechat.choose-media` 的判定；四个选择按钮分别打开图片、视频、任一类型，以及仅相机。页面加载期间不会打开选择界面。Console 只打印文件数量、类别是否被识别及元数据是否可用；不会记录所选媒体、base64、文件名、完整临时路径或原始失败对象。开发者工具的精确关闭信号（`chooseMedia:cancel`）与 Android 的关闭信号（`chooseMedia:fail cancel`）都打印 `INTERRUPTED cause=indeterminate`；其他失败只打印安全的 SDK 错误名与诊断类别。媒体选择不请求任何 SDK 权限。宿主返回的路径是临时资源，如需在本次运行后继续使用，应复制到调用方拥有的存储中。
 
 Node 与 TypeScript 检查不能替代真实宿主验证。[../../docs/TESTING-ch.md](../../docs/TESTING-ch.md) 是权威检查清单与两层测试模型的来源。
 

@@ -98,6 +98,7 @@ cd examples/wechat-miniprogram && npm run smoke && npm run typecheck
 | File system | `File System` 卡片的写入、检查、读取、删除四项均为 `PASS` | `[kmp-miniapp-sdk] filesystem write: PASS`、`filesystem access: PASS exists=true`、`filesystem read: PASS matched=true`、`filesystem remove: PASS`、`filesystem access: PASS exists=false` |
 | Location | `Location` 卡片显示能力判定、权限、隐私要求，以及定位读取的 `PASS` | `[kmp-miniapp-sdk] location capability: PASS wechat.location=…`、`location permission query: PASS state=…`、`location privacy query: PASS requirement=…`、`location: PASS coordinatesValid=true, accuracyValid=true` |
 | Scanner | `Scanner` 卡片显示能力判定，以及扫码的 `PASS`、`INTERRUPTED` 或 `FAIL` | `[kmp-miniapp-sdk] scanner capability: PASS wechat.scan-code=…`、`scan: PASS resultPresent=true, typeRecognized=true`、`scan: INTERRUPTED cause=indeterminate` |
+| Media | `Media` 卡片显示能力判定，以及选择的 `PASS`、`INTERRUPTED` 或 `FAIL` | `[kmp-miniapp-sdk] media capability: PASS wechat.choose-media=…`、`media choose: PASS count=1, typesValid=true, metadataValid=true`、`media choose: INTERRUPTED cause=indeterminate` |
 | Clipboard 与震动 | `Clipboard and Haptics` 卡片的写入、读取、短震动、长震动四项均为 `PASS` | `[kmp-miniapp-sdk] clipboard write: PASS`、`clipboard read: PASS matched=true`、`haptics short: PASS`、`haptics long: PASS` |
 | Storage | `Storage verification: PASS` | `[kmp-miniapp-sdk] storage: PASS first=first, overwritten=second, missing=null` |
 | Client login code | `Client login code: PASS` | `[kmp-miniapp-sdk] auth bootstrap: PASS codeReceived=true, length=<正整数>` |
@@ -229,7 +230,26 @@ cd examples/wechat-miniprogram && npm run smoke && npm run typecheck
 
 开发者工具不是真机：其扫码实现是让用户选一张图片再解码，因此相机路径与 `onlyFromCamera` 的实际行为只能在真机上判断。`Scan from camera only` 只是把 `onlyFromCamera=true` 交给微信，用于防止相册回退；它不查询、不请求也不假定 `scope.camera`。示例没有向 `app.json.requiredPrivateInfos` 添加任何扫码字段。系统或微信自身可能在扫码界面中处理相机访问，这不等于 SDK 建立了权限前置条件。
 
-15. 记录你观察到了哪些检查项、哪些没有观察到。只有在某项 capability 完成真实宿主运行后，才会在 [PROJECT_FACTS-ch.md](PROJECT_FACTS-ch.md) 中被记录为已通过宿主验证。
+15. 验证媒体选择。它打开的是微信自身的选择界面，因此页面加载期间不会打开任何界面，以下每一步都由点击触发。页面只报告返回了几个文件、宿主报出的每个类别是否被 SDK 识别、元数据是否可用；**从不显示或记录所选媒体、base64、文件名或完整临时路径**。
+
+| 步骤 | 点击 | 预期 |
+| --- | --- | --- |
+| 1 | `Check media capability` | `[kmp-miniapp-sdk] media capability: PASS wechat.choose-media=Supported`，卡片显示同一状态。宿主没有该 API 时 `Unsupported` 也是正确结果 |
+| 2 | 页面加载后确认 Console 与页面 | 没有出现选择界面，也没有任何 `media choose:` 行；卡片保持 `NOT RUN` |
+| 3 | `Choose image` 并选择一张测试图片 | `[kmp-miniapp-sdk] media choose: PASS count=1, typesValid=true, metadataValid=true` |
+| 4 | `Choose video` 并选择一个测试视频 | 同一行且 `count=1`；在真机上记录 `durationSeconds`、`width`、`height` 是被报告了还是缺失 |
+| 5 | `Choose image or video` | 无论返回哪一类，`typesValid` 都应为 `true` |
+| 6 | `Choose from camera only` 并拍摄一张照片或一段视频 | 选择界面打开的是相机而不是相册 |
+| 7 | `Choose image` 后主动关闭选择界面 | `[kmp-miniapp-sdk] media choose: INTERRUPTED cause=indeterminate` |
+| 8 | 限制微信访问照片后 `Choose image` | 失败，或得到同一 `INTERRUPTED` 行 —— **记录是哪一种**，因为这一步的观察决定该宿主能否区分「受限」与「主动关闭」 |
+
+开发者工具把模拟关闭报告为 `chooseMedia:cancel`，已验收的 Android 真机把主动关闭报告为 `chooseMedia:fail cancel`；这两条精确信号都分类为中断。已验收的受限访问运行在该 Android 宿主上产生同样的不可归因中断，因此 SDK 不声称能够区分原因；在宿主证据支持修改分类前，其他消息均保持为宿主失败。
+
+第 3 步只证明 SDK 交回了契约能承载的文件，不证明有任何东西解码或上传过它们——本能力两者都不做。成功回调若不含任何所选文件属于无效宿主响应，不会产生空集意义下的 `count=0` PASS。
+
+页面不自行读取媒体，示例也不把临时文件复制到任何地方。宿主返回的路径属于产生它的那次会话，请按短期资源对待：如果媒体需要在本次运行之后仍然存在，请自行复制到你拥有的存储中。
+
+16. 记录你观察到了哪些检查项、哪些没有观察到。只有在某项 capability 完成真实宿主运行后，才会在 [PROJECT_FACTS-ch.md](PROJECT_FACTS-ch.md) 中被记录为已通过宿主验证。
 
 Storage 检查会写入专用测试 key、验证覆盖、删除该 key，并确认 missing key 读取为 `null`。Network 检查会向 `https://example.com/` 发起 `GET`，并报告 status code 与 body 长度；验证其他 host 时请修改示例中的 `networkUrl` 常量。
 

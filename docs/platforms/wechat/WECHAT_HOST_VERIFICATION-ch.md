@@ -60,6 +60,7 @@
 | File System | Unit + Contract + Node + DeveloperTools + RealDevice | 已完成 `buildMiniAppSdk`；小程序文件沙箱可用 | 运行测试；打开 index，按顺序使用 File System 卡片：写入、检查存在、读取、删除、再次检查 | `filesystem write: PASS`、`filesystem access: PASS exists=true`、`filesystem read: PASS matched=true`、`filesystem remove: PASS`、`filesystem access: PASS exists=false` | `WDT-2026-09-15-E`；`DEVICE-2026-09-15-C` | 每次文件系统 interop、adapter 或 export 变更 |
 | Location | Unit + Contract + Node + DeveloperTools + RealDevice | 已完成 `buildMiniAppSdk`；MP 后台已开启定位接口；宿主权限决定可手工更改 | 运行测试；打开 index，检查能力与隐私，依次覆盖 `NotRequested`、显式授权、定位成功、设置中拒绝、拒绝时读取、恢复后再次读取 | `wechat.location=Supported`；权限依次报告 `NotRequested`、`Granted`、`Denied`；拒绝时为 `location: DENIED permissionState=Denied`；恢复后为 `PASS coordinatesValid=true, accuracyValid=true`；不显示也不记录任何经纬度 | `WDT-2026-09-15-F`；`DEVICE-2026-09-15-D` | 每次定位 interop、adapter、catalog 或 export 变更 |
 | Scanner | Unit + Contract + Node + DeveloperTools + RealDevice | 已完成 `buildMiniAppSdk`；可用的测试二维码；可限制相机访问的设备 | 检查能力、扫描测试码、主动取消；限制相机后分别运行普通与 camera-only 扫码 | `Supported`；成功为 `PASS resultPresent=true, typeRecognized=true`；取消与相机受限均为 `INTERRUPTED cause=indeterminate`；不出现扫码内容 | 已于 2026-09-15 验证 —— Android、OnePlus PLQ110、微信 8.0.76、运行时基础库 3.17.2；宿主歧义以 `HostInteractionInterrupted` 保留 | 每次扫码 interop、adapter、catalog 或 export 变更 |
+| Media | Unit + Contract + Node + DeveloperTools + RealDevice | 已完成 `buildMiniAppSdk`；设备上有测试图片与测试视频；可限制照片访问的设备 | 运行测试；打开 index，使用 Media 卡片：检查能力、选择图片、选择视频、选择任一类型、从相机拍摄、主动关闭选择界面，最后限制照片访问后再选择一次 | `wechat.choose-media=Supported`；图片选择报告 `media choose: PASS count=1, typesValid=true, metadataValid=true`；视频选择报告其时长与尺寸，若宿主未发送则报告为缺失；主动关闭与受限访问均报告 `media choose: INTERRUPTED cause=indeterminate`；页面与 Console 中都不出现媒体内容与完整临时路径 | 已于 2026-09-16 验证 —— 开发者工具与 Android OnePlus PLQ110、微信 8.0.76、基础库 3.17.2 已覆盖支持、图片、视频、混合、拍摄、主动关闭与受限访问；宿主歧义以 `HostInteractionInterrupted` 保留 | 每次媒体 interop、adapter、catalog 或 export 变更 |
 | Platform Escape Hatch | Unit + Node + capability consumer 的宿主等级 | 使用 `WechatPlatformApi` | 运行相关测试，并由具体微信专属能力执行宿主验证 | 微信 API 可达且未被描述为通用 capability | 由 Auth、Page Lifecycle、Navigation 间接覆盖 | 每次 platform API surface 变更 |
 
 `VersionDependent` 无法在开发者工具中产出：其可选的最低调试基础库为 2.21.4，高于 Runtime Detection 记录的 2.20.1 边界。该状态仅由自动化测试覆盖。这属于验证环境限制，不是未实现功能。
@@ -83,7 +84,6 @@
 
 | Tracking | Capability | Minimum Verification |
 | --- | --- | --- |
-| BOB-63 | Media | Unit + Contract + RealDevice；覆盖选择、取消、临时文件及权限/隐私。 |
 | BOB-73 | Subscription Message | Unit + Contract + RealDevice；用户主动触发；端到端发送时 BackendRequired。 |
 | BOB-68 | Upload / Download | Unit + Contract + RealDevice + BackendRequired；覆盖进度、成功、失败、abort 和文件结果。 |
 | BOB-68 | Network Status | Unit + Contract + RealDevice；网络切换；取消订阅后不得继续收到事件。 |

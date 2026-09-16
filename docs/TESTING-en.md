@@ -99,6 +99,7 @@ The following procedure is the DeveloperTools checklist for currently implemente
 | File system | The `File System` card shows `PASS` for write, access, read, and remove | `[kmp-miniapp-sdk] filesystem write: PASS`, `filesystem access: PASS exists=true`, `filesystem read: PASS matched=true`, `filesystem remove: PASS`, `filesystem access: PASS exists=false` |
 | Location | The `Location` card shows the capability answer, the permission, the privacy requirement, and `PASS` for a position | `[kmp-miniapp-sdk] location capability: PASS wechat.location=…`, `location permission query: PASS state=…`, `location privacy query: PASS requirement=…`, `location: PASS coordinatesValid=true, accuracyValid=true` |
 | Scanner | The `Scanner` card shows the capability answer and `PASS`, `INTERRUPTED`, or `FAIL` for a scan | `[kmp-miniapp-sdk] scanner capability: PASS wechat.scan-code=…`, `scan: PASS resultPresent=true, typeRecognized=true`, `scan: INTERRUPTED cause=indeterminate` |
+| Media | The `Media` card shows the capability answer and `PASS`, `INTERRUPTED`, or `FAIL` for a selection | `[kmp-miniapp-sdk] media capability: PASS wechat.choose-media=…`, `media choose: PASS count=1, typesValid=true, metadataValid=true`, `media choose: INTERRUPTED cause=indeterminate` |
 | Storage | `Storage verification: PASS` | `[kmp-miniapp-sdk] storage: PASS first=first, overwritten=second, missing=null` |
 | Client login code | `Client login code: PASS` | `[kmp-miniapp-sdk] auth bootstrap: PASS codeReceived=true, length=<positive integer>` |
 | Network | `Network verification: PASS` | `[kmp-miniapp-sdk] network: PASS status=200, bytes=<positive integer>` |
@@ -229,7 +230,26 @@ The interruption classification matches exactly two host messages (`scanCode:can
 
 Developer Tools is not a device: its scan implementation has the user pick an image and then decodes it, so the camera path and what `onlyFromCamera` actually does can only be settled on hardware. `Scan from camera only` only passes `onlyFromCamera=true` to WeChat to prevent an album fallback; it neither queries nor requests nor assumes `scope.camera`. The example adds no scan field to `app.json.requiredPrivateInfos`. The system or WeChat may handle camera access inside the scanning interface, which does not mean the SDK established a permission precondition.
 
-15. Record which checks you observed and which you did not. A capability is recorded as host-verified in [PROJECT_FACTS-en.md](PROJECT_FACTS-en.md) only after a real-host run for that capability.
+15. Verify media selection. It opens WeChat's own picker, so nothing opens while the page loads and every step below follows a tap. The page reports only how many files came back, whether every kind the host named is one the SDK recognizes, and whether the metadata is usable; it **never displays or logs the selected media, a base64 encoding, a file name, or a complete temporary path**.
+
+| Step | Tap | Expected |
+| --- | --- | --- |
+| 1 | `Check media capability` | `[kmp-miniapp-sdk] media capability: PASS wechat.choose-media=Supported`, and the card shows the same state. `Unsupported` is a correct answer on a host without the API |
+| 2 | After the page loads, check the console and the card | No picker appeared and there is no `media choose:` line; the card still reads `NOT RUN` |
+| 3 | `Choose image` and select a test image | `[kmp-miniapp-sdk] media choose: PASS count=1, typesValid=true, metadataValid=true` |
+| 4 | `Choose video` and select a test video | The same line with `count=1`; on a device, record whether `durationSeconds`, `width`, and `height` were reported or absent |
+| 5 | `Choose image or video` | A selection containing either kind still reports `typesValid=true` |
+| 6 | `Choose from camera only` and take a photo or video | The picker opens the camera rather than the album |
+| 7 | `Choose image` and dismiss the picker | `[kmp-miniapp-sdk] media choose: INTERRUPTED cause=indeterminate` |
+| 8 | Restrict WeChat's access to photos, then `Choose image` | A failure, or the same `INTERRUPTED` line — **record which**, because this observation settles whether the device distinguishes a restriction from a dismissal |
+
+Developer Tools reports a simulated dismissal as `chooseMedia:cancel`, while the accepted Android run reports a manual dismissal as `chooseMedia:fail cancel`; both exact signals are classified as an interruption. The accepted restricted-access run produces the same indeterminate interruption on that Android host, so the SDK does not claim it can distinguish the cause. Any other message remains a host failure until host evidence justifies changing the classification.
+
+Step 3 proves only that the SDK handed over files the contract can carry, not that anything decoded or uploaded them — nothing in this capability does either. A success callback with no selected files is an invalid host response and never produces a vacuous `count=0` PASS.
+
+The page reads no media itself, and nothing in the example copies the temporary files anywhere. The paths the host returns belong to the session that produced them, so treat them as short-lived: copy the media to storage you own if it has to outlive the run.
+
+16. Record which checks you observed and which you did not. A capability is recorded as host-verified in [PROJECT_FACTS-en.md](PROJECT_FACTS-en.md) only after a real-host run for that capability.
 
 The Storage check writes a dedicated test key, verifies overwrite, removes it, and confirms that the missing key reads as `null`. The network check issues a `GET` to `https://example.com/` and reports the status code and body length; point the example's `networkUrl` constant at any reachable HTTPS endpoint when verifying a different host.
 
