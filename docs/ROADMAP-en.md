@@ -12,28 +12,80 @@ All items below are plans. Completion status must be supported by executable con
 - Configure the Kotlin/JS CommonJS library target and Node.js tests.
 - Establish minimal source sets, build validation, documentation, and repository rules.
 
-## V0.2 JS Consumer Bridge — PLANNED
+## P1 Closeout: First-class KMP Mini App Consumer Integration — URGENT / RELEASE BLOCKER
 
-- Define the first intentional `@JsExport` boundary.
-- Generate and inspect its TypeScript declaration.
-- Consume the CommonJS artifact through TypeScript `require()`.
-- Validate it in WeChat Developer Tools.
+BOB-75 raises the P1 completion bar from “this repository can generate Kotlin/JS for the WeChat example” to “an ordinary KMP project can use the Mini App SDK without understanding its internal Kotlin/JS wiring.” The existing `buildMiniAppSdk` task and WeChat example remain foundation evidence, but they do not replace a Gradle Plugin, `miniappMain` / `miniappTest`, automatic dependency wiring, and a genuine consumer fixture.
 
-## V0.3 First wx Bridge — PLANNED
+The target consumer experience is:
 
-Evaluate a deliberately small first bridge. Candidates include `wx.login`, `wx.showToast`, or storage. Candidate status is not a commitment to implement all of them.
+```kotlin
+plugins {
+    kotlin("multiplatform")
+    id("io.github.bobcgn.miniapp")
+}
+```
 
-## V0.4 Coroutine Adapter — PLANNED
+Applying the plugin must provide stable `miniappMain` and `miniappTest` entry points, the formal SDK API dependency, and an artifact consumable by WeChat Developer Tools. A PoC must first choose between a named Kotlin/JS target, custom source sets, or a plugin-managed compilation hierarchy; delivery pressure must not weaken the user-facing source-set requirement.
 
-Adapt an appropriate callback-based platform API to a suspend-friendly Kotlin API after the raw interop contract is validated.
+### Strict critical path
 
-## Later — PLANNED
+Only one critical-path stage advances at a time. A later issue must not become Ready or In Progress before its predecessor is complete:
 
-- Network integration
-- Navigation integration
-- Lifecycle integration
-- Build automation
-- Distribution strategy
+| Order | Issue | Deliverable | Gate to the next stage |
+| --- | --- | --- | --- |
+| A | BOB-83 | Minimal Kotlin 2.4.20 / Gradle 9.3.1 PoC comparing a named JS target, custom source sets, and a custom compilation/hierarchy | Record the chosen and rejected approaches, reasons, and KGP limitations; create an ADR if long-lived; retain the hard `miniappMain` / `miniappTest` requirement |
+| B | BOB-78 | Independent `io.github.bobcgn.miniapp` Gradle Plugin skeleton | An ordinary KMP project applies the plugin and syncs; a missing KMP plugin produces a clear error |
+| C | BOB-76 | Automatic `commonMain → miniappMain` and `commonTest → miniappTest` wiring | Consumers create no source sets manually; IDEA recognition and completion pass; `miniappTest` runs |
+| D | BOB-82 | Automatic formal SDK runtime dependency wiring | `miniappMain` directly uses the public API; consumers declare no internal WeChat artifact |
+| E | BOB-81 | Hidden CommonJS, TypeScript declaration, runtime dependency, and WeChat artifact assembly | One stable task emits the WeChat-consumable artifact; consumers call no `useCommonJs()` and copy no artifact manually |
+| F | BOB-84 | Minimal `miniapp { wechat { ... } }` Gradle DSL | Carry only genuine build configuration and preserve the Mini App Platform / current WeChat Host boundary |
+| G | BOB-80 | Independent ordinary KMP consumer fixture | Applying only the plugin compiles `miniappMain`, runs `miniappTest`, reuses `commonMain`, and produces the artifact consumed by the WeChat host |
+| H | BOB-79 | Gradle Plugin integration test suite | Automate plugin-apply, missing-KMP, source-set wiring, test execution, dependency wiring, task registration, and consumer-build coverage |
+| I | BOB-77 | First-class consumer workflow documentation | Synchronize README, PROJECT_FACTS, ARCHITECTURE, and DEVELOPMENT in English and Chinese; a new user builds Hello World from the README alone |
+| Release Gate | BOB-85 | Complete P1 Consumer Integration acceptance | After A–I have reviewable evidence, accept Gradle, IDEA, fixture, artifact, WeChat Developer Tools, and documentation; only then unblock the BOB-51 release gate |
+
+### P1 completion evidence
+
+BOB-85 requires all of the following evidence. An implementation report cannot substitute for a missing acceptance result:
+
+- An actual Gradle clean build and `miniappTest` execution for an ordinary KMP fixture.
+- Automated assertions that the plugin creates `miniappMain` / `miniappTest` and both dependsOn relationships.
+- Automatic SDK dependency resolution, with no internal WeChat artifact or manual Kotlin/JS module-kind configuration in the consumer build.
+- A stable assembly task producing the complete WeChat consumer artifact, including declarations and runtime dependencies, with no manual copy step.
+- IDEA recognition of both source sets as Kotlin source sets; this needs a screenshot or equivalent reviewable IDE evidence and cannot be replaced by Gradle tests alone.
+- The final artifact loading in WeChat Developer Tools and passing the prescribed Consumer Bridge smoke. Real-device, permission, privacy, and backend capabilities remain separately governed by the host-verification matrix.
+- Both the Gradle Plugin integration suite and the genuine consumer fixture passing, preventing an SDK-repository-only false green.
+- English and Chinese README, PROJECT_FACTS, ARCHITECTURE, and DEVELOPMENT matching the proven workflow.
+
+### Architecture boundaries and non-goals
+
+- The Gradle Plugin owns platform/build integration and developer experience; the Runtime SDK continues to own APIs and Host capabilities.
+- Mini App Platform is the abstraction and WeChat is the current Host; the plugin must not encode `MiniApp == WeChat` as the overall architecture.
+- This stage does not implement Alipay, Telegram, a multi-Host source-set hierarchy, npm/Maven Central publication, or multiple Mini App targets.
+- This stage does not enter the P2 Presentation Runtime or introduce Compose, a renderer, Virtual DOM, or WXML generation.
+- BOB-53 `buildMiniAppSdk` is foundation evidence, not the consumer workflow required by BOB-75/85.
+
+## V0.2 JS Consumer Bridge — DONE
+
+- Defined the intentional `@JsExport` boundary.
+- Generated and inspected its TypeScript declaration.
+- Consumed the CommonJS artifact through TypeScript `require()`.
+- Validated it in WeChat Developer Tools.
+
+## V0.3 First wx Bridge — DONE
+
+Storage was selected as the first minimal bridge and now has typed interop, an adapter, automated coverage, and WeChat Developer Tools evidence. That choice does not imply every earlier candidate is implemented.
+
+## V0.4 Coroutine Adapter — DONE
+
+An internal callback-to-coroutine primitive now adapts suitable callback APIs into suspend-friendly Kotlin APIs, while preserving the distinction between operations with a real abort handle and operations where cancellation only stops waiting.
+
+## Remaining P1 Host Capabilities — IN PROGRESS
+
+- Network, Navigation, Lifecycle, and multiple WeChat Host capabilities are implemented; PROJECT_FACTS and the WeChat capability matrix remain authoritative for exact status.
+- BOB-60 real-host privacy acceptance remains blocked by account/backend conditions; BOB-73 subscription-message real-host acceptance is in progress.
+- Payment, Upload/Download/Network Status, BLE, and Virtual Payment continue under their own issues and are not made implemented by the consumer-integration track.
+- Build automation and consumer distribution close through the urgent BOB-75 to BOB-85 track above.
 
 ## Future / Exploratory
 
