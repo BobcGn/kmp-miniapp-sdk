@@ -132,6 +132,95 @@ export function wechatScanCode(
   scanTypes?: readonly ScanCategory[],
 ): Promise<ScanResult>;
 
+/** A media type {@link wechatChooseMedia} can ask for. */
+export type MediaType = 'image' | 'video' | 'mix';
+
+/** Where {@link wechatChooseMedia} may take media from. */
+export type MediaSource = 'album' | 'camera';
+
+/** How much {@link wechatChooseMedia} may compress an image it returns. */
+export type MediaSizeType = 'original' | 'compressed';
+
+/** Which camera {@link wechatChooseMedia} may use. */
+export type CameraPosition = 'back' | 'front';
+
+/** A kind of file the host may report. */
+export type MediaFileType = 'image' | 'video';
+
+/**
+ * One file the user selected.
+ *
+ * The path is a host temporary resource, not a durable one: it belongs to the
+ * session that produced it and nothing in the host contract promises it survives.
+ * Copy it to storage you own before relying on it.
+ *
+ * The SDK never logs, stores, or uploads what the user selected. A caller that
+ * keeps it takes on the responsibility that comes with it.
+ */
+export interface MediaFile {
+  /** The host's temporary path to the selected file. */
+  readonly tempFilePath: string;
+  /** The file's size in bytes. */
+  readonly sizeBytes: number;
+  /** The kind resolved against this SDK's known set, or `null` when unrecognized. */
+  readonly fileType: MediaFileType | null | undefined;
+  /** The host's required name for the kind, verbatim. */
+  readonly hostFileType: string;
+  /** A video's duration in seconds; `null` for an image or when unreported. */
+  readonly durationSeconds: number | null | undefined;
+  /** A video's width in pixels, or `null` when the host reported none. */
+  readonly width: number | null | undefined;
+  /** A video's height in pixels, or `null` when the host reported none. */
+  readonly height: number | null | undefined;
+  /** A temporary path to a video's thumbnail, or `null` when the host reported none. */
+  readonly thumbTempFilePath: string | null | undefined;
+}
+
+/** What one media selection asks the host for. */
+export interface MediaRequest {
+  /**
+   * Media types to ask for.
+   *
+   * WeChat documents this option as required, so it must not be empty.
+   */
+  readonly mediaTypes: readonly MediaType[];
+  /**
+   * Maximum number of files to ask for; defaults to `1`.
+   *
+   * The host applies its own limit and may return fewer than requested.
+   */
+  readonly count?: number;
+  /** Where the host may take media from; an empty or omitted array means no restriction. */
+  readonly sourceTypes?: readonly MediaSource[];
+  /**
+   * Longest video recording to ask for, in seconds.
+   *
+   * WeChat documents the range as 3 to 60, and states that it does not restrict
+   * album selection. Omit it for the host's own default.
+   */
+  readonly maxDurationSeconds?: number | null;
+  /** How much the host may compress returned images; effective only for images. */
+  readonly sizeTypes?: readonly MediaSizeType[];
+  /** Which camera to use; effective only when `camera` is among `sourceTypes`. */
+  readonly camera?: CameraPosition | null;
+}
+
+/**
+ * Asks WeChat to let the user choose images or videos through its own picker.
+ *
+ * Resolves with the non-empty file array the host returned. A success callback
+ * without a selected file is rejected as an invalid host response.
+ *
+ * The interaction ending without a selection rejects with the SDK's
+ * host-interrupted error (`error.name === 'HostInteractionInterrupted'`), which does
+ * not claim to know whether the user dismissed the picker or something prevented it
+ * from completing. Every other failure rejects as a host failure or an invalid
+ * response.
+ *
+ * This call asks the host for no permission: WeChat's own picker needs none.
+ */
+export function wechatChooseMedia(request: MediaRequest): Promise<MediaFile[]>;
+
 /**
  * Reads the system clipboard as text.
  *

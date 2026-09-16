@@ -1050,6 +1050,16 @@ if (typeof Math.clz32 === 'undefined') {
     _init_properties_boxedLong_kt__v24qrw();
     return compare(_this__u8e3s4, other) >= 0;
   }
+  function numberToLong(a) {
+    _init_properties_boxedLong_kt__v24qrw();
+    var tmp;
+    if (a instanceof Long) {
+      tmp = a;
+    } else {
+      tmp = fromNumber(a);
+    }
+    return tmp;
+  }
   function isLongArray(a) {
     _init_properties_boxedLong_kt__v24qrw();
     return isJsArray(a) && a.$type$ === 'LongArray';
@@ -1845,6 +1855,9 @@ if (typeof Math.clz32 === 'undefined') {
       tmp = 1 << (31 - clz32(_this__u8e3s4) | 0);
     }
     return tmp;
+  }
+  function isFinite(_this__u8e3s4) {
+    return !isInfinite(_this__u8e3s4) && !isNaN_0(_this__u8e3s4);
   }
   function isInfinite(_this__u8e3s4) {
     return _this__u8e3s4 === Infinity || _this__u8e3s4 === -Infinity;
@@ -6366,56 +6379,61 @@ if (typeof Math.clz32 === 'undefined') {
   _.$_$.p2 = throwUninitializedPropertyAccessException;
   _.$_$.q2 = add;
   _.$_$.r2 = compare;
-  _.$_$.s2 = subtract;
-  _.$_$.t2 = FunctionAdapter;
-  _.$_$.u2 = anyToString;
-  _.$_$.v2 = captureStack;
-  _.$_$.w2 = charArrayOf;
-  _.$_$.x2 = compareTo;
-  _.$_$.y2 = constructCallableReference;
-  _.$_$.z2 = defineProp;
-  _.$_$.a3 = equals;
-  _.$_$.b3 = getBooleanHashCode;
-  _.$_$.c3 = getNumberHashCode;
-  _.$_$.d3 = getPropertyCallableRef;
-  _.$_$.e3 = getStringHashCode;
-  _.$_$.f3 = hashCode_0;
-  _.$_$.g3 = initMetadataForClass;
-  _.$_$.h3 = initMetadataForCompanion;
-  _.$_$.i3 = initMetadataForCoroutine;
-  _.$_$.j3 = initMetadataForInterface;
-  _.$_$.k3 = initMetadataForLambda;
-  _.$_$.l3 = initMetadataForObject;
-  _.$_$.m3 = isCharSequence;
-  _.$_$.n3 = isInterface;
-  _.$_$.o3 = isNumber;
-  _.$_$.p3 = numberToDouble;
-  _.$_$.q3 = protoOf;
-  _.$_$.r3 = toString_1;
-  _.$_$.s3 = getKClassFromExpression;
-  _.$_$.t3 = KProperty1;
-  _.$_$.u3 = contains_0;
-  _.$_$.v3 = isBlank;
-  _.$_$.w3 = split;
-  _.$_$.x3 = toIntOrNull;
-  _.$_$.y3 = trim;
-  _.$_$.z3 = Enum;
-  _.$_$.a4 = Error_0;
-  _.$_$.b4 = Exception;
-  _.$_$.c4 = Long;
-  _.$_$.d4 = RuntimeException;
-  _.$_$.e4 = THROW_CCE;
-  _.$_$.f4 = UnsupportedOperationException;
-  _.$_$.g4 = addSuppressed;
-  _.$_$.h4 = createFailure;
-  _.$_$.i4 = ensureNotNull;
-  _.$_$.j4 = isInfinite;
-  _.$_$.k4 = isNaN_0;
-  _.$_$.l4 = lazy;
-  _.$_$.m4 = noWhenBranchMatchedException;
-  _.$_$.n4 = stackTraceToString;
-  _.$_$.o4 = toString_0;
-  _.$_$.p4 = to;
+  _.$_$.s2 = equalsLong;
+  _.$_$.t2 = numberToLong;
+  _.$_$.u2 = subtract;
+  _.$_$.v2 = toNumber;
+  _.$_$.w2 = FunctionAdapter;
+  _.$_$.x2 = anyToString;
+  _.$_$.y2 = captureStack;
+  _.$_$.z2 = charArrayOf;
+  _.$_$.a3 = charSequenceLength;
+  _.$_$.b3 = compareTo;
+  _.$_$.c3 = constructCallableReference;
+  _.$_$.d3 = defineProp;
+  _.$_$.e3 = equals;
+  _.$_$.f3 = getBooleanHashCode;
+  _.$_$.g3 = getNumberHashCode;
+  _.$_$.h3 = getPropertyCallableRef;
+  _.$_$.i3 = getStringHashCode;
+  _.$_$.j3 = hashCode_0;
+  _.$_$.k3 = initMetadataForClass;
+  _.$_$.l3 = initMetadataForCompanion;
+  _.$_$.m3 = initMetadataForCoroutine;
+  _.$_$.n3 = initMetadataForInterface;
+  _.$_$.o3 = initMetadataForLambda;
+  _.$_$.p3 = initMetadataForObject;
+  _.$_$.q3 = isCharSequence;
+  _.$_$.r3 = isInterface;
+  _.$_$.s3 = isNumber;
+  _.$_$.t3 = numberToDouble;
+  _.$_$.u3 = protoOf;
+  _.$_$.v3 = toString_1;
+  _.$_$.w3 = getKClassFromExpression;
+  _.$_$.x3 = KProperty1;
+  _.$_$.y3 = contains_0;
+  _.$_$.z3 = isBlank;
+  _.$_$.a4 = split;
+  _.$_$.b4 = toIntOrNull;
+  _.$_$.c4 = trim;
+  _.$_$.d4 = Enum;
+  _.$_$.e4 = Error_0;
+  _.$_$.f4 = Exception;
+  _.$_$.g4 = Long;
+  _.$_$.h4 = RuntimeException;
+  _.$_$.i4 = THROW_CCE;
+  _.$_$.j4 = UnsupportedOperationException;
+  _.$_$.k4 = addSuppressed;
+  _.$_$.l4 = createFailure;
+  _.$_$.m4 = ensureNotNull;
+  _.$_$.n4 = isFinite;
+  _.$_$.o4 = isInfinite;
+  _.$_$.p4 = isNaN_0;
+  _.$_$.q4 = lazy;
+  _.$_$.r4 = noWhenBranchMatchedException;
+  _.$_$.s4 = stackTraceToString;
+  _.$_$.t4 = toString_0;
+  _.$_$.u4 = to;
   //endregion
   return _;
 }(module.exports));

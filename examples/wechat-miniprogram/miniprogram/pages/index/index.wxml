@@ -108,6 +108,18 @@
   </view>
 
   <view class="card">
+    <text class="eyebrow">Media</text>
+    <text class="status status--{{mediaStatus}}">{{mediaStatus}}</text>
+    <text class="details">{{mediaDetails}}</text>
+    <text class="security-note">What you pick is never shown or logged; no picker opens on load.</text>
+    <button class="action" bindtap="checkMediaCapability">Check media capability</button>
+    <button class="action" bindtap="chooseImage">Choose image</button>
+    <button class="action" bindtap="chooseVideo">Choose video</button>
+    <button class="action" bindtap="chooseImageOrVideo">Choose image or video</button>
+    <button class="action" bindtap="chooseFromCamera">Choose from camera only</button>
+  </view>
+
+  <view class="card">
     <text class="eyebrow">First Host Capability</text>
     <text class="label">Storage verification</text>
     <text class="status status--{{storageStatus}}">{{storageStatus}}</text>

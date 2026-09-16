@@ -58,6 +58,8 @@ interface IndexPageData {
   locationDetails: string;
   scannerStatus: string;
   scannerDetails: string;
+  mediaStatus: string;
+  mediaDetails: string;
 }
 
 type IndexPage = MiniProgramPageInstance<IndexPageData>;
@@ -676,6 +678,148 @@ function isHostInteractionInterrupted(error: unknown): boolean {
   return (error as { name?: unknown }).name === 'HostInteractionInterrupted';
 }
 
+/**
+ * Reports how the gate answers for the media-selection capability.
+ *
+ * This is the whole answer for this capability: WeChat's own picker needs no
+ * permission the host ties to it, so there is nothing else to report here.
+ */
+function checkMediaCapability(this: IndexPage): void {
+  try {
+    const support: MiniAppSdk.CapabilitySupportResult =
+      MiniAppSdk.capabilitySupport('wechat.choose-media');
+    console.log('[kmp-miniapp-sdk] media capability: PASS wechat.choose-media=' + support.state);
+    this.setData({
+      mediaStatus: support.state,
+      mediaDetails: 'wechat.choose-media=' + support.state,
+    });
+  } catch (error) {
+    console.error('[kmp-miniapp-sdk] media capability: FAIL', error);
+    this.setData({ mediaStatus: 'FAIL', mediaDetails: String(error) });
+  }
+}
+
+/**
+ * A safe one-line description of a failed selection.
+ *
+ * The host's own message is deliberately left out: a failure message can carry part
+ * of a path or a file name, and this page prints neither. The raw error object is
+ * deliberately not logged for the same reason.
+ */
+function mediaFailureReason(error: unknown): string {
+  if (typeof error === 'object' && error !== null) {
+    const named = error as { name?: unknown };
+    if (typeof named.name === 'string' && named.name.length > 0) {
+      return named.name;
+    }
+  }
+  return 'unknown';
+}
+
+/**
+ * Classifies the media host signal without printing the signal itself.
+ *
+ * A host message may contain a file name or path, so the diagnostic is deliberately
+ * a closed label. The two exact candidates are separated because the next real-host
+ * run needs to establish which one WeChat actually returns for a manual dismissal.
+ */
+function mediaFailureSignal(error: unknown): string {
+  if (typeof error !== 'object' || error === null) {
+    return 'unavailable';
+  }
+
+  // Kotlin keeps hostMessage internal at the JavaScript boundary, while the
+  // standard Error.message contains the HostFailure prefix plus that text.
+  const message = (error as { message?: unknown }).message;
+  if (typeof message !== 'string') {
+    return 'unavailable';
+  }
+  if (message === 'wechat host failure: chooseMedia:cancel') {
+    return 'cancel';
+  }
+  if (message === 'wechat host failure: chooseMedia:fail cancel') {
+    return 'fail-cancel';
+  }
+  if (message.toLowerCase().includes('cancel')) {
+    return 'cancel-like';
+  }
+  return 'other';
+}
+
+/**
+ * Opens WeChat's picker and checks the shape of what came back.
+ *
+ * The selected files are never displayed or logged: what the user picked is theirs,
+ * and the temporary paths belong to the host. This check only needs to know how many
+ * files came back, whether every file's kind is one the SDK recognizes, and whether
+ * the metadata it reported is usable. All three are recomputed here rather than
+ * assumed, so they are evidence about the values and not a formality. An image
+ * reports no duration or dimensions, so those are expected to be absent rather than
+ * zero. The SDK rejects a successful host response containing no selected files.
+ */
+async function runMediaSelection(
+  page: IndexPage,
+  request: MiniAppSdk.MediaRequest,
+): Promise<void> {
+  try {
+    const files: MiniAppSdk.MediaFile[] = await MiniAppSdk.wechatChooseMedia(request);
+
+    const count = files.length;
+    const typesValid = files.every(
+      (file) => file.fileType === 'image' || file.fileType === 'video',
+    );
+    const metadataValid = files.every((file) => {
+      const sizeValid = Number.isFinite(file.sizeBytes) && file.sizeBytes >= 0;
+      const pathPresent = typeof file.tempFilePath === 'string' && file.tempFilePath.length > 0;
+      const optionalNumbersValid = [file.durationSeconds, file.width, file.height].every(
+        (value) => value === null || value === undefined || (Number.isFinite(value) && value >= 0),
+      );
+      return sizeValid && pathPresent && optionalNumbersValid;
+    });
+
+    const details = `count=${count}, typesValid=${typesValid}, metadataValid=${metadataValid}`;
+    console.log('[kmp-miniapp-sdk] media choose: PASS', details);
+    page.setData({ mediaStatus: 'PASS', mediaDetails: details });
+  } catch (error) {
+    // An exact host signal can report an ended interaction without a structured
+    // cause, so the page does not attribute it to user intent or a permission.
+    if (isHostInteractionInterrupted(error)) {
+      console.log('[kmp-miniapp-sdk] media choose: INTERRUPTED cause=indeterminate');
+      page.setData({
+        mediaStatus: 'INTERRUPTED',
+        mediaDetails: 'the interaction ended without a selection',
+      });
+      return;
+    }
+
+    const reason = mediaFailureReason(error);
+    const signal = mediaFailureSignal(error);
+    const details = `reason=${reason}, signal=${signal}`;
+    console.error('[kmp-miniapp-sdk] media choose: FAIL ' + details);
+    page.setData({ mediaStatus: 'FAIL', mediaDetails: details });
+  }
+}
+
+/** Chooses one image, or an image and a video, from anywhere the host allows. */
+function chooseImage(this: IndexPage): Promise<void> {
+  return runMediaSelection(this, { mediaTypes: ['image'] });
+}
+
+/** Chooses one video from anywhere the host allows. */
+function chooseVideo(this: IndexPage): Promise<void> {
+  return runMediaSelection(this, { mediaTypes: ['video'] });
+}
+
+/** Chooses an image or a video, letting the host decide which. */
+function chooseImageOrVideo(this: IndexPage): Promise<void> {
+  return runMediaSelection(this, { mediaTypes: ['mix'] });
+}
+
+/** Asks the host to take a new photo or video rather than offering the album. */
+function chooseFromCamera(this: IndexPage): Promise<void> {
+  return runMediaSelection(this, { mediaTypes: ['mix'], sourceTypes: ['camera'] });
+}
+
 async function runStorageCheck(page: IndexPage): Promise<void> {
   try {
     await MiniAppSdk.storageSet(storageKey, 'first');
@@ -822,6 +966,8 @@ Page<IndexPageData>({
     locationDetails: 'Tap a button; nothing requests a position on load.',
     scannerStatus: 'NOT RUN',
     scannerDetails: 'Tap a button; nothing opens the scanning interface on load.',
+    mediaStatus: 'NOT RUN',
+    mediaDetails: 'Tap a button; nothing opens the picker on load.',
     permissionStatus: 'UNKNOWN',
     permissionDetails:
       'Permission is never requested on load. Tap a button to query or request it.',
@@ -855,4 +1001,9 @@ Page<IndexPageData>({
   checkScannerCapability,
   scanCode,
   scanCodeFromCamera,
+  checkMediaCapability,
+  chooseImage,
+  chooseVideo,
+  chooseImageOrVideo,
+  chooseFromCamera,
 });

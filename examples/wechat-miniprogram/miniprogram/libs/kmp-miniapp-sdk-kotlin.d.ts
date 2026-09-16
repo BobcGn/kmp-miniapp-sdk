@@ -31,6 +31,25 @@ export declare namespace io.github.bobcgn.miniapp.export {
     }
 }
 export declare namespace io.github.bobcgn.miniapp.export {
+    class JsMediaFile {
+        private constructor();
+        get tempFilePath(): string;
+        get sizeBytes(): number;
+        get fileType(): Nullable<string>;
+        get hostFileType(): string;
+        get durationSeconds(): Nullable<number>;
+        get width(): Nullable<number>;
+        get height(): Nullable<number>;
+        get thumbTempFilePath(): Nullable<string>;
+    }
+    namespace JsMediaFile {
+        /** @deprecated $metadata$ is used for internal purposes, please don't use it in your code, because it can be removed at any moment */
+        namespace $metadata$ {
+            const constructor: abstract new () => JsMediaFile;
+        }
+    }
+}
+export declare namespace io.github.bobcgn.miniapp.export {
     class JsPrivacyStatus {
         private constructor();
         get requirement(): string;
@@ -120,6 +139,7 @@ export declare namespace io.github.bobcgn.miniapp.export {
                 wechatRemoveFile(path: string): Promise<void>;
                 wechatGetCurrentLocation(coordinateSystem: string): Promise<io.github.bobcgn.miniapp.export.JsGeoPosition>;
                 wechatScanCode(onlyFromCamera: boolean, scanTypes: Array<string>): Promise<io.github.bobcgn.miniapp.export.JsScanResult>;
+                wechatChooseMedia(mediaTypes: Array<string>, count: number, sourceTypes: Array<string>, maxDurationSeconds: Nullable<number>, sizeTypes: Array<string>, camera: Nullable<string>): Promise<Array<io.github.bobcgn.miniapp.export.JsMediaFile>>;
                 requirePrivacySatisfied(): Promise<void>;
                 private constructor();
             }

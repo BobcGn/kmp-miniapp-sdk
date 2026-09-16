@@ -100,6 +100,32 @@ module.exports = {
         };
       });
   },
+  wechatChooseMedia: function wechatChooseMedia(request) {
+    const options = request || {};
+    return miniAppExports
+      .wechatChooseMedia(
+        options.mediaTypes === undefined ? [] : options.mediaTypes,
+        options.count === undefined ? 1 : options.count,
+        options.sourceTypes === undefined ? [] : options.sourceTypes,
+        options.maxDurationSeconds === undefined ? null : options.maxDurationSeconds,
+        options.sizeTypes === undefined ? [] : options.sizeTypes,
+        options.camera === undefined ? null : options.camera,
+      )
+      .then(function (files) {
+        return files.map(function (file) {
+          return {
+            tempFilePath: file.tempFilePath,
+            sizeBytes: file.sizeBytes,
+            fileType: file.fileType,
+            hostFileType: file.hostFileType,
+            durationSeconds: file.durationSeconds,
+            width: file.width,
+            height: file.height,
+            thumbTempFilePath: file.thumbTempFilePath,
+          };
+        });
+      });
+  },
   networkRequest: function networkRequest(url, init) {
     const options = init || {};
     return miniAppExports

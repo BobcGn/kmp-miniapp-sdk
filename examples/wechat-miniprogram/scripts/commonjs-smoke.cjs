@@ -27,6 +27,7 @@ const supportedSchemas = new Set([
   'getFileSystemManager',
   'getLocation',
   'scanCode',
+  'chooseMedia',
 ]);
 
 // Permission state this fake host holds, plus a record of what it was asked to
@@ -82,6 +83,15 @@ let scanAnswer = {
 };
 let scanFailure = null;
 const scanCalls = [];
+
+// Media selection is another user-gesture capability. The fake records what it was
+// asked for and returns the entries it is given, so a test can supply a malformed
+// selection as easily as a valid one.
+let mediaTempFiles = [
+  { tempFilePath: '/node-sandbox/media/image.png', size: 2048, fileType: 'image' },
+];
+let mediaFailure = null;
+const mediaCalls = [];
 
 function fileSystemManager() {
   return {
@@ -264,6 +274,21 @@ global.wx = {
     if (scanAnswer.path !== undefined) answer.path = scanAnswer.path;
     options.success(answer);
   },
+  chooseMedia(options) {
+    mediaCalls.push({
+      count: options.count,
+      mediaType: options.mediaType,
+      sourceType: options.sourceType,
+      maxDuration: options.maxDuration,
+      sizeType: options.sizeType,
+      camera: options.camera,
+    });
+    if (mediaFailure !== null) {
+      options.fail({ errMsg: mediaFailure });
+      return;
+    }
+    options.success({ errMsg: 'chooseMedia:ok', tempFiles: mediaTempFiles });
+  },
   env: {
     USER_DATA_PATH: sandboxRoot,
   },
@@ -299,6 +324,7 @@ async function main() {
     'wechatRemoveFile',
     'wechatGetCurrentLocation',
     'wechatScanCode',
+    'wechatChooseMedia',
     'networkRequest',
     'wechatAppOnLaunch',
     'wechatAppOnShow',
@@ -729,6 +755,190 @@ async function main() {
   global.wx.scanCode = scanCodeImpl;
   supportedSchemas.add('scanCode');
 
+  // Media selection opens WeChat's own picker, and only from a user gesture.
+  // Nothing opened it while the module loaded, and the SDK asks for no permission
+  // to do so, because the host ties none to this API.
+  assert.deepEqual(mediaCalls, []);
+  assert.equal(miniAppSdk.capabilitySupport('wechat.choose-media').state, 'Supported');
+
+  const permissionQueriesBeforeMedia = getSettingCalls;
+  const authorizationsBeforeMedia = authorizeCalls.length;
+  const settingsVisitsBeforeMedia = openSettingCalls;
+  const privacyAuthorizationsBeforeMedia = privacyAuthorizations.length;
+
+  // Only what the caller asked for is sent, so the host's own defaults apply to
+  // everything else.
+  const chosen = await miniAppSdk.wechatChooseMedia({ mediaTypes: ['image'] });
+  assert.equal(chosen.length, 1);
+  assert.equal(chosen[0].tempFilePath, '/node-sandbox/media/image.png');
+  assert.equal(chosen[0].sizeBytes, 2048);
+  assert.equal(chosen[0].fileType, 'image');
+  assert.equal(chosen[0].hostFileType, 'image');
+  // WeChat reports no duration, dimensions, or thumbnail for an image, so those
+  // stay absent instead of becoming zeros.
+  assert.equal(chosen[0].durationSeconds, null);
+  assert.equal(chosen[0].width, null);
+  assert.equal(chosen[0].height, null);
+  assert.equal(chosen[0].thumbTempFilePath, null);
+
+  const lastMediaCall = mediaCalls[mediaCalls.length - 1];
+  assert.equal(lastMediaCall.count, 1);
+  assert.deepEqual(lastMediaCall.mediaType, ['image']);
+  assert.equal(lastMediaCall.sourceType, undefined);
+  assert.equal(lastMediaCall.maxDuration, undefined);
+  assert.equal(lastMediaCall.sizeType, undefined);
+  assert.equal(lastMediaCall.camera, undefined);
+
+  // No permission was queried, requested, or opened, and no privacy consent was
+  // asked for, on the way to opening the picker.
+  assert.equal(getSettingCalls, permissionQueriesBeforeMedia);
+  assert.equal(authorizeCalls.length, authorizationsBeforeMedia);
+  assert.equal(openSettingCalls, settingsVisitsBeforeMedia);
+  assert.equal(privacyAuthorizations.length, privacyAuthorizationsBeforeMedia);
+
+  // Every option the caller can set is forwarded.
+  await miniAppSdk.wechatChooseMedia({
+    mediaTypes: ['mix'],
+    count: 3,
+    sourceTypes: ['album', 'camera'],
+    maxDurationSeconds: 30,
+    sizeTypes: ['compressed'],
+    camera: 'front',
+  });
+  const fullCall = mediaCalls[mediaCalls.length - 1];
+  assert.equal(fullCall.count, 3);
+  assert.deepEqual(fullCall.mediaType, ['mix']);
+  assert.deepEqual(fullCall.sourceType, ['album', 'camera']);
+  assert.equal(fullCall.maxDuration, 30);
+  assert.deepEqual(fullCall.sizeType, ['compressed']);
+  assert.equal(fullCall.camera, 'front');
+
+  // A video reports the metadata an image has none of.
+  mediaTempFiles = [
+    {
+      tempFilePath: '/node-sandbox/media/video.mp4',
+      size: 1048576,
+      fileType: 'video',
+      duration: 12.5,
+      width: 1920,
+      height: 1080,
+      thumbTempFilePath: '/node-sandbox/media/video-thumb.jpg',
+    },
+  ];
+  const video = await miniAppSdk.wechatChooseMedia({ mediaTypes: ['video'] });
+  assert.equal(video[0].fileType, 'video');
+  assert.equal(video[0].durationSeconds, 12.5);
+  assert.equal(video[0].width, 1920);
+  assert.equal(video[0].height, 1080);
+  assert.equal(video[0].thumbTempFilePath, '/node-sandbox/media/video-thumb.jpg');
+
+  // A kind this SDK does not know is reported rather than turned into a failure,
+  // and the host's own name is kept.
+  mediaTempFiles = [
+    { tempFilePath: '/node-sandbox/media/live.heic', size: 512, fileType: 'livePhoto' },
+  ];
+  const unknownKind = await miniAppSdk.wechatChooseMedia({ mediaTypes: ['image'] });
+  assert.equal(unknownKind[0].fileType, null);
+  assert.equal(unknownKind[0].hostFileType, 'livePhoto');
+
+  // A successful picker response must identify at least one selected file.
+  mediaTempFiles = [];
+  await assert.rejects(
+    miniAppSdk.wechatChooseMedia({ mediaTypes: ['image'] }),
+    (error) => error.name === 'InvalidResponse',
+  );
+
+  mediaTempFiles = [
+    { tempFilePath: '/node-sandbox/media/image.png', size: 2048, fileType: 'image' },
+  ];
+
+  // Caller mistakes are refused rather than quietly corrected.
+  await assert.rejects(
+    miniAppSdk.wechatChooseMedia({ mediaTypes: ['hologram'] }),
+    /Unsupported media type/,
+  );
+  await assert.rejects(miniAppSdk.wechatChooseMedia({ mediaTypes: [] }), /at least one media type/);
+  await assert.rejects(
+    miniAppSdk.wechatChooseMedia({ mediaTypes: ['image'], count: 0 }),
+    /at least 1/,
+  );
+  await assert.rejects(
+    miniAppSdk.wechatChooseMedia({ mediaTypes: ['video'], maxDurationSeconds: 2 }),
+    /between 3 and 60/,
+  );
+  await assert.rejects(
+    miniAppSdk.wechatChooseMedia({ mediaTypes: ['video'], maxDurationSeconds: 61 }),
+    /between 3 and 60/,
+  );
+  await assert.rejects(
+    miniAppSdk.wechatChooseMedia({ mediaTypes: ['image'], sourceTypes: ['disk'] }),
+    /Unsupported media source/,
+  );
+
+  // The interaction ending without a selection is reported as an interruption whose
+  // cause the host did not identify. The two exact signals observed in Developer
+  // Tools and on Android are recognized; nothing matches on a substring.
+  mediaFailure = 'chooseMedia:cancel';
+  await assert.rejects(
+    miniAppSdk.wechatChooseMedia({ mediaTypes: ['image'] }),
+    (error) => error.name === 'HostInteractionInterrupted',
+  );
+  mediaFailure = 'chooseMedia:fail cancel';
+  await assert.rejects(
+    miniAppSdk.wechatChooseMedia({ mediaTypes: ['image'] }),
+    (error) => error.name === 'HostInteractionInterrupted',
+  );
+
+  // A failure that merely mentions cancelling is not an interruption.
+  mediaFailure = 'chooseMedia:fail user cancel';
+  await assert.rejects(
+    miniAppSdk.wechatChooseMedia({ mediaTypes: ['image'] }),
+    (error) => error.name === 'HostFailure',
+  );
+  mediaFailure = 'chooseMedia:fail system error';
+  await assert.rejects(
+    miniAppSdk.wechatChooseMedia({ mediaTypes: ['image'] }),
+    (error) => error.name === 'HostFailure',
+  );
+  mediaFailure = null;
+
+  // Answers the contract cannot carry are reported rather than becoming fabricated
+  // metadata or a missing file the caller never chose.
+  mediaTempFiles = [{ tempFilePath: undefined, size: 2048, fileType: 'image' }];
+  await assert.rejects(
+    miniAppSdk.wechatChooseMedia({ mediaTypes: ['image'] }),
+    (error) => error.name === 'InvalidResponse',
+  );
+  mediaTempFiles = [{ tempFilePath: '/node-sandbox/media/image.png', size: -1, fileType: 'image' }];
+  await assert.rejects(
+    miniAppSdk.wechatChooseMedia({ mediaTypes: ['image'] }),
+    (error) => error.name === 'InvalidResponse',
+  );
+  mediaTempFiles = [{ tempFilePath: '/node-sandbox/media/image.png', size: 2048 }];
+  await assert.rejects(
+    miniAppSdk.wechatChooseMedia({ mediaTypes: ['image'] }),
+    (error) => error.name === 'InvalidResponse',
+  );
+  mediaTempFiles = [
+    { tempFilePath: '/node-sandbox/media/image.png', size: 2048, fileType: 'image' },
+  ];
+
+  // A host without the API fails through the capability path instead of throwing
+  // out of the JavaScript boundary.
+  supportedSchemas.delete('chooseMedia');
+  const chooseMediaImpl = global.wx.chooseMedia;
+  delete global.wx.chooseMedia;
+
+  assert.equal(miniAppSdk.wechatCanIUse('chooseMedia'), false);
+  assert.equal(miniAppSdk.capabilitySupport('wechat.choose-media').state, 'Unsupported');
+  await assert.rejects(
+    miniAppSdk.wechatChooseMedia({ mediaTypes: ['image'] }),
+    (error) => error.name === 'UnsupportedCapability',
+  );
+
+  global.wx.chooseMedia = chooseMediaImpl;
+  supportedSchemas.add('chooseMedia');
+
   console.log('[node-smoke] sdkVersion:', miniAppSdk.sdkVersion());
   console.log('[node-smoke] storage: PASS');
   console.log('[node-smoke] auth bootstrap: PASS');
@@ -744,6 +954,7 @@ async function main() {
   console.log('[node-smoke] filesystem: PASS');
   console.log('[node-smoke] location: PASS');
   console.log('[node-smoke] scanner: PASS');
+  console.log('[node-smoke] media: PASS');
 }
 
 main().catch((error) => {
