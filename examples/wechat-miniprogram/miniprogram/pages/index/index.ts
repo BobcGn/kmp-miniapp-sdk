@@ -15,6 +15,12 @@ const clipboardTestText = 'kmp-miniapp-sdk clipboard test';
 // displayed; the sandbox root it sits under is never printed.
 const testFileName = 'kmp-miniapp-sdk-bob72.txt';
 const testFileContent = 'kmp-miniapp-sdk bob72 test';
+// Subscription template ids are host identifiers that belong to this mini program's
+// account, so none is committed here: paste your own test template ids locally to try
+// the card, and do not commit them. While this is empty the page refuses to ask the
+// host anything and reports NOT CONFIGURED, so the card never fires a request without
+// a deliberate local edit. The page never displays or logs these values.
+const subscriptionTemplateIds: string[] = [];
 
 interface IndexPageData {
   sdkVersion: string;
@@ -60,6 +66,8 @@ interface IndexPageData {
   scannerDetails: string;
   mediaStatus: string;
   mediaDetails: string;
+  subscriptionStatus: string;
+  subscriptionDetails: string;
 }
 
 type IndexPage = MiniProgramPageInstance<IndexPageData>;
@@ -700,13 +708,13 @@ function checkMediaCapability(this: IndexPage): void {
 }
 
 /**
- * A safe one-line description of a failed selection.
+ * A safe one-line description of a failed host interaction.
  *
  * The host's own message is deliberately left out: a failure message can carry part
  * of a path or a file name, and this page prints neither. The raw error object is
  * deliberately not logged for the same reason.
  */
-function mediaFailureReason(error: unknown): string {
+function failureReason(error: unknown): string {
   if (typeof error === 'object' && error !== null) {
     const named = error as { name?: unknown };
     if (typeof named.name === 'string' && named.name.length > 0) {
@@ -744,6 +752,45 @@ function mediaFailureSignal(error: unknown): string {
     return 'cancel-like';
   }
   return 'other';
+}
+
+/**
+ * Classifies a subscription failure without logging its raw message.
+ *
+ * The labels are diagnostics for real-host acceptance, not semantic SDK outcomes.
+ * In particular, seeing a cancel-like label does not prove user intent.
+ */
+function subscriptionFailureSignal(error: unknown): string {
+  if (typeof error !== 'object' || error === null) {
+    return 'unavailable';
+  }
+  const message = (error as { message?: unknown }).message;
+  if (typeof message !== 'string') {
+    return 'unavailable';
+  }
+  if (message === 'wechat host failure: requestSubscribeMessage:cancel') {
+    return 'cancel';
+  }
+  if (message === 'wechat host failure: requestSubscribeMessage:fail cancel') {
+    return 'fail-cancel';
+  }
+  if (message.toLowerCase().includes('cancel')) {
+    return 'cancel-like';
+  }
+  return 'other';
+}
+
+/** Reduces host status vocabulary to non-sensitive labels for acceptance evidence. */
+function subscriptionStatusSignal(status: string): string {
+  switch (status) {
+    case 'accept':
+    case 'reject':
+    case 'ban':
+    case 'filter':
+      return status;
+    default:
+      return 'other';
+  }
 }
 
 /**
@@ -792,7 +839,7 @@ async function runMediaSelection(
       return;
     }
 
-    const reason = mediaFailureReason(error);
+    const reason = failureReason(error);
     const signal = mediaFailureSignal(error);
     const details = `reason=${reason}, signal=${signal}`;
     console.error('[kmp-miniapp-sdk] media choose: FAIL ' + details);
@@ -818,6 +865,84 @@ function chooseImageOrVideo(this: IndexPage): Promise<void> {
 /** Asks the host to take a new photo or video rather than offering the album. */
 function chooseFromCamera(this: IndexPage): Promise<void> {
   return runMediaSelection(this, { mediaTypes: ['mix'], sourceTypes: ['camera'] });
+}
+
+/**
+ * Reports how the gate answers for the subscription capability.
+ *
+ * This is a smaller question than the card's other one: the request needs no
+ * permission the SDK could establish, so the API answer is the whole answer.
+ */
+function checkSubscriptionCapability(this: IndexPage): void {
+  try {
+    const support: MiniAppSdk.CapabilitySupportResult =
+      MiniAppSdk.capabilitySupport('wechat.request-subscribe-message');
+    console.log(
+      '[kmp-miniapp-sdk] subscription capability: PASS wechat.request-subscribe-message=' +
+        support.state,
+    );
+    this.setData({
+      subscriptionStatus: support.state,
+      subscriptionDetails: 'wechat.request-subscribe-message=' + support.state,
+    });
+  } catch (error) {
+    console.error('[kmp-miniapp-sdk] subscription capability: FAIL', error);
+    this.setData({ subscriptionStatus: 'FAIL', subscriptionDetails: String(error) });
+  }
+}
+
+/**
+ * Asks the host to put the configured templates in front of the user.
+ *
+ * **This runs only from this button.** WeChat requires a subscription request to
+ * follow a user gesture, so nothing here calls it while the page loads, and the SDK
+ * does not either.
+ *
+ * The summary counts answers rather than listing them, and never prints a template id:
+ * which templates a user subscribed to is between the user and the mini program, and a
+ * screenshot of this page must not carry it. `accepted` counts the answers this SDK can
+ * name; `otherStatuses` counts answers the host gave that this SDK has no evidence to
+ * name, which the console does not spell out because the vocabulary could not be
+ * verified offline. A missing, extra, blank, or non-text answer fails validation
+ * instead of being reported as a successful request.
+ *
+ * Acceptance is a subscription state. It does not mean a message was sent, will be
+ * sent, or was delivered.
+ */
+async function requestSubscription(this: IndexPage): Promise<void> {
+  if (subscriptionTemplateIds.length === 0) {
+    // No host call, and no prompt: without a configured template there is nothing to
+    // ask about, and guessing one would be worse than saying so.
+    console.log('[kmp-miniapp-sdk] subscription request: NOT CONFIGURED templateCount=0');
+    this.setData({
+      subscriptionStatus: 'NOT CONFIGURED',
+      subscriptionDetails: 'no test template ids configured locally',
+    });
+    return;
+  }
+
+  try {
+    const results: MiniAppSdk.SubscriptionResult[] =
+      await MiniAppSdk.wechatRequestSubscribeMessage(subscriptionTemplateIds);
+
+    const accepted = results.filter((entry) => entry.status === 'accept').length;
+    const otherStatuses = results.filter(
+      (entry) => entry.status === null,
+    ).length;
+    const signals = Array.from(
+      new Set(results.map((entry) => subscriptionStatusSignal(entry.hostStatus))),
+    ).sort().join('|');
+    const details =
+      `accepted=${accepted}, otherStatuses=${otherStatuses}, signals=${signals}`;
+    console.log('[kmp-miniapp-sdk] subscription request: PASS', details);
+    this.setData({ subscriptionStatus: 'PASS', subscriptionDetails: details });
+  } catch (error) {
+    const reason = failureReason(error);
+    const signal = subscriptionFailureSignal(error);
+    const details = `reason=${reason}, signal=${signal}`;
+    console.error('[kmp-miniapp-sdk] subscription request: FAIL ' + details);
+    this.setData({ subscriptionStatus: 'FAIL', subscriptionDetails: details });
+  }
 }
 
 async function runStorageCheck(page: IndexPage): Promise<void> {
@@ -968,6 +1093,8 @@ Page<IndexPageData>({
     scannerDetails: 'Tap a button; nothing opens the scanning interface on load.',
     mediaStatus: 'NOT RUN',
     mediaDetails: 'Tap a button; nothing opens the picker on load.',
+    subscriptionStatus: 'NOT RUN',
+    subscriptionDetails: 'Tap a button; nothing asks the host on load.',
     permissionStatus: 'UNKNOWN',
     permissionDetails:
       'Permission is never requested on load. Tap a button to query or request it.',
@@ -1006,4 +1133,6 @@ Page<IndexPageData>({
   chooseVideo,
   chooseImageOrVideo,
   chooseFromCamera,
+  checkSubscriptionCapability,
+  requestSubscription,
 });

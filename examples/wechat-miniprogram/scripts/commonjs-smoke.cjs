@@ -28,6 +28,7 @@ const supportedSchemas = new Set([
   'getLocation',
   'scanCode',
   'chooseMedia',
+  'requestSubscribeMessage',
 ]);
 
 // Permission state this fake host holds, plus a record of what it was asked to
@@ -92,6 +93,16 @@ let mediaTempFiles = [
 ];
 let mediaFailure = null;
 const mediaCalls = [];
+
+// A subscription request is a user-gesture capability whose answer is keyed by the
+// template the host answered about. The fake records what it was asked about and
+// returns the per-template statuses it is given.
+let subscribeAnswer = {
+  'node-template-one': 'accept',
+  'node-template-two': 'reject',
+};
+let subscribeFailure = null;
+const subscribeCalls = [];
 
 function fileSystemManager() {
   return {
@@ -289,6 +300,18 @@ global.wx = {
     }
     options.success({ errMsg: 'chooseMedia:ok', tempFiles: mediaTempFiles });
   },
+  requestSubscribeMessage(options) {
+    subscribeCalls.push({ tmplIds: options.tmplIds });
+    if (subscribeFailure !== null) {
+      options.fail({ errMsg: subscribeFailure });
+      return;
+    }
+    const answer = { errMsg: 'requestSubscribeMessage:ok' };
+    for (const [templateId, status] of Object.entries(subscribeAnswer)) {
+      answer[templateId] = status;
+    }
+    options.success(answer);
+  },
   env: {
     USER_DATA_PATH: sandboxRoot,
   },
@@ -325,6 +348,7 @@ async function main() {
     'wechatGetCurrentLocation',
     'wechatScanCode',
     'wechatChooseMedia',
+    'wechatRequestSubscribeMessage',
     'networkRequest',
     'wechatAppOnLaunch',
     'wechatAppOnShow',
@@ -939,6 +963,154 @@ async function main() {
   global.wx.chooseMedia = chooseMediaImpl;
   supportedSchemas.add('chooseMedia');
 
+  // A subscription request is a user-gesture capability whose answer is keyed by the
+  // template the host answered about. Nothing asked the host while the module loaded,
+  // and the SDK asks for no permission to do so.
+  assert.deepEqual(subscribeCalls, []);
+  assert.equal(
+    miniAppSdk.capabilitySupport('wechat.request-subscribe-message').state,
+    'Supported',
+  );
+
+  const permissionQueriesBeforeSubscribe = getSettingCalls;
+  const authorizationsBeforeSubscribe = authorizeCalls.length;
+  const settingsVisitsBeforeSubscribe = openSettingCalls;
+  const privacyAuthorizationsBeforeSubscribe = privacyAuthorizations.length;
+
+  // The template ids reach the host in the caller's order.
+  const subscribed = await miniAppSdk.wechatRequestSubscribeMessage([
+    'node-template-one',
+    'node-template-two',
+  ]);
+  assert.deepEqual(subscribeCalls[subscribeCalls.length - 1].tmplIds, [
+    'node-template-one',
+    'node-template-two',
+  ]);
+
+  // One entry per requested template, in caller order.
+  assert.equal(subscribed.length, 2);
+  assert.equal(subscribed[0].templateId, 'node-template-one');
+  assert.equal(subscribed[0].status, 'accept');
+  assert.equal(subscribed[0].hostStatus, 'accept');
+  assert.equal(subscribed[1].templateId, 'node-template-two');
+  assert.equal(subscribed[1].status, null);
+  assert.equal(subscribed[1].hostStatus, 'reject');
+  // The host's own status line is never read as a template.
+  assert.equal(subscribed.some((entry) => entry.templateId === 'errMsg'), false);
+
+
+  // No permission was queried, requested, or opened, and no privacy consent was asked
+  // for, on the way to the request.
+  assert.equal(getSettingCalls, permissionQueriesBeforeSubscribe);
+  assert.equal(authorizeCalls.length, authorizationsBeforeSubscribe);
+  assert.equal(openSettingCalls, settingsVisitsBeforeSubscribe);
+  assert.equal(privacyAuthorizations.length, privacyAuthorizationsBeforeSubscribe);
+
+  // A status this SDK cannot name is preserved verbatim with no resolved status, so a
+  // caller can act on what the host actually said instead of a guess.
+  subscribeAnswer = { 'node-template-one': 'reject' };
+  const unnamed = await miniAppSdk.wechatRequestSubscribeMessage(['node-template-one']);
+  assert.equal(unnamed[0].status, null);
+  assert.equal(unnamed[0].hostStatus, 'reject');
+
+  // An unexpected template breaks request/response correlation.
+  subscribeAnswer = { 'node-template-one': 'accept', 'node-template-other': 'ban' };
+  await assert.rejects(
+    miniAppSdk.wechatRequestSubscribeMessage(['node-template-one']),
+    (error) => error.name === 'InvalidResponse',
+  );
+
+  // A success callback must correlate exactly with the templates in the request.
+  subscribeAnswer = {};
+  await assert.rejects(
+    miniAppSdk.wechatRequestSubscribeMessage(['node-template-one']),
+    (error) => error.name === 'InvalidResponse',
+  );
+
+  subscribeAnswer = {
+    'node-template-one': 'accept',
+    'node-template-unexpected': 'reject',
+  };
+  await assert.rejects(
+    miniAppSdk.wechatRequestSubscribeMessage(['node-template-one']),
+    (error) => error.name === 'InvalidResponse',
+  );
+
+  subscribeAnswer = {
+    'node-template-two': 'reject',
+    'node-template-one': 'accept',
+  };
+
+  // Duplicate ids are collapsed with the caller's order kept.
+  await miniAppSdk.wechatRequestSubscribeMessage(['node-template-two', 'node-template-one', 'node-template-two']);
+  assert.deepEqual(subscribeCalls[subscribeCalls.length - 1].tmplIds, [
+    'node-template-two',
+    'node-template-one',
+  ]);
+
+  // Caller mistakes are refused rather than quietly corrected.
+  await assert.rejects(
+    miniAppSdk.wechatRequestSubscribeMessage([]),
+    /at least one template id/,
+  );
+  await assert.rejects(
+    miniAppSdk.wechatRequestSubscribeMessage(['node-template-one', '   ']),
+    /non-blank/,
+  );
+
+  // A status the host reports as something other than text is a broken answer.
+  subscribeAnswer = { 'node-template-one': 7 };
+  await assert.rejects(
+    miniAppSdk.wechatRequestSubscribeMessage(['node-template-one']),
+    (error) => error.name === 'InvalidResponse',
+  );
+  subscribeAnswer = { 'node-template-one': 'accept' };
+
+  // These are only conventional candidates. They remain host failures until a real
+  // subscription request establishes an exact cancellation signal.
+  subscribeFailure = 'requestSubscribeMessage:cancel';
+  await assert.rejects(
+    miniAppSdk.wechatRequestSubscribeMessage(['node-template-one']),
+    (error) => error.name === 'HostFailure',
+  );
+  subscribeFailure = 'requestSubscribeMessage:fail cancel';
+  await assert.rejects(
+    miniAppSdk.wechatRequestSubscribeMessage(['node-template-one']),
+    (error) => error.name === 'HostFailure',
+  );
+
+  // A failure that merely mentions cancelling is not an interruption.
+  subscribeFailure = 'requestSubscribeMessage:fail user cancel';
+  await assert.rejects(
+    miniAppSdk.wechatRequestSubscribeMessage(['node-template-one']),
+    (error) => error.name === 'HostFailure',
+  );
+  subscribeFailure = 'requestSubscribeMessage:fail template not found';
+  await assert.rejects(
+    miniAppSdk.wechatRequestSubscribeMessage(['node-template-one']),
+    (error) => error.name === 'HostFailure',
+  );
+  subscribeFailure = null;
+
+  // A host without the API fails through the capability path instead of throwing out of
+  // the JavaScript boundary.
+  supportedSchemas.delete('requestSubscribeMessage');
+  const requestSubscribeMessageImpl = global.wx.requestSubscribeMessage;
+  delete global.wx.requestSubscribeMessage;
+
+  assert.equal(miniAppSdk.wechatCanIUse('requestSubscribeMessage'), false);
+  assert.equal(
+    miniAppSdk.capabilitySupport('wechat.request-subscribe-message').state,
+    'Unsupported',
+  );
+  await assert.rejects(
+    miniAppSdk.wechatRequestSubscribeMessage(['node-template-one']),
+    (error) => error.name === 'UnsupportedCapability',
+  );
+
+  global.wx.requestSubscribeMessage = requestSubscribeMessageImpl;
+  supportedSchemas.add('requestSubscribeMessage');
+
   console.log('[node-smoke] sdkVersion:', miniAppSdk.sdkVersion());
   console.log('[node-smoke] storage: PASS');
   console.log('[node-smoke] auth bootstrap: PASS');
@@ -955,6 +1127,7 @@ async function main() {
   console.log('[node-smoke] location: PASS');
   console.log('[node-smoke] scanner: PASS');
   console.log('[node-smoke] media: PASS');
+  console.log('[node-smoke] subscription: PASS');
 }
 
 main().catch((error) => {

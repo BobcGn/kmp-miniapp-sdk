@@ -120,6 +120,15 @@
   </view>
 
   <view class="card">
+    <text class="eyebrow">Subscription Message</text>
+    <text class="status status--{{subscriptionStatus}}">{{subscriptionStatus}}</text>
+    <text class="details">{{subscriptionDetails}}</text>
+    <text class="security-note">Runs only from a button; accepting a subscription does not mean a message was sent.</text>
+    <button class="action" bindtap="checkSubscriptionCapability">Check subscription capability</button>
+    <button class="action" bindtap="requestSubscription">Request subscription</button>
+  </view>
+
+  <view class="card">
     <text class="eyebrow">First Host Capability</text>
     <text class="label">Storage verification</text>
     <text class="status status--{{storageStatus}}">{{storageStatus}}</text>

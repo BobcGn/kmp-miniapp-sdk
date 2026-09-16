@@ -222,6 +222,60 @@ export interface MediaRequest {
 export function wechatChooseMedia(request: MediaRequest): Promise<MediaFile[]>;
 
 /**
+ * A per-template answer this SDK is able to name.
+ *
+ * **This union is deliberately narrow.** WeChat's own status vocabulary for this API
+ * could not be verified from the sources available offline: the base library shipped
+ * with the installed WeChat Developer Tools declares the API's option and states that
+ * the success result is keyed by template ID, but names no status value and ships no
+ * implementation of it. The one status string observed anywhere in that bundle is
+ * `accept`, in the simulator's prompt preview payload, which is prompt-rendering data
+ * rather than an API result. Only what could be evidenced is named here.
+ *
+ * A status the host reports that is not a member is **not** guessed at: it arrives in
+ * {@link SubscriptionResult.hostStatus} with `status` left `null`, so a caller can act
+ * on what the host actually said. A real-device run is expected to extend this union
+ * from evidence.
+ */
+export type SubscriptionStatus = 'accept';
+
+/** What the host answered about one requested template. */
+export interface SubscriptionResult {
+  /** The template this entry answers, echoed from the request. */
+  readonly templateId: string;
+  /** The answer resolved against {@link SubscriptionStatus}, or `null` when unnamed. */
+  readonly status: SubscriptionStatus | null | undefined;
+  /** The host's own non-blank answer, verbatim. */
+  readonly hostStatus: string;
+}
+
+/**
+ * Asks WeChat to put message templates in front of the user.
+ *
+ * **The caller must call this from a user gesture.** WeChat requires one, and the SDK
+ * neither supplies one nor retries when the host refuses because none preceded the
+ * call. Nothing in this SDK calls it on page load.
+ *
+ * Resolves with exactly one entry per requested template, in the order given.
+ * Missing, unexpected, blank, or non-text answers reject as invalid responses.
+ *
+ * An answer says what the user decided about a template. It never says a message was
+ * sent or delivered: acceptance is a subscription state, and sending is the consumer
+ * backend's business.
+ *
+ * Failures remain host failures until a real-host run establishes an exact dismissal
+ * signal for this API. Malformed success values reject as invalid responses.
+ *
+ * This call asks the host for no permission: the offline sources for this API name no
+ * scope for it.
+ *
+ * @param templateIds templates to ask about; blank identifiers are refused
+ */
+export function wechatRequestSubscribeMessage(
+  templateIds: readonly string[],
+): Promise<SubscriptionResult[]>;
+
+/**
  * Reads the system clipboard as text.
  *
  * An empty clipboard resolves with an empty string. The clipboard belongs to the

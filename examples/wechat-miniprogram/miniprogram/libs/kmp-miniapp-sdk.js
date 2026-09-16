@@ -126,6 +126,19 @@ module.exports = {
         });
       });
   },
+  wechatRequestSubscribeMessage: function wechatRequestSubscribeMessage(templateIds) {
+    return miniAppExports
+      .wechatRequestSubscribeMessage(templateIds === undefined ? [] : templateIds)
+      .then(function (results) {
+        return results.map(function (result) {
+          return {
+            templateId: result.templateId,
+            status: result.status,
+            hostStatus: result.hostStatus,
+          };
+        });
+      });
+  },
   networkRequest: function networkRequest(url, init) {
     const options = init || {};
     return miniAppExports

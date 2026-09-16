@@ -94,6 +94,20 @@ export declare namespace io.github.bobcgn.miniapp.export {
     }
 }
 export declare namespace io.github.bobcgn.miniapp.export {
+    class JsSubscriptionResult {
+        private constructor();
+        get templateId(): string;
+        get status(): Nullable<string>;
+        get hostStatus(): string;
+    }
+    namespace JsSubscriptionResult {
+        /** @deprecated $metadata$ is used for internal purposes, please don't use it in your code, because it can be removed at any moment */
+        namespace $metadata$ {
+            const constructor: abstract new () => JsSubscriptionResult;
+        }
+    }
+}
+export declare namespace io.github.bobcgn.miniapp.export {
     abstract class MiniAppExports extends KtSingleton<MiniAppExports.$metadata$.constructor>() {
         private constructor();
     }
@@ -140,6 +154,7 @@ export declare namespace io.github.bobcgn.miniapp.export {
                 wechatGetCurrentLocation(coordinateSystem: string): Promise<io.github.bobcgn.miniapp.export.JsGeoPosition>;
                 wechatScanCode(onlyFromCamera: boolean, scanTypes: Array<string>): Promise<io.github.bobcgn.miniapp.export.JsScanResult>;
                 wechatChooseMedia(mediaTypes: Array<string>, count: number, sourceTypes: Array<string>, maxDurationSeconds: Nullable<number>, sizeTypes: Array<string>, camera: Nullable<string>): Promise<Array<io.github.bobcgn.miniapp.export.JsMediaFile>>;
+                wechatRequestSubscribeMessage(templateIds: Array<string>): Promise<Array<io.github.bobcgn.miniapp.export.JsSubscriptionResult>>;
                 requirePrivacySatisfied(): Promise<void>;
                 private constructor();
             }
