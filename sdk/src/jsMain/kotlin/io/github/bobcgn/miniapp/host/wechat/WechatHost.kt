@@ -16,6 +16,8 @@ import io.github.bobcgn.miniapp.host.HostPlatformApi
 import io.github.bobcgn.miniapp.host.MiniAppHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatAuth
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatAuthHost
+import io.github.bobcgn.miniapp.host.wechat.adapter.WechatChooseMedia
+import io.github.bobcgn.miniapp.host.wechat.adapter.WechatChooseMediaHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatClipboard
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatClipboardHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatFileSystem
@@ -38,6 +40,7 @@ import io.github.bobcgn.miniapp.host.wechat.adapter.WechatScanCodeHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatStorage
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatStorageHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WxAuthHost
+import io.github.bobcgn.miniapp.host.wechat.adapter.WxChooseMediaHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WxClipboardHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WxFileSystemHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WxHapticsHost
@@ -83,6 +86,8 @@ internal class WechatPlatformApi(
     internal val location: WechatLocation,
     /** Scanning through WeChat's own scanning interface. */
     internal val scanCode: WechatScanCode,
+    /** Choosing images or videos through WeChat's own picker. */
+    internal val chooseMedia: WechatChooseMedia,
 ) : HostPlatformApi
 
 /** First concrete [MiniAppHost], backed by the WeChat Mini Program runtime. */
@@ -99,6 +104,7 @@ internal class WechatHost(
     fileSystemHost: WechatFileSystemHost = WxFileSystemHost,
     locationHost: WechatLocationHost = WxLocationHost,
     scanCodeHost: WechatScanCodeHost = WxScanCodeHost,
+    chooseMediaHost: WechatChooseMediaHost = WxChooseMediaHost,
 ) : MiniAppHost<WechatPlatformApi>,
     StorageCapabilityProvider,
     NetworkCapabilityProvider,
@@ -131,6 +137,7 @@ internal class WechatHost(
         fileSystem = WechatFileSystem(fileSystemHost),
         location = WechatLocation(locationHost, privacyAdapter, permissionsAdapter),
         scanCode = WechatScanCode(scanCodeHost),
+        chooseMedia = WechatChooseMedia(chooseMediaHost),
     )
 
     override val storage: MiniAppStorage = WechatStorage(storageHost)

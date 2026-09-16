@@ -125,6 +125,13 @@ internal object WechatCapabilityCatalog {
         WeChatDeviceCapabilities.ScanCode to WechatCapabilityRequirement(
             canIUseSchemas = listOf("scanCode"),
         ),
+        // WeChat documents no introduction version for chooseMedia either, so no
+        // number is recorded and the probe is the authority. Reading the media
+        // library needs no permission the host ties to this API, so nothing else is
+        // gated here.
+        WeChatDeviceCapabilities.ChooseMedia to WechatCapabilityRequirement(
+            canIUseSchemas = listOf("chooseMedia"),
+        ),
         // The four device capabilities are gated separately: a host may expose one
         // clipboard direction or one vibration length without the other. WeChat
         // documents 1.1.0 for the clipboard APIs and 1.2.0 for the vibration APIs,

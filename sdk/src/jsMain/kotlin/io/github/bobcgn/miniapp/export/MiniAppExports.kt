@@ -17,8 +17,13 @@ import io.github.bobcgn.miniapp.capability.privacy.PrivacyAuthorizationRequireme
 import io.github.bobcgn.miniapp.capability.privacy.PrivacyStatus
 import io.github.bobcgn.miniapp.capability.storage.MiniAppStorage
 import io.github.bobcgn.miniapp.host.requireSupported
+import io.github.bobcgn.miniapp.host.wechat.WeChatCameraPosition
 import io.github.bobcgn.miniapp.host.wechat.WeChatCoordinateSystem
 import io.github.bobcgn.miniapp.host.wechat.WeChatLoginResult
+import io.github.bobcgn.miniapp.host.wechat.WeChatMediaRequest
+import io.github.bobcgn.miniapp.host.wechat.WeChatMediaSizeType
+import io.github.bobcgn.miniapp.host.wechat.WeChatMediaSource
+import io.github.bobcgn.miniapp.host.wechat.WeChatMediaType
 import io.github.bobcgn.miniapp.host.wechat.WeChatScanCategory
 import io.github.bobcgn.miniapp.host.wechat.WeChatScanRequest
 import io.github.bobcgn.miniapp.host.wechat.WeChatSessionState
@@ -431,6 +436,74 @@ public object MiniAppExports {
     }
 
     /**
+     * Asks WeChat to let the user choose images or videos through its own picker.
+     *
+     * Resolves with the non-empty file array the host returned. A success callback
+     * without a selected file is rejected as an invalid host response.
+     *
+     * The interaction ending without a selection rejects with the SDK's
+     * host-interrupted error, which is not a host failure and does not claim to know
+     * whether the user dismissed the picker or something prevented it from
+     * completing. Every other failure rejects as a host failure or an invalid
+     * response.
+     *
+     * This call asks the host for no permission: WeChat's own picker needs none,
+     * and the host's scope list holds no scope for reading the media library.
+     *
+     * The returned paths are host temporary resources. The SDK never logs, stores,
+     * or uploads what the user selected, and a caller that keeps it does so on its
+     * own authority.
+     *
+     * @param mediaTypes media types to ask for, for example `image`; WeChat
+     *   documents this option as required, so it must not be empty
+     * @param count maximum number of files to ask for; the host applies its own
+     *   limit and may return fewer
+     * @param sourceTypes where the host may take media from, for example `album`;
+     *   an empty array asks for no restriction, which is not the same as asking for
+     *   none
+     * @param maxDurationSeconds longest video recording to ask for, or `null` for
+     *   the host's own default; WeChat documents the range as 3 to 60
+     * @param sizeTypes how much the host may compress the images it returns; an
+     *   empty array asks for no restriction
+     * @param camera which camera to use, or `null` to leave it to the host
+     * @throws IllegalArgumentException when a name is not one this SDK knows, when
+     *   no media type is given, when [count] is below 1, or when
+     *   [maxDurationSeconds] is outside the range WeChat documents
+     */
+    public suspend fun wechatChooseMedia(
+        mediaTypes: Array<String>,
+        count: Int,
+        sourceTypes: Array<String>,
+        maxDurationSeconds: Int?,
+        sizeTypes: Array<String>,
+        camera: String?,
+    ): Array<JsMediaFile> {
+        val request = WeChatMediaRequest(
+            mediaType = mediaTypes.map { mediaType(it) },
+            count = count,
+            sourceType = sourceTypes.map { mediaSource(it) },
+            maxDurationSeconds = maxDurationSeconds,
+            sizeType = sizeTypes.map { mediaSizeType(it) },
+            camera = camera?.let { cameraPosition(it) },
+        )
+
+        return host.platform.chooseMedia.choose(request).map { file ->
+            JsMediaFile(
+                tempFilePath = file.tempFilePath,
+                // Kotlin's Long is not a JavaScript value, so the byte count crosses
+                // as a number, which is exact well beyond any file size.
+                sizeBytes = file.sizeBytes.toDouble(),
+                fileType = file.fileType?.hostValue,
+                hostFileType = file.hostFileType,
+                durationSeconds = file.durationSeconds,
+                width = file.width,
+                height = file.height,
+                thumbTempFilePath = file.thumbTempFilePath,
+            )
+        }.toTypedArray()
+    }
+
+    /**
      * Fails unless the host currently requires no privacy authorization.
      *
      * This is the precondition point for capabilities the host gates behind its
@@ -526,3 +599,23 @@ private fun httpMethod(method: String): HttpMethod {
 private fun scanCategory(name: String): WeChatScanCategory =
     WeChatScanCategory.entries.firstOrNull { it.hostValue == name }
         ?: throw IllegalArgumentException("Unsupported scan category: '$name'")
+
+/** Resolves a JavaScript-supplied media type to the closed SDK set. */
+private fun mediaType(name: String): WeChatMediaType =
+    WeChatMediaType.entries.firstOrNull { it.hostValue == name }
+        ?: throw IllegalArgumentException("Unsupported media type: '$name'")
+
+/** Resolves a JavaScript-supplied media source to the closed SDK set. */
+private fun mediaSource(name: String): WeChatMediaSource =
+    WeChatMediaSource.entries.firstOrNull { it.hostValue == name }
+        ?: throw IllegalArgumentException("Unsupported media source: '$name'")
+
+/** Resolves a JavaScript-supplied size type to the closed SDK set. */
+private fun mediaSizeType(name: String): WeChatMediaSizeType =
+    WeChatMediaSizeType.entries.firstOrNull { it.hostValue == name }
+        ?: throw IllegalArgumentException("Unsupported size type: '$name'")
+
+/** Resolves a JavaScript-supplied camera position to the closed SDK set. */
+private fun cameraPosition(name: String): WeChatCameraPosition =
+    WeChatCameraPosition.entries.firstOrNull { it.hostValue == name }
+        ?: throw IllegalArgumentException("Unsupported camera position: '$name'")

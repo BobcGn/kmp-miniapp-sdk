@@ -131,6 +131,15 @@ internal external object wx {
     fun scanCode(options: WxScanCodeOptions): Unit
 
     /**
+     * Asks the host to let the user choose images or videos.
+     *
+     * Like [scanCode] this runs in the host's own interface, and a dismissal
+     * arrives at the failure callback. The host offers no abort handle, so a
+     * cancelled caller only stops waiting.
+     */
+    fun chooseMedia(options: WxChooseMediaOptions): Unit
+
+    /**
      * Returns the host's global file manager.
      *
      * The manager is a host object whose methods are optional, so callers probe

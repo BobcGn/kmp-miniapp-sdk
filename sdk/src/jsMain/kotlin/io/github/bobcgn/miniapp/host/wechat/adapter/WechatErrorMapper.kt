@@ -120,6 +120,45 @@ private val SCAN_INTERRUPTED_ERRMSGS: Set<String> = setOf(
 )
 
 /**
+ * Converts a raw `wx.chooseMedia` failure into the platform-neutral SDK model.
+ *
+ * Media selection runs in the host's own interface. The installed Developer Tools
+ * base library reports a simulated dismissal as the exact `chooseMedia:cancel`
+ * message and provides no structured cause. The SDK therefore reports only that
+ * the interaction ended, without attributing user intent or a permission result.
+ *
+ * Only the exact messages are matched, so a real failure that merely mentions
+ * cancelling is not reclassified. Developer Tools evidence established
+ * `chooseMedia:cancel`; Android real-device evidence established
+ * `chooseMedia:fail cancel` for a manual dismissal.
+ *
+ * This is the only place the media failure text is interpreted, and the raw message
+ * never reaches a public type. Every other failure stays a
+ * [MiniAppException.HostFailure].
+ */
+internal fun mapWechatChooseMediaFailure(result: WxGeneralCallbackResult): MiniAppException =
+    if (result.errMsg in CHOOSE_MEDIA_INTERRUPTED_ERRMSGS) {
+        MiniAppException.HostInteractionInterrupted(
+            host = "wechat",
+            operation = "chooseMedia",
+            hostMessage = result.errMsg,
+        )
+    } else {
+        mapWechatHostFailure(operation = "chooseMedia", result = result)
+    }
+
+/**
+ * The exact host messages that mean the media interaction ended without a selection.
+ *
+ * Matching is exact and case-sensitive on purpose: a differently worded message is
+ * a host failure, not evidence that the user decided anything.
+ */
+private val CHOOSE_MEDIA_INTERRUPTED_ERRMSGS: Set<String> = setOf(
+    "chooseMedia:cancel",
+    "chooseMedia:fail cancel",
+)
+
+/**
  * What a raw `wx.requirePrivacyAuthorize` failure means.
  *
  * A declined privacy contract is the user's answer and is modelled as an outcome;

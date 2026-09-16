@@ -88,6 +88,11 @@ internal class WechatHostTest {
             CapabilitySupport.Supported,
             host.capabilitySupport(WeChatDeviceCapabilities.ScanCode),
         )
+        // Media selection is gated on the API alone, for the same reason.
+        assertEquals(
+            CapabilitySupport.Supported,
+            host.capabilitySupport(WeChatDeviceCapabilities.ChooseMedia),
+        )
         assertEquals(
             CapabilitySupport.Unsupported,
             host.capabilitySupport(CapabilityKey("unknown")),

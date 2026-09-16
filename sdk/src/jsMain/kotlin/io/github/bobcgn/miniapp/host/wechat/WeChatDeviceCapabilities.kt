@@ -64,4 +64,13 @@ internal object WeChatDeviceCapabilities {
      * deliberately does not stand in for one.
      */
     val ScanCode: CapabilityKey = CapabilityKey("wechat.scan-code")
+
+    /**
+     * Choosing images or videos through WeChat's own picker.
+     *
+     * Only API availability is answered by this key. The host's scope list holds
+     * no scope for reading the media library, so there is no permission to map and
+     * none is invented.
+     */
+    val ChooseMedia: CapabilityKey = CapabilityKey("wechat.choose-media")
 }

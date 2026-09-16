@@ -11,6 +11,7 @@ import io.github.bobcgn.miniapp.host.wechat.interop.WxOpenSettingSuccessResult
 import io.github.bobcgn.miniapp.host.wechat.interop.WxReadFileSuccessResult
 import io.github.bobcgn.miniapp.host.wechat.interop.WxRequestFailureResult
 import io.github.bobcgn.miniapp.host.wechat.interop.WxRequestSuccessResult
+import io.github.bobcgn.miniapp.host.wechat.interop.WxChooseMediaSuccessResult
 import io.github.bobcgn.miniapp.host.wechat.interop.WxRequestTask
 import io.github.bobcgn.miniapp.host.wechat.interop.WxScanCodeSuccessResult
 
@@ -179,6 +180,84 @@ internal fun fakeScanCodeSuccess(
     js("value.path = path")
     return value
 }
+/**
+ * Builds a `wx.chooseMedia` success result.
+ *
+ * `tempFiles` is supplied as `Any?` so a test can produce the shapes the contract
+ * must reject, such as a value that is not an array at all.
+ */
+internal fun fakeChooseMediaSuccess(tempFiles: Any?): WxChooseMediaSuccessResult {
+    val result: WxChooseMediaSuccessResult = js("({})")
+    js("result.errMsg = 'chooseMedia:ok'")
+    js("result.tempFiles = tempFiles")
+    return result
+}
+
+/**
+ * Builds the `tempFiles` array the host returns.
+ *
+ * The entries are supplied as `Any?` so a test can put a malformed value where an
+ * entry belongs, which is how the contract's rejection of one is exercised.
+ */
+internal fun fakeChooseMediaFiles(vararg entries: Any?): Any {
+    val files: Any = js("[]")
+    for (entry in entries) {
+        js("files.push(entry)")
+    }
+    return files
+}
+
+/**
+ * Builds one `tempFiles` entry.
+ *
+ * Every field is supplied as `Any?` so a test can produce the shapes the contract
+ * must reject. The defaults describe an image: WeChat reports a video's duration,
+ * dimensions, and thumbnail but not an image's, so those are absent here.
+ *
+ * @param tempFilePath path the host reports, or a value standing in for a malformed one
+ * @param size byte count the host reports, or a value standing in for a malformed one
+ * @param fileType the host's own name for the kind, or a value standing in for a malformed one
+ */
+internal fun fakeChooseMediaEntry(
+    tempFilePath: Any? = "/tmp/wechat-media/image.png",
+    size: Any? = 4096,
+    fileType: Any? = "image",
+    duration: Any? = null,
+    width: Any? = null,
+    height: Any? = null,
+    thumbTempFilePath: Any? = null,
+): Any {
+    val file: Any = js("({})")
+    js("file.tempFilePath = tempFilePath")
+    js("file.size = size")
+    js("file.fileType = fileType")
+    js("file.duration = duration")
+    js("file.width = width")
+    js("file.height = height")
+    js("file.thumbTempFilePath = thumbTempFilePath")
+    return file
+}
+
+/**
+ * Builds a `tempFiles` entry describing a video, with the metadata the host reports
+ * for one.
+ */
+internal fun fakeChooseMediaVideoEntry(
+    tempFilePath: Any? = "/tmp/wechat-media/video.mp4",
+    size: Any? = 1048576,
+    duration: Any? = 12.5,
+    width: Any? = 1920,
+    height: Any? = 1080,
+    thumbTempFilePath: Any? = "/tmp/wechat-media/video-thumb.jpg",
+): Any = fakeChooseMediaEntry(
+    tempFilePath = tempFilePath,
+    size = size,
+    fileType = "video",
+    duration = duration,
+    width = width,
+    height = height,
+    thumbTempFilePath = thumbTempFilePath,
+)
 
 /**
  * Builds a `wx.getPrivacySetting` success result.
