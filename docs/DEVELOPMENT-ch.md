@@ -32,7 +32,7 @@ VS Code 可用于处理 `examples/wechat-miniprogram` 下的文件。Consumer Br
 
 这些命令有效，并已于 2026-09-15 完成验证。
 
-`:sdk:jsTest` suite 覆盖 Host boundary、error model、callback adaptation、cancellation、double completion、可选 abort、微信 error mapping、包含取消时宿主中止的 HTTP transport adaptation、生命周期状态迁移、导航适配、capability support 状态与版本门控、包含并发请求合并的权限生命周期行为、包含拒绝分类的隐私授权、包含过期分类的微信会话检查、包含逐项门控的微信剪贴板与震动 adapter、包含沙箱与文本边界的微信文件系统 adapter、包含坐标校验与隐私前置条件的微信定位 adapter、包含不可归因中断分类与结果校验的微信扫码 adapter、包含请求边界、结果校验与中断分类的微信媒体 adapter、包含模板校验与逐模板结果策略的微信订阅消息 adapter，以及 interop object construction。这些测试使用 fake callbacks，不代表能够访问真实 `wx` runtime。
+`:sdk:jsTest` suite 覆盖 Host boundary、error model、callback adaptation、cancellation、double completion、可选 abort、微信 error mapping、包含取消时宿主中止的 HTTP transport adaptation、生命周期状态迁移、导航适配、capability support 状态与版本门控、包含并发请求合并的权限生命周期行为、包含拒绝分类的隐私授权、包含过期分类的微信会话检查、包含逐项门控的微信剪贴板与震动 adapter、包含沙箱与文本边界的微信文件系统 adapter、包含坐标校验与隐私前置条件的微信定位 adapter、包含不可归因中断分类与结果校验的微信扫码 adapter、包含请求边界、结果校验与中断分类的微信媒体 adapter、包含模板校验与逐模板结果策略的微信订阅消息 adapter、包含逐 collector 监听配对的网络状态 adapter、包含 abort、进度与超时行为的微信上传与下载 adapter，以及 interop object construction。这些测试使用 fake callbacks，不代表能够访问真实 `wx` runtime。
 
 ## Consumer Bridge
 
@@ -71,7 +71,7 @@ npm run smoke
 npm run typecheck
 ```
 
-smoke test 加载 consumer-facing CommonJS 模块、调用 `sdkVersion()`，并安装 fake global `wx` 验证 Storage、微信 login bootstrap、HTTP transport、lifecycle 转发、三种导航调用、运行时能力检测、权限生命周期、隐私授权、微信会话检查、剪贴板与震动能力、文件系统、定位、扫码、媒体选择，以及订阅消息请求。它还会断言 HTTP transport 交给 fake host 的内容，包括原始文本响应模式、导航收到的绝对页面路径，以及每个纳入门控的能力所报告的支持状态。该测试还会断言扫码、媒体选择与订阅消息请求都不查询、不请求任何权限，覆盖交互中断与相似失败文本的分类，并确认宿主自身的状态行永远不会被当作模板 ID。该测试验证 module 与 adapter behavior，但不构成真实 Host 证据。TypeScript 使用 strict mode，并在不依赖 `any` 的情况下验证 Promise-based Storage、typed `WeChatLoginResult`、HTTP transport、lifecycle、导航、capability support、权限、隐私、会话检查、剪贴板、震动、文件系统、定位、扫码、媒体选择与订阅消息请求 exports。
+smoke test 加载 consumer-facing CommonJS 模块、调用 `sdkVersion()`，并安装 fake global `wx` 验证 Storage、微信 login bootstrap、HTTP transport、lifecycle 转发、三种导航调用、运行时能力检测、权限生命周期、隐私授权、微信会话检查、剪贴板与震动能力、文件系统、定位、扫码、媒体选择、订阅消息请求，以及网络扩展（网络状态、上传与下载）。它还会断言 HTTP transport 交给 fake host 的内容，包括原始文本响应模式、导航收到的绝对页面路径，以及每个纳入门控的能力所报告的支持状态。该测试还会断言扫码、媒体选择、订阅消息请求与每个网络扩展都不查询、不请求任何权限，覆盖交互中断与相似失败文本的分类，确认宿主自身的状态行永远不会被当作模板 ID，并验证网络状态观察会注册一个 listener 后将其移除、以及中止传输会只停止一次宿主 task 并清理其进度 listener。该测试验证 module 与 adapter behavior，但不构成真实 Host 证据。TypeScript 使用 strict mode，并在不依赖 `any` 的情况下验证 Promise-based Storage、typed `WeChatLoginResult`、HTTP transport、lifecycle、导航、capability support、权限、隐私、会话检查、剪贴板、震动、文件系统、定位、扫码、媒体选择、订阅消息请求、网络状态与传输 exports。
 
 真实宿主验证按 [TESTING-ch.md](TESTING-ch.md) 中的检查清单执行，该清单是页面取值、console 输出与准备步骤的权威来源。只有在完成该运行后，某项 capability 才会在 [PROJECT_FACTS-ch.md](PROJECT_FACTS-ch.md) 中被记录为已通过宿主验证。
 
@@ -165,6 +165,22 @@ SDK 校验模板与响应关联，而不猜测答案词汇：ID 必须非空白�
 「同意」是订阅状态，永远不是送达。端到端送达需要微信后台模板与可信后端，属于 `BackendRequired`，也超出任何 adapter 测试所能证明的范围。
 
 微信订阅消息请求已有自动化覆盖与部分真机证据。2026-09-16 的 Android 运行验证了运行时支持与 `templateCount=0` 保护。该保护有意不调用宿主，因此没有出现订阅同意弹窗是预期结果，不是权限失败。同意、拒绝、关闭、多模板关联与消息送达仍**阻塞**于为同一 AppID 配置的有效测试模板。该能力为 `Partial`。
+
+### 微信网络扩展
+
+这里适配五个宿主 API：网络类型查询、网络状态变更监听，以及文件上传与下载。契约取自已安装开发者工具所带的基础库：它枚举了查询与事件各自的连接类型、两个传输的选项与结果字段、两种 task 的成员，以及它自身错误映射产出的超时消息。
+
+网络状态成为公共 capability，而两个传输没有，区别在模型而不在名字。宿主总能回答「是否在线、通过什么链路」，而回答它不需要任何宿主专属内容；上传与下载建立在宿主自身文件系统的路径之上，而本 SDK 刻意没有可移植的文件引用，因此把它们提升为公共能力，等于为唯一一个实现凭空发明一个。传输中可移植的那一半——method、URL、headers、status、文本 body——已经属于 transport capability。
+
+查询与监听分开门控，因为宿主可能能回答该问题却不提供事件；监听还要求两半都在：只能注册而无法移除会让 listener 泄漏到小程序的整个生命周期，因此只有 `on` 的宿主被报告为不支持。`changes` 的每个 collector 注册自己的宿主 listener，并在结束时移除，这使得每条终止路径上的配对都是精确的——包括一个畸形事件，它会以 `InvalidResponse` 结束该 collector，而不是让这条流对宿主的实际情况撒谎。这里不做轮询，也不在开始收集时合成任何读数；需要起点的消费者去调用查询。
+
+传输 adapter 拥有三项单纯的 suspend 调用无法提供的东西：abort、进度与清理。`abort()` 最多停止宿主 task 一次，并报告是否真的触发了宿主 abort，因此没有返回 task 的宿主永远不会被描述成「已停止」。取消正在等待传输的协程同样会停止宿主 task，因为一个不再等待的调用方并没有要求它继续运行。进度 listener 最多注册一次——当 task 无法报告进度时完全不注册，因为一次永远配不到移除的注册就是泄漏——并在成功、失败与 abort 时一律被移除。进度是咨询性的：SDK 读不懂的数值会被忽略，而不会让一个正常工作的传输失败；没有报告进度的传输没有进度值，而不是 0%。
+
+已完成的传输就是一次已完成的 exchange，因此非 2xx 状态会 resolve，与 transport capability 完全一致。超时是宿主确切的消息 `<api>:fail timeout`；仅仅提到 timeout 的消息仍然是 `HostFailure`。
+
+这些 API 都不索取权限。访问某个 host 需要消费者把它列入 request domain，那是对小程序的配置约束而不是 SDK 能请求的东西；可离线来源也没有把任何隐私条件与它们中的任何一个绑定。
+
+网络扩展目前仅有自动化覆盖。真实宿主验收尚未完成，且其中两半无法由自动化产出：真实传输需要一个位于 request domain 列表中的受控 HTTPS 服务（属 `BackendRequired`，也是示例在未提供之前报告 `NOT CONFIGURED` 的原因），而真实的网络切换需要一台能够真正切换连接的真机，任何模拟器都无法替代。WebSocket 未实现，在能力矩阵中保持 `Planned`。
 
 
 微信文件系统已于 2026-09-15 完成真实宿主验收。微信开发者工具与 Android 真机均在基础库 3.17.2 上验证了固定测试文件的写入、读取匹配、存在检查、删除与删除后不存在；沙箱根和文件内容均未被显示或记录。自动化 Kotlin/JS、fake-host、CommonJS 与 TypeScript 检查也已通过。

@@ -101,6 +101,7 @@ The following procedure is the DeveloperTools checklist for currently implemente
 | Scanner | The `Scanner` card shows the capability answer and `PASS`, `INTERRUPTED`, or `FAIL` for a scan | `[kmp-miniapp-sdk] scanner capability: PASS wechat.scan-code=…`, `scan: PASS resultPresent=true, typeRecognized=true`, `scan: INTERRUPTED cause=indeterminate` |
 | Media | The `Media` card shows the capability answer and `PASS`, `INTERRUPTED`, or `FAIL` for a selection | `[kmp-miniapp-sdk] media capability: PASS wechat.choose-media=…`, `media choose: PASS count=1, typesValid=true, metadataValid=true`, `media choose: INTERRUPTED cause=indeterminate` |
 | Subscription Message | The `Subscription Message` card shows the capability answer and the request's `PASS`, `NOT CONFIGURED`, or `FAIL` | `[kmp-miniapp-sdk] subscription capability: PASS wechat.request-subscribe-message=…`, `subscription request: PASS accepted=N, otherStatuses=N, signals=…`, `subscription request: FAIL reason=HostFailure, signal=…` |
+| Network extensions | The `Network Extensions` card shows each capability answer, the current network, and the observation, upload, and download states | `[kmp-miniapp-sdk] network capabilities: PASS query=…, listener=…, upload=…, download=…`, `network type: PASS connected=true, type=WIFI`, `network observation: PASS events=N, last=…`, `upload check: PASS\|NOT CONFIGURED`, `download check: PASS\|NOT CONFIGURED` |
 | Storage | `Storage verification: PASS` | `[kmp-miniapp-sdk] storage: PASS first=first, overwritten=second, missing=null` |
 | Client login code | `Client login code: PASS` | `[kmp-miniapp-sdk] auth bootstrap: PASS codeReceived=true, length=<positive integer>` |
 | Network | `Network verification: PASS` | `[kmp-miniapp-sdk] network: PASS status=200, bytes=<positive integer>` |
@@ -270,7 +271,25 @@ Step 4 proves only that the SDK handed over the host's per-template answers, not
 
 The adapter requires exact correlation: missing or unexpected template keys and blank or non-text statuses are `InvalidResponse`, never a successful “silent” answer.
 
-17. Record which checks you observed and which you did not. A capability is recorded as host-verified in [PROJECT_FACTS-en.md](PROJECT_FACTS-en.md) only after a real-host run for that capability.
+17. Verify the network extensions. Nothing is queried, registered, uploaded, or downloaded while the page loads, so every step follows a tap. The page never prints a URL, a header, a file path, or a response body; it reports statuses, byte counts, event counts, and whether an abort was invoked.
+
+| Step | Tap | Expected |
+| --- | --- | --- |
+| 1 | `Check network capabilities` | `[kmp-miniapp-sdk] network capabilities: PASS query=Supported, listener=Supported, upload=Supported, download=Supported`, or `Unsupported` for whichever API the host lacks |
+| 2 | `Get current network type` | `[kmp-miniapp-sdk] network type: PASS connected=true, type=<recognized kind or unrecognized>` |
+| 3 | `Start network status observation`, switch the device's connection (Wi-Fi to cellular, or turn connectivity off and on), then `Stop network status observation` | `[kmp-miniapp-sdk] network observation: PASS events=<count above zero>, last=<the kind you switched to>`. **This needs a device**: a simulator has no connection to switch |
+| 4 | `Stop network status observation` again without starting it | `[kmp-miniapp-sdk] network observation: PASS events=0, last=none` |
+| 5 | `Run upload check` with no endpoint configured | `[kmp-miniapp-sdk] upload check: NOT CONFIGURED`, and no request leaves the device |
+| 6 | `Run download check` with no endpoint configured | `[kmp-miniapp-sdk] download check: NOT CONFIGURED` |
+| 7 | Configure a controlled HTTPS endpoint locally (do not commit it), whitelist it in the request domain, then `Run upload check` | `[kmp-miniapp-sdk] upload check: PASS status=<2xx or the status the service returns>, bytes=<length>, progressSeen=<true\|false>` |
+| 8 | `Run download check` against the same service | `[kmp-miniapp-sdk] download check: PASS status=…, fileReported=true, progressSeen=…` |
+| 9 | Start a check against a large or slow endpoint, then `Cancel upload` (or `Cancel download`) while it runs | `[kmp-miniapp-sdk] upload cancel: PASS abortInvoked=true` and the card shows `CANCELLED`; the transfer reports no answer |
+
+Steps 3, 7, 8, and 9 are the ones automation cannot produce. Step 3 needs a device whose connection can actually be switched; steps 7 to 9 need a controlled HTTPS service, which is `BackendRequired` — a public endpoint is not acceptable evidence, and `https://example.com/` is not an upload service.
+
+Step 5 is the guard that the example's default state is honest: with nothing configured the page makes no host call at all, so no upload can be mistaken for a passing check. A `progressSeen=false` in step 7 or 8 is not a failure: a small transfer can complete before the host reports anything.
+
+18. Record which checks you observed and which you did not. A capability is recorded as host-verified in [PROJECT_FACTS-en.md](PROJECT_FACTS-en.md) only after a real-host run for that capability.
 
 The Storage check writes a dedicated test key, verifies overwrite, removes it, and confirms that the missing key reads as `null`. The network check issues a `GET` to `https://example.com/` and reports the status code and body length; point the example's `networkUrl` constant at any reachable HTTPS endpoint when verifying a different host.
 

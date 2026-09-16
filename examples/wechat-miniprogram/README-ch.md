@@ -64,7 +64,16 @@ npm run typecheck
 [kmp-miniapp-sdk] subscription request: NOT CONFIGURED templateCount=0
 [kmp-miniapp-sdk] subscription request: PASS accepted=1, otherStatuses=0, signals=accept
 [kmp-miniapp-sdk] subscription request: FAIL reason=HostFailure, signal=fail-cancel
+[kmp-miniapp-sdk] network capabilities: PASS query=Supported, listener=Supported, upload=Supported, download=Supported
+[kmp-miniapp-sdk] network type: PASS connected=true, type=WIFI
+[kmp-miniapp-sdk] network observation: PASS events=2, last=CELLULAR_4G
+[kmp-miniapp-sdk] upload check: NOT CONFIGURED
+[kmp-miniapp-sdk] download check: NOT CONFIGURED
 ```
+
+Network Extensions 卡片覆盖五个宿主 API，逐项门控：网络类型查询、网络状态监听、上传与下载。`Check network capabilities` 报告每一项的判定；`Get current network type` 执行一次不注册任何东西的查询；`Start`/`Stop network status observation` 注册一个宿主 listener 并将其移除，停止那行会报告收到了多少次变更以及最后的连接类型。上传与下载检查在本地配置受控 HTTPS endpoint 之前什么都不做——卡片报告 `NOT CONFIGURED` 且不调用宿主——其结果只报告状态、字节数以及宿主是否报告过进度，从不报告 URL、header、文件路径或响应正文。`Cancel upload` 与 `Cancel download` 中止进行中的传输，并报告是否真的触发了宿主 abort。
+
+观察那一半需要真机：模拟器没有可切换的连接。传输那一半属 `BackendRequired`：它需要一个列入 request domain 的受控 HTTPS 服务，因此 `https://example.com/` 不能替代。详见 [../../docs/DEVELOPMENT-ch.md](../../docs/DEVELOPMENT-ch.md) 的网络扩展一节。
 
 Network 检查会向 `https://example.com/` 发起 `GET`。微信要求该 host 已列入 request domain 白名单，或编译时关闭域名校验。验证其他 endpoint 时请修改 `networkUrl` 常量。
 

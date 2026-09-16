@@ -100,6 +100,7 @@ cd examples/wechat-miniprogram && npm run smoke && npm run typecheck
 | Scanner | `Scanner` 卡片显示能力判定，以及扫码的 `PASS`、`INTERRUPTED` 或 `FAIL` | `[kmp-miniapp-sdk] scanner capability: PASS wechat.scan-code=…`、`scan: PASS resultPresent=true, typeRecognized=true`、`scan: INTERRUPTED cause=indeterminate` |
 | Media | `Media` 卡片显示能力判定，以及选择的 `PASS`、`INTERRUPTED` 或 `FAIL` | `[kmp-miniapp-sdk] media capability: PASS wechat.choose-media=…`、`media choose: PASS count=1, typesValid=true, metadataValid=true`、`media choose: INTERRUPTED cause=indeterminate` |
 | Subscription Message | `Subscription Message` 卡片显示能力判定，以及请求的 `PASS`、`NOT CONFIGURED` 或 `FAIL` | `[kmp-miniapp-sdk] subscription capability: PASS wechat.request-subscribe-message=…`、`subscription request: PASS accepted=N, otherStatuses=N, signals=…`、`subscription request: FAIL reason=HostFailure, signal=…` |
+| Network extensions | `Network Extensions` 卡片显示每项能力判定、当前网络，以及观察、上传、下载状态 | `[kmp-miniapp-sdk] network capabilities: PASS query=…, listener=…, upload=…, download=…`、`network type: PASS connected=true, type=WIFI`、`network observation: PASS events=N, last=…`、`upload check: PASS\|NOT CONFIGURED`、`download check: PASS\|NOT CONFIGURED` |
 | Clipboard 与震动 | `Clipboard and Haptics` 卡片的写入、读取、短震动、长震动四项均为 `PASS` | `[kmp-miniapp-sdk] clipboard write: PASS`、`clipboard read: PASS matched=true`、`haptics short: PASS`、`haptics long: PASS` |
 | Storage | `Storage verification: PASS` | `[kmp-miniapp-sdk] storage: PASS first=first, overwritten=second, missing=null` |
 | Client login code | `Client login code: PASS` | `[kmp-miniapp-sdk] auth bootstrap: PASS codeReceived=true, length=<正整数>` |
@@ -270,7 +271,25 @@ cd examples/wechat-miniprogram && npm run smoke && npm run typecheck
 
 Adapter 要求精确关联：缺少或多出的模板键、空白或非文本状态均为 `InvalidResponse`，绝不会被当成成功的“沉默”答案。
 
-17. 记录你观察到了哪些检查项、哪些没有观察到。只有在某项 capability 完成真实宿主运行后，才会在 [PROJECT_FACTS-ch.md](PROJECT_FACTS-ch.md) 中被记录为已通过宿主验证。
+17. 验证网络扩展。页面加载期间不会查询、注册监听、上传或下载，因此每一步都由点击触发。页面从不打印 URL、header、文件路径或响应正文；它报告状态、字节数、事件数与是否触发了 abort。
+
+| 步骤 | 点击 | 预期 |
+| --- | --- | --- |
+| 1 | `Check network capabilities` | `[kmp-miniapp-sdk] network capabilities: PASS query=Supported, listener=Supported, upload=Supported, download=Supported`，宿主缺少哪个 API 就显示 `Unsupported` |
+| 2 | `Get current network type` | `[kmp-miniapp-sdk] network type: PASS connected=true, type=<已识别类型或 unrecognized>` |
+| 3 | `Start network status observation`，切换设备连接（Wi-Fi 与蜂窝互切，或断开再恢复），然后 `Stop network status observation` | `[kmp-miniapp-sdk] network observation: PASS events=<大于 0 的计数>, last=<你切换到的类型>`。**这一步需要真机**：模拟器没有可切换的连接 |
+| 4 | 未启动观察时再次点击 `Stop network status observation` | `[kmp-miniapp-sdk] network observation: PASS events=0, last=none` |
+| 5 | 未配置 endpoint 时点击 `Run upload check` | `[kmp-miniapp-sdk] upload check: NOT CONFIGURED`，且设备不发出任何请求 |
+| 6 | 未配置 endpoint 时点击 `Run download check` | `[kmp-miniapp-sdk] download check: NOT CONFIGURED` |
+| 7 | 在本地配置一个受控 HTTPS endpoint（不要提交它），将其加入 request domain 白名单，然后 `Run upload check` | `[kmp-miniapp-sdk] upload check: PASS status=<2xx 或服务返回的状态>, bytes=<长度>, progressSeen=<true\|false>` |
+| 8 | 对同一服务点击 `Run download check` | `[kmp-miniapp-sdk] download check: PASS status=…, fileReported=true, progressSeen=…` |
+| 9 | 对一个较大或较慢的 endpoint 发起检查，并在进行中点击 `Cancel upload`（或 `Cancel download`） | `[kmp-miniapp-sdk] upload cancel: PASS abortInvoked=true`，卡片显示 `CANCELLED`；该传输不会给出结果 |
+
+第 3、7、8、9 步是自动化无法产出的部分。第 3 步需要一台能够真正切换连接的真机；第 7 至 9 步需要一个受控的 HTTPS 服务，属 `BackendRequired`——公共 endpoint 不能作为证据，`https://example.com/` 也不是上传服务。
+
+第 5 步是示例默认状态诚实性的保障：未配置时页面完全不调用宿主，因此不会有任何上传被误当成通过的检查。第 7 或 8 步出现 `progressSeen=false` 并不代表失败：小传输可能在宿主报告任何进度之前就已完成。
+
+18. 记录你观察到了哪些检查项、哪些没有观察到。只有在某项 capability 完成真实宿主运行后，才会在 [PROJECT_FACTS-ch.md](PROJECT_FACTS-ch.md) 中被记录为已通过宿主验证。
 
 Storage 检查会写入专用测试 key、验证覆盖、删除该 key，并确认 missing key 读取为 `null`。Network 检查会向 `https://example.com/` 发起 `GET`，并报告 status code 与 body 长度；验证其他 host 时请修改示例中的 `networkUrl` 常量。
 

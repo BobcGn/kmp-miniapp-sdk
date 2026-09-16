@@ -132,7 +132,7 @@ Kotlin/JS platform variants 及其传递依赖由 Gradle 在依赖解析期间�
 - `host/wechat/runtime`：宿主 lifecycle 和 runtime integration
 - `export`：宿主无关的 Kotlin 到 JavaScript / TypeScript public boundary
 
-`export` 边界包含版本 facade、Promise-based Storage functions、微信专属 login bootstrap、Promise-based HTTP transport function、供消费者转发的 App 与 Page lifecycle 入口、微信导航函数、capability support 与 runtime inspection 查询、权限生命周期函数、微信专属的会话检查、四项微信剪贴板与震动函数、五项微信文件系统函数、微信定位函数、微信扫码函数、微信媒体选择函数，以及微信订阅消息请求函数。Interop 边界包含 `login`、`showToast`、Storage、`request`、三个页面栈导航方法，以及带 presence guard 的 runtime inspection 成员的 internal 契约；production adapters 通过 `WechatHost` 调用 login、Storage、HTTP transport、导航、runtime inspection 与权限生命周期，`showToast` 仍仅为 interop contract。`runtime` 边界包含实现公共 lifecycle capability 的 `WechatAppLifecycle`、跟踪 runtime 报告为已显示页面的 `WechatPageLifecycle`，以及依据 runtime 报告判定支持状态的能力目录表与 gate。`adapter` 边界另外包含 `WechatPermissionScopes`，这是微信 scope 字符串唯一存在的地方。
+`export` 边界包含版本 facade、Promise-based Storage functions、微信专属 login bootstrap、Promise-based HTTP transport function、供消费者转发的 App 与 Page lifecycle 入口、微信导航函数、capability support 与 runtime inspection 查询、权限生命周期函数、微信专属的会话检查、四项微信剪贴板与震动函数、五项微信文件系统函数、微信定位函数、微信扫码函数、微信媒体选择函数、微信订阅消息请求函数、网络状态函数，以及两个微信传输函数。Interop 边界包含 `login`、`showToast`、Storage、`request`、三个页面栈导航方法，以及带 presence guard 的 runtime inspection 成员的 internal 契约；production adapters 通过 `WechatHost` 调用 login、Storage、HTTP transport、导航、runtime inspection 与权限生命周期，`showToast` 仍仅为 interop contract。`runtime` 边界包含实现公共 lifecycle capability 的 `WechatAppLifecycle`、跟踪 runtime 报告为已显示页面的 `WechatPageLifecycle`，以及依据 runtime 报告判定支持状态的能力目录表与 gate。`adapter` 边界另外包含 `WechatPermissionScopes`，这是微信 scope 字符串唯一存在的地方。
 
 ## 9. 当前能力
 
@@ -227,6 +227,13 @@ Kotlin/JS platform variants 及其传递依赖由 Gradle 在依赖解析期间�
 - `WeChatSubscriptionStatus` 只命名 `accept`，并刻意不命名更多：该 API 的可离线来源完全没有给出状态词汇。整个已安装基础库中唯一观察到的状态字符串是模拟器订阅弹窗预览载荷里的 `accept`，那属于弹窗渲染数据而不是 API 结果。其他状态一律原样保留在 `hostStatus` 中而 `status` 为 `null`，因此调用方依据宿主实际所说行动，真机运行可以凭证据扩展该集合。
 - 「同意」是订阅状态而不是送达。SDK 中没有任何部分把消息报告为已发送；端到端送达需要微信后台模板与可信后端，属于本能力之外的 `BackendRequired` 事项。
 - 订阅请求不查询也不请求任何权限：该 API 的可离线来源没有给出任何 scope。这是关于证据的结论，SDK 既不假定 BOB-60 尚未完成的隐私工作适用于它，也不假定不适用。
+- 网络状态是公共 capability，因为每个宿主都能回答「是否在线、通过什么链路」这种问题，且该模型不需要任何宿主专属部分。词汇不是公共的，因此 `NetworkType` 命名 SDK 能识别的取值，`hostNetworkType` 始终携带宿主自己的词；SDK 从未见过的类型会被如实报告，而不是映射成 `UNKNOWN`。
+- 查询与监听是两个独立的 capability key（`network-status-query`、`network-status-listener`），因为宿主可能能回答该问题却不提供变更事件。
+- `MiniAppNetworkStatus.changes` 只转发宿主推送的内容：不做轮询，不在开始收集时合成任何读数，每个 collector 注册自己的宿主 listener 并在结束时恰好移除一次，结束之后到达的事件不会再被投递。
+- 上传与下载保留在微信逃生口之后，key 为 `wechat.upload-file` 与 `wechat.download-file`。它们可移植的部分——method、URL、headers、status、文本 body——已经属于公共 HTTP transport capability；不可移植的是文件，也就是宿主路径，而本 SDK 刻意没有可移植的文件引用。两个方向各自按 API 门控。
+- 传输报告宿主自己的 task：`abort()` 停止它（最多一次，并会说明是否真的触发了宿主 abort），`lastProgress()` 报告宿主给出的最后一个数值而不是估算值，取消等待也会停止宿主操作。进度 listener 最多注册一次，并在包括 abort 在内的每条终止路径上被移除。
+- 已完成的传输就是一次已完成的 exchange：非 2xx 状态会 resolve，与 HTTP transport capability 完全一致，只有传输层失败才 reject。超时是宿主的确切消息 `uploadFile:fail timeout` 或 `downloadFile:fail timeout`（由该基础库自身的错误映射产出）；仅仅提到 timeout 的消息仍然是 `HostFailure`。
+- 网络扩展不查询也不请求任何权限。访问某个 host 需要它位于消费者的 request domain 列表中，那是对小程序的配置约束而不是 SDK 能索取的权限；可离线来源也没有把任何隐私条件与这些 API 绑定。
 - 自动测试覆盖版本比较与解析、四种支持状态、版本边界本身、版本不可读时的回退、完全无法探测的宿主、runtime 只读取一次，以及 `UnsupportedCapability` guard。
 - 微信开发者工具已验证前台 lifecycle 状态、页面 route，以及 `navigateTo` → `redirectTo` → `navigateBack` 的完整页面栈路径。
 - [TESTING-ch.md](TESTING-ch.md) 记录了两层测试体系、各层可用的 fake，以及可复现的真实宿主检查清单。
@@ -248,6 +255,7 @@ Kotlin/JS platform variants 及其传递依赖由 Gradle 在依赖解析期间�
 - 相机原生组件、连续视觉识别、自建二维码或条码解析器、通用相机界面，以及扫码结果的业务解析、持久化或上传
 - 所选媒体的播放器、编辑器、压缩或转码器；图片识别；上传、下载或后端存储；对宿主临时文件的长期管理；微信媒体 API 的完整封装；以及宿主选择界面本身
 - 通用推送通知抽象；由后端发送订阅消息；模板管理；静默或页面加载时的订阅请求；以及任何「已同意订阅即表示消息已发送或将要送达」的说法
+- 带重试、缓存或认证的通用 HTTP 客户端；断点续传、下载缓存或下载管理器；读取、移动、解压或解析下载内容；WebSocket 客户端；以及任何「下载结果的路径会超出本次会话」的说法
 - Request 或 response body 序列化、cookie 处理、redirect 策略、streaming、upload 或 download
 - 服务端 code exchange、已认证用户/session 管理和 token refresh
 - 公共通用 callback-to-coroutine API
@@ -293,6 +301,8 @@ Kotlin/JS platform variants 及其传递依赖由 Gradle 在依赖解析期间�
 微信媒体选择 capability 适配 typed `wx.chooseMedia`，把一次用户手势变成一次微信自身界面的选择。它属于微信专属能力，因此位于 platform escape hatch 之后，key 为 `wechat.choose-media`，导出为 `wechatChooseMedia`。请求只建模确有必要的选项——媒体类型、数量、来源、最长拍摄时长、压缩与摄像头——并只校验能够精确陈述的部分：微信自己的 schema 把 `mediaType` 标为 required，并把 `maxDurationSeconds` 文档化为 3 至 60 秒，因此空媒体类型列表与越界时长都不会被发送；宿主的数量上限则交给宿主，因为它取决于宿主的基础库。结果报告每个文件的临时路径、字节数、宿主必填类别，以及宿主报告的视频元数据；本 SDK 不认识的类别会保留宿主原名而不是让选择失败，宿主未报告的描述性字段保持缺失而不是变成 0，而空成功结果、缺少必填字段或字节数不是非负 JavaScript 安全整数都会映射为 `InvalidResponse`。开发者工具模拟关闭报告 `chooseMedia:cancel`，Android 真机主动关闭报告 `chooseMedia:fail cancel`；这两条精确信号都映射为 `HostInteractionInterrupted`，但不推断用户意图，其他失败保持为 `HostFailure`。媒体选择不查询也不请求 SDK 权限。选择返回的路径是宿主临时资源：SDK 不保留副本、不声称其生命周期，也不代替调用方把媒体复制到任何地方。自动化检查通过，真实宿主已覆盖能力支持、图片、视频、混合、拍摄、主动关闭与媒体访问受限路径。在已验证的 Android 宿主上，主动关闭与受限访问产生相同的不可归因中断，因此 SDK 显式保留这项宿主歧义。该能力为 `Stable`。
 
 微信订阅消息 capability 适配 typed `wx.requestSubscribeMessage`，把一次用户手势变成一次针对模板列表的请求。它属于微信专属能力，因此位于 platform escape hatch 之后，key 为 `wechat.request-subscribe-message`，导出为 `wechatRequestSubscribeMessage`。**它是本项目证据最薄的一处。** 已安装开发者工具所带的基础库在其元数据表中声明了该 API——选项 `tmplIds`，以及一个以模板 ID 为键、旁边带 `errMsg` 的 success 结果——但其中没有该 API 的任何实现，也没有文档 schema，因此可离线来源没有给出该 API 的状态词汇，也没有给出它的关闭消息。整个 bundle 中唯一观察到的状态字符串是 `accept`，来自模拟器订阅弹窗预览载荷，那是弹窗渲染数据而不是 API 结果。因此 SDK 只识别这一个状态，并原样保留其他非空白字符串。在该 API 自身产出可观察证据之前，不分类任何关闭信号；惯例性的 cancel 形式仍为 `HostFailure`。合法结果必须精确包含所请求的模板键，且每项都是非空白文本状态，否则为 `InvalidResponse`。「同意」是订阅状态，永远不是送达，端到端送达属于 `BackendRequired`。不映射任何权限，也不添加任何 `app.json` 声明，因为没有可引用来源把某个 scope 或隐私条件与该 API 绑定——这是关于证据的结论，不等于认定其不存在。自动化 Kotlin/JS、fake-host、CommonJS 与 TypeScript 检查均已通过。2026-09-16 的 Android 真机运行（OnePlus PLQ110、Android 36、微信 8.0.76、运行时基础库 3.17.2）验证了 `wechat.request-subscribe-message=Supported` 与 `NOT CONFIGURED templateCount=0`；此路径有意不调用宿主，因此不会出现订阅同意弹窗。弹窗同意、拒绝、关闭、多模板关联与消息送达仍未验证，并受阻于为同一 AppID 配置的有效订阅模板，因此该能力仍为 `Partial`。
+
+微信网络扩展适配五个宿主 API。其中成为公共 capability 的是网络状态，因为它回答的是一个普适问题，且模型里没有任何宿主专属部分；两个传输能力保留为微信专属，因为它们的请求与结果建立在宿主文件路径之上，而本 SDK 刻意没有可移植的文件引用——HTTP exchange 中可移植的那一半已经属于 transport capability。契约读取自已安装开发者工具所带的基础库：`getNetworkType` 枚举 `wifi`、`2g`、`3g`、`4g`、`5g`、`unknown` 与 `none`；变更事件枚举同一集合但不含 `5g`；`uploadFile` 接收 `url`、`filePath`、`name`、`header`、`formData` 与 `timeout`，并返回 `data` 与 `statusCode`；`downloadFile` 接收 `url`、`header`、`timeout` 与 `filePath`，并返回 `tempFilePath`、`filePath` 与 `statusCode`；两个 task 都带 `abort`、`onProgressUpdate` 与 `offProgressUpdate`（`RequestTask` 没有）；同一基础库的错误映射产出 `<api>:fail timeout`。它们都没有标注引入基础库版本，因此各自依靠 `wx.canIUse`。四个能力按 API 逐项门控，监听能力要求两半都在，以保证每次注册都能配到一次移除。自动化 Kotlin/JS、fake-host、CommonJS 与 TypeScript 检查均已通过。开发者工具与真机验收尚未完成：真实的传输需要位于 request domain 列表中的受控 HTTPS 服务（属 `BackendRequired`），而真实的网络切换需要一台能够真正切换连接的真机，任何模拟器都无法替代。WebSocket 未实现，在能力矩阵中保持 `Planned`。
 
 运行时能力检测已于 2026-09-15 完成开发者工具与真机验收。开发者工具在基础库 3.17.2 下报告 `baseLibrary=3.17.2, platform=devtools, runtime-detection=Supported, storage=Supported, ungated=Unsupported`；Android 真机（OnePlus PLQ110、Android 36、微信 8.0.76）报告同样的状态而 `platform=android`。开发者工具当前可选的最低调试基础库为 2.21.4，无法在该环境中构造低于 2.20.1 的宿主，因此 `VersionDependent` 没有真实宿主截图；该边界由 `HostVersion` 单元测试、Fake Host 契约检查、边界测试与已执行的变异探针覆盖。3.17.2 是当前主要兼容验证版本，不是已验证的最低支持版本。权限生命周期已于 2026-09-15 完成麦克风与位置权限的开发者工具和 Android 真机验收；位置运行补充覆盖了 `NotRequested`、`Granted` 与 `Denied`。
 

@@ -64,7 +64,16 @@ Import this directory as a Mini Program project and compile it. The clipboard an
 [kmp-miniapp-sdk] subscription request: NOT CONFIGURED templateCount=0
 [kmp-miniapp-sdk] subscription request: PASS accepted=1, otherStatuses=0, signals=accept
 [kmp-miniapp-sdk] subscription request: FAIL reason=HostFailure, signal=fail-cancel
+[kmp-miniapp-sdk] network capabilities: PASS query=Supported, listener=Supported, upload=Supported, download=Supported
+[kmp-miniapp-sdk] network type: PASS connected=true, type=WIFI
+[kmp-miniapp-sdk] network observation: PASS events=2, last=CELLULAR_4G
+[kmp-miniapp-sdk] upload check: NOT CONFIGURED
+[kmp-miniapp-sdk] download check: NOT CONFIGURED
 ```
+
+The Network Extensions card covers five host APIs, gated one at a time: the network type query, the network status listener, upload, and download. `Check network capabilities` reports each answer; `Get current network type` performs a query that registers nothing; `Start`/`Stop network status observation` register one host listener and remove it, and the stop line reports how many changes arrived and the last connection kind. The upload and download checks do nothing at all until you configure a controlled HTTPS endpoint locally — the card reports `NOT CONFIGURED` and makes no host call — and their results report a status, a byte count, and whether the host reported progress, never a URL, header, file path, or response body. `Cancel upload` and `Cancel download` stop an in-flight transfer and report whether a host abort was actually invoked.
+
+The observation half needs a device: a simulator has no connection to switch. The transfer half is `BackendRequired`: it needs a controlled HTTPS service listed in the request domain, so `https://example.com/` cannot stand in for one. See the network extensions section of [../../docs/DEVELOPMENT-en.md](../../docs/DEVELOPMENT-en.md).
 
 The network check issues a `GET` to `https://example.com/`. WeChat requires that host to be listed in the request domain whitelist, or the project must be compiled with domain checking disabled. Change the `networkUrl` constant to verify a different endpoint.
 

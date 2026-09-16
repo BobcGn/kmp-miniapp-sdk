@@ -63,10 +63,15 @@
 | Media | Unit + Contract + Node + DeveloperTools + RealDevice | 已完成 `buildMiniAppSdk`；设备上有测试图片与测试视频；可限制照片访问的设备 | 运行测试；打开 index，使用 Media 卡片：检查能力、选择图片、选择视频、选择任一类型、从相机拍摄、主动关闭选择界面，最后限制照片访问后再选择一次 | `wechat.choose-media=Supported`；图片选择报告 `media choose: PASS count=1, typesValid=true, metadataValid=true`；视频选择报告其时长与尺寸，若宿主未发送则报告为缺失；主动关闭与受限访问均报告 `media choose: INTERRUPTED cause=indeterminate`；页面与 Console 中都不出现媒体内容与完整临时路径 | 已于 2026-09-16 验证 —— 开发者工具与 Android OnePlus PLQ110、微信 8.0.76、基础库 3.17.2 已覆盖支持、图片、视频、混合、拍摄、主动关闭与受限访问；宿主歧义以 `HostInteractionInterrupted` 保留 | 每次媒体 interop、adapter、catalog 或 export 变更 |
 | Platform Escape Hatch | Unit + Node + capability consumer 的宿主等级 | 使用 `WechatPlatformApi` | 运行相关测试，并由具体微信专属能力执行宿主验证 | 微信 API 可达且未被描述为通用 capability | 由 Auth、Page Lifecycle、Navigation 间接覆盖 | 每次 platform API surface 变更 |
 | Subscription Message | Unit + Contract + Node + DeveloperTools + RealDevice | 已完成 `buildMiniAppSdk`；在同一 AppID 后台真实存在、仅在本地配置且从不提交的测试模板；任何送达结论都需要可信后端及其模板条件 | 运行测试；打开 index，使用 Subscription Message 卡片：检查能力、未配置模板时请求、在本地配置一个后请求并分别同意与拒绝、主动关闭弹窗、最后用两个模板重试 | `wechat.request-subscribe-message=Supported`；未配置时报告 `NOT CONFIGURED` 且不弹窗；合法响应对每个请求模板精确给出一个非空白文本状态；`accept` 被识别，**其他非空白状态原样保留**；在精确宿主消息得到证据之前，主动关闭保持 `HostFailure` 且只报告封闭的 signal 标签；页面与 Console 中都不出现模板 ID 或原始失败 | `DEVICE-2026-09-16-A` 已部分验证：能力支持与零模板不调用宿主的保护通过。当前 AppID 获得有效模板前，弹窗结果为**阻塞**而非失败。接受订阅只表示订阅状态；送达属于 `BackendRequired`，此处不声称 | 每次订阅消息 interop、adapter、catalog 或 export 变更 |
+| Network Status | Unit + Contract + Node + DeveloperTools + RealDevice | 已完成 `buildMiniAppSdk`；一台能够真正切换连接的真机 | 运行测试；打开 index，检查能力、读取当前网络，然后启动观察、切换连接（Wi-Fi 与蜂窝互切，或断开再恢复），再停止观察 | `network-status-query=Supported` 且 `network-status-listener=Supported`；查询报告连接类型与 `connected=true`；停止时报告 `network observation: PASS events=<大于 0>, last=<切换到的类型>`；只有 `on` 的宿主报告监听不支持 | 待补 —— 模拟器没有可切换的连接，因此需要真机 | 每次网络状态 interop、adapter、catalog 或 export 变更 |
+| Upload | Unit + Contract + Node + DeveloperTools + RealDevice + BackendRequired | 已完成 `buildMiniAppSdk`；一个列入 request domain 的受控 HTTPS endpoint，以及沙箱中的文件；未提供时示例报告 `NOT CONFIGURED` | 运行测试；打开 index，使用 Network Extensions 卡片：检查能力、执行上传检查，然后对一个较慢的 endpoint 重试并在进行中取消 | `wechat.upload-file=Supported`；`upload check: PASS status=…, bytes=…, progressSeen=<true\|false>`；取消时报告 `upload cancel: PASS abortInvoked=true` 且卡片显示 `CANCELLED`；不出现 URL、header、路径或响应正文 | 待补 —— 属 `BackendRequired`：公共 endpoint 不构成证据，`https://example.com/` 也不是上传服务 | 每次上传 interop、adapter、catalog 或 export 变更 |
+| Download | Unit + Contract + Node + DeveloperTools + RealDevice + BackendRequired | 已完成 `buildMiniAppSdk`；一个列入 request domain 的受控 HTTPS endpoint | 运行测试；打开 index 使用卡片：检查能力、执行下载检查，然后对一个较慢的 endpoint 重试并在进行中取消 | `wechat.download-file=Supported`；`download check: PASS status=…, fileReported=true, progressSeen=<true\|false>`；取消时报告 `download cancel: PASS abortInvoked=true`；不出现路径或正文 | 待补 —— 与上传相同，属 `BackendRequired` | 每次下载 interop、adapter、catalog 或 export 变更 |
 
 `VersionDependent` 无法在开发者工具中产出：其可选的最低调试基础库为 2.21.4，高于 Runtime Detection 记录的 2.20.1 边界。该状态仅由自动化测试覆盖。这属于验证环境限制，不是未实现功能。
 
 麦克风运行所用账号无法产出 `NotRequested`，但后续位置运行已在宿主中产出该状态，并完成 `NotRequested` → `Granted` → `Denied` → 恢复后成功读取的闭环。尚未查询过的页面会显示 `UNKNOWN`，那是示例页面的占位值，刻意不属于公共 `PermissionState`。
+
+上传与下载检查同样有一半属于 `BackendRequired`：真实传输需要一个消费者列入 request domain 的受控 HTTPS 服务，因此任何已提交的 endpoint 都无法替代。网络切换则不同——它不需要服务，但需要一台能够真正切换连接的真机，模拟器无法提供。
 
 订阅消息验收有一半属于 `BackendRequired`：客户端只能确立订阅状态，消息是否真正发送或送达取决于微信后台模板与可信后端。该部分单独记录，且绝不从一次成功的客户端请求推断出来。
 
@@ -87,8 +92,6 @@
 
 | Tracking | Capability | Minimum Verification |
 | --- | --- | --- |
-| BOB-68 | Upload / Download | Unit + Contract + RealDevice + BackendRequired；覆盖进度、成功、失败、abort 和文件结果。 |
-| BOB-68 | Network Status | Unit + Contract + RealDevice；网络切换；取消订阅后不得继续收到事件。 |
 | BOB-74 | Virtual Payment Boundary | 架构与文档审查；如实现则 RealDevice + BackendRequired。 |
 | BOB-69 | BLE PoC | Unit + Contract + RealDevice；覆盖发现、连接、取消、停止与 listener cleanup；保持 Experimental。 |
 | BOB-62 | Bundle Baseline | 自动尺寸报告 + DeveloperTools 启动观察；记录 commit 和构建模式。 |
