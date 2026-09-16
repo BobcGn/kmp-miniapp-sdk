@@ -3,6 +3,7 @@ package io.github.bobcgn.miniapp.host.wechat.runtime
 import io.github.bobcgn.miniapp.capability.CapabilityKey
 import io.github.bobcgn.miniapp.capability.lifecycle.MiniAppLifecycle
 import io.github.bobcgn.miniapp.capability.network.MiniAppHttpTransport
+import io.github.bobcgn.miniapp.capability.network.MiniAppNetworkStatus
 import io.github.bobcgn.miniapp.capability.permission.MiniAppPermissions
 import io.github.bobcgn.miniapp.capability.privacy.MiniAppPrivacy
 import io.github.bobcgn.miniapp.capability.storage.MiniAppStorage
@@ -137,6 +138,24 @@ internal object WechatCapabilityCatalog {
         // for this API name no permission scope for it, so nothing else is gated here.
         WeChatDeviceCapabilities.RequestSubscribeMessage to WechatCapabilityRequirement(
             canIUseSchemas = listOf("requestSubscribeMessage"),
+        ),
+        // The network extensions are gated one API at a time, because a host may offer
+        // any subset: the query, the listener, the upload, and the download are four
+        // separate host capabilities. No introduction version is recorded for any of
+        // them, because the offline sources state none, so the probes are the authority.
+        MiniAppNetworkStatus.QueryKey to WechatCapabilityRequirement(
+            canIUseSchemas = listOf("getNetworkType"),
+        ),
+        // The listener needs both halves: registering without being able to remove
+        // would leak the listener, so a host with only `on` is reported unsupported.
+        MiniAppNetworkStatus.ListenerKey to WechatCapabilityRequirement(
+            canIUseSchemas = listOf("onNetworkStatusChange", "offNetworkStatusChange"),
+        ),
+        WeChatDeviceCapabilities.UploadFile to WechatCapabilityRequirement(
+            canIUseSchemas = listOf("uploadFile"),
+        ),
+        WeChatDeviceCapabilities.DownloadFile to WechatCapabilityRequirement(
+            canIUseSchemas = listOf("downloadFile"),
         ),
         // The four device capabilities are gated separately: a host may expose one
         // clipboard direction or one vibration length without the other. WeChat

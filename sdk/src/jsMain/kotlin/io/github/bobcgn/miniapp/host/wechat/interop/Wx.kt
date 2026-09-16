@@ -148,6 +148,36 @@ internal external object wx {
     fun requestSubscribeMessage(options: WxRequestSubscribeMessageOptions): Unit
 
     /**
+     * Reports the host's current network connection through callbacks.
+     *
+     * The host offers no abort handle, so a cancelled caller only stops waiting.
+     */
+    fun getNetworkType(options: WxGetNetworkTypeOptions): Unit
+
+    /**
+     * Registers a listener for network state changes.
+     *
+     * Listeners are removed by identity, so the same function value must be handed to
+     * [offNetworkStatusChange].
+     */
+    fun onNetworkStatusChange(listener: WxNetworkStatusChangeListener): Unit
+
+    /** Removes a network state listener, or every listener when none is given. */
+    fun offNetworkStatusChange(listener: WxNetworkStatusChangeListener?): Unit
+
+    /**
+     * Uploads a file through the host.
+     *
+     * Returns the host's task so the caller can report progress and stop the
+     * transfer; the host returns no task on some base libraries, which the adapter
+     * reports rather than hiding.
+     */
+    fun uploadFile(options: WxUploadFileOptions): WxTransferTask?
+
+    /** Downloads a file through the host, returning the same kind of task. */
+    fun downloadFile(options: WxDownloadFileOptions): WxTransferTask?
+
+    /**
      * Returns the host's global file manager.
      *
      * The manager is a host object whose methods are optional, so callers probe

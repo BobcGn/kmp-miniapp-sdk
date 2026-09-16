@@ -172,6 +172,41 @@ internal fun mapWechatRequestSubscribeMessageFailure(
 ): MiniAppException = mapWechatHostFailure(operation = "requestSubscribeMessage", result = result)
 
 /**
+ * Converts a raw `wx.uploadFile` failure into the platform-neutral SDK model.
+ *
+ * The base library shipped with the installed Developer Tools reports an expired
+ * transfer as `<api>:fail timeout`, which is the same convention its `wx.request`
+ * path uses. Only that exact message becomes [MiniAppException.Timeout]; a message
+ * that merely contains the word is a host failure, because a transfer that failed for
+ * another reason should not be reported as one the host stopped waiting for.
+ */
+internal fun mapWechatUploadFailure(result: WxGeneralCallbackResult): MiniAppException =
+    if (result.errMsg == UPLOAD_TIMEOUT_ERRMSG) {
+        MiniAppException.Timeout(operation = "uploadFile", hostMessage = result.errMsg)
+    } else {
+        mapWechatHostFailure(operation = "uploadFile", result = result)
+    }
+
+/** The exact host message for an upload that exhausted its timeout. */
+private const val UPLOAD_TIMEOUT_ERRMSG: String = "uploadFile:fail timeout"
+
+/**
+ * Converts a raw `wx.downloadFile` failure into the platform-neutral SDK model.
+ *
+ * As with the upload direction, only the exact documented timeout message becomes
+ * [MiniAppException.Timeout].
+ */
+internal fun mapWechatDownloadFailure(result: WxGeneralCallbackResult): MiniAppException =
+    if (result.errMsg == DOWNLOAD_TIMEOUT_ERRMSG) {
+        MiniAppException.Timeout(operation = "downloadFile", hostMessage = result.errMsg)
+    } else {
+        mapWechatHostFailure(operation = "downloadFile", result = result)
+    }
+
+/** The exact host message for a download that exhausted its timeout. */
+private const val DOWNLOAD_TIMEOUT_ERRMSG: String = "downloadFile:fail timeout"
+
+/**
  * What a raw `wx.requirePrivacyAuthorize` failure means.
  *
  * A declined privacy contract is the user's answer and is modelled as an outcome;

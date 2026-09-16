@@ -5,6 +5,7 @@ import io.github.bobcgn.miniapp.capability.CapabilitySupport
 import io.github.bobcgn.miniapp.capability.lifecycle.MiniAppLifecycle
 import io.github.bobcgn.miniapp.capability.lifecycle.MiniAppLifecycleState
 import io.github.bobcgn.miniapp.capability.network.MiniAppHttpTransport
+import io.github.bobcgn.miniapp.capability.network.MiniAppNetworkStatus
 import io.github.bobcgn.miniapp.capability.permission.MiniAppPermissions
 import io.github.bobcgn.miniapp.capability.privacy.MiniAppPrivacy
 import io.github.bobcgn.miniapp.capability.storage.MiniAppStorage
@@ -99,12 +100,31 @@ internal class WechatHostTest {
             CapabilitySupport.Supported,
             host.capabilitySupport(WeChatDeviceCapabilities.RequestSubscribeMessage),
         )
+        // The network extensions are gated one API at a time: the query, the listener,
+        // the upload, and the download each answer for themselves.
+        assertEquals(
+            CapabilitySupport.Supported,
+            host.capabilitySupport(MiniAppNetworkStatus.QueryKey),
+        )
+        assertEquals(
+            CapabilitySupport.Supported,
+            host.capabilitySupport(MiniAppNetworkStatus.ListenerKey),
+        )
+        assertEquals(
+            CapabilitySupport.Supported,
+            host.capabilitySupport(WeChatDeviceCapabilities.UploadFile),
+        )
+        assertEquals(
+            CapabilitySupport.Supported,
+            host.capabilitySupport(WeChatDeviceCapabilities.DownloadFile),
+        )
         assertEquals(
             CapabilitySupport.Unsupported,
             host.capabilitySupport(CapabilityKey("unknown")),
         )
         assertNotNull(host.storage)
         assertNotNull(host.network)
+        assertNotNull(host.networkStatus)
         assertNotNull(host.lifecycle)
         assertNotNull(host.permissions)
         assertNotNull(host.privacy)

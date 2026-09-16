@@ -12,7 +12,12 @@ import io.github.bobcgn.miniapp.host.wechat.interop.WxReadFileSuccessResult
 import io.github.bobcgn.miniapp.host.wechat.interop.WxRequestFailureResult
 import io.github.bobcgn.miniapp.host.wechat.interop.WxRequestSuccessResult
 import io.github.bobcgn.miniapp.host.wechat.interop.WxChooseMediaSuccessResult
+import io.github.bobcgn.miniapp.host.wechat.interop.WxDownloadFileSuccessResult
+import io.github.bobcgn.miniapp.host.wechat.interop.WxGetNetworkTypeSuccessResult
+import io.github.bobcgn.miniapp.host.wechat.interop.WxNetworkStatusChangeResult
 import io.github.bobcgn.miniapp.host.wechat.interop.WxRequestSubscribeMessageSuccessResult
+import io.github.bobcgn.miniapp.host.wechat.interop.WxTransferProgressResult
+import io.github.bobcgn.miniapp.host.wechat.interop.WxUploadFileSuccessResult
 import io.github.bobcgn.miniapp.host.wechat.interop.WxRequestTask
 import io.github.bobcgn.miniapp.host.wechat.interop.WxScanCodeSuccessResult
 
@@ -279,6 +284,91 @@ internal fun fakeSubscribeMessageSuccess(
     for ((templateId, status) in entries) {
         js("result[templateId] = status")
     }
+    return result
+}
+
+/**
+ * Builds a `wx.getNetworkType` success result.
+ *
+ * `networkType` is supplied as `Any?` so a test can produce the shapes the contract
+ * must reject, such as a missing or non-string connection kind.
+ */
+internal fun fakeGetNetworkTypeSuccess(networkType: Any?): WxGetNetworkTypeSuccessResult {
+    val result: WxGetNetworkTypeSuccessResult = js("({})")
+    js("result.errMsg = 'getNetworkType:ok'")
+    js("result.networkType = networkType")
+    return result
+}
+
+/**
+ * Builds a network status change payload.
+ *
+ * Both fields are supplied as `Any?` so a test can produce the shapes the contract
+ * must reject.
+ */
+internal fun fakeNetworkStatusEvent(
+    isConnected: Any?,
+    networkType: Any?,
+): WxNetworkStatusChangeResult {
+    val result: WxNetworkStatusChangeResult = js("({})")
+    js("result.isConnected = isConnected")
+    js("result.networkType = networkType")
+    return result
+}
+
+/**
+ * Builds a `wx.uploadFile` success result.
+ *
+ * Both fields are supplied as `Any?` so a test can produce the shapes the contract
+ * must reject.
+ */
+internal fun fakeUploadSuccess(statusCode: Any?, data: Any?): WxUploadFileSuccessResult {
+    val result: WxUploadFileSuccessResult = js("({})")
+    js("result.errMsg = 'uploadFile:ok'")
+    js("result.statusCode = statusCode")
+    js("result.data = data")
+    return result
+}
+
+/**
+ * Builds a `wx.downloadFile` success result.
+ *
+ * Every field is supplied as `Any?` so a test can produce the shapes the contract
+ * must reject. The default [path] is absent, which is how the host reports a download
+ * that was not given a target location.
+ */
+internal fun fakeDownloadSuccess(
+    tempFilePath: Any?,
+    statusCode: Any?,
+    path: Any? = null,
+): WxDownloadFileSuccessResult {
+    val result: WxDownloadFileSuccessResult = js("({})")
+    js("result.errMsg = 'downloadFile:ok'")
+    js("result.tempFilePath = tempFilePath")
+    js("result.statusCode = statusCode")
+    js("result.filePath = path")
+    return result
+}
+
+/**
+ * Builds a transfer progress payload.
+ *
+ * Every field is supplied as `Any?` so a test can produce the shapes the contract must
+ * reject, and so it can produce the upload pair, the download pair, or neither.
+ */
+internal fun fakeTransferProgress(
+    progress: Any?,
+    totalBytesSent: Any? = null,
+    totalBytesExpectedToSend: Any? = null,
+    totalBytesWritten: Any? = null,
+    totalBytesExpectedToWrite: Any? = null,
+): WxTransferProgressResult {
+    val result: WxTransferProgressResult = js("({})")
+    js("result.progress = progress")
+    js("result.totalBytesSent = totalBytesSent")
+    js("result.totalBytesExpectedToSend = totalBytesExpectedToSend")
+    js("result.totalBytesWritten = totalBytesWritten")
+    js("result.totalBytesExpectedToWrite = totalBytesExpectedToWrite")
     return result
 }
 

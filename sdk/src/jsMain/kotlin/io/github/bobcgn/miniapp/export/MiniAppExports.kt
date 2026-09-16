@@ -8,6 +8,8 @@ import io.github.bobcgn.miniapp.capability.CapabilitySupport
 import io.github.bobcgn.miniapp.capability.network.HttpMethod
 import io.github.bobcgn.miniapp.capability.network.MiniAppHttpRequest
 import io.github.bobcgn.miniapp.capability.network.MiniAppHttpTransport
+import io.github.bobcgn.miniapp.capability.network.MiniAppNetworkState
+import io.github.bobcgn.miniapp.capability.network.MiniAppNetworkStatus
 import io.github.bobcgn.miniapp.capability.permission.MiniAppPermissions
 import io.github.bobcgn.miniapp.capability.permission.PermissionKey
 import io.github.bobcgn.miniapp.capability.permission.PermissionState
@@ -23,7 +25,9 @@ import io.github.bobcgn.miniapp.host.wechat.WeChatLoginResult
 import io.github.bobcgn.miniapp.host.wechat.WeChatMediaRequest
 import io.github.bobcgn.miniapp.host.wechat.WeChatMediaSizeType
 import io.github.bobcgn.miniapp.host.wechat.WeChatMediaSource
+import io.github.bobcgn.miniapp.host.wechat.WeChatDownloadRequest
 import io.github.bobcgn.miniapp.host.wechat.WeChatMediaType
+import io.github.bobcgn.miniapp.host.wechat.WeChatUploadRequest
 import io.github.bobcgn.miniapp.host.wechat.WeChatScanCategory
 import io.github.bobcgn.miniapp.host.wechat.WeChatScanRequest
 import io.github.bobcgn.miniapp.host.wechat.WeChatSessionState
@@ -46,6 +50,12 @@ public object MiniAppExports {
     private val network: MiniAppHttpTransport = host.network
     private val permissions: MiniAppPermissions = host.permissions
     private val privacy: MiniAppPrivacy = host.privacy
+    private val networkStatus: MiniAppNetworkStatus = host.networkStatus
+
+    // One session, so one start is one host listener and one stop is one removal.
+    private val networkObservation: NetworkStatusObservation =
+        NetworkStatusObservation(networkStatus.changes)
+    private var lastObservation: NetworkStatusObservationResult? = null
 
     /**
      * Returns the version of the Kotlin SDK bundled into the JavaScript artifact.
@@ -545,6 +555,115 @@ public object MiniAppExports {
     }
 
     /**
+     * Returns what the host reports about its current network connection.
+     *
+     * The host's own word for the connection kind is always carried in
+     * `hostNetworkType`; `networkType` is `null` when this SDK has no name for it.
+     *
+     * Rejects with the SDK's unsupported-capability error on a host that cannot
+     * answer, which is the same signal every other capability uses.
+     */
+    public suspend fun networkStatus(): JsNetworkState = networkStatus.current().toJs()
+
+    /**
+     * Begins observing network status changes.
+     *
+     * The host listener is registered for this session and removed when
+     * [stopNetworkStatusObservation] is called. Calling this while already observing
+     * does nothing, so a second start cannot leave a second listener behind.
+     */
+    public fun startNetworkStatusObservation(): Unit = networkObservation.start()
+
+    /**
+     * Stops observing and resolves with every state the session saw.
+     *
+     * The resolution happens after the host listener is removed, so nothing observed
+     * can arrive after it. Only the most recent states are kept, because a session has
+     * no natural end.
+     */
+    public suspend fun stopNetworkStatusObservation(): Array<JsNetworkState> {
+        val result = networkObservation.stop()
+        lastObservation = result
+        return result.events.map { it.toJs() }.toTypedArray()
+    }
+
+    /**
+     * Why the last observation session ended on its own, or `null` when it was stopped.
+     *
+     * A host that reports a network state this SDK cannot read ends the session, and
+     * this is how the caller learns that rather than seeing an empty result.
+     */
+    public fun networkStatusObservationFailure(): String? = lastObservation?.failureName
+
+    /**
+     * Uploads a file to an HTTP endpoint through WeChat.
+     *
+     * The returned handle is the transfer: `await handle.result()` resolves with the
+     * host's answer, `handle.abort()` stops it, and `handle.progress()` reports the
+     * last figure the host gave.
+     *
+     * A completed upload is a completed exchange, so a non-2xx status resolves rather
+     * than rejecting — the same rule {@link networkRequest} follows. The SDK reads no
+     * file and logs no path.
+     *
+     * @param url absolute HTTPS endpoint
+     * @param filePath path inside the mini program file sandbox
+     * @param name form field name the host gives the file
+     * @param headers alternating header name and value entries
+     * @param formData alternating form field name and value entries
+     * @param timeoutMillis host timeout, or `null` for the host default
+     * @throws IllegalArgumentException when a name or value is missing from a pair, or
+     *   when a required value is blank
+     */
+    public fun wechatUploadFile(
+        url: String,
+        filePath: String,
+        name: String,
+        headers: Array<String>,
+        formData: Array<String>,
+        timeoutMillis: Int?,
+    ): JsUploadTransfer {
+        val request = WeChatUploadRequest(
+            url = url,
+            filePath = filePath,
+            name = name,
+            headers = headerMap(headers),
+            formData = headerMap(formData),
+            timeoutMillis = timeoutMillis,
+        )
+        return JsUploadTransfer(host.platform.uploadFile.start(request))
+    }
+
+    /**
+     * Downloads a URL into WeChat's file system.
+     *
+     * Behaviour matches {@link wechatUploadFile}. The result carries the host's own
+     * file reference; the SDK reads no content and moves nothing.
+     *
+     * @param url absolute endpoint
+     * @param headers alternating header name and value entries
+     * @param timeoutMillis host timeout, or `null` for the host default
+     * @param filePath optional target location, or `null` for the host's own
+     *   temporary location
+     * @throws IllegalArgumentException when a header name or value is missing from a
+     *   pair, when the URL is blank, or when a supplied path is blank
+     */
+    public fun wechatDownloadFile(
+        url: String,
+        headers: Array<String>,
+        timeoutMillis: Int?,
+        filePath: String?,
+    ): JsDownloadTransfer {
+        val request = WeChatDownloadRequest(
+            url = url,
+            headers = headerMap(headers),
+            timeoutMillis = timeoutMillis,
+            filePath = filePath,
+        )
+        return JsDownloadTransfer(host.platform.downloadFile.start(request))
+    }
+
+    /**
      * Fails unless the host currently requires no privacy authorization.
      *
      * This is the precondition point for capabilities the host gates behind its
@@ -552,6 +671,13 @@ public object MiniAppExports {
      */
     public suspend fun requirePrivacySatisfied(): Unit = privacy.requireSatisfied()
 }
+
+/** Presents a network state in a form a JavaScript caller can read. */
+private fun MiniAppNetworkState.toJs(): JsNetworkState = JsNetworkState(
+    isConnected = isConnected,
+    networkType = networkType?.name,
+    hostNetworkType = hostNetworkType,
+)
 
 /** Presents a capability's support state in a form a JavaScript caller can read. */
 private fun CapabilitySupport.toJs(): JsCapabilitySupport = when (this) {

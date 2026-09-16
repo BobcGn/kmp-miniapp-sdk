@@ -44,6 +44,11 @@ internal class FakeWechatRuntimeInfoHost(
         "scanCode",
         "chooseMedia",
         "requestSubscribeMessage",
+        "getNetworkType",
+        "onNetworkStatusChange",
+        "offNetworkStatusChange",
+        "uploadFile",
+        "downloadFile",
     ),
     private val canIUseAvailable: Boolean = true,
     private val availableFileSystemMethods: Set<String> = setOf(

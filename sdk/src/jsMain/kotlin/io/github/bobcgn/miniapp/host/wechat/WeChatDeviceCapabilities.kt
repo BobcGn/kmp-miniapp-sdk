@@ -82,4 +82,15 @@ internal object WeChatDeviceCapabilities {
      */
     val RequestSubscribeMessage: CapabilityKey =
         CapabilityKey("wechat.request-subscribe-message")
+
+    /**
+     * Uploading a file to an HTTP endpoint.
+     *
+     * Gated on its own: a host may download without uploading, and the two directions
+     * also report progress through different byte fields.
+     */
+    val UploadFile: CapabilityKey = CapabilityKey("wechat.upload-file")
+
+    /** Downloading a file to the host's file system. */
+    val DownloadFile: CapabilityKey = CapabilityKey("wechat.download-file")
 }

@@ -5,7 +5,9 @@ import io.github.bobcgn.miniapp.capability.CapabilitySupport
 import io.github.bobcgn.miniapp.capability.lifecycle.LifecycleCapabilityProvider
 import io.github.bobcgn.miniapp.capability.lifecycle.MiniAppLifecycle
 import io.github.bobcgn.miniapp.capability.network.MiniAppHttpTransport
+import io.github.bobcgn.miniapp.capability.network.MiniAppNetworkStatus
 import io.github.bobcgn.miniapp.capability.network.NetworkCapabilityProvider
+import io.github.bobcgn.miniapp.capability.network.NetworkStatusCapabilityProvider
 import io.github.bobcgn.miniapp.capability.permission.MiniAppPermissions
 import io.github.bobcgn.miniapp.capability.permission.PermissionCapabilityProvider
 import io.github.bobcgn.miniapp.capability.privacy.MiniAppPrivacy
@@ -20,6 +22,8 @@ import io.github.bobcgn.miniapp.host.wechat.adapter.WechatChooseMedia
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatChooseMediaHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatClipboard
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatClipboardHost
+import io.github.bobcgn.miniapp.host.wechat.adapter.WechatDownloadFile
+import io.github.bobcgn.miniapp.host.wechat.adapter.WechatDownloadFileHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatFileSystem
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatFileSystemHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatHaptics
@@ -30,6 +34,8 @@ import io.github.bobcgn.miniapp.host.wechat.adapter.WechatNavigation
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatNavigationHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatNetwork
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatNetworkHost
+import io.github.bobcgn.miniapp.host.wechat.adapter.WechatNetworkStatus
+import io.github.bobcgn.miniapp.host.wechat.adapter.WechatNetworkStatusHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatPermissionHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatPermissions
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatPrivacy
@@ -40,21 +46,26 @@ import io.github.bobcgn.miniapp.host.wechat.adapter.WechatRuntimeInfoHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatScanCode
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatScanCodeHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatStorage
+import io.github.bobcgn.miniapp.host.wechat.adapter.WechatUploadFile
+import io.github.bobcgn.miniapp.host.wechat.adapter.WechatUploadFileHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatStorageHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WxAuthHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WxChooseMediaHost
+import io.github.bobcgn.miniapp.host.wechat.adapter.WxDownloadFileHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WxClipboardHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WxFileSystemHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WxHapticsHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WxLocationHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WxNavigationHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WxNetworkHost
+import io.github.bobcgn.miniapp.host.wechat.adapter.WxNetworkStatusHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WxPermissionHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WxPrivacyHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WxRequestSubscribeMessageHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WxRuntimeInfoHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WxScanCodeHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WxStorageHost
+import io.github.bobcgn.miniapp.host.wechat.adapter.WxUploadFileHost
 import io.github.bobcgn.miniapp.host.wechat.runtime.WechatAppLifecycle
 import io.github.bobcgn.miniapp.host.wechat.runtime.WechatCapabilityGate
 import io.github.bobcgn.miniapp.host.wechat.runtime.WechatPageLifecycle
@@ -93,6 +104,10 @@ internal class WechatPlatformApi(
     internal val chooseMedia: WechatChooseMedia,
     /** Asking the user to subscribe to message templates. */
     internal val requestSubscribeMessage: WechatRequestSubscribeMessage,
+    /** Uploading a file to an HTTP endpoint. */
+    internal val uploadFile: WechatUploadFile,
+    /** Downloading a file into the host's file system. */
+    internal val downloadFile: WechatDownloadFile,
 ) : HostPlatformApi
 
 /** First concrete [MiniAppHost], backed by the WeChat Mini Program runtime. */
@@ -111,9 +126,13 @@ internal class WechatHost(
     scanCodeHost: WechatScanCodeHost = WxScanCodeHost,
     chooseMediaHost: WechatChooseMediaHost = WxChooseMediaHost,
     requestSubscribeMessageHost: WechatRequestSubscribeMessageHost = WxRequestSubscribeMessageHost,
+    networkStatusHost: WechatNetworkStatusHost = WxNetworkStatusHost,
+    uploadFileHost: WechatUploadFileHost = WxUploadFileHost,
+    downloadFileHost: WechatDownloadFileHost = WxDownloadFileHost,
 ) : MiniAppHost<WechatPlatformApi>,
     StorageCapabilityProvider,
     NetworkCapabilityProvider,
+    NetworkStatusCapabilityProvider,
     LifecycleCapabilityProvider,
     PermissionCapabilityProvider,
     PrivacyCapabilityProvider {
@@ -145,11 +164,15 @@ internal class WechatHost(
         scanCode = WechatScanCode(scanCodeHost),
         chooseMedia = WechatChooseMedia(chooseMediaHost),
         requestSubscribeMessage = WechatRequestSubscribeMessage(requestSubscribeMessageHost),
+        uploadFile = WechatUploadFile(uploadFileHost),
+        downloadFile = WechatDownloadFile(downloadFileHost),
     )
 
     override val storage: MiniAppStorage = WechatStorage(storageHost)
 
     override val network: MiniAppHttpTransport = WechatNetwork(networkHost)
+
+    override val networkStatus: MiniAppNetworkStatus = WechatNetworkStatus(networkStatusHost)
 
     override val lifecycle: MiniAppLifecycle = appLifecycle
 
