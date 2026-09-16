@@ -73,4 +73,13 @@ internal object WeChatDeviceCapabilities {
      * none is invented.
      */
     val ChooseMedia: CapabilityKey = CapabilityKey("wechat.choose-media")
+
+    /**
+     * Asking the user to subscribe to message templates.
+     *
+     * Only API availability is answered by this key. The offline sources for this API
+     * name no permission scope for it, so none is mapped and none is assumed absent.
+     */
+    val RequestSubscribeMessage: CapabilityKey =
+        CapabilityKey("wechat.request-subscribe-message")
 }

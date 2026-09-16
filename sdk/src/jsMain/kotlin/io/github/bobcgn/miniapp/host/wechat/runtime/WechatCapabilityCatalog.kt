@@ -132,6 +132,12 @@ internal object WechatCapabilityCatalog {
         WeChatDeviceCapabilities.ChooseMedia to WechatCapabilityRequirement(
             canIUseSchemas = listOf("chooseMedia"),
         ),
+        // WeChat documents no introduction version for requestSubscribeMessage either,
+        // so no number is recorded and the probe is the authority. The offline sources
+        // for this API name no permission scope for it, so nothing else is gated here.
+        WeChatDeviceCapabilities.RequestSubscribeMessage to WechatCapabilityRequirement(
+            canIUseSchemas = listOf("requestSubscribeMessage"),
+        ),
         // The four device capabilities are gated separately: a host may expose one
         // clipboard direction or one vibration length without the other. WeChat
         // documents 1.1.0 for the clipboard APIs and 1.2.0 for the vibration APIs,

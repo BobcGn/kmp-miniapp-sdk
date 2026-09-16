@@ -159,6 +159,19 @@ private val CHOOSE_MEDIA_INTERRUPTED_ERRMSGS: Set<String> = setOf(
 )
 
 /**
+ * Converts a raw `wx.requestSubscribeMessage` failure into the platform-neutral SDK model.
+ *
+ * No dismissal signal has been observed for this API yet. Similar-looking messages
+ * from scan or media are not evidence for subscription requests, so every failure
+ * remains a [MiniAppException.HostFailure] until a real-host run establishes an exact
+ * signal. The raw message remains internal to the exception and is never exposed as
+ * a subscription answer.
+ */
+internal fun mapWechatRequestSubscribeMessageFailure(
+    result: WxGeneralCallbackResult,
+): MiniAppException = mapWechatHostFailure(operation = "requestSubscribeMessage", result = result)
+
+/**
  * What a raw `wx.requirePrivacyAuthorize` failure means.
  *
  * A declined privacy contract is the user's answer and is modelled as an outcome;

@@ -12,6 +12,7 @@ import io.github.bobcgn.miniapp.host.wechat.interop.WxReadFileSuccessResult
 import io.github.bobcgn.miniapp.host.wechat.interop.WxRequestFailureResult
 import io.github.bobcgn.miniapp.host.wechat.interop.WxRequestSuccessResult
 import io.github.bobcgn.miniapp.host.wechat.interop.WxChooseMediaSuccessResult
+import io.github.bobcgn.miniapp.host.wechat.interop.WxRequestSubscribeMessageSuccessResult
 import io.github.bobcgn.miniapp.host.wechat.interop.WxRequestTask
 import io.github.bobcgn.miniapp.host.wechat.interop.WxScanCodeSuccessResult
 
@@ -258,6 +259,28 @@ internal fun fakeChooseMediaVideoEntry(
     height = height,
     thumbTempFilePath = thumbTempFilePath,
 )
+
+/**
+ * Builds a `wx.requestSubscribeMessage` success result.
+ *
+ * WeChat keys this result by template ID, with its own status line beside those
+ * keys, so entries are supplied as template id → status pairs. A status is supplied
+ * as `Any?` so a test can put a value of the wrong type where one belongs, which is
+ * how the contract's rejection of it is exercised.
+ *
+ * @param entries template identifiers and the status the host reports for each, in
+ *   the order they should appear on the object
+ */
+internal fun fakeSubscribeMessageSuccess(
+    vararg entries: Pair<String, Any?>,
+): WxRequestSubscribeMessageSuccessResult {
+    val result: WxRequestSubscribeMessageSuccessResult = js("({})")
+    js("result.errMsg = 'requestSubscribeMessage:ok'")
+    for ((templateId, status) in entries) {
+        js("result[templateId] = status")
+    }
+    return result
+}
 
 /**
  * Builds a `wx.getPrivacySetting` success result.

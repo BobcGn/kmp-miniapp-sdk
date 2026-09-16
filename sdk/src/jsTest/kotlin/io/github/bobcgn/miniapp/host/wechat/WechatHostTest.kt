@@ -93,6 +93,12 @@ internal class WechatHostTest {
             CapabilitySupport.Supported,
             host.capabilitySupport(WeChatDeviceCapabilities.ChooseMedia),
         )
+        // Subscription requests are gated on the API alone too: no scope for them
+        // could be established, so there is nothing else to answer.
+        assertEquals(
+            CapabilitySupport.Supported,
+            host.capabilitySupport(WeChatDeviceCapabilities.RequestSubscribeMessage),
+        )
         assertEquals(
             CapabilitySupport.Unsupported,
             host.capabilitySupport(CapabilityKey("unknown")),

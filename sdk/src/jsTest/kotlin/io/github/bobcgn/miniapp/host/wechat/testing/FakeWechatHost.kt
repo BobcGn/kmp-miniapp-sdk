@@ -11,6 +11,7 @@ import io.github.bobcgn.miniapp.host.wechat.adapter.WechatNavigationHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatNetworkHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatPermissionHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatPrivacyHost
+import io.github.bobcgn.miniapp.host.wechat.adapter.WechatRequestSubscribeMessageHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatRuntimeInfoHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatScanCodeHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatStorageHost
@@ -35,6 +36,8 @@ internal fun fakeWechatHost(
     locationHost: WechatLocationHost = FakeWechatLocationHost(),
     scanCodeHost: WechatScanCodeHost = FakeWechatScanCodeHost(),
     chooseMediaHost: WechatChooseMediaHost = FakeWechatChooseMediaHost(),
+    requestSubscribeMessageHost: WechatRequestSubscribeMessageHost =
+        FakeWechatRequestSubscribeMessageHost(),
 ): WechatHost = WechatHost(
     storageHost = storageHost,
     authHost = authHost,
@@ -49,4 +52,5 @@ internal fun fakeWechatHost(
     locationHost = locationHost,
     scanCodeHost = scanCodeHost,
     chooseMediaHost = chooseMediaHost,
+    requestSubscribeMessageHost = requestSubscribeMessageHost,
 )

@@ -140,6 +140,14 @@ internal external object wx {
     fun chooseMedia(options: WxChooseMediaOptions): Unit
 
     /**
+     * Asks the host to put message templates in front of the user.
+     *
+     * WeChat requires a user gesture for this, so the caller owns that. The host
+     * offers no abort handle, so a cancelled caller only stops waiting.
+     */
+    fun requestSubscribeMessage(options: WxRequestSubscribeMessageOptions): Unit
+
+    /**
      * Returns the host's global file manager.
      *
      * The manager is a host object whose methods are optional, so callers probe

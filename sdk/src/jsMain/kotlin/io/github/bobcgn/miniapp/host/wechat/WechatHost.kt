@@ -34,6 +34,8 @@ import io.github.bobcgn.miniapp.host.wechat.adapter.WechatPermissionHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatPermissions
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatPrivacy
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatPrivacyHost
+import io.github.bobcgn.miniapp.host.wechat.adapter.WechatRequestSubscribeMessage
+import io.github.bobcgn.miniapp.host.wechat.adapter.WechatRequestSubscribeMessageHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatRuntimeInfoHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatScanCode
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatScanCodeHost
@@ -49,6 +51,7 @@ import io.github.bobcgn.miniapp.host.wechat.adapter.WxNavigationHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WxNetworkHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WxPermissionHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WxPrivacyHost
+import io.github.bobcgn.miniapp.host.wechat.adapter.WxRequestSubscribeMessageHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WxRuntimeInfoHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WxScanCodeHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WxStorageHost
@@ -88,6 +91,8 @@ internal class WechatPlatformApi(
     internal val scanCode: WechatScanCode,
     /** Choosing images or videos through WeChat's own picker. */
     internal val chooseMedia: WechatChooseMedia,
+    /** Asking the user to subscribe to message templates. */
+    internal val requestSubscribeMessage: WechatRequestSubscribeMessage,
 ) : HostPlatformApi
 
 /** First concrete [MiniAppHost], backed by the WeChat Mini Program runtime. */
@@ -105,6 +110,7 @@ internal class WechatHost(
     locationHost: WechatLocationHost = WxLocationHost,
     scanCodeHost: WechatScanCodeHost = WxScanCodeHost,
     chooseMediaHost: WechatChooseMediaHost = WxChooseMediaHost,
+    requestSubscribeMessageHost: WechatRequestSubscribeMessageHost = WxRequestSubscribeMessageHost,
 ) : MiniAppHost<WechatPlatformApi>,
     StorageCapabilityProvider,
     NetworkCapabilityProvider,
@@ -138,6 +144,7 @@ internal class WechatHost(
         location = WechatLocation(locationHost, privacyAdapter, permissionsAdapter),
         scanCode = WechatScanCode(scanCodeHost),
         chooseMedia = WechatChooseMedia(chooseMediaHost),
+        requestSubscribeMessage = WechatRequestSubscribeMessage(requestSubscribeMessageHost),
     )
 
     override val storage: MiniAppStorage = WechatStorage(storageHost)

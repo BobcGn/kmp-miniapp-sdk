@@ -27,6 +27,7 @@ import io.github.bobcgn.miniapp.host.wechat.WeChatMediaType
 import io.github.bobcgn.miniapp.host.wechat.WeChatScanCategory
 import io.github.bobcgn.miniapp.host.wechat.WeChatScanRequest
 import io.github.bobcgn.miniapp.host.wechat.WeChatSessionState
+import io.github.bobcgn.miniapp.host.wechat.WeChatSubscriptionRequest
 import io.github.bobcgn.miniapp.host.wechat.WechatHost
 import io.github.bobcgn.miniapp.host.wechat.runtime.WechatRuntimeInfo
 import kotlin.js.ExperimentalJsExport
@@ -499,6 +500,46 @@ public object MiniAppExports {
                 width = file.width,
                 height = file.height,
                 thumbTempFilePath = file.thumbTempFilePath,
+            )
+        }.toTypedArray()
+    }
+
+    /**
+     * Asks WeChat to put message templates in front of the user.
+     *
+     * **The caller must call this from a user gesture.** WeChat requires one, and the
+     * SDK neither supplies one nor retries when the host refuses because none
+     * preceded the call. Nothing in this SDK calls it on page load.
+     *
+     * Resolves with exactly one entry per requested template, in the order given.
+     * Missing, unexpected, blank, or non-text answers reject as invalid responses.
+     * A non-blank status this SDK cannot name is still reported verbatim in
+     * `hostStatus`.
+     *
+     * An answer says what the user decided about a template. It never says a message
+     * was sent or delivered: acceptance is a subscription state, and sending is the
+     * consumer backend's business.
+     *
+     * Failures remain host failures until a real-host run establishes an exact
+     * dismissal signal for this API. Malformed success values reject as invalid
+     * responses.
+     *
+     * This call asks the host for no permission: the offline sources for this API
+     * name no scope for it.
+     *
+     * @param templateIds templates to ask about; blank identifiers are refused
+     * @throws IllegalArgumentException when [templateIds] is empty or holds a blank id
+     */
+    public suspend fun wechatRequestSubscribeMessage(
+        templateIds: Array<String>,
+    ): Array<JsSubscriptionResult> {
+        val request = WeChatSubscriptionRequest(templateIds.toList())
+
+        return host.platform.requestSubscribeMessage.request(request).map { result ->
+            JsSubscriptionResult(
+                templateId = result.templateId,
+                status = result.status?.hostValue,
+                hostStatus = result.hostStatus,
             )
         }.toTypedArray()
     }
