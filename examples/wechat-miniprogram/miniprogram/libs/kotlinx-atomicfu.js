@@ -1,19 +1,46 @@
 (function (_, kotlin_kotlin) {
   'use strict';
   //region block: imports
-  var protoOf = kotlin_kotlin.$_$.w3;
-  var initMetadataForObject = kotlin_kotlin.$_$.r3;
+  var protoOf = kotlin_kotlin.$_$.n4;
+  var defineProp = kotlin_kotlin.$_$.w3;
+  var initMetadataForClass = kotlin_kotlin.$_$.d4;
+  var initMetadataForObject = kotlin_kotlin.$_$.i4;
   var VOID = kotlin_kotlin.$_$.a;
-  var initMetadataForClass = kotlin_kotlin.$_$.m3;
-  var toString = kotlin_kotlin.$_$.v4;
+  var toString = kotlin_kotlin.$_$.s5;
+  var equalsLong = kotlin_kotlin.$_$.g3;
+  var get_ONE = kotlin_kotlin.$_$.a3;
+  var add = kotlin_kotlin.$_$.b3;
+  var subtract = kotlin_kotlin.$_$.n3;
   //endregion
   //region block: pre-declaration
+  initMetadataForClass(atomicfu$AtomicRefArray$ref, 'AtomicArray');
   initMetadataForClass(atomicfu$TraceBase, 'TraceBase');
   initMetadataForObject(None, 'None', VOID, atomicfu$TraceBase);
   initMetadataForClass(AtomicRef, 'AtomicRef');
   initMetadataForClass(AtomicBoolean, 'AtomicBoolean');
+  initMetadataForClass(AtomicLong, 'AtomicLong');
   initMetadataForClass(AtomicInt, 'AtomicInt');
   //endregion
+  function atomicfu$AtomicRefArray$ref(size) {
+    var tmp = this;
+    var tmp_0 = 0;
+    // Inline function 'kotlin.arrayOfNulls' call
+    var tmp_1 = Array(size);
+    while (tmp_0 < size) {
+      tmp_1[tmp_0] = atomic$ref$1(null);
+      tmp_0 = tmp_0 + 1 | 0;
+    }
+    tmp.array_1 = tmp_1;
+  }
+  protoOf(atomicfu$AtomicRefArray$ref).get_atomicfu$size_iufoqq_k$ = function () {
+    return this.array_1.length;
+  };
+  protoOf(atomicfu$AtomicRefArray$ref).atomicfu$get = function (index) {
+    return this.array_1[index];
+  };
+  function atomicfu$AtomicRefArray$ofNulls(size) {
+    return new atomicfu$AtomicRefArray$ref(size);
+  }
   function None() {
     None_instance = this;
     atomicfu$TraceBase.call(this);
@@ -86,6 +113,59 @@
   function atomic$boolean$1(initial) {
     return atomic$boolean$(initial, None_getInstance());
   }
+  function AtomicLong(value) {
+    this.kotlinx$atomicfu$value = value;
+  }
+  protoOf(AtomicLong).set_kotlinx$atomicfu$value_40snoh_k$ = function (_set____db54di) {
+    this.kotlinx$atomicfu$value = _set____db54di;
+  };
+  protoOf(AtomicLong).get_kotlinx$atomicfu$value_vi2am5_k$ = function () {
+    return this.kotlinx$atomicfu$value;
+  };
+  protoOf(AtomicLong).atomicfu$compareAndSet = function (expect, update) {
+    if (!equalsLong(this.kotlinx$atomicfu$value, expect))
+      return false;
+    this.kotlinx$atomicfu$value = update;
+    return true;
+  };
+  protoOf(AtomicLong).atomicfu$getAndSet = function (value) {
+    var oldValue = this.kotlinx$atomicfu$value;
+    this.kotlinx$atomicfu$value = value;
+    return oldValue;
+  };
+  protoOf(AtomicLong).atomicfu$getAndIncrement$long = function () {
+    var _unary__edvuaz = this.kotlinx$atomicfu$value;
+    this.kotlinx$atomicfu$value = add(_unary__edvuaz, get_ONE());
+    return _unary__edvuaz;
+  };
+  protoOf(AtomicLong).atomicfu$getAndDecrement$long = function () {
+    var _unary__edvuaz = this.kotlinx$atomicfu$value;
+    this.kotlinx$atomicfu$value = subtract(_unary__edvuaz, get_ONE());
+    return _unary__edvuaz;
+  };
+  protoOf(AtomicLong).atomicfu$getAndAdd$long = function (delta) {
+    var oldValue = this.kotlinx$atomicfu$value;
+    this.kotlinx$atomicfu$value = add(this.kotlinx$atomicfu$value, delta);
+    return oldValue;
+  };
+  protoOf(AtomicLong).atomicfu$addAndGet$long = function (delta) {
+    this.kotlinx$atomicfu$value = add(this.kotlinx$atomicfu$value, delta);
+    return this.kotlinx$atomicfu$value;
+  };
+  protoOf(AtomicLong).atomicfu$incrementAndGet$long = function () {
+    this.kotlinx$atomicfu$value = add(this.kotlinx$atomicfu$value, get_ONE());
+    return this.kotlinx$atomicfu$value;
+  };
+  protoOf(AtomicLong).atomicfu$decrementAndGet$long = function () {
+    this.kotlinx$atomicfu$value = subtract(this.kotlinx$atomicfu$value, get_ONE());
+    return this.kotlinx$atomicfu$value;
+  };
+  protoOf(AtomicLong).toString = function () {
+    return this.kotlinx$atomicfu$value.toString();
+  };
+  function atomic$long$1(initial) {
+    return atomic$long$(initial, None_getInstance());
+  }
   function AtomicInt(value) {
     this.kotlinx$atomicfu$value = value;
   }
@@ -147,15 +227,24 @@
     trace = trace === VOID ? None_getInstance() : trace;
     return new AtomicBoolean(initial);
   }
+  function atomic$long$(initial, trace) {
+    trace = trace === VOID ? None_getInstance() : trace;
+    return new AtomicLong(initial);
+  }
   function atomic$int$(initial, trace) {
     trace = trace === VOID ? None_getInstance() : trace;
     return new AtomicInt(initial);
   }
+  //region block: post-declaration
+  defineProp(protoOf(atomicfu$AtomicRefArray$ref), 'atomicfu$size', protoOf(atomicfu$AtomicRefArray$ref).get_atomicfu$size_iufoqq_k$);
+  //endregion
   //region block: exports
   _.$_$ = _.$_$ || {};
-  _.$_$.a = atomic$boolean$1;
-  _.$_$.b = atomic$ref$1;
-  _.$_$.c = atomic$int$1;
+  _.$_$.a = atomicfu$AtomicRefArray$ofNulls;
+  _.$_$.b = atomic$boolean$1;
+  _.$_$.c = atomic$long$1;
+  _.$_$.d = atomic$ref$1;
+  _.$_$.e = atomic$int$1;
   //endregion
   return _;
 }(module.exports, require('./kotlin-kotlin-stdlib.js')));

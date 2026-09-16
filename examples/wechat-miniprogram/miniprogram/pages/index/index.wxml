@@ -129,6 +129,29 @@
   </view>
 
   <view class="card">
+    <text class="eyebrow">Network Extensions</text>
+    <text class="status status--{{networkCapabilityStatus}}">{{networkCapabilityStatus}}</text>
+    <text class="details">{{networkCapabilityDetails}}</text>
+    <text class="label">Current network: {{networkTypeStatus}}</text>
+    <text class="details">{{networkTypeDetails}}</text>
+    <text class="label">Observation: {{observationStatus}}</text>
+    <text class="details">{{observationDetails}}</text>
+    <text class="label">Upload: {{uploadStatus}}</text>
+    <text class="details">{{uploadDetails}}</text>
+    <text class="label">Download: {{downloadStatus}}</text>
+    <text class="details">{{downloadDetails}}</text>
+    <text class="security-note">Nothing is uploaded, downloaded, or observed on load; no URL, header, path, or body is shown.</text>
+    <button class="action" bindtap="checkNetworkCapabilities">Check network capabilities</button>
+    <button class="action" bindtap="getNetworkType">Get current network type</button>
+    <button class="action" bindtap="startNetworkObservation">Start network status observation</button>
+    <button class="action" bindtap="stopNetworkObservation">Stop network status observation</button>
+    <button class="action" bindtap="runUploadCheck">Run upload check</button>
+    <button class="action" bindtap="cancelUpload">Cancel upload</button>
+    <button class="action" bindtap="runDownloadCheck">Run download check</button>
+    <button class="action" bindtap="cancelDownload">Cancel download</button>
+  </view>
+
+  <view class="card">
     <text class="eyebrow">First Host Capability</text>
     <text class="label">Storage verification</text>
     <text class="status status--{{storageStatus}}">{{storageStatus}}</text>

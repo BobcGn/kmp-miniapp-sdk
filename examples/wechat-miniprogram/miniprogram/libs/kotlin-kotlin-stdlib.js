@@ -81,19 +81,20 @@ if (typeof Math.clz32 === 'undefined') {
   initMetadataForClass(AbstractCollection, 'AbstractCollection', VOID, VOID, [Collection]);
   initMetadataForClass(AbstractMutableCollection, 'AbstractMutableCollection', VOID, AbstractCollection, [Collection]);
   initMetadataForClass(IteratorImpl, 'IteratorImpl');
+  initMetadataForClass(ListIteratorImpl, 'ListIteratorImpl', VOID, IteratorImpl);
   initMetadataForClass(AbstractMutableList, 'AbstractMutableList', VOID, AbstractMutableCollection, [KtList, Collection]);
   initMetadataForClass(AbstractMap, 'AbstractMap', VOID, VOID, [KtMap]);
   initMetadataForClass(AbstractMutableMap, 'AbstractMutableMap', VOID, AbstractMap, [KtMap]);
-  initMetadataForClass(AbstractMutableSet, 'AbstractMutableSet', VOID, AbstractMutableCollection, [KtSet, Collection]);
+  initMetadataForClass(AbstractMutableSet, 'AbstractMutableSet', VOID, AbstractMutableCollection, [Collection, KtSet]);
   initMetadataForCompanion(Companion_1);
   initMetadataForClass(ArrayList, 'ArrayList', ArrayList_init_$Create$, AbstractMutableList, [KtList, Collection]);
   initMetadataForClass(HashMap, 'HashMap', HashMap_init_$Create$, AbstractMutableMap, [KtMap]);
-  initMetadataForClass(HashMapKeys, 'HashMapKeys', VOID, AbstractMutableSet, [KtSet, Collection]);
-  initMetadataForClass(HashMapEntrySetBase, 'HashMapEntrySetBase', VOID, AbstractMutableSet, [KtSet, Collection]);
+  initMetadataForClass(HashMapKeys, 'HashMapKeys', VOID, AbstractMutableSet, [Collection, KtSet]);
+  initMetadataForClass(HashMapEntrySetBase, 'HashMapEntrySetBase', VOID, AbstractMutableSet, [Collection, KtSet]);
   initMetadataForClass(HashMapEntrySet, 'HashMapEntrySet', VOID, HashMapEntrySetBase);
   initMetadataForClass(HashMapKeysDefault$iterator$1);
   initMetadataForClass(HashMapKeysDefault, 'HashMapKeysDefault', VOID, AbstractMutableSet);
-  initMetadataForClass(HashSet, 'HashSet', HashSet_init_$Create$, AbstractMutableSet, [KtSet, Collection]);
+  initMetadataForClass(HashSet, 'HashSet', HashSet_init_$Create$, AbstractMutableSet, [Collection, KtSet]);
   initMetadataForCompanion(Companion_2);
   initMetadataForClass(Itr, 'Itr');
   initMetadataForClass(KeysItr, 'KeysItr', VOID, Itr);
@@ -137,7 +138,7 @@ if (typeof Math.clz32 === 'undefined') {
   initMetadataForInterface(InternalMap, 'InternalMap');
   initMetadataForClass(InternalHashMap, 'InternalHashMap', InternalHashMap_init_$Create$, VOID, [InternalMap]);
   initMetadataForClass(LinkedHashMap, 'LinkedHashMap', LinkedHashMap_init_$Create$, HashMap, [KtMap]);
-  initMetadataForClass(LinkedHashSet, 'LinkedHashSet', LinkedHashSet_init_$Create$, HashSet, [KtSet, Collection]);
+  initMetadataForClass(LinkedHashSet, 'LinkedHashSet', LinkedHashSet_init_$Create$, HashSet, [Collection, KtSet]);
   initMetadataForInterface(Continuation, 'Continuation');
   initMetadataForClass(InterceptedCoroutine, 'InterceptedCoroutine', VOID, VOID, [Continuation]);
   initMetadataForClass(CoroutineImpl, 'CoroutineImpl', VOID, InterceptedCoroutine, [Continuation]);
@@ -289,6 +290,11 @@ if (typeof Math.clz32 === 'undefined') {
     IllegalStateException_init_$Init$_1(message, cause, $this);
     CancellationException.call($this);
     return $this;
+  }
+  function CancellationException_init_$Create$_1(message, cause) {
+    var tmp = CancellationException_init_$Init$_1(message, cause, objectCreate(protoOf(CancellationException)));
+    captureStack(tmp, CancellationException_init_$Create$_1);
+    return tmp;
   }
   function CancellationException() {
     captureStack(this, CancellationException);
@@ -459,10 +465,41 @@ if (typeof Math.clz32 === 'undefined') {
     buffer.append_jgojdo_k$(postfix);
     return buffer;
   }
+  function plus_0(_this__u8e3s4, element) {
+    var result = ArrayList_init_$Create$_0(_this__u8e3s4.get_size_woubt6_k$() + 1 | 0);
+    result.addAll_h3ej1q_k$(_this__u8e3s4);
+    result.add_utx5q5_k$(element);
+    return result;
+  }
   function last(_this__u8e3s4) {
     if (_this__u8e3s4.isEmpty_y1axqb_k$())
       throw NoSuchElementException_init_$Create$_0('List is empty.');
     return _this__u8e3s4.get_c1px32_k$(get_lastIndex_0(_this__u8e3s4));
+  }
+  function toList_0(_this__u8e3s4) {
+    if (isInterface(_this__u8e3s4, Collection)) {
+      var tmp;
+      switch (_this__u8e3s4.get_size_woubt6_k$()) {
+        case 0:
+          tmp = emptyList();
+          break;
+        case 1:
+          var tmp_0;
+          if (isInterface(_this__u8e3s4, KtList)) {
+            tmp_0 = _this__u8e3s4.get_c1px32_k$(0);
+          } else {
+            tmp_0 = _this__u8e3s4.iterator_jk1svi_k$().next_20eer_k$();
+          }
+
+          tmp = listOf(tmp_0);
+          break;
+        default:
+          tmp = toMutableList(_this__u8e3s4);
+          break;
+      }
+      return tmp;
+    }
+    return optimizeReadOnlyList(toMutableList_0(_this__u8e3s4));
   }
   function distinct(_this__u8e3s4) {
     return toList_0(toMutableSet(_this__u8e3s4));
@@ -492,30 +529,13 @@ if (typeof Math.clz32 === 'undefined') {
     }
     return optimizeReadOnlySet(toCollection_0(_this__u8e3s4, LinkedHashSet_init_$Create$()));
   }
-  function toList_0(_this__u8e3s4) {
-    if (isInterface(_this__u8e3s4, Collection)) {
-      var tmp;
-      switch (_this__u8e3s4.get_size_woubt6_k$()) {
-        case 0:
-          tmp = emptyList();
-          break;
-        case 1:
-          var tmp_0;
-          if (isInterface(_this__u8e3s4, KtList)) {
-            tmp_0 = _this__u8e3s4.get_c1px32_k$(0);
-          } else {
-            tmp_0 = _this__u8e3s4.iterator_jk1svi_k$().next_20eer_k$();
-          }
-
-          tmp = listOf(tmp_0);
-          break;
-        default:
-          tmp = toMutableList(_this__u8e3s4);
-          break;
-      }
-      return tmp;
-    }
-    return optimizeReadOnlyList(toMutableList_0(_this__u8e3s4));
+  function toMutableList(_this__u8e3s4) {
+    return ArrayList_init_$Create$_1(_this__u8e3s4);
+  }
+  function toMutableList_0(_this__u8e3s4) {
+    if (isInterface(_this__u8e3s4, Collection))
+      return toMutableList(_this__u8e3s4);
+    return toCollection_0(_this__u8e3s4, ArrayList_init_$Create$());
   }
   function toMutableSet(_this__u8e3s4) {
     var tmp;
@@ -533,14 +553,6 @@ if (typeof Math.clz32 === 'undefined') {
       destination.add_utx5q5_k$(item);
     }
     return destination;
-  }
-  function toMutableList(_this__u8e3s4) {
-    return ArrayList_init_$Create$_1(_this__u8e3s4);
-  }
-  function toMutableList_0(_this__u8e3s4) {
-    if (isInterface(_this__u8e3s4, Collection))
-      return toMutableList(_this__u8e3s4);
-    return toCollection_0(_this__u8e3s4, ArrayList_init_$Create$());
   }
   function until(_this__u8e3s4, to) {
     if (to <= -2147483648)
@@ -575,6 +587,12 @@ if (typeof Math.clz32 === 'undefined') {
   protoOf(asIterable$$inlined$Iterable$1).iterator_jk1svi_k$ = function () {
     return this.$this_asIterable_1.iterator_jk1svi_k$();
   };
+  function last_0(_this__u8e3s4) {
+    // Inline function 'kotlin.text.isEmpty' call
+    if (charSequenceLength(_this__u8e3s4) === 0)
+      throw NoSuchElementException_init_$Create$_0('Char sequence is empty.');
+    return charSequenceGet(_this__u8e3s4, get_lastIndex_1(_this__u8e3s4));
+  }
   function dropLast(_this__u8e3s4, n) {
     // Inline function 'kotlin.require' call
     if (!(n >= 0)) {
@@ -1103,6 +1121,14 @@ if (typeof Math.clz32 === 'undefined') {
     _init_properties_boxedLong_kt__v24qrw();
     return compare(_this__u8e3s4, other) >= 0;
   }
+  function modulo(_this__u8e3s4, other) {
+    _init_properties_boxedLong_kt__v24qrw();
+    return subtract(_this__u8e3s4, multiply(divide(_this__u8e3s4, other), other));
+  }
+  function bitwiseAnd(_this__u8e3s4, other) {
+    _init_properties_boxedLong_kt__v24qrw();
+    return new Long(_this__u8e3s4.low_1 & other.low_1, _this__u8e3s4.high_1 & other.high_1);
+  }
   function numberToLong(a) {
     _init_properties_boxedLong_kt__v24qrw();
     var tmp;
@@ -1518,6 +1544,11 @@ if (typeof Math.clz32 === 'undefined') {
   }
   var symbolMap;
   var symbolWeakMap;
+  function boxIntrinsic(x) {
+    // Inline function 'kotlin.error' call
+    var message = 'Should be lowered';
+    throw IllegalStateException_init_$Create$_0(toString_1(message));
+  }
   function unboxIntrinsic(x) {
     // Inline function 'kotlin.error' call
     var message = 'Should be lowered';
@@ -1853,6 +1884,14 @@ if (typeof Math.clz32 === 'undefined') {
     // Inline function 'kotlin.js.asDynamic' call
     return new ArrayList(_this__u8e3s4);
   }
+  function fill(_this__u8e3s4, element, fromIndex, toIndex) {
+    fromIndex = fromIndex === VOID ? 0 : fromIndex;
+    toIndex = toIndex === VOID ? _this__u8e3s4.length : toIndex;
+    Companion_instance_3.checkRangeIndexes_mmy49x_k$(fromIndex, toIndex, _this__u8e3s4.length);
+    // Inline function 'kotlin.js.nativeFill' call
+    // Inline function 'kotlin.js.asDynamic' call
+    _this__u8e3s4.fill(element, fromIndex, toIndex);
+  }
   function digitToIntImpl(_this__u8e3s4) {
     // Inline function 'kotlin.code' call
     var ch = Char__toInt_impl_vasixd(_this__u8e3s4);
@@ -2049,6 +2088,12 @@ if (typeof Math.clz32 === 'undefined') {
     this.index_1 = this.last_1;
     this.last_1 = -1;
   };
+  function ListIteratorImpl($outer, index) {
+    this.$this_2 = $outer;
+    IteratorImpl.call(this, $outer);
+    Companion_instance_3.checkPositionIndex_w4k0on_k$(index, this.$this_2.get_size_woubt6_k$());
+    this.index_1 = index;
+  }
   function AbstractMutableList() {
     AbstractMutableCollection.call(this);
     this.modCount_1 = 0;
@@ -2057,6 +2102,10 @@ if (typeof Math.clz32 === 'undefined') {
     this.checkIsMutable_jn1ih0_k$();
     this.add_dl6gt3_k$(this.get_size_woubt6_k$(), element);
     return true;
+  };
+  protoOf(AbstractMutableList).clear_j9egeb_k$ = function () {
+    this.checkIsMutable_jn1ih0_k$();
+    this.removeRange_sm1kzt_k$(0, this.get_size_woubt6_k$());
   };
   protoOf(AbstractMutableList).iterator_jk1svi_k$ = function () {
     return new IteratorImpl(this);
@@ -2081,6 +2130,23 @@ if (typeof Math.clz32 === 'undefined') {
       tmp$ret$0 = -1;
     }
     return tmp$ret$0;
+  };
+  protoOf(AbstractMutableList).listIterator_70e65o_k$ = function (index) {
+    return new ListIteratorImpl(this, index);
+  };
+  protoOf(AbstractMutableList).removeRange_sm1kzt_k$ = function (fromIndex, toIndex) {
+    var iterator = this.listIterator_70e65o_k$(fromIndex);
+    // Inline function 'kotlin.repeat' call
+    var times = toIndex - fromIndex | 0;
+    var inductionVariable = 0;
+    if (inductionVariable < times)
+      do {
+        var index = inductionVariable;
+        inductionVariable = inductionVariable + 1 | 0;
+        iterator.next_20eer_k$();
+        iterator.remove_ldkf9o_k$();
+      }
+       while (inductionVariable < times);
   };
   protoOf(AbstractMutableList).equals = function (other) {
     if (other === this)
@@ -2286,6 +2352,19 @@ if (typeof Math.clz32 === 'undefined') {
       tmp = this.array_1.splice(index, 1)[0];
     }
     return tmp;
+  };
+  protoOf(ArrayList).removeRange_sm1kzt_k$ = function (fromIndex, toIndex) {
+    this.checkIsMutable_jn1ih0_k$();
+    this.modCount_1 = this.modCount_1 + 1 | 0;
+    // Inline function 'kotlin.js.asDynamic' call
+    this.array_1.splice(fromIndex, toIndex - fromIndex | 0);
+  };
+  protoOf(ArrayList).clear_j9egeb_k$ = function () {
+    this.checkIsMutable_jn1ih0_k$();
+    var tmp = this;
+    // Inline function 'kotlin.emptyArray' call
+    tmp.array_1 = [];
+    this.modCount_1 = this.modCount_1 + 1 | 0;
   };
   protoOf(ArrayList).indexOf_si1fv9_k$ = function (element) {
     return indexOf(this.array_1, element);
@@ -4209,6 +4288,11 @@ if (typeof Math.clz32 === 'undefined') {
   protoOf(StringBuilder).toString = function () {
     return this.string_1;
   };
+  protoOf(StringBuilder).deleteAt_mq1vvq_k$ = function (index) {
+    Companion_instance_3.checkElementIndex_s0yg86_k$(index, this.get_length_g42xv3_k$());
+    this.string_1 = substring(this.string_1, 0, index) + substring_0(this.string_1, index + 1 | 0);
+    return this;
+  };
   function uppercaseChar(_this__u8e3s4) {
     // Inline function 'kotlin.text.uppercase' call
     // Inline function 'kotlin.js.asDynamic' call
@@ -4235,6 +4319,11 @@ if (typeof Math.clz32 === 'undefined') {
     _init_properties_stringJs_kt__bg7zye();
     // Inline function 'kotlin.js.asDynamic' call
     return _this__u8e3s4.substring(startIndex, endIndex);
+  }
+  function substring_0(_this__u8e3s4, startIndex) {
+    _init_properties_stringJs_kt__bg7zye();
+    // Inline function 'kotlin.js.asDynamic' call
+    return _this__u8e3s4.substring(startIndex);
   }
   function compareTo_0(_this__u8e3s4, other, ignoreCase) {
     ignoreCase = ignoreCase === VOID ? false : ignoreCase;
@@ -4888,6 +4977,9 @@ if (typeof Math.clz32 === 'undefined') {
   function positiveMod($this, index) {
     return index >= $this.elementData_1.length ? index - $this.elementData_1.length | 0 : index;
   }
+  function negativeMod($this, index) {
+    return index < 0 ? index + $this.elementData_1.length | 0 : index;
+  }
   function incremented($this, index) {
     return index === get_lastIndex($this.elementData_1) ? 0 : index + 1 | 0;
   }
@@ -4919,6 +5011,64 @@ if (typeof Math.clz32 === 'undefined') {
       }
        while (inductionVariable_0 < last_0);
     $this.size_1 = $this.size_1 + elements.get_size_woubt6_k$() | 0;
+  }
+  function removeRangeShiftPreceding($this, fromIndex, toIndex) {
+    // Inline function 'kotlin.collections.ArrayDeque.internalIndex' call
+    var index = fromIndex - 1 | 0;
+    var copyFromIndex = positiveMod($this, $this.head_1 + index | 0);
+    // Inline function 'kotlin.collections.ArrayDeque.internalIndex' call
+    var index_0 = toIndex - 1 | 0;
+    var copyToIndex = positiveMod($this, $this.head_1 + index_0 | 0);
+    var copyCount = fromIndex;
+    while (copyCount > 0) {
+      var tmp0 = copyCount;
+      var tmp2 = copyFromIndex + 1 | 0;
+      // Inline function 'kotlin.comparisons.minOf' call
+      var c = copyToIndex + 1 | 0;
+      var segmentLength = Math.min(tmp0, tmp2, c);
+      var tmp0_0 = $this.elementData_1;
+      var tmp2_0 = $this.elementData_1;
+      var tmp4 = (copyToIndex - segmentLength | 0) + 1 | 0;
+      var tmp6 = (copyFromIndex - segmentLength | 0) + 1 | 0;
+      // Inline function 'kotlin.collections.copyInto' call
+      var endIndex = copyFromIndex + 1 | 0;
+      arrayCopy(tmp0_0, tmp2_0, tmp4, tmp6, endIndex);
+      copyFromIndex = negativeMod($this, copyFromIndex - segmentLength | 0);
+      copyToIndex = negativeMod($this, copyToIndex - segmentLength | 0);
+      copyCount = copyCount - segmentLength | 0;
+    }
+  }
+  function removeRangeShiftSucceeding($this, fromIndex, toIndex) {
+    // Inline function 'kotlin.collections.ArrayDeque.internalIndex' call
+    var copyFromIndex = positiveMod($this, $this.head_1 + toIndex | 0);
+    // Inline function 'kotlin.collections.ArrayDeque.internalIndex' call
+    var copyToIndex = positiveMod($this, $this.head_1 + fromIndex | 0);
+    var copyCount = $this.size_1 - toIndex | 0;
+    while (copyCount > 0) {
+      var tmp0 = copyCount;
+      var tmp2 = $this.elementData_1.length - copyFromIndex | 0;
+      // Inline function 'kotlin.comparisons.minOf' call
+      var c = $this.elementData_1.length - copyToIndex | 0;
+      var segmentLength = Math.min(tmp0, tmp2, c);
+      var tmp0_0 = $this.elementData_1;
+      var tmp2_0 = $this.elementData_1;
+      var tmp4 = copyToIndex;
+      var tmp6 = copyFromIndex;
+      // Inline function 'kotlin.collections.copyInto' call
+      var endIndex = copyFromIndex + segmentLength | 0;
+      arrayCopy(tmp0_0, tmp2_0, tmp4, tmp6, endIndex);
+      copyFromIndex = positiveMod($this, copyFromIndex + segmentLength | 0);
+      copyToIndex = positiveMod($this, copyToIndex + segmentLength | 0);
+      copyCount = copyCount - segmentLength | 0;
+    }
+  }
+  function nullifyNonEmpty($this, internalFromIndex, internalToIndex) {
+    if (internalFromIndex < internalToIndex) {
+      fill($this.elementData_1, null, internalFromIndex, internalToIndex);
+    } else {
+      fill($this.elementData_1, null, internalFromIndex, $this.elementData_1.length);
+      fill($this.elementData_1, null, 0, internalToIndex);
+    }
   }
   function registerModification_0($this) {
     $this.modCount_1 = $this.modCount_1 + 1 | 0;
@@ -5192,6 +5342,18 @@ if (typeof Math.clz32 === 'undefined') {
     this.size_1 = this.size_1 - 1 | 0;
     return element;
   };
+  protoOf(ArrayDeque).clear_j9egeb_k$ = function () {
+    // Inline function 'kotlin.collections.isNotEmpty' call
+    if (!this.isEmpty_y1axqb_k$()) {
+      registerModification_0(this);
+      // Inline function 'kotlin.collections.ArrayDeque.internalIndex' call
+      var index = this.size_1;
+      var tail = positiveMod(this, this.head_1 + index | 0);
+      nullifyNonEmpty(this, this.head_1, tail);
+    }
+    this.head_1 = 0;
+    this.size_1 = 0;
+  };
   protoOf(ArrayDeque).toArray_6cwqme_k$ = function (array) {
     var tmp = array.length >= this.size_1 ? array : arrayOfNulls(array, this.size_1);
     var dest = isArray(tmp) ? tmp : THROW_CCE();
@@ -5228,6 +5390,33 @@ if (typeof Math.clz32 === 'undefined') {
   };
   protoOf(ArrayDeque).toArray = function () {
     return this.toArray_jjyjqa_k$();
+  };
+  protoOf(ArrayDeque).removeRange_sm1kzt_k$ = function (fromIndex, toIndex) {
+    Companion_instance_3.checkRangeIndexes_mmy49x_k$(fromIndex, toIndex, this.size_1);
+    var length = toIndex - fromIndex | 0;
+    if (length === 0)
+      return Unit_instance;
+    else if (length === this.size_1) {
+      this.clear_j9egeb_k$();
+      return Unit_instance;
+    } else if (length === 1) {
+      this.removeAt_6niowx_k$(fromIndex);
+      return Unit_instance;
+    }
+    registerModification_0(this);
+    if (fromIndex < (this.size_1 - toIndex | 0)) {
+      removeRangeShiftPreceding(this, fromIndex, toIndex);
+      var newHead = positiveMod(this, this.head_1 + length | 0);
+      nullifyNonEmpty(this, this.head_1, newHead);
+      this.head_1 = newHead;
+    } else {
+      removeRangeShiftSucceeding(this, fromIndex, toIndex);
+      // Inline function 'kotlin.collections.ArrayDeque.internalIndex' call
+      var index = this.size_1;
+      var tail = positiveMod(this, this.head_1 + index | 0);
+      nullifyNonEmpty(this, negativeMod(this, tail - length | 0), tail);
+    }
+    this.size_1 = this.size_1 - length | 0;
   };
   function ArrayDeque() {
     Companion_getInstance_6();
@@ -5936,8 +6125,78 @@ if (typeof Math.clz32 === 'undefined') {
     }
     return tmp;
   }
+  function toLongOrNull(_this__u8e3s4) {
+    return toLongOrNull_0(_this__u8e3s4, 10);
+  }
   function toIntOrNull(_this__u8e3s4) {
     return toIntOrNull_0(_this__u8e3s4, 10);
+  }
+  function toLongOrNull_0(_this__u8e3s4, radix) {
+    checkRadix(radix);
+    var length = _this__u8e3s4.length;
+    if (length === 0)
+      return null;
+    var start;
+    var isNegative;
+    var limit;
+    var firstChar = charCodeAt(_this__u8e3s4, 0);
+    if (Char__compareTo_impl_ypi4mb(firstChar, _Char___init__impl__6a9atx(48)) < 0) {
+      if (length === 1)
+        return null;
+      start = 1;
+      if (firstChar === _Char___init__impl__6a9atx(45)) {
+        isNegative = true;
+        limit = new Long(0, -2147483648);
+      } else if (firstChar === _Char___init__impl__6a9atx(43)) {
+        isNegative = false;
+        limit = new Long(1, -2147483648);
+      } else
+        return null;
+    } else {
+      start = 0;
+      isNegative = false;
+      limit = new Long(1, -2147483648);
+    }
+    // Inline function 'kotlin.Long.div' call
+    var this_0 = new Long(1, -2147483648);
+    var limitForMaxRadix = divide(this_0, fromInt(36));
+    var limitBeforeMul = limitForMaxRadix;
+    var result = new Long(0, 0);
+    var inductionVariable = start;
+    if (inductionVariable < length)
+      do {
+        var i = inductionVariable;
+        inductionVariable = inductionVariable + 1 | 0;
+        var digit = digitOf(charCodeAt(_this__u8e3s4, i), radix);
+        if (digit < 0)
+          return null;
+        if (compare(result, limitBeforeMul) < 0) {
+          if (equalsLong(limitBeforeMul, limitForMaxRadix)) {
+            // Inline function 'kotlin.Long.div' call
+            var this_1 = limit;
+            limitBeforeMul = divide(this_1, fromInt(radix));
+            if (compare(result, limitBeforeMul) < 0) {
+              return null;
+            }
+          } else {
+            return null;
+          }
+        }
+        // Inline function 'kotlin.Long.times' call
+        var this_2 = result;
+        result = multiply(this_2, fromInt(radix));
+        var tmp = result;
+        // Inline function 'kotlin.Long.plus' call
+        var this_3 = limit;
+        var tmp$ret$3 = add(this_3, fromInt(digit));
+        if (compare(tmp, tmp$ret$3) < 0)
+          return null;
+        // Inline function 'kotlin.Long.minus' call
+        var this_4 = result;
+        result = subtract(this_4, fromInt(digit));
+      }
+       while (inductionVariable < length);
+    return isNegative ? result : negate(result);
   }
   function toIntOrNull_0(_this__u8e3s4, radix) {
     checkRadix(radix);
@@ -6007,7 +6266,7 @@ if (typeof Math.clz32 === 'undefined') {
     var _iterator__ex2g4s = this_0.iterator_jk1svi_k$();
     while (_iterator__ex2g4s.hasNext_bitz1p_k$()) {
       var item = _iterator__ex2g4s.next_20eer_k$();
-      var tmp$ret$2 = substring_0(_this__u8e3s4, item);
+      var tmp$ret$2 = substring_1(_this__u8e3s4, item);
       destination.add_utx5q5_k$(tmp$ret$2);
     }
     return destination;
@@ -6100,7 +6359,7 @@ if (typeof Math.clz32 === 'undefined') {
     requireNonNegativeLimit(limit);
     return new DelimitedRangesSequence(_this__u8e3s4, startIndex, limit, rangesDelimitedBy$lambda(delimiters, ignoreCase));
   }
-  function substring_0(_this__u8e3s4, range) {
+  function substring_1(_this__u8e3s4, range) {
     return toString_1(charSequenceSubSequence(_this__u8e3s4, range.get_start_iypx6h_k$(), range.get_endInclusive_r07xpi_k$() + 1 | 0));
   }
   function trim(_this__u8e3s4) {
@@ -6527,113 +6786,136 @@ if (typeof Math.clz32 === 'undefined') {
   _.$_$.r = LinkedHashSet_init_$Create$;
   _.$_$.s = CancellationException_init_$Create$_0;
   _.$_$.t = CancellationException_init_$Init$_1;
-  _.$_$.u = StringBuilder_init_$Create$_0;
-  _.$_$.v = Error_init_$Init$_1;
-  _.$_$.w = Exception_init_$Init$_1;
-  _.$_$.x = IllegalArgumentException_init_$Create$_0;
-  _.$_$.y = IllegalStateException_init_$Create$_0;
-  _.$_$.z = IllegalStateException_init_$Create$_1;
-  _.$_$.a1 = RuntimeException_init_$Init$_0;
-  _.$_$.b1 = RuntimeException_init_$Init$_1;
-  _.$_$.c1 = RuntimeException_init_$Create$_1;
-  _.$_$.d1 = UnsupportedOperationException_init_$Create$_0;
-  _.$_$.e1 = ArrayList;
-  _.$_$.f1 = Collection;
-  _.$_$.g1 = KtList;
-  _.$_$.h1 = addAll;
-  _.$_$.i1 = collectionSizeOrDefault;
-  _.$_$.j1 = copyToArray;
-  _.$_$.k1 = distinct;
-  _.$_$.l1 = emptyList;
-  _.$_$.m1 = emptyMap;
-  _.$_$.n1 = get_lastIndex_0;
-  _.$_$.o1 = last;
-  _.$_$.p1 = listOf;
-  _.$_$.q1 = listOf_0;
-  _.$_$.r1 = mapOf;
-  _.$_$.s1 = mapOf_0;
-  _.$_$.t1 = removeFirstOrNull;
-  _.$_$.u1 = setOf_0;
-  _.$_$.v1 = toList;
-  _.$_$.w1 = toSet_0;
-  _.$_$.x1 = CancellationException;
-  _.$_$.y1 = get_COROUTINE_SUSPENDED;
-  _.$_$.z1 = createCoroutineUnintercepted;
-  _.$_$.a2 = intercepted;
-  _.$_$.b2 = promisify;
-  _.$_$.c2 = startCoroutineUninterceptedOrReturnNonGeneratorVersion;
-  _.$_$.d2 = AbstractCoroutineContextElement;
-  _.$_$.e2 = AbstractCoroutineContextKey;
-  _.$_$.f2 = get_0;
-  _.$_$.g2 = minusKey_0;
-  _.$_$.h2 = ContinuationInterceptor;
-  _.$_$.i2 = Continuation;
-  _.$_$.j2 = fold;
-  _.$_$.k2 = get;
-  _.$_$.l2 = minusKey;
-  _.$_$.m2 = Element;
-  _.$_$.n2 = plus;
-  _.$_$.o2 = CoroutineImpl;
-  _.$_$.p2 = startCoroutine;
-  _.$_$.q2 = enumEntries;
-  _.$_$.r2 = throwUninitializedPropertyAccessException;
-  _.$_$.s2 = add;
-  _.$_$.t2 = compare;
-  _.$_$.u2 = equalsLong;
-  _.$_$.v2 = numberToLong;
-  _.$_$.w2 = subtract;
-  _.$_$.x2 = toNumber;
-  _.$_$.y2 = FunctionAdapter;
-  _.$_$.z2 = anyToString;
-  _.$_$.a3 = captureStack;
-  _.$_$.b3 = charArrayOf;
-  _.$_$.c3 = charSequenceLength;
-  _.$_$.d3 = compareTo;
-  _.$_$.e3 = constructCallableReference;
-  _.$_$.f3 = defineProp;
-  _.$_$.g3 = equals;
-  _.$_$.h3 = getBooleanHashCode;
-  _.$_$.i3 = getNumberHashCode;
-  _.$_$.j3 = getPropertyCallableRef;
-  _.$_$.k3 = getStringHashCode;
-  _.$_$.l3 = hashCode_0;
-  _.$_$.m3 = initMetadataForClass;
-  _.$_$.n3 = initMetadataForCompanion;
-  _.$_$.o3 = initMetadataForCoroutine;
-  _.$_$.p3 = initMetadataForInterface;
-  _.$_$.q3 = initMetadataForLambda;
-  _.$_$.r3 = initMetadataForObject;
-  _.$_$.s3 = isCharSequence;
-  _.$_$.t3 = isInterface;
-  _.$_$.u3 = isNumber;
-  _.$_$.v3 = numberToDouble;
-  _.$_$.w3 = protoOf;
-  _.$_$.x3 = toString_1;
-  _.$_$.y3 = getKClassFromExpression;
-  _.$_$.z3 = KProperty1;
-  _.$_$.a4 = contains_0;
-  _.$_$.b4 = isBlank;
-  _.$_$.c4 = split;
-  _.$_$.d4 = toIntOrNull;
-  _.$_$.e4 = trim;
-  _.$_$.f4 = Enum;
-  _.$_$.g4 = Error_0;
-  _.$_$.h4 = Exception;
-  _.$_$.i4 = Long;
-  _.$_$.j4 = RuntimeException;
-  _.$_$.k4 = THROW_CCE;
-  _.$_$.l4 = UnsupportedOperationException;
-  _.$_$.m4 = addSuppressed;
-  _.$_$.n4 = createFailure;
-  _.$_$.o4 = ensureNotNull;
-  _.$_$.p4 = isFinite;
-  _.$_$.q4 = isInfinite;
-  _.$_$.r4 = isNaN_0;
-  _.$_$.s4 = lazy;
-  _.$_$.t4 = noWhenBranchMatchedException;
-  _.$_$.u4 = stackTraceToString;
-  _.$_$.v4 = toString_0;
-  _.$_$.w4 = to;
+  _.$_$.u = CancellationException_init_$Create$_1;
+  _.$_$.v = StringBuilder_init_$Create$_0;
+  _.$_$.w = Error_init_$Init$_1;
+  _.$_$.x = Exception_init_$Init$_1;
+  _.$_$.y = IllegalArgumentException_init_$Create$_0;
+  _.$_$.z = IllegalStateException_init_$Init$_0;
+  _.$_$.a1 = IllegalStateException_init_$Create$_0;
+  _.$_$.b1 = IllegalStateException_init_$Create$_1;
+  _.$_$.c1 = NoSuchElementException_init_$Create$;
+  _.$_$.d1 = NoSuchElementException_init_$Init$_0;
+  _.$_$.e1 = RuntimeException_init_$Init$_0;
+  _.$_$.f1 = RuntimeException_init_$Init$_1;
+  _.$_$.g1 = RuntimeException_init_$Create$_1;
+  _.$_$.h1 = UnsupportedOperationException_init_$Create$_0;
+  _.$_$.i1 = ArrayList;
+  _.$_$.j1 = Collection;
+  _.$_$.k1 = KtList;
+  _.$_$.l1 = addAll;
+  _.$_$.m1 = collectionSizeOrDefault;
+  _.$_$.n1 = copyOf_0;
+  _.$_$.o1 = copyToArray;
+  _.$_$.p1 = distinct;
+  _.$_$.q1 = emptyList;
+  _.$_$.r1 = emptyMap;
+  _.$_$.s1 = joinToString_0;
+  _.$_$.t1 = get_lastIndex_0;
+  _.$_$.u1 = last;
+  _.$_$.v1 = listOf;
+  _.$_$.w1 = listOf_0;
+  _.$_$.x1 = mapOf;
+  _.$_$.y1 = mapOf_0;
+  _.$_$.z1 = plus_0;
+  _.$_$.a2 = removeFirstOrNull;
+  _.$_$.b2 = setOf_0;
+  _.$_$.c2 = toList_0;
+  _.$_$.d2 = toList;
+  _.$_$.e2 = toSet_0;
+  _.$_$.f2 = CancellationException;
+  _.$_$.g2 = get_COROUTINE_SUSPENDED;
+  _.$_$.h2 = createCoroutineUnintercepted;
+  _.$_$.i2 = intercepted;
+  _.$_$.j2 = promisify;
+  _.$_$.k2 = startCoroutineUninterceptedOrReturnNonGeneratorVersion;
+  _.$_$.l2 = AbstractCoroutineContextElement;
+  _.$_$.m2 = AbstractCoroutineContextKey;
+  _.$_$.n2 = get_0;
+  _.$_$.o2 = minusKey_0;
+  _.$_$.p2 = ContinuationInterceptor;
+  _.$_$.q2 = Continuation;
+  _.$_$.r2 = fold;
+  _.$_$.s2 = get;
+  _.$_$.t2 = minusKey;
+  _.$_$.u2 = Element;
+  _.$_$.v2 = plus;
+  _.$_$.w2 = CoroutineImpl;
+  _.$_$.x2 = startCoroutine;
+  _.$_$.y2 = enumEntries;
+  _.$_$.z2 = throwUninitializedPropertyAccessException;
+  _.$_$.a3 = get_ONE;
+  _.$_$.b3 = add;
+  _.$_$.c3 = bitwiseAnd;
+  _.$_$.d3 = compare;
+  _.$_$.e3 = convertToInt;
+  _.$_$.f3 = divide;
+  _.$_$.g3 = equalsLong;
+  _.$_$.h3 = fromInt;
+  _.$_$.i3 = modulo;
+  _.$_$.j3 = multiply;
+  _.$_$.k3 = numberToLong;
+  _.$_$.l3 = shiftLeft;
+  _.$_$.m3 = shiftRight;
+  _.$_$.n3 = subtract;
+  _.$_$.o3 = toNumber;
+  _.$_$.p3 = FunctionAdapter;
+  _.$_$.q3 = anyToString;
+  _.$_$.r3 = captureStack;
+  _.$_$.s3 = charArrayOf;
+  _.$_$.t3 = charSequenceLength;
+  _.$_$.u3 = compareTo;
+  _.$_$.v3 = constructCallableReference;
+  _.$_$.w3 = defineProp;
+  _.$_$.x3 = equals;
+  _.$_$.y3 = getBooleanHashCode;
+  _.$_$.z3 = getNumberHashCode;
+  _.$_$.a4 = getPropertyCallableRef;
+  _.$_$.b4 = getStringHashCode;
+  _.$_$.c4 = hashCode_0;
+  _.$_$.d4 = initMetadataForClass;
+  _.$_$.e4 = initMetadataForCompanion;
+  _.$_$.f4 = initMetadataForCoroutine;
+  _.$_$.g4 = initMetadataForInterface;
+  _.$_$.h4 = initMetadataForLambda;
+  _.$_$.i4 = initMetadataForObject;
+  _.$_$.j4 = isCharSequence;
+  _.$_$.k4 = isInterface;
+  _.$_$.l4 = isNumber;
+  _.$_$.m4 = numberToDouble;
+  _.$_$.n4 = protoOf;
+  _.$_$.o4 = toString_1;
+  _.$_$.p4 = getKClassFromExpression;
+  _.$_$.q4 = getKClass;
+  _.$_$.r4 = KProperty1;
+  _.$_$.s4 = contains_0;
+  _.$_$.t4 = isBlank;
+  _.$_$.u4 = last_0;
+  _.$_$.v4 = split;
+  _.$_$.w4 = toIntOrNull;
+  _.$_$.x4 = toLongOrNull;
+  _.$_$.y4 = trim;
+  _.$_$.z4 = Enum;
+  _.$_$.a5 = Error_0;
+  _.$_$.b5 = Exception;
+  _.$_$.c5 = IllegalStateException;
+  _.$_$.d5 = Long;
+  _.$_$.e5 = NoSuchElementException;
+  _.$_$.f5 = RuntimeException;
+  _.$_$.g5 = THROW_CCE;
+  _.$_$.h5 = Unit;
+  _.$_$.i5 = UnsupportedOperationException;
+  _.$_$.j5 = addSuppressed;
+  _.$_$.k5 = createFailure;
+  _.$_$.l5 = ensureNotNull;
+  _.$_$.m5 = isFinite;
+  _.$_$.n5 = isInfinite;
+  _.$_$.o5 = isNaN_0;
+  _.$_$.p5 = lazy;
+  _.$_$.q5 = noWhenBranchMatchedException;
+  _.$_$.r5 = stackTraceToString;
+  _.$_$.s5 = toString_0;
+  _.$_$.t5 = to;
   //endregion
   return _;
 }(module.exports));

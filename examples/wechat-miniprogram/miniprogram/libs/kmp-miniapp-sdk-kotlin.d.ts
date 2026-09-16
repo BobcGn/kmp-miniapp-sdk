@@ -50,6 +50,83 @@ export declare namespace io.github.bobcgn.miniapp.export {
     }
 }
 export declare namespace io.github.bobcgn.miniapp.export {
+    class JsNetworkState {
+        private constructor();
+        get isConnected(): boolean;
+        get networkType(): Nullable<string>;
+        get hostNetworkType(): string;
+    }
+    namespace JsNetworkState {
+        /** @deprecated $metadata$ is used for internal purposes, please don't use it in your code, because it can be removed at any moment */
+        namespace $metadata$ {
+            const constructor: abstract new () => JsNetworkState;
+        }
+    }
+}
+export declare namespace io.github.bobcgn.miniapp.export {
+    class JsTransferProgress {
+        private constructor();
+        get percent(): number;
+        get bytesTransferred(): Nullable<number>;
+        get bytesExpected(): Nullable<number>;
+    }
+    namespace JsTransferProgress {
+        /** @deprecated $metadata$ is used for internal purposes, please don't use it in your code, because it can be removed at any moment */
+        namespace $metadata$ {
+            const constructor: abstract new () => JsTransferProgress;
+        }
+    }
+    class JsUploadResult {
+        private constructor();
+        get statusCode(): number;
+        get responseText(): string;
+    }
+    namespace JsUploadResult {
+        /** @deprecated $metadata$ is used for internal purposes, please don't use it in your code, because it can be removed at any moment */
+        namespace $metadata$ {
+            const constructor: abstract new () => JsUploadResult;
+        }
+    }
+    class JsDownloadResult {
+        private constructor();
+        get statusCode(): number;
+        get tempFilePath(): string;
+        get filePath(): Nullable<string>;
+    }
+    namespace JsDownloadResult {
+        /** @deprecated $metadata$ is used for internal purposes, please don't use it in your code, because it can be removed at any moment */
+        namespace $metadata$ {
+            const constructor: abstract new () => JsDownloadResult;
+        }
+    }
+    class JsUploadTransfer {
+        private constructor();
+        get abortable(): boolean;
+        result(): Promise<io.github.bobcgn.miniapp.export.JsUploadResult>;
+        abort(): boolean;
+        progress(): Nullable<io.github.bobcgn.miniapp.export.JsTransferProgress>;
+    }
+    namespace JsUploadTransfer {
+        /** @deprecated $metadata$ is used for internal purposes, please don't use it in your code, because it can be removed at any moment */
+        namespace $metadata$ {
+            const constructor: abstract new () => JsUploadTransfer;
+        }
+    }
+    class JsDownloadTransfer {
+        private constructor();
+        get abortable(): boolean;
+        result(): Promise<io.github.bobcgn.miniapp.export.JsDownloadResult>;
+        abort(): boolean;
+        progress(): Nullable<io.github.bobcgn.miniapp.export.JsTransferProgress>;
+    }
+    namespace JsDownloadTransfer {
+        /** @deprecated $metadata$ is used for internal purposes, please don't use it in your code, because it can be removed at any moment */
+        namespace $metadata$ {
+            const constructor: abstract new () => JsDownloadTransfer;
+        }
+    }
+}
+export declare namespace io.github.bobcgn.miniapp.export {
     class JsPrivacyStatus {
         private constructor();
         get requirement(): string;
@@ -155,6 +232,12 @@ export declare namespace io.github.bobcgn.miniapp.export {
                 wechatScanCode(onlyFromCamera: boolean, scanTypes: Array<string>): Promise<io.github.bobcgn.miniapp.export.JsScanResult>;
                 wechatChooseMedia(mediaTypes: Array<string>, count: number, sourceTypes: Array<string>, maxDurationSeconds: Nullable<number>, sizeTypes: Array<string>, camera: Nullable<string>): Promise<Array<io.github.bobcgn.miniapp.export.JsMediaFile>>;
                 wechatRequestSubscribeMessage(templateIds: Array<string>): Promise<Array<io.github.bobcgn.miniapp.export.JsSubscriptionResult>>;
+                networkStatus(): Promise<io.github.bobcgn.miniapp.export.JsNetworkState>;
+                startNetworkStatusObservation(): void;
+                stopNetworkStatusObservation(): Promise<Array<io.github.bobcgn.miniapp.export.JsNetworkState>>;
+                networkStatusObservationFailure(): Nullable<string>;
+                wechatUploadFile(url: string, filePath: string, name: string, headers: Array<string>, formData: Array<string>, timeoutMillis: Nullable<number>): io.github.bobcgn.miniapp.export.JsUploadTransfer;
+                wechatDownloadFile(url: string, headers: Array<string>, timeoutMillis: Nullable<number>, filePath: Nullable<string>): io.github.bobcgn.miniapp.export.JsDownloadTransfer;
                 requirePrivacySatisfied(): Promise<void>;
                 private constructor();
             }

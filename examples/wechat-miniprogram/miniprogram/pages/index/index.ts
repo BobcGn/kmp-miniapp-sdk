@@ -21,6 +21,21 @@ const testFileContent = 'kmp-miniapp-sdk bob72 test';
 // host anything and reports NOT CONFIGURED, so the card never fires a request without
 // a deliberate local edit. The page never displays or logs these values.
 const subscriptionTemplateIds: string[] = [];
+// Endpoints for the network extension checks. Both are empty on purpose: accepting an
+// upload or a download needs a controlled HTTPS service the consumer provides, so none
+// is committed and no request is made until you fill one in locally. The page never
+// logs a URL, a header, or a response body.
+const uploadTestUrl: string = '';
+const downloadTestUrl: string = '';
+// The fixed, non-sensitive file this page writes itself before uploading. Only its name
+// is ever displayed, and the sandbox root is never printed.
+const uploadTestFileName = 'kmp-miniapp-sdk-bob68-upload.txt';
+const uploadTestContent = 'kmp-miniapp-sdk bob68 upload';
+// The in-flight transfers, so the cancel buttons can reach the one they cancel.
+let activeUpload: MiniAppSdk.UploadTransfer | null = null;
+let activeDownload: MiniAppSdk.DownloadTransfer | null = null;
+let cancelledUpload: MiniAppSdk.UploadTransfer | null = null;
+let cancelledDownload: MiniAppSdk.DownloadTransfer | null = null;
 
 interface IndexPageData {
   sdkVersion: string;
@@ -68,6 +83,16 @@ interface IndexPageData {
   mediaDetails: string;
   subscriptionStatus: string;
   subscriptionDetails: string;
+  networkCapabilityStatus: string;
+  networkCapabilityDetails: string;
+  networkTypeStatus: string;
+  networkTypeDetails: string;
+  observationStatus: string;
+  observationDetails: string;
+  uploadStatus: string;
+  uploadDetails: string;
+  downloadStatus: string;
+  downloadDetails: string;
 }
 
 type IndexPage = MiniProgramPageInstance<IndexPageData>;
@@ -945,6 +970,236 @@ async function requestSubscription(this: IndexPage): Promise<void> {
   }
 }
 
+/**
+ * Reports how the gate answers for each network API.
+ *
+ * The five APIs are gated one at a time, so a host can support some of them; this
+ * reports each answer rather than collapsing them into one.
+ */
+function checkNetworkCapabilities(this: IndexPage): void {
+  const query = MiniAppSdk.capabilitySupport('network-status-query').state;
+  const listener = MiniAppSdk.capabilitySupport('network-status-listener').state;
+  const upload = MiniAppSdk.capabilitySupport('wechat.upload-file').state;
+  const download = MiniAppSdk.capabilitySupport('wechat.download-file').state;
+  const details = `query=${query}, listener=${listener}, upload=${upload}, download=${download}`;
+  console.log('[kmp-miniapp-sdk] network capabilities: PASS', details);
+  this.setData({ networkCapabilityStatus: 'PASS', networkCapabilityDetails: details });
+}
+
+/**
+ * Reads the host's current network state.
+ *
+ * This is a query, not an observation: it registers nothing and leaves nothing behind.
+ */
+async function getNetworkType(this: IndexPage): Promise<void> {
+  try {
+    const state: MiniAppSdk.NetworkState = await MiniAppSdk.networkStatus();
+    // The host's own word is safe metadata, and it is what a caller needs when this SDK
+    // has no name for the connection kind.
+    const details = `connected=${state.isConnected}, type=${state.networkType ?? 'unrecognized'}`;
+    console.log('[kmp-miniapp-sdk] network type: PASS', details);
+    this.setData({ networkTypeStatus: 'PASS', networkTypeDetails: details });
+  } catch (error) {
+    const reason = failureReason(error);
+    console.error('[kmp-miniapp-sdk] network type: FAIL reason=' + reason, error);
+    this.setData({ networkTypeStatus: 'FAIL', networkTypeDetails: 'reason=' + reason });
+  }
+}
+
+/** Begins observing network changes, which registers one host listener. */
+function startNetworkObservation(this: IndexPage): void {
+  MiniAppSdk.startNetworkStatusObservation();
+  console.log('[kmp-miniapp-sdk] network observation: STARTED');
+  this.setData({
+    observationStatus: 'OBSERVING',
+    observationDetails: 'switch Wi-Fi, cellular, or connectivity and then stop',
+  });
+}
+
+/**
+ * Stops observing and reports what the session saw.
+ *
+ * Only a count and the last connection kind are printed: a change event is about the
+ * device, not about the user, but the page reports what it needs and no more.
+ */
+async function stopNetworkObservation(this: IndexPage): Promise<void> {
+  try {
+    const events: MiniAppSdk.NetworkState[] = await MiniAppSdk.stopNetworkStatusObservation();
+    const failure = MiniAppSdk.networkStatusObservationFailure();
+    const last = events.length > 0 ? events[events.length - 1] : null;
+    const details =
+      `events=${events.length}, last=${last === null ? 'none' : last.networkType ?? 'unrecognized'}`;
+
+    if (failure !== null && failure !== undefined) {
+      console.error('[kmp-miniapp-sdk] network observation: FAIL reason=' + failure);
+      this.setData({ observationStatus: 'FAIL', observationDetails: 'reason=' + failure });
+      return;
+    }
+
+    console.log('[kmp-miniapp-sdk] network observation: PASS', details);
+    this.setData({
+      observationStatus: events.length > 0 ? 'PASS' : 'READY',
+      observationDetails: details,
+    });
+  } catch (error) {
+    const reason = failureReason(error);
+    console.error('[kmp-miniapp-sdk] network observation: FAIL reason=' + reason, error);
+    this.setData({ observationStatus: 'FAIL', observationDetails: 'reason=' + reason });
+  }
+}
+
+/**
+ * Uploads a fixed test file to the configured endpoint.
+ *
+ * Without a configured endpoint nothing is sent and the card says so. The check writes
+ * its own benign file first, and never prints the path, the headers, or the response
+ * body: only the status, the response length, and whether the host reported progress.
+ */
+async function runUploadCheck(this: IndexPage): Promise<void> {
+  if (uploadTestUrl.length === 0) {
+    console.log('[kmp-miniapp-sdk] upload check: NOT CONFIGURED');
+    this.setData({
+      uploadStatus: 'NOT CONFIGURED',
+      uploadDetails: 'no upload endpoint configured locally',
+    });
+    return;
+  }
+
+  if (activeUpload !== null) {
+    console.log('[kmp-miniapp-sdk] upload check: BUSY');
+    this.setData({ uploadStatus: 'BUSY', uploadDetails: 'an upload is already in flight' });
+    return;
+  }
+
+  let transfer: MiniAppSdk.UploadTransfer | null = null;
+  try {
+    const filePath = MiniAppSdk.wechatUserDataPath() + '/' + uploadTestFileName;
+    await MiniAppSdk.wechatWriteTextFile(filePath, uploadTestContent);
+
+    transfer = MiniAppSdk.wechatUploadFile({
+      url: uploadTestUrl,
+      filePath,
+      name: 'file',
+    });
+    activeUpload = transfer;
+    cancelledUpload = null;
+    this.setData({ uploadStatus: 'READY', uploadDetails: 'upload in flight' });
+
+    const result: MiniAppSdk.UploadResult = await transfer.result();
+    const progress = transfer.progress();
+    const details =
+      `status=${result.statusCode}, bytes=${result.responseText.length}, ` +
+      `progressSeen=${progress !== null}`;
+    console.log('[kmp-miniapp-sdk] upload check: PASS', details);
+    this.setData({ uploadStatus: 'PASS', uploadDetails: details });
+  } catch (error) {
+    if (transfer !== null && cancelledUpload === transfer) {
+      console.log('[kmp-miniapp-sdk] upload check: CANCELLED');
+      this.setData({ uploadStatus: 'CANCELLED', uploadDetails: 'consumer aborted transfer' });
+      return;
+    }
+    const reason = failureReason(error);
+    console.error('[kmp-miniapp-sdk] upload check: FAIL reason=' + reason, error);
+    this.setData({ uploadStatus: 'FAIL', uploadDetails: 'reason=' + reason });
+  } finally {
+    if (activeUpload === transfer) activeUpload = null;
+    if (cancelledUpload === transfer) cancelledUpload = null;
+  }
+}
+
+/**
+ * Stops an in-flight upload.
+ *
+ * The return value is what says whether the host operation was actually stopped: a host
+ * that returned no task cannot be aborted, and this never claims otherwise.
+ */
+function cancelUpload(this: IndexPage): void {
+  const transfer = activeUpload;
+  if (transfer === null) {
+    console.log('[kmp-miniapp-sdk] upload cancel: READY no upload in flight');
+    this.setData({ uploadStatus: 'READY', uploadDetails: 'no upload in flight' });
+    return;
+  }
+
+  const invoked = transfer.abort();
+  if (invoked) cancelledUpload = transfer;
+  console.log('[kmp-miniapp-sdk] upload cancel: PASS abortInvoked=' + invoked);
+  this.setData({
+    uploadStatus: invoked ? 'CANCELLED' : 'NOT ABORTABLE',
+    uploadDetails: 'abortInvoked=' + invoked,
+  });
+}
+
+/**
+ * Downloads from the configured endpoint.
+ *
+ * The result carries the host's own file reference, which this page does not print: it
+ * reports the status and whether a file was reported, and nothing else. The SDK reads
+ * no content, and neither does this check.
+ */
+async function runDownloadCheck(this: IndexPage): Promise<void> {
+  if (downloadTestUrl.length === 0) {
+    console.log('[kmp-miniapp-sdk] download check: NOT CONFIGURED');
+    this.setData({
+      downloadStatus: 'NOT CONFIGURED',
+      downloadDetails: 'no download endpoint configured locally',
+    });
+    return;
+  }
+
+  if (activeDownload !== null) {
+    console.log('[kmp-miniapp-sdk] download check: BUSY');
+    this.setData({ downloadStatus: 'BUSY', downloadDetails: 'a download is already in flight' });
+    return;
+  }
+
+  let transfer: MiniAppSdk.DownloadTransfer | null = null;
+  try {
+    transfer = MiniAppSdk.wechatDownloadFile({ url: downloadTestUrl });
+    activeDownload = transfer;
+    cancelledDownload = null;
+    this.setData({ downloadStatus: 'READY', downloadDetails: 'download in flight' });
+
+    const result: MiniAppSdk.DownloadResult = await transfer.result();
+    const progress = transfer.progress();
+    const details =
+      `status=${result.statusCode}, fileReported=${result.tempFilePath.length > 0}, ` +
+      `progressSeen=${progress !== null}`;
+    console.log('[kmp-miniapp-sdk] download check: PASS', details);
+    this.setData({ downloadStatus: 'PASS', downloadDetails: details });
+  } catch (error) {
+    if (transfer !== null && cancelledDownload === transfer) {
+      console.log('[kmp-miniapp-sdk] download check: CANCELLED');
+      this.setData({ downloadStatus: 'CANCELLED', downloadDetails: 'consumer aborted transfer' });
+      return;
+    }
+    const reason = failureReason(error);
+    console.error('[kmp-miniapp-sdk] download check: FAIL reason=' + reason, error);
+    this.setData({ downloadStatus: 'FAIL', downloadDetails: 'reason=' + reason });
+  } finally {
+    if (activeDownload === transfer) activeDownload = null;
+    if (cancelledDownload === transfer) cancelledDownload = null;
+  }
+}
+
+/** Stops an in-flight download. Semantics match {@link cancelUpload}. */
+function cancelDownload(this: IndexPage): void {
+  const transfer = activeDownload;
+  if (transfer === null) {
+    console.log('[kmp-miniapp-sdk] download cancel: READY no download in flight');
+    this.setData({ downloadStatus: 'READY', downloadDetails: 'no download in flight' });
+    return;
+  }
+
+  const invoked = transfer.abort();
+  if (invoked) cancelledDownload = transfer;
+  console.log('[kmp-miniapp-sdk] download cancel: PASS abortInvoked=' + invoked);
+  this.setData({
+    downloadStatus: invoked ? 'CANCELLED' : 'NOT ABORTABLE',
+    downloadDetails: 'abortInvoked=' + invoked,
+  });
+}
+
 async function runStorageCheck(page: IndexPage): Promise<void> {
   try {
     await MiniAppSdk.storageSet(storageKey, 'first');
@@ -1034,6 +1289,16 @@ function onHide(this: IndexPage): void {
 }
 
 function onUnload(this: IndexPage): void {
+  // A page must not leave host work or listeners behind when navigation removes it.
+  // Stopping observation begins listener cleanup immediately; the Promise is not
+  // awaited because WeChat lifecycle hooks are synchronous.
+  void MiniAppSdk.stopNetworkStatusObservation();
+  activeUpload?.abort();
+  activeDownload?.abort();
+  activeUpload = null;
+  activeDownload = null;
+  cancelledUpload = null;
+  cancelledDownload = null;
   MiniAppSdk.wechatPageOnUnload(this.route);
 }
 
@@ -1095,6 +1360,16 @@ Page<IndexPageData>({
     mediaDetails: 'Tap a button; nothing opens the picker on load.',
     subscriptionStatus: 'NOT RUN',
     subscriptionDetails: 'Tap a button; nothing asks the host on load.',
+    networkCapabilityStatus: 'NOT RUN',
+    networkCapabilityDetails: 'Tap a button; nothing is queried or registered on load.',
+    networkTypeStatus: 'NOT RUN',
+    networkTypeDetails: 'Tap a button; the query registers nothing.',
+    observationStatus: 'NOT RUN',
+    observationDetails: 'Switch networks by hand after starting observation.',
+    uploadStatus: 'NOT RUN',
+    uploadDetails: 'Tap a button; nothing is uploaded on load.',
+    downloadStatus: 'NOT RUN',
+    downloadDetails: 'Tap a button; nothing is downloaded on load.',
     permissionStatus: 'UNKNOWN',
     permissionDetails:
       'Permission is never requested on load. Tap a button to query or request it.',
@@ -1135,4 +1410,12 @@ Page<IndexPageData>({
   chooseFromCamera,
   checkSubscriptionCapability,
   requestSubscription,
+  checkNetworkCapabilities,
+  getNetworkType,
+  startNetworkObservation,
+  stopNetworkObservation,
+  runUploadCheck,
+  cancelUpload,
+  runDownloadCheck,
+  cancelDownload,
 });

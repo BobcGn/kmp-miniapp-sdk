@@ -25,6 +25,51 @@ function expandHeaders(flat) {
   return headers;
 }
 
+
+// The network status and transfer exports hand back objects, and a JavaScript caller
+// should see the documented plain shape rather than a Kotlin instance. These helpers
+// convert representation only: they contain no SDK behavior, host access, or error
+// mapping.
+function toNetworkState(state) {
+  return {
+    isConnected: state.isConnected,
+    networkType: state.networkType,
+    hostNetworkType: state.hostNetworkType,
+  };
+}
+
+function toTransferProgress(progress) {
+  return {
+    percent: progress.percent,
+    bytesTransferred: progress.bytesTransferred,
+    bytesExpected: progress.bytesExpected,
+  };
+}
+
+function wrapTransfer(transfer, toResult) {
+  const handle = {
+    abort: function abort() {
+      return transfer.abort();
+    },
+    progress: function progress() {
+      const current = transfer.progress();
+      return current === null || current === undefined ? null : toTransferProgress(current);
+    },
+    result: function result() {
+      return transfer.result().then(toResult);
+    },
+  };
+  // A getter rather than a snapshot, because whether a transfer can still be aborted
+  // changes as it runs.
+  Object.defineProperty(handle, 'abortable', {
+    get: function abortable() {
+      return transfer.abortable;
+    },
+    enumerable: true,
+  });
+  return handle;
+}
+
 module.exports = {
   sdkVersion: function sdkVersion() {
     return miniAppExports.sdkVersion();
@@ -138,6 +183,50 @@ module.exports = {
           };
         });
       });
+  },
+  networkStatus: function networkStatus() {
+    return miniAppExports.networkStatus().then(toNetworkState);
+  },
+  startNetworkStatusObservation: function startNetworkStatusObservation() {
+    return miniAppExports.startNetworkStatusObservation();
+  },
+  stopNetworkStatusObservation: function stopNetworkStatusObservation() {
+    return miniAppExports.stopNetworkStatusObservation().then(function (states) {
+      return states.map(toNetworkState);
+    });
+  },
+  networkStatusObservationFailure: function networkStatusObservationFailure() {
+    return miniAppExports.networkStatusObservationFailure();
+  },
+  wechatUploadFile: function wechatUploadFile(request) {
+    const options = request || {};
+    const transfer = miniAppExports.wechatUploadFile(
+      options.url === undefined ? '' : options.url,
+      options.filePath === undefined ? '' : options.filePath,
+      options.name === undefined ? 'file' : options.name,
+      flattenHeaders(options.headers),
+      flattenHeaders(options.formData),
+      options.timeoutMillis === undefined ? null : options.timeoutMillis,
+    );
+    return wrapTransfer(transfer, function (result) {
+      return { statusCode: result.statusCode, responseText: result.responseText };
+    });
+  },
+  wechatDownloadFile: function wechatDownloadFile(request) {
+    const options = request || {};
+    const transfer = miniAppExports.wechatDownloadFile(
+      options.url === undefined ? '' : options.url,
+      flattenHeaders(options.headers),
+      options.timeoutMillis === undefined ? null : options.timeoutMillis,
+      options.filePath === undefined ? null : options.filePath,
+    );
+    return wrapTransfer(transfer, function (result) {
+      return {
+        statusCode: result.statusCode,
+        tempFilePath: result.tempFilePath,
+        filePath: result.filePath,
+      };
+    });
   },
   networkRequest: function networkRequest(url, init) {
     const options = init || {};

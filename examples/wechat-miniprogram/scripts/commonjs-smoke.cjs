@@ -29,6 +29,11 @@ const supportedSchemas = new Set([
   'scanCode',
   'chooseMedia',
   'requestSubscribeMessage',
+  'getNetworkType',
+  'onNetworkStatusChange',
+  'offNetworkStatusChange',
+  'uploadFile',
+  'downloadFile',
 ]);
 
 // Permission state this fake host holds, plus a record of what it was asked to
@@ -103,6 +108,72 @@ let subscribeAnswer = {
 };
 let subscribeFailure = null;
 const subscribeCalls = [];
+
+// The network extensions are five host APIs gated one at a time. The fake records what
+// it was asked, holds the listener it was given so a test can prove the SDK removes it,
+// and hands back transfer tasks so abort and progress can be observed.
+let networkTypeAnswer = 'wifi';
+let networkTypeFailure = null;
+const networkTypeCalls = [];
+const networkListeners = [];
+let networkListenerAdds = 0;
+let networkListenerRemoves = 0;
+
+let uploadAnswer = { statusCode: 200, data: 'upload-ok' };
+let uploadFailure = null;
+let uploadHold = false;
+const uploadCalls = [];
+const uploadRecords = [];
+let pendingUpload = null;
+
+let downloadAnswer = {
+  tempFilePath: '/node-sandbox/downloaded.bin',
+  statusCode: 200,
+  filePath: null,
+};
+let downloadFailure = null;
+let downloadHold = false;
+const downloadCalls = [];
+const downloadRecords = [];
+let pendingDownload = null;
+
+// One transfer task, so abort and progress registration can be counted.
+function makeTransferTask(record) {
+  return {
+    progressListeners: [],
+    abort() {
+      record.aborts += 1;
+    },
+    onProgressUpdate(listener) {
+      record.registrations += 1;
+      this.progressListeners.push(listener);
+    },
+    offProgressUpdate(listener) {
+      record.removals += 1;
+      const index = this.progressListeners.indexOf(listener);
+      if (index >= 0) {
+        this.progressListeners.splice(index, 1);
+      }
+    },
+    emit(progress) {
+      this.progressListeners.slice().forEach(function (listener) {
+        listener(progress);
+      });
+    },
+  };
+}
+
+// The observation session runs on the JavaScript event loop, so a test that observes it
+// must yield before the registration, the event, and the removal can be seen.
+function settle() {
+  return new Promise(function (resolve) {
+    setTimeout(resolve, 0);
+  });
+}
+
+function newTransferRecord() {
+  return { aborts: 0, registrations: 0, removals: 0, task: null };
+}
 
 function fileSystemManager() {
   return {
@@ -300,6 +371,78 @@ global.wx = {
     }
     options.success({ errMsg: 'chooseMedia:ok', tempFiles: mediaTempFiles });
   },
+  getNetworkType(options) {
+    networkTypeCalls.push(1);
+    if (networkTypeFailure !== null) {
+      options.fail({ errMsg: networkTypeFailure });
+      return;
+    }
+    options.success({ errMsg: 'getNetworkType:ok', networkType: networkTypeAnswer });
+  },
+  onNetworkStatusChange(listener) {
+    networkListenerAdds += 1;
+    networkListeners.push(listener);
+  },
+  offNetworkStatusChange(listener) {
+    networkListenerRemoves += 1;
+    const index = networkListeners.indexOf(listener);
+    if (index >= 0) {
+      networkListeners.splice(index, 1);
+    }
+  },
+  uploadFile(options) {
+    const record = newTransferRecord();
+    record.task = makeTransferTask(record);
+    uploadRecords.push(record);
+    uploadCalls.push({
+      url: options.url,
+      filePath: options.filePath,
+      name: options.name,
+      header: options.header,
+      formData: options.formData,
+      timeout: options.timeout,
+    });
+    if (uploadFailure !== null) {
+      options.fail({ errMsg: uploadFailure });
+      return record.task;
+    }
+    if (uploadHold) {
+      pendingUpload = { options: options, record: record };
+    } else {
+      options.success({
+        errMsg: 'uploadFile:ok',
+        statusCode: uploadAnswer.statusCode,
+        data: uploadAnswer.data,
+      });
+    }
+    return record.task;
+  },
+  downloadFile(options) {
+    const record = newTransferRecord();
+    record.task = makeTransferTask(record);
+    downloadRecords.push(record);
+    downloadCalls.push({
+      url: options.url,
+      header: options.header,
+      timeout: options.timeout,
+      filePath: options.filePath,
+    });
+    if (downloadFailure !== null) {
+      options.fail({ errMsg: downloadFailure });
+      return record.task;
+    }
+    if (downloadHold) {
+      pendingDownload = { options: options, record: record };
+    } else {
+      options.success({
+        errMsg: 'downloadFile:ok',
+        statusCode: downloadAnswer.statusCode,
+        tempFilePath: downloadAnswer.tempFilePath,
+        filePath: downloadAnswer.filePath,
+      });
+    }
+    return record.task;
+  },
   requestSubscribeMessage(options) {
     subscribeCalls.push({ tmplIds: options.tmplIds });
     if (subscribeFailure !== null) {
@@ -349,6 +492,12 @@ async function main() {
     'wechatScanCode',
     'wechatChooseMedia',
     'wechatRequestSubscribeMessage',
+    'networkStatus',
+    'startNetworkStatusObservation',
+    'stopNetworkStatusObservation',
+    'networkStatusObservationFailure',
+    'wechatUploadFile',
+    'wechatDownloadFile',
     'networkRequest',
     'wechatAppOnLaunch',
     'wechatAppOnShow',
@@ -1111,6 +1260,301 @@ async function main() {
   global.wx.requestSubscribeMessage = requestSubscribeMessageImpl;
   supportedSchemas.add('requestSubscribeMessage');
 
+  // The network extensions are five host APIs, gated one at a time. Nothing asked the
+  // host while the module loaded: no query, no listener, no transfer.
+  assert.deepEqual(networkTypeCalls, []);
+  assert.deepEqual(uploadCalls, []);
+  assert.deepEqual(downloadCalls, []);
+  assert.equal(networkListenerAdds, 0);
+  assert.equal(miniAppSdk.capabilitySupport('network-status-query').state, 'Supported');
+  assert.equal(miniAppSdk.capabilitySupport('network-status-listener').state, 'Supported');
+  assert.equal(miniAppSdk.capabilitySupport('wechat.upload-file').state, 'Supported');
+  assert.equal(miniAppSdk.capabilitySupport('wechat.download-file').state, 'Supported');
+
+  // A query answers with the host's own word beside the name this SDK has for it.
+  const networkState = await miniAppSdk.networkStatus();
+  assert.equal(networkState.isConnected, true);
+  assert.equal(networkState.networkType, 'WIFI');
+  assert.equal(networkState.hostNetworkType, 'wifi');
+  assert.equal(networkTypeCalls.length, 1);
+  // Asking is not observing: the query must not leave a listener behind.
+  assert.equal(networkListenerAdds, 0);
+
+  // A kind this SDK does not know is preserved rather than reported as unknown.
+  networkTypeAnswer = '6g';
+  const unknownNetworkKind = await miniAppSdk.networkStatus();
+  assert.equal(unknownNetworkKind.networkType, null);
+  assert.equal(unknownNetworkKind.hostNetworkType, '6g');
+  assert.equal(unknownNetworkKind.isConnected, true);
+
+  // No connection is the host's own word for it, and the SDK reads connectivity from it.
+  networkTypeAnswer = 'none';
+  const none = await miniAppSdk.networkStatus();
+  assert.equal(none.isConnected, false);
+  assert.equal(none.networkType, 'NONE');
+
+  // Answers the contract cannot carry are reported rather than filled in.
+  networkTypeAnswer = '   ';
+  await assert.rejects(miniAppSdk.networkStatus(), (error) => error.name === 'InvalidResponse');
+  networkTypeAnswer = 7;
+  await assert.rejects(miniAppSdk.networkStatus(), (error) => error.name === 'InvalidResponse');
+  networkTypeAnswer = 'wifi';
+
+  networkTypeFailure = 'getNetworkType:fail system error';
+  await assert.rejects(miniAppSdk.networkStatus(), (error) => error.name === 'HostFailure');
+  networkTypeFailure = null;
+
+  // Observation registers one host listener and removes it when the session stops.
+  const queriesBeforeObservation = networkTypeCalls.length;
+  assert.equal(miniAppSdk.startNetworkStatusObservation(), undefined);
+  await settle();
+  assert.equal(networkListenerAdds, 1);
+  assert.equal(networkListeners.length, 1);
+  networkListeners.slice().forEach(function (listener) {
+    listener({ isConnected: true, networkType: '4g' });
+  });
+  await settle();
+  const observed = await miniAppSdk.stopNetworkStatusObservation();
+  assert.equal(networkListenerRemoves, 1);
+  assert.equal(networkListeners.length, 0);
+  assert.equal(observed.length, 1);
+  assert.equal(observed[0].networkType, 'CELLULAR_4G');
+  assert.equal(observed[0].hostNetworkType, '4g');
+  assert.equal(miniAppSdk.networkStatusObservationFailure(), null);
+
+  // Observing is not polling: the host was asked by the queries above and never by the
+  // session itself.
+  assert.equal(networkTypeCalls.length, queriesBeforeObservation);
+
+  // A host that can register a listener but not remove one is reported unsupported, so
+  // the session records why instead of leaking the listener it could not remove.
+  const offNetworkStatusChangeImpl = global.wx.offNetworkStatusChange;
+  delete global.wx.offNetworkStatusChange;
+  supportedSchemas.delete('offNetworkStatusChange');
+  assert.equal(miniAppSdk.capabilitySupport('network-status-listener').state, 'Unsupported');
+  miniAppSdk.startNetworkStatusObservation();
+  await settle();
+  const blocked = await miniAppSdk.stopNetworkStatusObservation();
+  assert.deepEqual(blocked, []);
+  assert.equal(miniAppSdk.networkStatusObservationFailure(), 'UnsupportedCapability');
+  assert.equal(networkListenerAdds, 1, 'nothing may be registered that cannot be removed');
+  global.wx.offNetworkStatusChange = offNetworkStatusChangeImpl;
+  supportedSchemas.add('offNetworkStatusChange');
+
+  // An upload carries what the caller described and reports the host's answer.
+  const uploaded = await miniAppSdk
+    .wechatUploadFile({
+      url: 'https://example.com/upload',
+      filePath: '/node-sandbox/upload.bin',
+      name: 'file',
+      headers: { 'X-Test': 'yes' },
+      formData: { field: 'value' },
+      timeoutMillis: 5000,
+    })
+    .result();
+  assert.equal(uploaded.statusCode, 200);
+  assert.equal(uploaded.responseText, 'upload-ok');
+  const uploadCall = uploadCalls[uploadCalls.length - 1];
+  assert.equal(uploadCall.url, 'https://example.com/upload');
+  assert.equal(uploadCall.filePath, '/node-sandbox/upload.bin');
+  assert.equal(uploadCall.name, 'file');
+  assert.deepEqual(uploadCall.header, { 'X-Test': 'yes' });
+  assert.deepEqual(uploadCall.formData, { field: 'value' });
+  assert.equal(uploadCall.timeout, 5000);
+  // An omitted option is not sent, so the host's own default applies.
+  await miniAppSdk
+    .wechatUploadFile({ url: 'https://example.com/upload', filePath: '/node-sandbox/upload.bin' })
+    .result();
+  assert.equal(uploadCalls[uploadCalls.length - 1].header, undefined);
+  assert.equal(uploadCalls[uploadCalls.length - 1].formData, undefined);
+  assert.equal(uploadCalls[uploadCalls.length - 1].timeout, undefined);
+
+  // A completed upload reports its HTTP status, including an error status.
+  uploadAnswer = { statusCode: 500, data: 'server error' };
+  const failedStatus = await miniAppSdk
+    .wechatUploadFile({ url: 'https://example.com/upload', filePath: '/node-sandbox/upload.bin' })
+    .result();
+  assert.equal(failedStatus.statusCode, 500);
+  uploadAnswer = { statusCode: 200, data: 'upload-ok' };
+
+  // Answers the contract cannot carry are reported.
+  uploadAnswer = { statusCode: 200, data: 7 };
+  await assert.rejects(
+    miniAppSdk
+      .wechatUploadFile({ url: 'https://example.com/upload', filePath: '/node-sandbox/upload.bin' })
+      .result(),
+    (error) => error.name === 'InvalidResponse',
+  );
+  uploadAnswer = { statusCode: '200', data: 'ok' };
+  await assert.rejects(
+    miniAppSdk
+      .wechatUploadFile({ url: 'https://example.com/upload', filePath: '/node-sandbox/upload.bin' })
+      .result(),
+    (error) => error.name === 'InvalidResponse',
+  );
+  uploadAnswer = { statusCode: 200, data: 'upload-ok' };
+
+  // Caller mistakes are refused before the host is called.
+  await assert.rejects(
+    Promise.resolve().then(function () {
+      return miniAppSdk.wechatUploadFile({ url: '  ', filePath: '/node-sandbox/upload.bin' });
+    }),
+    /requires a url/,
+  );
+
+  // The exact host timeout is a timeout; a message that merely mentions it is not.
+  uploadFailure = 'uploadFile:fail timeout';
+  await assert.rejects(
+    miniAppSdk
+      .wechatUploadFile({ url: 'https://example.com/upload', filePath: '/node-sandbox/upload.bin' })
+      .result(),
+    (error) => error.name === 'Timeout',
+  );
+  uploadFailure = 'uploadFile:fail connection timeout';
+  await assert.rejects(
+    miniAppSdk
+      .wechatUploadFile({ url: 'https://example.com/upload', filePath: '/node-sandbox/upload.bin' })
+      .result(),
+    (error) => error.name === 'HostFailure',
+  );
+  uploadFailure = null;
+
+  // An in-flight upload registers one progress listener, reports the host's figure, and
+  // removes the listener when it finishes.
+  uploadHold = true;
+  const slowUpload = miniAppSdk.wechatUploadFile({
+    url: 'https://example.com/slow',
+    filePath: '/node-sandbox/upload.bin',
+  });
+  assert.equal(slowUpload.abortable, true);
+  const uploadRecord = uploadRecords[uploadRecords.length - 1];
+  assert.equal(uploadRecord.registrations, 1);
+  assert.equal(slowUpload.progress(), null, 'no progress has been reported yet');
+  uploadRecord.task.emit({ progress: 40, totalBytesSent: 400, totalBytesExpectedToSend: 1000 });
+  const uploadProgress = slowUpload.progress();
+  assert.equal(uploadProgress.percent, 40);
+  assert.equal(uploadProgress.bytesTransferred, 400);
+  assert.equal(uploadProgress.bytesExpected, 1000);
+  pendingUpload.options.success({ errMsg: 'uploadFile:ok', statusCode: 200, data: 'done' });
+  assert.equal((await slowUpload.result()).responseText, 'done');
+  assert.equal(uploadRecord.removals, 1);
+  assert.equal(uploadRecord.task.progressListeners.length, 0);
+  uploadHold = false;
+
+  // Aborting stops the host task once and ends the transfer without an answer.
+  uploadHold = true;
+  const abortedUpload = miniAppSdk.wechatUploadFile({
+    url: 'https://example.com/slow',
+    filePath: '/node-sandbox/upload.bin',
+  });
+  const abortedRecord = uploadRecords[uploadRecords.length - 1];
+  assert.equal(abortedUpload.abort(), true);
+  assert.equal(abortedUpload.abort(), false);
+  assert.equal(abortedRecord.aborts, 1);
+  assert.equal(abortedRecord.removals, 1, 'progress must be cleaned up on abort');
+  // A late answer for an aborted transfer is ignored.
+  pendingUpload.options.success({ errMsg: 'uploadFile:ok', statusCode: 200, data: 'late' });
+  await assert.rejects(abortedUpload.result());
+  uploadHold = false;
+
+  // A host that returns no task cannot be aborted, and the SDK says so rather than
+  // pretending the host operation was stopped.
+  const uploadFileImpl = global.wx.uploadFile;
+  global.wx.uploadFile = function uploadWithoutTask(options) {
+    uploadCalls.push({ url: options.url, filePath: options.filePath, name: options.name });
+    options.success({ errMsg: 'uploadFile:ok', statusCode: 200, data: 'no task' });
+  };
+  const tasklessUpload = miniAppSdk.wechatUploadFile({
+    url: 'https://example.com/upload',
+    filePath: '/node-sandbox/upload.bin',
+  });
+  assert.equal(tasklessUpload.abortable, false);
+  assert.equal(tasklessUpload.abort(), false);
+  assert.equal((await tasklessUpload.result()).responseText, 'no task');
+  global.wx.uploadFile = uploadFileImpl;
+
+  // A download reports the host's temporary path and never reads the file.
+  const downloaded = await miniAppSdk
+    .wechatDownloadFile({ url: 'https://example.com/file.bin' })
+    .result();
+  assert.equal(downloaded.statusCode, 200);
+  assert.equal(downloaded.tempFilePath, '/node-sandbox/downloaded.bin');
+  assert.equal(downloaded.filePath, null);
+  assert.equal(downloadCalls[downloadCalls.length - 1].filePath, undefined);
+
+  // A requested target path is forwarded, and the path the host reports comes back.
+  downloadAnswer = {
+    tempFilePath: '/node-sandbox/downloaded.bin',
+    statusCode: 200,
+    filePath: '/node-sandbox/target.bin',
+  };
+  const targeted = await miniAppSdk
+    .wechatDownloadFile({
+      url: 'https://example.com/file.bin',
+      filePath: '/node-sandbox/target.bin',
+      headers: { 'X-Test': 'yes' },
+    })
+    .result();
+  assert.equal(targeted.filePath, '/node-sandbox/target.bin');
+  assert.deepEqual(downloadCalls[downloadCalls.length - 1].header, { 'X-Test': 'yes' });
+  assert.equal(downloadCalls[downloadCalls.length - 1].filePath, '/node-sandbox/target.bin');
+
+  // A download without a file to point at is a broken answer, not a successful one.
+  downloadAnswer = { tempFilePath: null, statusCode: 200, filePath: null };
+  await assert.rejects(
+    miniAppSdk.wechatDownloadFile({ url: 'https://example.com/file.bin' }).result(),
+    (error) => error.name === 'InvalidResponse',
+  );
+  downloadAnswer = {
+    tempFilePath: '/node-sandbox/downloaded.bin',
+    statusCode: 200,
+    filePath: null,
+  };
+
+  downloadFailure = 'downloadFile:fail timeout';
+  await assert.rejects(
+    miniAppSdk.wechatDownloadFile({ url: 'https://example.com/file.bin' }).result(),
+    (error) => error.name === 'Timeout',
+  );
+  downloadFailure = null;
+
+  // The download task cleans up its progress listener on abort, exactly as the upload does.
+  downloadHold = true;
+  const abortedDownload = miniAppSdk.wechatDownloadFile({ url: 'https://example.com/slow' });
+  const downloadRecord = downloadRecords[downloadRecords.length - 1];
+  assert.equal(downloadRecord.registrations, 1);
+  assert.equal(abortedDownload.abort(), true);
+  assert.equal(downloadRecord.aborts, 1);
+  assert.equal(downloadRecord.removals, 1);
+  downloadHold = false;
+
+  // A host without each API fails through the capability path instead of throwing out of
+  // the JavaScript boundary, one API at a time.
+  const removable = [
+    ['getNetworkType', 'network-status-query'],
+    ['uploadFile', 'wechat.upload-file'],
+    ['downloadFile', 'wechat.download-file'],
+  ];
+  for (const [api, capability] of removable) {
+    const implementation = global.wx[api];
+    delete global.wx[api];
+    supportedSchemas.delete(api);
+    assert.equal(miniAppSdk.capabilitySupport(capability).state, 'Unsupported', api);
+    global.wx[api] = implementation;
+    supportedSchemas.add(api);
+  }
+  const missingApiDownload = global.wx.downloadFile;
+  delete global.wx.downloadFile;
+  supportedSchemas.delete('downloadFile');
+  await assert.rejects(
+    Promise.resolve().then(function () {
+      return miniAppSdk.wechatDownloadFile({ url: 'https://example.com/file.bin' });
+    }),
+    (error) => error.name === 'UnsupportedCapability',
+  );
+  global.wx.downloadFile = missingApiDownload;
+  supportedSchemas.add('downloadFile');
+
   console.log('[node-smoke] sdkVersion:', miniAppSdk.sdkVersion());
   console.log('[node-smoke] storage: PASS');
   console.log('[node-smoke] auth bootstrap: PASS');
@@ -1128,6 +1572,7 @@ async function main() {
   console.log('[node-smoke] scanner: PASS');
   console.log('[node-smoke] media: PASS');
   console.log('[node-smoke] subscription: PASS');
+  console.log('[node-smoke] network extensions: PASS');
 }
 
 main().catch((error) => {

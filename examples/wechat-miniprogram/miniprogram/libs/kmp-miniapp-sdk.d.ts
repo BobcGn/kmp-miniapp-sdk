@@ -276,6 +276,165 @@ export function wechatRequestSubscribeMessage(
 ): Promise<SubscriptionResult[]>;
 
 /**
+ * The kind of network connection a host reports, as this SDK names it.
+ *
+ * The vocabulary is the host's, so a connection kind this union does not name still
+ * arrives: {@link NetworkState.networkType} is then `null` and
+ * {@link NetworkState.hostNetworkType} carries the host's own word.
+ */
+export type NetworkType =
+  | 'WIFI'
+  | 'CELLULAR_2G'
+  | 'CELLULAR_3G'
+  | 'CELLULAR_4G'
+  | 'CELLULAR_5G'
+  | 'UNKNOWN'
+  | 'NONE';
+
+/** What the host reports about its network. */
+export interface NetworkState {
+  /** Whether the host currently has a usable connection. */
+  readonly isConnected: boolean;
+  /** The kind of link, resolved against {@link NetworkType} when recognized. */
+  readonly networkType: NetworkType | null | undefined;
+  /** The host's own word for the link, verbatim. */
+  readonly hostNetworkType: string;
+}
+
+/**
+ * Returns the host's current network state.
+ *
+ * Rejects with the SDK's unsupported-capability error on a host that cannot answer.
+ */
+export function networkStatus(): Promise<NetworkState>;
+
+/**
+ * Begins observing network status changes.
+ *
+ * WeChat pushes changes, and this registers one host listener for the session. Nothing
+ * polls. Calling this while already observing does nothing.
+ */
+export function startNetworkStatusObservation(): void;
+
+/**
+ * Stops observing and resolves with every state the session saw.
+ *
+ * Resolves after the host listener is removed, so nothing observed arrives afterwards.
+ * Only the most recent states are kept, because a session has no natural end.
+ */
+export function stopNetworkStatusObservation(): Promise<NetworkState[]>;
+
+/**
+ * Why the last observation session ended on its own, or `null` when it was stopped.
+ *
+ * A host that reports a network state this SDK cannot read ends the session, and this
+ * is how the caller learns that rather than seeing an empty result.
+ */
+export function networkStatusObservationFailure(): string | null | undefined;
+
+/** What one upload asks the host for. */
+export interface UploadRequest {
+  /** Absolute HTTPS endpoint to post to. */
+  readonly url: string;
+  /** Path to the file inside the mini program file sandbox. */
+  readonly filePath: string;
+  /** Form field name the host gives the file; defaults to `file`. */
+  readonly name?: string;
+  /** Request headers. */
+  readonly headers?: Readonly<Record<string, string>>;
+  /** Additional multipart form fields. */
+  readonly formData?: Readonly<Record<string, string>>;
+  /** Host timeout in milliseconds; omit for the host default. */
+  readonly timeoutMillis?: number | null;
+}
+
+/** What one download asks the host for. */
+export interface DownloadRequest {
+  /** Absolute endpoint to fetch from. */
+  readonly url: string;
+  /** Request headers. */
+  readonly headers?: Readonly<Record<string, string>>;
+  /** Host timeout in milliseconds; omit for the host default. */
+  readonly timeoutMillis?: number | null;
+  /** Where the host should put the file; omit for its own temporary location. */
+  readonly filePath?: string | null;
+}
+
+/** Progress the host reported for an in-flight transfer. */
+export interface TransferProgress {
+  /** Percentage complete, in `0..100`, as the host reported it. */
+  readonly percent: number;
+  /** Bytes transferred so far, when the host reports that figure. */
+  readonly bytesTransferred: number | null | undefined;
+  /** Bytes expected in total, when the host reports that figure. */
+  readonly bytesExpected: number | null | undefined;
+}
+
+/** One completed upload. */
+export interface UploadResult {
+  /** HTTP status the host received, including `4xx` and `5xx`. */
+  readonly statusCode: number;
+  /** The response body as text. */
+  readonly responseText: string;
+}
+
+/** One completed download. */
+export interface DownloadResult {
+  /** HTTP status the host received. */
+  readonly statusCode: number;
+  /** The host's temporary copy of the downloaded content. */
+  readonly tempFilePath: string;
+  /** The path the host reports for a requested target, else `null`. */
+  readonly filePath: string | null | undefined;
+}
+
+/**
+ * Handle for an in-flight upload.
+ *
+ * A completed upload resolves even when its status reports an HTTP error; only a
+ * transport failure rejects. After {@link abort} it rejects, because a transfer the
+ * caller stopped has no answer — a caller that aborted knows it did.
+ */
+export interface UploadTransfer {
+  /** Whether this transfer can still be aborted. */
+  readonly abortable: boolean;
+  /** Stops the transfer, at most once. Returns whether a host abort was invoked. */
+  abort(): boolean;
+  /** The most recent progress the host reported, or `null` when it reported none. */
+  progress(): TransferProgress | null;
+  /** Resolves with the host's answer, or rejects on failure or after an abort. */
+  result(): Promise<UploadResult>;
+}
+
+/** Handle for an in-flight download. Behaviour matches {@link UploadTransfer}. */
+export interface DownloadTransfer {
+  /** Whether this transfer can still be aborted. */
+  readonly abortable: boolean;
+  /** Stops the transfer, at most once. Returns whether a host abort was invoked. */
+  abort(): boolean;
+  /** The most recent progress the host reported, or `null` when it reported none. */
+  progress(): TransferProgress | null;
+  /** Resolves with the host's answer, or rejects on failure or after an abort. */
+  result(): Promise<DownloadResult>;
+}
+
+/**
+ * Uploads a file to an HTTP endpoint through WeChat.
+ *
+ * The SDK reads no file, logs no path, and defines no upload protocol: it carries what
+ * the request describes to the host and reports what came back.
+ */
+export function wechatUploadFile(request: UploadRequest): UploadTransfer;
+
+/**
+ * Downloads a URL into WeChat's file system.
+ *
+ * The result carries the host's own file reference. The SDK reads no content, moves
+ * nothing, and makes no claim that the path outlives the session.
+ */
+export function wechatDownloadFile(request: DownloadRequest): DownloadTransfer;
+
+/**
  * Reads the system clipboard as text.
  *
  * An empty clipboard resolves with an empty string. The clipboard belongs to the
