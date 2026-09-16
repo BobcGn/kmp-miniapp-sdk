@@ -32,7 +32,7 @@ VS Code 可用于处理 `examples/wechat-miniprogram` 下的文件。Consumer Br
 
 这些命令有效，并已于 2026-09-15 完成验证。
 
-`:sdk:jsTest` suite 覆盖 Host boundary、error model、callback adaptation、cancellation、double completion、可选 abort、微信 error mapping、包含取消时宿主中止的 HTTP transport adaptation、生命周期状态迁移、导航适配、capability support 状态与版本门控、包含并发请求合并的权限生命周期行为、包含拒绝分类的隐私授权、包含过期分类的微信会话检查、包含逐项门控的微信剪贴板与震动 adapter、包含沙箱与文本边界的微信文件系统 adapter、包含坐标校验与隐私前置条件的微信定位 adapter、包含不可归因中断分类与结果校验的微信扫码 adapter、包含请求边界、结果校验与中断分类的微信媒体 adapter、包含模板校验与逐模板结果策略的微信订阅消息 adapter、包含逐 collector 监听配对的网络状态 adapter、包含 abort、进度与超时行为的微信上传与下载 adapter，以及 interop object construction。这些测试使用 fake callbacks，不代表能够访问真实 `wx` runtime。
+`:sdk:jsTest` suite 覆盖 Host boundary、error model、callback adaptation、cancellation、double completion、可选 abort、微信 error mapping、包含取消时宿主中止的 HTTP transport adaptation、生命周期状态迁移、导航适配、capability support 状态与版本门控、包含并发请求合并的权限生命周期行为、包含拒绝分类的隐私授权、包含过期分类的微信会话检查、包含逐项门控的微信剪贴板与震动 adapter、包含沙箱与文本边界的微信文件系统 adapter、包含坐标校验与隐私前置条件的微信定位 adapter、包含不可归因中断分类与结果校验的微信扫码 adapter、包含请求边界、结果校验与中断分类的微信媒体 adapter、包含模板校验与逐模板结果策略的微信订阅消息 adapter、包含逐 collector 监听配对的网络状态 adapter、包含 abort、进度与超时行为的微信上传与下载 adapter、包含参数转发、空白参数拒绝、精确中断分类与单次终态行为的微信支付 adapter，以及 interop object construction。这些测试使用 fake callbacks，不代表能够访问真实 `wx` runtime。
 
 ## Consumer Bridge
 
@@ -71,7 +71,7 @@ npm run smoke
 npm run typecheck
 ```
 
-smoke test 加载 consumer-facing CommonJS 模块、调用 `sdkVersion()`，并安装 fake global `wx` 验证 Storage、微信 login bootstrap、HTTP transport、lifecycle 转发、三种导航调用、运行时能力检测、权限生命周期、隐私授权、微信会话检查、剪贴板与震动能力、文件系统、定位、扫码、媒体选择、订阅消息请求，以及网络扩展（网络状态、上传与下载）。它还会断言 HTTP transport 交给 fake host 的内容，包括原始文本响应模式、导航收到的绝对页面路径，以及每个纳入门控的能力所报告的支持状态。该测试还会断言扫码、媒体选择、订阅消息请求与每个网络扩展都不查询、不请求任何权限，覆盖交互中断与相似失败文本的分类，确认宿主自身的状态行永远不会被当作模板 ID，并验证网络状态观察会注册一个 listener 后将其移除、以及中止传输会只停止一次宿主 task 并清理其进度 listener。该测试验证 module 与 adapter behavior，但不构成真实 Host 证据。TypeScript 使用 strict mode，并在不依赖 `any` 的情况下验证 Promise-based Storage、typed `WeChatLoginResult`、HTTP transport、lifecycle、导航、capability support、权限、隐私、会话检查、剪贴板、震动、文件系统、定位、扫码、媒体选择、订阅消息请求、网络状态与传输 exports。
+smoke test 加载 consumer-facing CommonJS 模块、调用 `sdkVersion()`，并安装 fake global `wx` 验证 Storage、微信 login bootstrap、HTTP transport、lifecycle 转发、三种导航调用、运行时能力检测、权限生命周期、隐私授权、微信会话检查、剪贴板与震动能力、文件系统、定位、扫码、媒体选择、订阅消息请求、网络扩展（网络状态、上传与下载）与标准支付。它还会断言 HTTP transport 交给 fake host 的内容，包括原始文本响应模式、导航收到的绝对页面路径，以及每个纳入门控的能力所报告的支持状态。该测试还会断言扫码、媒体选择、订阅消息请求与每个网络扩展都不查询、不请求任何权限，覆盖交互中断与相似失败文本的分类，确认宿主自身的状态行永远不会被当作模板 ID，并验证支付只以宿主接受的五个字段到达宿主、其 resolve 值不携带任何订单字段，验证网络状态观察会注册一个 listener 后将其移除、以及中止传输会只停止一次宿主 task 并清理其进度 listener。该测试验证 module 与 adapter behavior，但不构成真实 Host 证据。TypeScript 使用 strict mode，并在不依赖 `any` 的情况下验证 Promise-based Storage、typed `WeChatLoginResult`、HTTP transport、lifecycle、导航、capability support、权限、隐私、会话检查、剪贴板、震动、文件系统、定位、扫码、媒体选择、订阅消息请求、网络状态、传输与支付 exports。
 
 真实宿主验证按 [TESTING-ch.md](TESTING-ch.md) 中的检查清单执行，该清单是页面取值、console 输出与准备步骤的权威来源。只有在完成该运行后，某项 capability 才会在 [PROJECT_FACTS-ch.md](PROJECT_FACTS-ch.md) 中被记录为已通过宿主验证。
 
@@ -183,9 +183,47 @@ SDK 校验模板与响应关联，而不猜测答案词汇：ID 必须非空白�
 网络扩展目前仅有自动化覆盖。真实宿主验收尚未完成，且其中两半无法由自动化产出：真实传输需要一个位于 request domain 列表中的受控 HTTPS 服务（属 `BackendRequired`，也是示例在未提供之前报告 `NOT CONFIGURED` 的原因），而真实的网络切换需要一台能够真正切换连接的真机，任何模拟器都无法替代。WebSocket 未实现，在能力矩阵中保持 `Planned`。
 
 
+### 微信标准支付
+
+支付被实现为类型化转发器，而不是 SDK 能够自行推理的能力。契约读取自已安装开发者工具所带的基础库：`requestPayment` 恰好接收 `timeStamp`、`nonceStr`、`package`、`signType` 与 `paySign`，把 `signType` 限制为 `MD5` 与 `HMAC-SHA256`，并声明 success 形状为空；该库自身的支付流程把交互结束报告为 `requestPayment:cancel`。
+
+交给宿主的一切都来自消费者的可信后端，本 SDK 不产出其中任何一项。没有签名、没有商户密钥、没有预支付查询，也没有订单模型——这不是尚未实现的功能，而是边界本身：订单就是资金，其状态属于持有密钥并接收微信支付通知的后端。因此导出结果只说一件事 `interactionCompleted`，任何结果都不会被命名为 `paid`、`settled` 或 `confirmed`。支付相关的任何内容都不会被记录、缓存或持久化；请求模型在调用宿主之前拒绝空白字段，因为空白参数无法让宿主校验任何东西。
+
+失败词表被刻意收窄。只有确切消息 `requestPayment:cancel` 会成为 `HostInteractionInterrupted`；`requestPayment:fail cancel` 及其他一切都保持 `HostFailure`。宿主其他接口使用 `:fail cancel` 形式，但该 API 没有证据覆盖，在此处猜测等于判定「支付被主动关闭」还是「支付被破坏」。出于同样的原因，该中断也不声称用户取消。
+
+真实宿主验收尚未完成，且属于 `BackendRequired`：真实支付需要绑定本小程序 AppID 的合法商户号、真实订单、完成签名的可信后端与真机。模拟器的支付流程不是商户，因此它产出的任何内容都不能被记为支付结果。示例在本地提供参数之前报告 `NOT CONFIGURED` 且不调用宿主，该能力在这次运行发生前保持 `Partial`。
+
 微信文件系统已于 2026-09-15 完成真实宿主验收。微信开发者工具与 Android 真机均在基础库 3.17.2 上验证了固定测试文件的写入、读取匹配、存在检查、删除与删除后不存在；沙箱根和文件内容均未被显示或记录。自动化 Kotlin/JS、fake-host、CommonJS 与 TypeScript 检查也已通过。
 
 隐私授权目前仅有自动化覆盖。其真实宿主验收尚未完成，且取决于两件本仓库无法安排的事：小程序在 MP 后台声明的收集类型，以及该账号对宿主弹窗的作答。验证矩阵要求的证据是：`REQUIRED` 读数与宿主返回的协议名；成功后宿主报告 `NOT_REQUIRED`；以及拒绝被报告为 `REFUSED` 且要求仍然存在。
+
+### 计划中的虚拟支付（未实现）
+
+当前不存在任何虚拟支付代码，P1 也不计划实现：本轮的交付物是边界定义，见 [ARCHITECTURE-ch.md](ARCHITECTURE-ch.md)。以下内容是未来实现必须先确立的事项，记录在此是为了让这项工作不要从标准支付的文件开始。
+
+在写下任何代码前，必须先从官方来源回答以下问题，因为每一项都会改变设计：
+
+- `wx.requestVirtualPayment` 的参数表与结果形状；
+- 它的最低基础库版本，或是否只能依赖 `wx.canIUse`；
+- 其载体是小程序还是小游戏，以及哪些平台暴露该 API（Android、iOS、HarmonyOS 与开发者工具模拟器）；
+- 账号、主体与类目资格规则，以及是否存在灰度；
+- 是否需要权限或后台接口权限；
+- 交互结束是否产生稳定、确切、区别于其他失败的消息；
+- success callback 确立了哪些内容，以及由哪一方确认最终交易。
+
+未来实现会遵循与其他微信能力相同的路径 —— 强类型 `interop` 声明与 presence guard、带生产实现的 adapter 端口、经 `canIUse` 门控的 catalog 条目、强类型导出 —— 并额外增加两点支付专属要求：独立 capability key，以及绝不与 `WeChatPaymentRequest` 合并的请求模型。
+
+若实现，独立测试计划如下：
+
+| 层级 | 必须覆盖的内容 |
+| --- | --- |
+| Interop | option bag 的确切字段，且不包含官方参数表未证明的字段；callback 初始化与赋值；API 或 `wx` 不存在时 presence guard 返回 false；没有任何 raw JS 对象离开 interop 包。 |
+| Adapter | 完整的合法请求原样到达宿主；每个必填字段为空时被拒绝；成功、交互结束与失败各自只结算一次；重复与迟到回调不改变第一个终态；账号或平台不具备资格与 API 缺失被区分开；宿主是否提供 task 或 abort handle 由真实契约决定，而不是假设。 |
+| Capability | key 与 `wechat.request-payment` 不同，且同一个 key 绝不同时回答两者；API 存在与账号/平台资格被区分；通过 `canIUse` 版本门控；缺少该 API 的宿主报告 `UnsupportedCapability`。 |
+| Consumer | 示例默认 `NOT CONFIGURED`；未配置任何参数时不调用宿主；不打印也不显示敏感参数、凭据或宿主原始消息；一次成功调用显示为「交互结果」而不是「交易完成」；最终状态单独由后端验证。 |
+| Real host | 分平台运行（Android、iOS、HarmonyOS、开发者工具），一个平台的结果不得记为另一个平台的证据；具备合法资格的账号；真实但可处置的商品与订单；交互结束实际产生的信号；失败场景；服务端最终交易确认；截图与 Console 记录不含敏感数据。 |
+
+自动化无法替代资格与后端这两半：它们需要合格账号与真实订单，与标准支付完全相同。
 
 ## 开发原则
 

@@ -123,6 +123,41 @@ Capability 还可能有 SDK 能够强制、而不只是记录的前置条件。�
 
 设备调用成功只表示宿主接受并执行了它，仅此而已：尤其是震动，只能由实际握持设备的人确认，因此 SDK 中没有任何部分把震动报告为「已被感知」。
 
+支付是这条规则的极端情形。SDK 承担的部分是类型化转发器：把可信后端产出的五个参数带给微信自身的界面，并只报告宿主说过的那一件事——支付交互已完成——而不报告任何关于订单的内容。这是架构决定而不是风格偏好：权威的订单状态存在于持有商户密钥、并接收微信支付自身通知的后端；若客户端能判定订单已支付，它就成了关于资金的第二个事实来源。本 SDK 因此没有签名、没有密钥、也没有订单模型。日后把结果命名为 `paid` 或 `confirmed` 属于改变 SDK 的主张，而不是增加一个字段——这正是导出类型只携带 `interactionCompleted` 的原因。
+
+### 计划中的虚拟支付边界（未实现）
+
+虚拟支付使用与标准支付不同的微信 API 名称。本项目因此把它规划为独立 capability，而不是现有支付能力的一种模式；其资格条件与后端流程仍未验证。本节内容没有实现、没有注册进 capability catalog、也没有导出；本节存在的意义是让后续实现不要从扩宽标准支付模型开始，并让读者能区分「边界决策」与「路线图愿望」。
+
+```text
+Standard Payment
+  -> physical/general commerce boundary
+  -> wx.requestPayment
+  -> independent request/outcome model
+
+Virtual Payment
+  -> virtual goods/services boundary
+  -> wx.requestVirtualPayment
+  -> independent eligibility, request, outcome and backend workflow
+```
+
+这种隔离是规则而不是偏好：
+
+- **独立 capability key。** 标准支付是 `wechat.request-payment`。虚拟支付需要自己的 key —— `wechat.request-virtual-payment` 是候选，实现时按仓库既有命名规范最终确定 —— 因为一个 key 同时回答两者会让 `Supported` 变得含糊。
+- **独立的请求与结果模型。** 任何虚拟支付字段都不进入 `WeChatPaymentRequest`，也不建立同时携带两套字段、靠可空值区分半边归属的模型：那样的 DTO 会让每个调用方先判断自己拿的是哪一半，并可能让虚拟支付的取值进入 `wx.requestPayment`。复用 `JsPaymentOutcome` 同样不在计划内 —— 标准支付的结果语义绑定在那一次具体宿主调用上，而离线来源无法证明虚拟支付的 success callback 含义相同。名称相似不构成语义相同的证明。
+- **两者之间不互为降级路径。** 标准支付失败或不可用时不会改用虚拟支付重试，反之亦然。不同的 API 名称足以让本项目保持边界隔离；当前无法取得的官方契约与本仓库都不构成「可互换」的证据。
+- **没有客户端凭据。** 与标准支付一致，SDK 不计算签名，也不持有密钥、会话、支付 token 或订单。若官方契约要求出现客户端可见的凭据，那它是可信后端产出、由本 SDK 转发的值，绝不是本 SDK 生成的值。
+- **API 存在不等于已确立资格。** 在取得官方资格规则之前，未来实现不得把「API 存在」等同于「本账号可用」。SDK 声称的每个平台与账号范围都必须独立举证；Android 上的结果不能说明 iOS、HarmonyOS 或开发者工具模拟器的任何情况。
+
+计划中的形状（在写下任何一行之前都必须先对照官方契约确认）：
+
+- `VirtualPaymentRequest` —— 只包含官方参数表能证明的字段，必填字段非空白；不为未知项保留可空占位，也不与标准支付请求共享字段。
+- `VirtualPaymentOutcome` —— 只命名宿主 success callback 真正确立的内容（离线证据目前无法说明这是什么）。与标准支付一致，最终交易状态属于可信后端，且任何结果都不会被命名为 `paid`、`settled` 或 `confirmed`。
+- `VirtualPaymentFailure` 语义 —— 在适用处复用既有错误模型（同样的 `HostFailure`、`HostInteractionInterrupted` 与 `UnsupportedCapability` 区分），而不是为单个能力另建一套错误层级；交互结束是否有稳定官方信号目前未知，因此不凭猜测规划取消分类。
+- 敏感取值 —— 官方契约标为签名、token、会话或订单凭据的任何值，都不记录、不显示、不持久化，与标准支付请求的既有要求一致。
+
+待办项（一律记为未知而不是猜测）：参数表与结果形状、最低基础库版本、属于小程序还是小游戏、分平台可用性、账号与类目资格规则、是否有权限或后台接口权限、success callback 是否携带任何交易事实。这些是未来实现必须先从官方来源回答的问题；在此之前该能力在[能力矩阵](platforms/wechat/WECHAT_CAPABILITIES-ch.md)中保持 `Planned`，背后没有任何代码。
+
 ## 4. JS Interop 边界
 
 `external`、`dynamic` 和 `js()` 等 JavaScript-specific constructs 只能存在于 `jsMain`。原始 platform contracts 限制在 `jsMain/.../host/wechat/interop`。

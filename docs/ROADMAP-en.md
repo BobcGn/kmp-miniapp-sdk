@@ -85,6 +85,7 @@ An internal callback-to-coroutine primitive now adapts suitable callback APIs in
 - Network, Navigation, Lifecycle, and multiple WeChat Host capabilities are implemented; PROJECT_FACTS and the WeChat capability matrix remain authoritative for exact status.
 - BOB-60 real-host privacy acceptance remains blocked by account/backend conditions; BOB-73 subscription-message real-host acceptance is in progress.
 - Payment, Upload/Download/Network Status, BLE, and Virtual Payment continue under their own issues and are not made implemented by the consumer-integration track.
+- The virtual-payment boundary is decided in BOB-74 and recorded in [ARCHITECTURE-en.md](ARCHITECTURE-en.md): a capability separate from Standard Payment, with its own key, request, outcome and backend workflow, and no fallback between the two. P1 implements none of it — the capability is `Planned` in the [WeChat capability matrix](platforms/wechat/WECHAT_CAPABILITIES-en.md) and no code, catalog entry or export exists. Standard payment (BOB-59) is implemented and automated-tested, and its real-host acceptance is blocked on a legal merchant environment, which is an environment block rather than an implementation gap.
 - Build automation and consumer distribution close through the urgent BOB-75 to BOB-85 track above.
 
 ## Future / Exploratory

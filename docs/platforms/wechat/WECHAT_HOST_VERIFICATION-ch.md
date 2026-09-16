@@ -66,6 +66,7 @@
 | Network Status | Unit + Contract + Node + DeveloperTools + RealDevice | 已完成 `buildMiniAppSdk`；一台能够真正切换连接的真机 | 运行测试；打开 index，检查能力、读取当前网络，然后启动观察、切换连接（Wi-Fi 与蜂窝互切，或断开再恢复），再停止观察 | `network-status-query=Supported` 且 `network-status-listener=Supported`；查询报告连接类型与 `connected=true`；停止时报告 `network observation: PASS events=<大于 0>, last=<切换到的类型>`；只有 `on` 的宿主报告监听不支持 | 待补 —— 模拟器没有可切换的连接，因此需要真机 | 每次网络状态 interop、adapter、catalog 或 export 变更 |
 | Upload | Unit + Contract + Node + DeveloperTools + RealDevice + BackendRequired | 已完成 `buildMiniAppSdk`；一个列入 request domain 的受控 HTTPS endpoint，以及沙箱中的文件；未提供时示例报告 `NOT CONFIGURED` | 运行测试；打开 index，使用 Network Extensions 卡片：检查能力、执行上传检查，然后对一个较慢的 endpoint 重试并在进行中取消 | `wechat.upload-file=Supported`；`upload check: PASS status=…, bytes=…, progressSeen=<true\|false>`；取消时报告 `upload cancel: PASS abortInvoked=true` 且卡片显示 `CANCELLED`；不出现 URL、header、路径或响应正文 | 待补 —— 属 `BackendRequired`：公共 endpoint 不构成证据，`https://example.com/` 也不是上传服务 | 每次上传 interop、adapter、catalog 或 export 变更 |
 | Download | Unit + Contract + Node + DeveloperTools + RealDevice + BackendRequired | 已完成 `buildMiniAppSdk`；一个列入 request domain 的受控 HTTPS endpoint | 运行测试；打开 index 使用卡片：检查能力、执行下载检查，然后对一个较慢的 endpoint 重试并在进行中取消 | `wechat.download-file=Supported`；`download check: PASS status=…, fileReported=true, progressSeen=<true\|false>`；取消时报告 `download cancel: PASS abortInvoked=true`；不出现路径或正文 | 待补 —— 与上传相同，属 `BackendRequired` | 每次下载 interop、adapter、catalog 或 export 变更 |
+| Standard Payment | Unit + Contract + Node + DeveloperTools + RealDevice + BackendRequired | 已完成 `buildMiniAppSdk`；绑定本小程序 AppID 的合法微信支付商户号；负责创建订单并生成签名的可信后端；装有微信客户端的真机 | 运行测试；打开 index，使用 Standard Payment 卡片：检查能力、在未配置状态下请求、在本地粘贴来自可信后端的参数后再请求，分别完成支付、主动关闭界面、复现一次支付被拒 | `wechat.request-payment=Supported`；未配置时报告 `NOT CONFIGURED` 且完全不调用宿主；完成时报告 `payment request: PASS interactionCompleted=true`，这不是订单事实；交互结束时报告 `payment request: CANCELLED cause=indeterminate`，保留不确定性而不归因于用户；失败时报告 `payment request: FAIL reason=<封闭标签>` 且不带宿主文本；页面与 Console 中都不出现任何支付参数、签名或商户标识；最终订单结果以可信后端为准，而不是客户端 | Pending —— `BackendRequired`：自动化部分已通过，真实宿主部分需要合法商户环境 | 每次支付 interop、adapter、catalog、错误映射或 export 变更 |
 
 `VersionDependent` 无法在开发者工具中产出：其可选的最低调试基础库为 2.21.4，高于 Runtime Detection 记录的 2.20.1 边界。该状态仅由自动化测试覆盖。这属于验证环境限制，不是未实现功能。
 
@@ -74,6 +75,12 @@
 上传与下载检查同样有一半属于 `BackendRequired`：真实传输需要一个消费者列入 request domain 的受控 HTTPS 服务，因此任何已提交的 endpoint 都无法替代。网络切换则不同——它不需要服务，但需要一台能够真正切换连接的真机，模拟器无法提供。
 
 订阅消息验收有一半属于 `BackendRequired`：客户端只能确立订阅状态，消息是否真正发送或送达取决于微信后台模板与可信后端。该部分单独记录，且绝不从一次成功的客户端请求推断出来。
+
+标准支付的 `BackendRequired` 部分比其他能力更大，因为答案的绝大部分不在客户端。参数必须来自持有商户密钥并完成签名的可信后端，订单结果必须来自同一后端、微信支付的异步通知或订单查询。因此真实宿主验收需要绑定本小程序 AppID 的合法商户号、真实订单与受控后端。缺少这些条件时自动化契约依然成立，能力保持 `Partial`：客户端 callback 永不被记录为支付或订单事实，也不会从模拟器推断任何结果 —— 模拟器的支付流程不是商户。
+
+真实主动关闭信号是其中具体的待办项。所带基础库自身支付流程把交互结束报告为 `requestPayment:cancel`，只有这条确切消息被分类为交互中断；其其他接口使用的 `requestPayment:fail cancel` 形式在合法商户环境给出真实关闭产物之前，被有意保留为 `HostFailure`。两种情况下 SDK 都不声称用户取消。
+
+虚拟支付仍有标准支付无法回答的资格问题，正是这一点让该能力保持 `Planned` 而不是进入实现：一个实现可能通过全部自动化检查，却对某个具体账号不可用。未来运行需要：按届时官方规则确认具备资格的账号与类目、真实但可处置的虚拟商品与订单、每个所声称平台的独立通过记录、交互结束实际产生的确切信号，以及服务端最终交易确认。这些都没有任何离线依据：所带开发者工具基础库没有定义虚拟支付 API，因此该模拟器无法提供正向能力证据，官方页面在本环境也无法抓取。在这次运行出现之前，不记录任何平台、账号或版本结论，该能力也不在 SDK 中注册。
 
 详细页面和 Console 断言继续以 [TESTING-ch.md](../../TESTING-ch.md) 为准。本表负责选择环境和管理证据，不复制完整页面操作说明。
 
@@ -92,7 +99,7 @@
 
 | Tracking | Capability | Minimum Verification |
 | --- | --- | --- |
-| BOB-74 | Virtual Payment Boundary | 架构与文档审查；如实现则 RealDevice + BackendRequired。 |
+| BOB-74 | Virtual Payment Boundary | 架构与文档审查 —— 即本 Issue 的交付物，其结果是该能力保持 `Planned`。若未来实现：分平台 RealDevice 运行（Android、iOS、HarmonyOS、开发者工具），一个平台的结果不得带到另一个平台；具备合法资格的账号与类目；真实但可处置的虚拟商品与订单；交互结束实际产生的信号；以及服务端最终交易的 `BackendRequired` 证据。 |
 | BOB-69 | BLE PoC | Unit + Contract + RealDevice；覆盖发现、连接、取消、停止与 listener cleanup；保持 Experimental。 |
 | BOB-62 | Bundle Baseline | 自动尺寸报告 + DeveloperTools 启动观察；记录 commit 和构建模式。 |
 

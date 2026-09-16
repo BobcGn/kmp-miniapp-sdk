@@ -102,6 +102,7 @@ The following procedure is the DeveloperTools checklist for currently implemente
 | Media | The `Media` card shows the capability answer and `PASS`, `INTERRUPTED`, or `FAIL` for a selection | `[kmp-miniapp-sdk] media capability: PASS wechat.choose-media=…`, `media choose: PASS count=1, typesValid=true, metadataValid=true`, `media choose: INTERRUPTED cause=indeterminate` |
 | Subscription Message | The `Subscription Message` card shows the capability answer and the request's `PASS`, `NOT CONFIGURED`, or `FAIL` | `[kmp-miniapp-sdk] subscription capability: PASS wechat.request-subscribe-message=…`, `subscription request: PASS accepted=N, otherStatuses=N, signals=…`, `subscription request: FAIL reason=HostFailure, signal=…` |
 | Network extensions | The `Network Extensions` card shows each capability answer, the current network, and the observation, upload, and download states | `[kmp-miniapp-sdk] network capabilities: PASS query=…, listener=…, upload=…, download=…`, `network type: PASS connected=true, type=WIFI`, `network observation: PASS events=N, last=…`, `upload check: PASS\|NOT CONFIGURED`, `download check: PASS\|NOT CONFIGURED` |
+| Standard payment | The `Standard Payment` card shows the capability answer and the request's `PASS`, `NOT CONFIGURED`, `CANCELLED`, or `FAIL` | `[kmp-miniapp-sdk] payment capability: PASS wechat.request-payment=…`, `payment request: NOT CONFIGURED`, `payment request: PASS interactionCompleted=true`, `payment request: CANCELLED cause=indeterminate`, `payment request: FAIL reason=<closed label>` |
 | Storage | `Storage verification: PASS` | `[kmp-miniapp-sdk] storage: PASS first=first, overwritten=second, missing=null` |
 | Client login code | `Client login code: PASS` | `[kmp-miniapp-sdk] auth bootstrap: PASS codeReceived=true, length=<positive integer>` |
 | Network | `Network verification: PASS` | `[kmp-miniapp-sdk] network: PASS status=200, bytes=<positive integer>` |
@@ -289,7 +290,19 @@ Steps 3, 7, 8, and 9 are the ones automation cannot produce. Step 3 needs a devi
 
 Step 5 is the guard that the example's default state is honest: with nothing configured the page makes no host call at all, so no upload can be mistaken for a passing check. A `progressSeen=false` in step 7 or 8 is not a failure: a small transfer can complete before the host reports anything.
 
-18. Record which checks you observed and which you did not. A capability is recorded as host-verified in [PROJECT_FACTS-en.md](PROJECT_FACTS-en.md) only after a real-host run for that capability.
+18. Verify standard payment. Nothing touches the payment interface while the page loads, so every step follows a tap. The page's log lines never contain a payment parameter, a signature, a merchant identifier, or the host's own failure text; a failure is reduced to a closed label instead.
+
+| Step | Tap | Expected |
+| --- | --- | --- |
+| 1 | `Check payment capability` | `[kmp-miniapp-sdk] payment capability: PASS wechat.request-payment=Supported`, or `Unsupported` on a host without the API |
+| 2 | `Request payment` with nothing configured | `[kmp-miniapp-sdk] payment request: NOT CONFIGURED`, and no host call at all: the page inspects its placeholder before it calls the SDK |
+| 3 | With a legal merchant environment, put the backend's parameters into the page's local placeholder (never commit them), then `Request payment` and complete the payment | `[kmp-miniapp-sdk] payment request: PASS interactionCompleted=true`. **This is not an order.** Confirm it with the trusted backend, which learns the truth from WeChat Pay's server API, its asynchronous notification, or an order query, and record that server-side result as the evidence |
+| 4 | `Request payment` and dismiss the payment interface | `[kmp-miniapp-sdk] payment request: CANCELLED cause=indeterminate`, and the card does not claim that the user cancelled. Which message a real dismissal produces — `requestPayment:cancel` or `requestPayment:fail cancel` — is the open item this run exists to settle |
+| 5 | `Request payment` with parameters the host refuses, such as an expired or already-used prepay package | `[kmp-miniapp-sdk] payment request: FAIL reason=host-failure`, with no host text on the page or in the console |
+
+Steps 3 to 5 cannot be produced here at all: they need a legal WeChat Pay merchant account bound to this mini program's AppID, a real order, and a trusted backend that signs, which is `BackendRequired`. The Developer Tools simulator is not a merchant, so nothing it shows may be recorded as a payment result. Step 2 is the guard that the committed default is honest, and it is the only one of these steps that runs without that environment.
+
+19. Record which checks you observed and which you did not. A capability is recorded as host-verified in [PROJECT_FACTS-en.md](PROJECT_FACTS-en.md) only after a real-host run for that capability.
 
 The Storage check writes a dedicated test key, verifies overwrite, removes it, and confirms that the missing key reads as `null`. The network check issues a `GET` to `https://example.com/` and reports the status code and body length; point the example's `networkUrl` constant at any reachable HTTPS endpoint when verifying a different host.
 

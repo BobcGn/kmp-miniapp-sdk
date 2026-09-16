@@ -147,6 +147,10 @@ BOB-75 只有在 BOB-83、BOB-78、BOB-76、BOB-82、BOB-81、BOB-84、BOB-80、
 
 在标准支付模型稳定后，独立定义 `requestVirtualPayment` 的 capability、请求与结果语义、平台限制和后端责任。P1 不要求生产实现，但必须在能力矩阵中给出明确状态，不得与标准支付合并为充满可空字段的 DTO。
 
+**本轮结论（2026-09-16）**：边界已定义，记录于 ARCHITECTURE 的「计划中的虚拟支付边界（未实现）」与 DEVELOPMENT 的「计划中的虚拟支付（未实现）」两节 —— 独立 capability key（候选 `wechat.request-virtual-payment`）、独立请求与结果模型、与标准支付之间不存在降级路径、资格不等于 API 存在、分平台分账号、无客户端签名或凭据。能力矩阵状态为 `Planned`：不注册 catalog、不导出、无任何代码。
+
+事实证据：所带开发者工具基础库（18,152,387 字节）中 `requestVirtualPayment` 出现 **0** 次，而 `requestPayment` 出现 7 次（含 `canIUse` 元数据表条目）。官方页面在本环境无法抓取，因此参数表、最低基础库版本、平台可用性与账号/类目资格均记为**待确认**，不得由路线图、社区文章或标准支付行为推断。
+
 ### 第 16 步：BOB-69 `[微信][P1][实验性] 验证 BLE 事件驱动能力模型`
 
 只进行最小实验：打开适配器、开始发现、设备发现事件、停止发现、连接和断开。重点验证 Flow、取消、连接生命周期、背压、重复事件，以及 `onXXX/offXXX` 清理。完成后仍标记为 Experimental，不得宣传为完整或稳定 BLE SDK。
@@ -167,7 +171,7 @@ BOB-58、BOB-65、BOB-72、BOB-66、BOB-61、BOB-63、BOB-73 完成后，确认�
 
 ### Gate C：复杂异步与安全
 
-BOB-68、BOB-59、BOB-74、BOB-69 完成后，确认 abort、listener cleanup、用户取消、权限拒绝、支付后端责任和事件资源生命周期模型成立。
+BOB-68、BOB-59、BOB-74、BOB-69 完成后，确认 abort、listener cleanup、用户取消、权限拒绝、支付后端责任和事件资源生命周期模型成立。BOB-74 以边界定义与文档审查计入本 Gate，本轮不实现虚拟支付，能力保持 `Planned`。
 
 ### Gate D：收尾
 

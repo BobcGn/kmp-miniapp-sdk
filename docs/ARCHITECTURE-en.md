@@ -123,6 +123,41 @@ A capability whose request and result are built on a host *file* stays behind th
 
 A device call resolving means the host accepted and performed it. It never means more than that: a vibration in particular can only be confirmed by someone holding the device, so nothing in the SDK reports one as having been felt.
 
+Payment is the extreme case of that rule. The SDK's part is a typed forwarder: it carries the five parameters a trusted backend produced to WeChat's own interface and reports the one thing the host said — that the payment interaction completed — instead of anything about an order. That is architectural rather than stylistic. The authoritative order state lives in a backend that holds the merchant key and receives WeChat Pay's own notification, so a client able to decide an order was paid would be a second source of truth for money; this SDK has no signature, no key, and no order model for that reason. Naming a result `paid` or `confirmed` later would change what the SDK claims rather than add a field, which is why the exported type carries `interactionCompleted` and nothing else.
+
+### Planned virtual-payment boundary (not implemented)
+
+Virtual payment is represented by a different WeChat API name from standard payment. This project therefore plans it as a separate capability rather than a mode of the existing one; its eligibility and backend workflow remain unverified. Nothing in this section is implemented, registered in the capability catalog, or exported; the section exists so that a later implementation does not begin by widening the standard-payment model, and so that a reader can tell a boundary decision from a roadmap wish.
+
+```text
+Standard Payment
+  -> physical/general commerce boundary
+  -> wx.requestPayment
+  -> independent request/outcome model
+
+Virtual Payment
+  -> virtual goods/services boundary
+  -> wx.requestVirtualPayment
+  -> independent eligibility, request, outcome and backend workflow
+```
+
+The separation is a rule, not a preference:
+
+- **Separate capability key.** Standard payment is `wechat.request-payment`. Virtual payment needs its own key — `wechat.request-virtual-payment` is the candidate, to be settled against the existing naming rules when it is implemented — because one key answering for both would make `Supported` ambiguous.
+- **Separate request and outcome models.** No virtual-payment field enters `WeChatPaymentRequest`, and no model carries both sets with nullable halves: such a DTO would make every consumer ask which half it holds, and would let a virtual-payment value reach `wx.requestPayment`. Reusing `JsPaymentOutcome` is not planned either — the standard-payment outcome is tied to one specific host call, and nothing available offline establishes that the virtual-payment success callback means the same thing. A similar name is not proof of the same meaning.
+- **No fallback between them.** A failed or unavailable standard payment is never retried as a virtual payment, or the reverse. Their distinct API names are enough for this project to keep the boundaries separate; neither the unavailable official contract nor this repository is evidence that they are interchangeable.
+- **No client-side credentials.** As with standard payment, the SDK would compute no signature and hold no key, session, payment token or order. If the official contract requires a client-visible credential, it is a value a trusted backend produced and this SDK forwards, never one this SDK generates.
+- **API presence does not establish eligibility.** Until the official eligibility rules are retrieved, a future implementation must not equate "the API exists" with "this account may use it". Availability must be evidenced separately for every platform and account scope the SDK claims; a result on Android says nothing about iOS, HarmonyOS, or the Developer Tools simulator.
+
+Planned shape, to be confirmed against the official contract before any of it is written:
+
+- `VirtualPaymentRequest` — only the fields the official parameter table proves, each required one non-blank; no nullable placeholder for an unknown, and no field shared with the standard-payment request.
+- `VirtualPaymentOutcome` — naming only what the host's success callback actually establishes, which offline evidence cannot yet state. As with standard payment, the final transaction state would belong to a trusted backend, and no result would be named `paid`, `settled` or `confirmed`.
+- `VirtualPaymentFailure` semantics — reuse of the existing error model where it fits (the same `HostFailure`, `HostInteractionInterrupted` and `UnsupportedCapability` distinctions) rather than a parallel hierarchy for one capability; whether an ended interaction has a stable official signal is unknown, so no cancellation classification is planned from a guess.
+- Sensitive values — anything the official contract marks as a signature, token, session or order credential is neither logged, displayed nor persisted, exactly as the standard-payment request already requires.
+
+Open items, all recorded as unknown rather than guessed: the parameter table and result shape, the minimum base library version, whether the surface is a mini program or a mini game, per-platform availability, the account and category eligibility rules, whether any permission or backend interface permission applies, and whether the success callback carries any transaction fact at all. These are the questions a future implementation must answer from official sources first; until then the capability stays `Planned` in the [capability matrix](platforms/wechat/WECHAT_CAPABILITIES-en.md) with no code behind it.
+
 ## 4. JS Interop Boundary
 
 JavaScript-specific constructs such as `external`, `dynamic`, and `js()` may exist only in `jsMain`. Raw platform contracts are restricted to `jsMain/.../host/wechat/interop`.

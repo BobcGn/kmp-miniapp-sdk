@@ -40,6 +40,8 @@
 - 微信扫码已实现，并通过自动化检查、微信开发者工具与 Android 真机验证
 - 微信媒体选择已实现，并通过自动化检查、开发者工具与 Android 真机运行验证
 - 微信订阅消息请求已实现并通过自动化检查；Android 真机已验证运行时支持与零模板保护，弹窗结果仍受阻于当前 AppID 下的有效模板
+- 微信标准支付已实现，并作为「后端参数的类型化转发器」通过自动化检查；Android 真机已验证运行时支持与「未配置参数」保护，真实支付验收仍受阻塞于合法商户环境与可信后端
+- 虚拟支付未实现：不存在请求、结果、capability 条目或导出，且所带开发者工具基础库中没有可发现的虚拟支付契约。其边界记录于 ARCHITECTURE，状态在能力矩阵中为 `Planned`
 
 构建基线与第一条端到端消费链路均已通过验证。Common layer 包含最小 Host identity、Capability support 与强类型 platform escape-hatch contracts。Production code 通过 Host 与 adapter boundaries 调用 typed 微信 Storage contracts，完整 Storage 链路已通过真实宿主验证。
 
@@ -234,6 +236,12 @@ Kotlin/JS platform variants 及其传递依赖由 Gradle 在依赖解析期间�
 - 传输报告宿主自己的 task：`abort()` 停止它（最多一次，并会说明是否真的触发了宿主 abort），`lastProgress()` 报告宿主给出的最后一个数值而不是估算值，取消等待也会停止宿主操作。进度 listener 最多注册一次，并在包括 abort 在内的每条终止路径上被移除。
 - 已完成的传输就是一次已完成的 exchange：非 2xx 状态会 resolve，与 HTTP transport capability 完全一致，只有传输层失败才 reject。超时是宿主的确切消息 `uploadFile:fail timeout` 或 `downloadFile:fail timeout`（由该基础库自身的错误映射产出）；仅仅提到 timeout 的消息仍然是 `HostFailure`。
 - 网络扩展不查询也不请求任何权限。访问某个 host 需要它位于消费者的 request domain 列表中，那是对小程序的配置约束而不是 SDK 能索取的权限；可离线来源也没有把任何隐私条件与这些 API 绑定。
+- `wechatRequestPayment()` 只把可信后端产出的五个参数 —— `timeStamp`、`nonceStr`、`package`、`signType` 与 `paySign` —— 转发给微信自身的支付界面，并且只报告宿主说「交互已完成」。SDK 不计算签名、不持有商户密钥、不获取预支付标识，也没有订单模型。空白字段在调用宿主之前就被拒绝，`signType` 是基础库所接受的两个取值构成的封闭集合。
+- 支付相关的任何内容都不会被 SDK 记录、缓存或持久化：`nonceStr`、`package` 与 `paySign` 是一次交互的凭据。导出结果只带 `interactionCompleted` 一个字段，因此一次成功调用不可能被误读为订单已支付，SDK 也从不用 `paid`、`settled` 或 `confirmed` 命名任何结果。
+- 支付不请求任何权限：可离线来源没有为该 API 给出任何 scope 或隐私条件。商户是否已配置、订单是否存在、参数是否可接受，都是宿主被调用时才给出的答案，因此其中任何一项都不会被报告为「宿主不支持」。
+- 确切消息 `requestPayment:cancel` —— 即所带基础库自身支付流程产出的形式 —— 映射为 `HostInteractionInterrupted`，且 SDK 不声称用户取消。`requestPayment:fail cancel` 及其他所有消息在合法商户环境提供真实关闭证据之前，保持 `HostFailure`。
+- 虚拟支付未实现：不存在对应的请求、结果、capability 条目或导出。对同一离线基础库的探测结果是 `requestPayment` 出现 7 次（含其 `canIUse` 元数据条目），而 `requestVirtualPayment` 在整个文件中出现 0 次，因此该来源无法提供正向能力证据；本次探测没有执行运行时能力检查。这些是关于单一离线来源的事实，不是关于真实微信客户端的事实：参数表、最低基础库版本、平台可用性以及账号/类目资格均未确立，该能力在能力矩阵中保持 `Planned`，SDK 中没有任何注册。[ARCHITECTURE-ch.md](ARCHITECTURE-ch.md) 固定了未来实现必须遵守的边界 —— 独立 key、独立请求与结果模型、两种支付产品之间不存在降级路径，以及没有客户端签名、密钥、会话或订单。
+
 - 自动测试覆盖版本比较与解析、四种支持状态、版本边界本身、版本不可读时的回退、完全无法探测的宿主、runtime 只读取一次，以及 `UnsupportedCapability` guard。
 - 微信开发者工具已验证前台 lifecycle 状态、页面 route，以及 `navigateTo` → `redirectTo` → `navigateBack` 的完整页面栈路径。
 - [TESTING-ch.md](TESTING-ch.md) 记录了两层测试体系、各层可用的 fake，以及可复现的真实宿主检查清单。
@@ -255,6 +263,7 @@ Kotlin/JS platform variants 及其传递依赖由 Gradle 在依赖解析期间�
 - 相机原生组件、连续视觉识别、自建二维码或条码解析器、通用相机界面，以及扫码结果的业务解析、持久化或上传
 - 所选媒体的播放器、编辑器、压缩或转码器；图片识别；上传、下载或后端存储；对宿主临时文件的长期管理；微信媒体 API 的完整封装；以及宿主选择界面本身
 - 通用推送通知抽象；由后端发送订阅消息；模板管理；静默或页面加载时的订阅请求；以及任何「已同意订阅即表示消息已发送或将要送达」的说法
+- 客户端签名、商户密钥或证书、订单创建或任何订单模型、退款、对账，以及 `requestVirtualPayment` 边界；也包括任何「客户端支付交互完成即代表订单已支付」的说法
 - 带重试、缓存或认证的通用 HTTP 客户端；断点续传、下载缓存或下载管理器；读取、移动、解压或解析下载内容；WebSocket 客户端；以及任何「下载结果的路径会超出本次会话」的说法
 - Request 或 response body 序列化、cookie 处理、redirect 策略、streaming、upload 或 download
 - 服务端 code exchange、已认证用户/session 管理和 token refresh

@@ -85,6 +85,7 @@ BOB-85 必须同时具备以下证据，缺一项都不得用“实现完成”�
 - Network、Navigation、Lifecycle 与多项微信 Host capability 已落地；精确状态以 PROJECT_FACTS 与微信能力矩阵为准。
 - BOB-60 隐私真实宿主验收仍被账号后台条件阻塞；BOB-73 订阅消息正在真实宿主验收。
 - Payment、Upload/Download/Network Status、BLE 与 Virtual Payment 仍按各自 Issue 推进，不因消费者集成主线而被视为已实现。
+- 虚拟支付边界已在 BOB-74 中确定并记录于 [ARCHITECTURE-ch.md](ARCHITECTURE-ch.md)：它是与标准支付相互独立的 capability，拥有自己的 key、请求、结果与后端流程，两者之间不存在降级路径。P1 不实现其中任何部分 —— 该能力在[微信能力矩阵](platforms/wechat/WECHAT_CAPABILITIES-ch.md)中为 `Planned`，且不存在任何代码、catalog 注册或导出。标准支付（BOB-59）已实现并具备自动化测试，其真实宿主验收被合法商户环境阻塞，属于环境阻塞而不是实现缺口。
 - Build automation 与 consumer distribution 由上面的 BOB-75 至 BOB-85 紧急主线收口。
 
 ## 未来 / 探索性内容

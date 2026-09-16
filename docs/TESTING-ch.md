@@ -102,6 +102,7 @@ cd examples/wechat-miniprogram && npm run smoke && npm run typecheck
 | Subscription Message | `Subscription Message` 卡片显示能力判定，以及请求的 `PASS`、`NOT CONFIGURED` 或 `FAIL` | `[kmp-miniapp-sdk] subscription capability: PASS wechat.request-subscribe-message=…`、`subscription request: PASS accepted=N, otherStatuses=N, signals=…`、`subscription request: FAIL reason=HostFailure, signal=…` |
 | Network extensions | `Network Extensions` 卡片显示每项能力判定、当前网络，以及观察、上传、下载状态 | `[kmp-miniapp-sdk] network capabilities: PASS query=…, listener=…, upload=…, download=…`、`network type: PASS connected=true, type=WIFI`、`network observation: PASS events=N, last=…`、`upload check: PASS\|NOT CONFIGURED`、`download check: PASS\|NOT CONFIGURED` |
 | Clipboard 与震动 | `Clipboard and Haptics` 卡片的写入、读取、短震动、长震动四项均为 `PASS` | `[kmp-miniapp-sdk] clipboard write: PASS`、`clipboard read: PASS matched=true`、`haptics short: PASS`、`haptics long: PASS` |
+| Standard payment | `Standard Payment` 卡片显示能力答案，以及请求的 `PASS`、`NOT CONFIGURED`、`CANCELLED` 或 `FAIL` | `[kmp-miniapp-sdk] payment capability: PASS wechat.request-payment=…`、`payment request: NOT CONFIGURED`、`payment request: PASS interactionCompleted=true`、`payment request: CANCELLED cause=indeterminate`、`payment request: FAIL reason=<封闭标签>` |
 | Storage | `Storage verification: PASS` | `[kmp-miniapp-sdk] storage: PASS first=first, overwritten=second, missing=null` |
 | Client login code | `Client login code: PASS` | `[kmp-miniapp-sdk] auth bootstrap: PASS codeReceived=true, length=<正整数>` |
 | Network | `Network verification: PASS` | `[kmp-miniapp-sdk] network: PASS status=200, bytes=<正整数>` |
@@ -289,7 +290,19 @@ Adapter 要求精确关联：缺少或多出的模板键、空白或非文本状
 
 第 5 步是示例默认状态诚实性的保障：未配置时页面完全不调用宿主，因此不会有任何上传被误当成通过的检查。第 7 或 8 步出现 `progressSeen=false` 并不代表失败：小传输可能在宿主报告任何进度之前就已完成。
 
-18. 记录你观察到了哪些检查项、哪些没有观察到。只有在某项 capability 完成真实宿主运行后，才会在 [PROJECT_FACTS-ch.md](PROJECT_FACTS-ch.md) 中被记录为已通过宿主验证。
+18. 验证标准支付。页面加载期间不会触碰支付界面，因此每一步都由点击触发。页面的日志行中不会出现任何支付参数、签名、商户标识或宿主自身的失败文本；失败会被归约为一个封闭标签。
+
+| 步骤 | 点击 | 期望结果 |
+| --- | --- | --- |
+| 1 | `Check payment capability` | `[kmp-miniapp-sdk] payment capability: PASS wechat.request-payment=Supported`，在缺少该 API 的宿主上为 `Unsupported` |
+| 2 | 未配置任何参数时点击 `Request payment` | `[kmp-miniapp-sdk] payment request: NOT CONFIGURED`，且完全不调用宿主：页面在调用 SDK 之前先检查本地占位配置 |
+| 3 | 在具备合法商户环境时，把后端参数填入页面的本地占位配置（绝不提交），然后点击 `Request payment` 并完成支付 | `[kmp-miniapp-sdk] payment request: PASS interactionCompleted=true`。**这不是订单事实**，必须用可信后端确认，后端从微信支付服务端 API、异步通知或订单查询获知真相，并以该服务端结果作为证据 |
+| 4 | 点击 `Request payment` 并主动关闭支付界面 | `[kmp-miniapp-sdk] payment request: CANCELLED cause=indeterminate`，且卡片不声称用户取消。真实主动关闭究竟产生 `requestPayment:cancel` 还是 `requestPayment:fail cancel`，正是这次运行要确定的待办项 |
+| 5 | 用宿主会拒绝的参数点击 `Request payment`（例如已过期或已使用的预支付包） | `[kmp-miniapp-sdk] payment request: FAIL reason=host-failure`，页面与 Console 中都没有宿主文本 |
+
+步骤 3 至 5 在此处完全无法产出：它们需要绑定本小程序 AppID 的合法微信支付商户号、真实订单，以及完成签名的可信后端，即 `BackendRequired`。开发者工具的模拟器不是商户，它显示的任何内容都不能被记为支付结果。步骤 2 是「已提交的默认状态是诚实的」这一保证，也是这些步骤中唯一不需要该环境的一项。
+
+19. 记录你观察到了哪些检查项、哪些没有观察到。只有在某项 capability 完成真实宿主运行后，才会在 [PROJECT_FACTS-ch.md](PROJECT_FACTS-ch.md) 中被记录为已通过宿主验证。
 
 Storage 检查会写入专用测试 key、验证覆盖、删除该 key，并确认 missing key 读取为 `null`。Network 检查会向 `https://example.com/` 发起 `GET`，并报告 status code 与 body 长度；验证其他 host 时请修改示例中的 `networkUrl` 常量。
 
