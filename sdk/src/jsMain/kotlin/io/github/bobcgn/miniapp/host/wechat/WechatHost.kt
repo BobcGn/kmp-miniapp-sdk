@@ -36,6 +36,8 @@ import io.github.bobcgn.miniapp.host.wechat.adapter.WechatNetwork
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatNetworkHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatNetworkStatus
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatNetworkStatusHost
+import io.github.bobcgn.miniapp.host.wechat.adapter.WechatPayment
+import io.github.bobcgn.miniapp.host.wechat.adapter.WechatPaymentHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatPermissionHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatPermissions
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatPrivacy
@@ -60,6 +62,7 @@ import io.github.bobcgn.miniapp.host.wechat.adapter.WxNavigationHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WxNetworkHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WxNetworkStatusHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WxPermissionHost
+import io.github.bobcgn.miniapp.host.wechat.adapter.WxRequestPaymentHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WxPrivacyHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WxRequestSubscribeMessageHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WxRuntimeInfoHost
@@ -108,6 +111,8 @@ internal class WechatPlatformApi(
     internal val uploadFile: WechatUploadFile,
     /** Downloading a file into the host's file system. */
     internal val downloadFile: WechatDownloadFile,
+    /** Standard WeChat Pay payment. */
+    internal val payment: WechatPayment,
 ) : HostPlatformApi
 
 /** First concrete [MiniAppHost], backed by the WeChat Mini Program runtime. */
@@ -129,6 +134,7 @@ internal class WechatHost(
     networkStatusHost: WechatNetworkStatusHost = WxNetworkStatusHost,
     uploadFileHost: WechatUploadFileHost = WxUploadFileHost,
     downloadFileHost: WechatDownloadFileHost = WxDownloadFileHost,
+    paymentHost: WechatPaymentHost = WxRequestPaymentHost,
 ) : MiniAppHost<WechatPlatformApi>,
     StorageCapabilityProvider,
     NetworkCapabilityProvider,
@@ -166,6 +172,7 @@ internal class WechatHost(
         requestSubscribeMessage = WechatRequestSubscribeMessage(requestSubscribeMessageHost),
         uploadFile = WechatUploadFile(uploadFileHost),
         downloadFile = WechatDownloadFile(downloadFileHost),
+        payment = WechatPayment(paymentHost),
     )
 
     override val storage: MiniAppStorage = WechatStorage(storageHost)

@@ -27,6 +27,8 @@ import io.github.bobcgn.miniapp.host.wechat.WeChatMediaSizeType
 import io.github.bobcgn.miniapp.host.wechat.WeChatMediaSource
 import io.github.bobcgn.miniapp.host.wechat.WeChatDownloadRequest
 import io.github.bobcgn.miniapp.host.wechat.WeChatMediaType
+import io.github.bobcgn.miniapp.host.wechat.WeChatPaymentRequest
+import io.github.bobcgn.miniapp.host.wechat.WeChatPaymentSignType
 import io.github.bobcgn.miniapp.host.wechat.WeChatUploadRequest
 import io.github.bobcgn.miniapp.host.wechat.WeChatScanCategory
 import io.github.bobcgn.miniapp.host.wechat.WeChatScanRequest
@@ -664,6 +666,59 @@ public object MiniAppExports {
     }
 
     /**
+     * Asks WeChat to run the standard payment interaction for backend-produced parameters.
+     *
+     * **Every argument must come from a trusted backend.** They are what WeChat Pay's
+     * unified-order API returned to that backend; this SDK does not compute a signature,
+     * does not hold a merchant key, and does not know what an order is. Nothing here is
+     * logged, stored, or cached, and the `nonceStr`, `package`, and `paySign` values are
+     * credentials for this one interaction — do not print or persist them either.
+     *
+     * **A resolved promise is not a paid order.** It means the host reported that the
+     * payment interaction completed. The authoritative order state belongs to your
+     * backend, which learns it from WeChat Pay's server API, from its asynchronous
+     * notification, or by querying the order; query it before delivering anything. The
+     * resolved value is named to make that hard to misread, and nothing here is called
+     * paid, settled, or confirmed.
+     *
+     * Call this only from a user gesture: WeChat requires one for a payment, and the SDK
+     * neither supplies one nor retries when the host refuses because none preceded the
+     * call. Nothing in this SDK calls it on page load.
+     *
+     * An ended interaction rejects with the SDK's host-interrupted error, which is also
+     * what a dismissal produces: the host uses one signal, and the SDK does not claim to
+     * know whether the user dismissed the payment interface or something else ended it.
+     * A payment failure rejects as a host failure, and a host without the API rejects as
+     * an unsupported capability.
+     *
+     * @param timeStamp backend-provided timestamp
+     * @param nonceStr backend-provided random string
+     * @param `package` backend-provided prepay package
+     * @param signType `MD5` or `HMAC-SHA256`, as the backend signed
+     * @param paySign backend-provided signature
+     * @throws IllegalArgumentException when a value is blank or [signType] is not one the
+     *   host accepts
+     */
+    public suspend fun wechatRequestPayment(
+        timeStamp: String,
+        nonceStr: String,
+        `package`: String,
+        signType: String,
+        paySign: String,
+    ): JsPaymentOutcome {
+        val request = WeChatPaymentRequest(
+            timeStamp = timeStamp,
+            nonceStr = nonceStr,
+            prepayPackage = `package`,
+            signType = paymentSignType(signType),
+            paySign = paySign,
+        )
+
+        host.platform.payment.request(request)
+        return JsPaymentOutcome(interactionCompleted = true)
+    }
+
+    /**
      * Fails unless the host currently requires no privacy authorization.
      *
      * This is the precondition point for capabilities the host gates behind its
@@ -781,6 +836,11 @@ private fun mediaSource(name: String): WeChatMediaSource =
 private fun mediaSizeType(name: String): WeChatMediaSizeType =
     WeChatMediaSizeType.entries.firstOrNull { it.hostValue == name }
         ?: throw IllegalArgumentException("Unsupported size type: '$name'")
+
+/** Resolves a JavaScript-supplied payment sign type to the closed SDK set. */
+private fun paymentSignType(name: String): WeChatPaymentSignType =
+    WeChatPaymentSignType.entries.firstOrNull { it.hostValue == name }
+        ?: throw IllegalArgumentException("Unsupported payment sign type: '$name'")
 
 /** Resolves a JavaScript-supplied camera position to the closed SDK set. */
 private fun cameraPosition(name: String): WeChatCameraPosition =

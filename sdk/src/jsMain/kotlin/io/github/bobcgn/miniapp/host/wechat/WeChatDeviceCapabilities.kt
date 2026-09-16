@@ -93,4 +93,14 @@ internal object WeChatDeviceCapabilities {
 
     /** Downloading a file to the host's file system. */
     val DownloadFile: CapabilityKey = CapabilityKey("wechat.download-file")
+
+    /**
+     * Standard WeChat Pay payment.
+     *
+     * Only API availability is answered by this key. Whether a merchant is configured,
+     * whether an order exists, and whether the parameters are valid are answers the host
+     * gives when it is called, and none of them is an API-presence question. A missing
+     * merchant backend is therefore never reported as an unsupported host.
+     */
+    val RequestPayment: CapabilityKey = CapabilityKey("wechat.request-payment")
 }

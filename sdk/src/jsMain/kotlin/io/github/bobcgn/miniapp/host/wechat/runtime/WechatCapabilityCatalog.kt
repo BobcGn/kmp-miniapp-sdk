@@ -157,6 +157,14 @@ internal object WechatCapabilityCatalog {
         WeChatDeviceCapabilities.DownloadFile to WechatCapabilityRequirement(
             canIUseSchemas = listOf("downloadFile"),
         ),
+        // WeChat documents no introduction version for requestPayment that this
+        // repository can cite, so no number is recorded and the probe is the authority.
+        // The API names no permission scope in the offline sources, and a merchant that
+        // is not configured yet is a runtime answer from the host, not an absence of the
+        // capability, so nothing else is gated here.
+        WeChatDeviceCapabilities.RequestPayment to WechatCapabilityRequirement(
+            canIUseSchemas = listOf("requestPayment"),
+        ),
         // The four device capabilities are gated separately: a host may expose one
         // clipboard direction or one vibration length without the other. WeChat
         // documents 1.1.0 for the clipboard APIs and 1.2.0 for the vibration APIs,

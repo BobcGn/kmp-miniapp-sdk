@@ -178,6 +178,15 @@ internal external object wx {
     fun downloadFile(options: WxDownloadFileOptions): WxTransferTask?
 
     /**
+     * Asks the host to run the standard payment interaction.
+     *
+     * The parameters are the host's own payment contract, produced by a trusted backend.
+     * The host offers no abort handle: the payment interface is the host's, so a
+     * cancelled caller only stops waiting.
+     */
+    fun requestPayment(options: WxRequestPaymentOptions): Unit
+
+    /**
      * Returns the host's global file manager.
      *
      * The manager is a host object whose methods are optional, so callers probe

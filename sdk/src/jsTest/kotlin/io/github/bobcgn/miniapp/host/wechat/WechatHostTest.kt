@@ -118,6 +118,12 @@ internal class WechatHostTest {
             CapabilitySupport.Supported,
             host.capabilitySupport(WeChatDeviceCapabilities.DownloadFile),
         )
+        // Payment is gated on the API alone: whether a merchant is configured is a
+        // runtime answer from the host, not an absence of the capability.
+        assertEquals(
+            CapabilitySupport.Supported,
+            host.capabilitySupport(WeChatDeviceCapabilities.RequestPayment),
+        )
         assertEquals(
             CapabilitySupport.Unsupported,
             host.capabilitySupport(CapabilityKey("unknown")),

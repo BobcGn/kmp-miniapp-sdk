@@ -207,6 +207,43 @@ internal fun mapWechatDownloadFailure(result: WxGeneralCallbackResult): MiniAppE
 private const val DOWNLOAD_TIMEOUT_ERRMSG: String = "downloadFile:fail timeout"
 
 /**
+ * Converts a raw `wx.requestPayment` failure into the platform-neutral SDK model.
+ *
+ * **Evidence.** The base library shipped with the installed Developer Tools runs this
+ * API's own payment flow, and its state machine reports a dismissed payment — and its
+ * test-mode stand-in — with the exact message `requestPayment:cancel`. That is what is
+ * matched here, and it becomes [MiniAppException.HostInteractionInterrupted] rather than
+ * a user-cancellation type: the host uses one signal, and nothing in this SDK's evidence
+ * separates a user dismissing the payment interface from any other condition that ends
+ * the interaction without completing it.
+ *
+ * **No other form is matched.** The host's scan, media, and subscription interfaces also
+ * use `<api>:fail cancel` for a dismissed interface, but no evidence covers that form for
+ * this API, so a message like `requestPayment:fail cancel` remains a
+ * [MiniAppException.HostFailure]. A real merchant-environment run has to show whether
+ * this API ever produces it; classifying on a convention would put a guess into the path
+ * that decides whether a payment attempt was cancelled or broken.
+ *
+ * This is the only place the payment failure text is interpreted. As with the SDK's
+ * existing host-error model, the text can remain available as diagnostic
+ * `hostMessage`; consumer UI must not print it, and the example reports only a closed
+ * failure label.
+ */
+internal fun mapWechatRequestPaymentFailure(result: WxGeneralCallbackResult): MiniAppException =
+    if (result.errMsg == PAYMENT_INTERRUPTED_ERRMSG) {
+        MiniAppException.HostInteractionInterrupted(
+            host = "wechat",
+            operation = "requestPayment",
+            hostMessage = result.errMsg,
+        )
+    } else {
+        mapWechatHostFailure(operation = "requestPayment", result = result)
+    }
+
+/** The exact host message an ended payment interaction produces. */
+private const val PAYMENT_INTERRUPTED_ERRMSG: String = "requestPayment:cancel"
+
+/**
  * What a raw `wx.requirePrivacyAuthorize` failure means.
  *
  * A declined privacy contract is the user's answer and is modelled as an outcome;

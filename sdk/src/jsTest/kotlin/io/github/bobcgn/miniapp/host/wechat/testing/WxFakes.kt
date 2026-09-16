@@ -15,6 +15,7 @@ import io.github.bobcgn.miniapp.host.wechat.interop.WxChooseMediaSuccessResult
 import io.github.bobcgn.miniapp.host.wechat.interop.WxDownloadFileSuccessResult
 import io.github.bobcgn.miniapp.host.wechat.interop.WxGetNetworkTypeSuccessResult
 import io.github.bobcgn.miniapp.host.wechat.interop.WxNetworkStatusChangeResult
+import io.github.bobcgn.miniapp.host.wechat.interop.WxRequestPaymentSuccessResult
 import io.github.bobcgn.miniapp.host.wechat.interop.WxRequestSubscribeMessageSuccessResult
 import io.github.bobcgn.miniapp.host.wechat.interop.WxTransferProgressResult
 import io.github.bobcgn.miniapp.host.wechat.interop.WxUploadFileSuccessResult
@@ -369,6 +370,19 @@ internal fun fakeTransferProgress(
     js("result.totalBytesExpectedToSend = totalBytesExpectedToSend")
     js("result.totalBytesWritten = totalBytesWritten")
     js("result.totalBytesExpectedToWrite = totalBytesExpectedToWrite")
+    return result
+}
+
+/**
+ * Builds a `wx.requestPayment` success result.
+ *
+ * The installed base library declares no result fields for this call, so this is the
+ * whole documented shape: the host's own status line and nothing else. There is no
+ * payment parameter, order, or receipt in it, and the SDK reads none.
+ */
+internal fun fakePaymentSuccess(): WxRequestPaymentSuccessResult {
+    val result: WxRequestPaymentSuccessResult = js("({})")
+    js("result.errMsg = 'requestPayment:ok'")
     return result
 }
 
