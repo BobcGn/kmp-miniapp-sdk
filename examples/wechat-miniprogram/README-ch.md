@@ -69,11 +69,18 @@ npm run typecheck
 [kmp-miniapp-sdk] network observation: PASS events=2, last=CELLULAR_4G
 [kmp-miniapp-sdk] upload check: NOT CONFIGURED
 [kmp-miniapp-sdk] download check: NOT CONFIGURED
+[kmp-miniapp-sdk] payment capability: PASS wechat.request-payment=Supported
+[kmp-miniapp-sdk] payment request: NOT CONFIGURED
+[kmp-miniapp-sdk] payment request: PASS interactionCompleted=true
+[kmp-miniapp-sdk] payment request: CANCELLED cause=indeterminate
+[kmp-miniapp-sdk] payment request: FAIL reason=host-failure
 ```
 
 Network Extensions 卡片覆盖五个宿主 API，逐项门控：网络类型查询、网络状态监听、上传与下载。`Check network capabilities` 报告每一项的判定；`Get current network type` 执行一次不注册任何东西的查询；`Start`/`Stop network status observation` 注册一个宿主 listener 并将其移除，停止那行会报告收到了多少次变更以及最后的连接类型。上传与下载检查在本地配置受控 HTTPS endpoint 之前什么都不做——卡片报告 `NOT CONFIGURED` 且不调用宿主——其结果只报告状态、字节数以及宿主是否报告过进度，从不报告 URL、header、文件路径或响应正文。`Cancel upload` 与 `Cancel download` 中止进行中的传输，并报告是否真的触发了宿主 abort。
 
 观察那一半需要真机：模拟器没有可切换的连接。传输那一半属 `BackendRequired`：它需要一个列入 request domain 的受控 HTTPS 服务，因此 `https://example.com/` 不能替代。详见 [../../docs/DEVELOPMENT-ch.md](../../docs/DEVELOPMENT-ch.md) 的网络扩展一节。
+
+Standard Payment 卡片把可信后端产出的参数转发给微信自身的支付界面。页面提交的是空占位配置，因此 `Request payment` 报告 `NOT CONFIGURED` 且完全不调用宿主；只有当你在合法商户环境下、在本地用自己后端的参数填入该占位配置时，卡片才会真正到达宿主。支付相关的任何内容都不会被打印——时间戳、nonce、package、签名，乃至宿主自身的失败文本都不会出现——因此页面截图不携带任何支付交互信息，失败也被归约为诸如 `reason=host-failure` 的封闭标签。`PASS interactionCompleted=true` 只表示宿主报告交互已完成，它不是一个订单，卡片也会如此说明。订单必须由你的后端确认：后端从微信支付服务端 API、异步通知或订单查询获知真相。真实支付需要合法商户号、真实订单与完成签名的后端，属 `BackendRequired`。
 
 Network 检查会向 `https://example.com/` 发起 `GET`。微信要求该 host 已列入 request domain 白名单，或编译时关闭域名校验。验证其他 endpoint 时请修改 `networkUrl` 常量。
 

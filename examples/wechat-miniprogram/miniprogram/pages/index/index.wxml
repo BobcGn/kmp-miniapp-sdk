@@ -152,6 +152,15 @@
   </view>
 
   <view class="card">
+    <text class="eyebrow">Standard Payment</text>
+    <text class="status status--{{paymentStatus}}">{{paymentStatus}}</text>
+    <text class="details">{{paymentDetails}}</text>
+    <text class="security-note">Payment parameters must come from a trusted backend; the SDK holds no merchant key and never signs. A host-reported completed interaction is not a paid order — confirm the order with your backend.</text>
+    <button class="action" bindtap="checkPaymentCapability">Check payment capability</button>
+    <button class="action" bindtap="requestPayment">Request payment</button>
+  </view>
+
+  <view class="card">
     <text class="eyebrow">First Host Capability</text>
     <text class="label">Storage verification</text>
     <text class="status status--{{storageStatus}}">{{storageStatus}}</text>

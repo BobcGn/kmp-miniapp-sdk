@@ -127,6 +127,18 @@ export declare namespace io.github.bobcgn.miniapp.export {
     }
 }
 export declare namespace io.github.bobcgn.miniapp.export {
+    class JsPaymentOutcome {
+        private constructor();
+        get interactionCompleted(): boolean;
+    }
+    namespace JsPaymentOutcome {
+        /** @deprecated $metadata$ is used for internal purposes, please don't use it in your code, because it can be removed at any moment */
+        namespace $metadata$ {
+            const constructor: abstract new () => JsPaymentOutcome;
+        }
+    }
+}
+export declare namespace io.github.bobcgn.miniapp.export {
     class JsPrivacyStatus {
         private constructor();
         get requirement(): string;
@@ -238,6 +250,7 @@ export declare namespace io.github.bobcgn.miniapp.export {
                 networkStatusObservationFailure(): Nullable<string>;
                 wechatUploadFile(url: string, filePath: string, name: string, headers: Array<string>, formData: Array<string>, timeoutMillis: Nullable<number>): io.github.bobcgn.miniapp.export.JsUploadTransfer;
                 wechatDownloadFile(url: string, headers: Array<string>, timeoutMillis: Nullable<number>, filePath: Nullable<string>): io.github.bobcgn.miniapp.export.JsDownloadTransfer;
+                wechatRequestPayment(timeStamp: string, nonceStr: string, _package: string, signType: string, paySign: string): Promise<io.github.bobcgn.miniapp.export.JsPaymentOutcome>;
                 requirePrivacySatisfied(): Promise<void>;
                 private constructor();
             }

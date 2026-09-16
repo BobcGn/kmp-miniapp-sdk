@@ -435,6 +435,57 @@ export function wechatUploadFile(request: UploadRequest): UploadTransfer;
 export function wechatDownloadFile(request: DownloadRequest): DownloadTransfer;
 
 /**
+ * The parameters of one payment interaction, exactly as a trusted backend produced them.
+ *
+ * **None of this originates in the SDK or in the client.** The SDK does not sign, holds
+ * no merchant key, and does not obtain a prepay identifier; these are what WeChat Pay's
+ * unified-order API returned to your backend. Do not print or store them: `nonceStr`,
+ * `package`, and `paySign` are credentials for this one payment.
+ */
+export type PaymentSignType = 'MD5' | 'HMAC-SHA256';
+
+export interface PaymentRequest {
+  /** Backend-provided timestamp. */
+  readonly timeStamp: string;
+  /** Backend-provided random string. */
+  readonly nonceStr: string;
+  /** Backend-provided prepay package, sent to the host under its own `package` name. */
+  readonly package: string;
+  /** `MD5` or `HMAC-SHA256`: whichever the backend signed with. */
+  readonly signType: PaymentSignType;
+  /** Backend-provided signature. */
+  readonly paySign: string;
+}
+
+/**
+ * What a completed WeChat payment interaction means, and nothing more.
+ *
+ * The host's success callback reports that the payment interaction ended. It is not an
+ * order, not a receipt, and not proof that money moved, so the field below is the only
+ * thing this value can say. Ask your backend — which learns the truth from WeChat Pay's
+ * server API, its asynchronous notification, or an order query — before delivering
+ * anything on the strength of a resolved promise.
+ */
+export interface PaymentOutcome {
+  /**
+   * Whether the host reported the payment interaction completed. `true` whenever this
+   * value exists at all: the field names what resolving means, so a caller cannot read a
+   * completed call as a completed order.
+   */
+  readonly interactionCompleted: boolean;
+}
+
+/**
+ * Asks WeChat to run the standard payment interaction for backend-produced parameters.
+ *
+ * **A resolved promise is not a paid order.** Call it only from a user gesture, because
+ * WeChat requires one and the SDK neither supplies one nor retries. An ended interaction
+ * rejects with the SDK's host-interrupted error; a payment failure rejects as a host
+ * failure; a host without the API rejects as an unsupported capability.
+ */
+export function wechatRequestPayment(request: PaymentRequest): Promise<PaymentOutcome>;
+
+/**
  * Reads the system clipboard as text.
  *
  * An empty clipboard resolves with an empty string. The clipboard belongs to the

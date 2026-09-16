@@ -34,6 +34,7 @@ const supportedSchemas = new Set([
   'offNetworkStatusChange',
   'uploadFile',
   'downloadFile',
+  'requestPayment',
 ]);
 
 // Permission state this fake host holds, plus a record of what it was asked to
@@ -136,6 +137,15 @@ let downloadHold = false;
 const downloadCalls = [];
 const downloadRecords = [];
 let pendingDownload = null;
+
+// Standard payment is one host API, and every answer it gives offline is a fake. The fake
+// records the option bag it was handed — but never prints it, because a bag holds a
+// signature — so a test can prove both what the SDK sent and that a caller with nothing
+// configured never reaches it.
+let paymentFailure = null;
+let paymentHold = false;
+let paymentPending = null;
+const paymentCalls = [];
 
 // One transfer task, so abort and progress registration can be counted.
 function makeTransferTask(record) {
@@ -443,6 +453,29 @@ global.wx = {
     }
     return record.task;
   },
+  requestPayment(options) {
+    paymentCalls.push({
+      // The whole bag, so a test can prove the SDK invented no field. The callbacks the
+      // adapter attaches are part of the bag and are filtered where they are asserted.
+      keys: Object.keys(options),
+      timeStamp: options.timeStamp,
+      nonceStr: options.nonceStr,
+      package: options.package,
+      signType: options.signType,
+      paySign: options.paySign,
+    });
+    if (paymentFailure !== null) {
+      options.fail({ errMsg: paymentFailure });
+      return;
+    }
+    if (paymentHold) {
+      paymentPending = options;
+      return;
+    }
+    // The host's success callback carries nothing about an order, and the SDK reads
+    // nothing from it: the callback itself is the whole signal.
+    options.success({ errMsg: 'requestPayment:ok' });
+  },
   requestSubscribeMessage(options) {
     subscribeCalls.push({ tmplIds: options.tmplIds });
     if (subscribeFailure !== null) {
@@ -498,6 +531,7 @@ async function main() {
     'networkStatusObservationFailure',
     'wechatUploadFile',
     'wechatDownloadFile',
+    'wechatRequestPayment',
     'networkRequest',
     'wechatAppOnLaunch',
     'wechatAppOnShow',
@@ -1555,6 +1589,120 @@ async function main() {
   global.wx.downloadFile = missingApiDownload;
   supportedSchemas.add('downloadFile');
 
+  // Standard payment. The capability key answers whether the host exposes the API, and
+  // nothing else: with no merchant configured the API is still present, so this stays
+  // Supported and a payment failure must not change it.
+  assert.equal(miniAppSdk.capabilitySupport('wechat.request-payment').state, 'Supported');
+
+  // Legal arguments, in the shape the example page's placeholder uses. This is not a real
+  // order and cannot be: only a trusted backend can produce one, so the values are
+  // obviously synthetic and the test never prints the bag.
+  const legalPayment = function legalPayment() {
+    return {
+      timeStamp: '1700000000',
+      nonceStr: 'node-nonce',
+      package: 'prepay_id=node',
+      signType: 'HMAC-SHA256',
+      paySign: 'node-signature',
+    };
+  };
+
+  const paymentOutcome = await miniAppSdk.wechatRequestPayment(legalPayment());
+  const forwardedPayment = paymentCalls[paymentCalls.length - 1];
+  assert.deepEqual(
+    forwardedPayment.keys.filter(
+      (key) => key !== 'success' && key !== 'fail' && key !== 'complete',
+    ),
+    ['timeStamp', 'nonceStr', 'package', 'signType', 'paySign'],
+  );
+  assert.equal(forwardedPayment.package, 'prepay_id=node');
+  assert.equal(forwardedPayment.signType, 'HMAC-SHA256');
+
+  // What the caller receives says one thing: the host reported the interaction completed.
+  // There is no order field in it to mistake for one, which is the point — the
+  // authoritative order state is the consumer backend's, never the client's.
+  assert.deepEqual(Object.keys(paymentOutcome), ['interactionCompleted']);
+  assert.equal(paymentOutcome.interactionCompleted, true);
+  assert.equal(paymentOutcome.paid, undefined);
+  assert.equal(paymentOutcome.orderConfirmed, undefined);
+
+  // A later callback never changes the first terminal answer, whichever order they arrive
+  // in, and a repeated success does not settle twice.
+  paymentHold = true;
+  const heldPayment = miniAppSdk.wechatRequestPayment(legalPayment());
+  const heldOptions = paymentPending;
+  assert.notEqual(heldOptions, null);
+  heldOptions.success({ errMsg: 'requestPayment:ok' });
+  heldOptions.fail({ errMsg: 'requestPayment:fail too late' });
+  heldOptions.success({ errMsg: 'requestPayment:ok' });
+  const heldOutcome = await heldPayment;
+  assert.equal(heldOutcome.interactionCompleted, true);
+  paymentPending = null;
+  paymentHold = false;
+
+  // An ended interaction is the SDK's interruption rather than a plain host failure. The
+  // host uses one signal for a dismissal and for every other way the interaction ends, and
+  // the SDK does not claim to know which it was — which is why this is not reported as a
+  // user cancellation either.
+  paymentFailure = 'requestPayment:cancel';
+  await assert.rejects(
+    miniAppSdk.wechatRequestPayment(legalPayment()),
+    (error) => error.name === 'HostInteractionInterrupted',
+  );
+
+  // The near miss stays a host failure. The host's other interfaces use this form, but no
+  // evidence covers it for this API, and a guess here would decide whether a payment was
+  // cancelled or broken.
+  paymentFailure = 'requestPayment:fail cancel';
+  await assert.rejects(
+    miniAppSdk.wechatRequestPayment(legalPayment()),
+    (error) => error.name === 'HostFailure',
+  );
+
+  paymentFailure = 'requestPayment:fail merchant not configured';
+  await assert.rejects(
+    miniAppSdk.wechatRequestPayment(legalPayment()),
+    (error) => error.name === 'HostFailure',
+  );
+  paymentFailure = null;
+
+  // Caller mistakes are refused rather than quietly corrected, and the host is not asked:
+  // a field naming nothing, and a sign type outside the two the host accepts.
+  const paymentCallsBeforeRefusals = paymentCalls.length;
+  const unsupportedSignType = legalPayment();
+  unsupportedSignType.signType = 'SHA1';
+  await assert.rejects(
+    miniAppSdk.wechatRequestPayment(unsupportedSignType),
+    /Unsupported payment sign type/,
+  );
+  // The example page's committed placeholder is empty on purpose, and this is the property
+  // that makes it safe: with nothing configured the SDK refuses before the host is called,
+  // so an unconfigured card can never open a payment interface.
+  await assert.rejects(
+    miniAppSdk.wechatRequestPayment({
+      timeStamp: '',
+      nonceStr: '',
+      package: '',
+      signType: 'HMAC-SHA256',
+      paySign: '',
+    }),
+    /requestPayment requires a/,
+  );
+  assert.equal(paymentCalls.length, paymentCallsBeforeRefusals);
+
+  // A host without the API fails through the capability path rather than throwing out of
+  // the JavaScript boundary.
+  const paymentApi = global.wx.requestPayment;
+  delete global.wx.requestPayment;
+  supportedSchemas.delete('requestPayment');
+  assert.equal(miniAppSdk.capabilitySupport('wechat.request-payment').state, 'Unsupported');
+  await assert.rejects(
+    miniAppSdk.wechatRequestPayment(legalPayment()),
+    (error) => error.name === 'UnsupportedCapability',
+  );
+  global.wx.requestPayment = paymentApi;
+  supportedSchemas.add('requestPayment');
+
   console.log('[node-smoke] sdkVersion:', miniAppSdk.sdkVersion());
   console.log('[node-smoke] storage: PASS');
   console.log('[node-smoke] auth bootstrap: PASS');
@@ -1573,6 +1721,7 @@ async function main() {
   console.log('[node-smoke] media: PASS');
   console.log('[node-smoke] subscription: PASS');
   console.log('[node-smoke] network extensions: PASS');
+  console.log('[node-smoke] standard payment: PASS');
 }
 
 main().catch((error) => {

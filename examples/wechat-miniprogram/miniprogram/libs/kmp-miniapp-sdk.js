@@ -228,6 +228,23 @@ module.exports = {
       };
     });
   },
+  wechatRequestPayment: function wechatRequestPayment(request) {
+    const options = request || {};
+    return miniAppExports
+      .wechatRequestPayment(
+        options.timeStamp === undefined ? '' : options.timeStamp,
+        options.nonceStr === undefined ? '' : options.nonceStr,
+        options.package === undefined ? '' : options.package,
+        options.signType === undefined ? '' : options.signType,
+        options.paySign === undefined ? '' : options.paySign,
+      )
+      .then(function (outcome) {
+        // Only the one field the SDK names crosses this boundary, and no payment parameter
+        // is echoed back. A caller cannot read a resolved promise here as an order fact,
+        // because there is no order fact in it to read.
+        return { interactionCompleted: outcome.interactionCompleted };
+      });
+  },
   networkRequest: function networkRequest(url, init) {
     const options = init || {};
     return miniAppExports

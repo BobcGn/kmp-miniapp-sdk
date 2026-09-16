@@ -36,6 +36,20 @@ let activeUpload: MiniAppSdk.UploadTransfer | null = null;
 let activeDownload: MiniAppSdk.DownloadTransfer | null = null;
 let cancelledUpload: MiniAppSdk.UploadTransfer | null = null;
 let cancelledDownload: MiniAppSdk.DownloadTransfer | null = null;
+// Payment parameters are produced by a trusted backend from WeChat Pay's unified-order
+// API. The SDK does not sign, holds no merchant key, and cannot invent them, so nothing
+// real is committed here and the placeholder below is deliberately empty: the card's
+// button therefore reports NOT CONFIGURED rather than opening a payment interface. Fill it
+// in locally, from your own backend, only with a legal merchant environment, and never
+// commit it — `nonceStr`, `package`, and `paySign` are credentials for one payment, and
+// this page never displays or logs any of them.
+const paymentRequest: MiniAppSdk.PaymentRequest = {
+  timeStamp: '',
+  nonceStr: '',
+  package: '',
+  signType: 'HMAC-SHA256',
+  paySign: '',
+};
 
 interface IndexPageData {
   sdkVersion: string;
@@ -93,6 +107,8 @@ interface IndexPageData {
   uploadDetails: string;
   downloadStatus: string;
   downloadDetails: string;
+  paymentStatus: string;
+  paymentDetails: string;
 }
 
 type IndexPage = MiniProgramPageInstance<IndexPageData>;
@@ -1200,6 +1216,118 @@ function cancelDownload(this: IndexPage): void {
   });
 }
 
+/**
+ * Whether the local placeholder holds anything that could be a real payment.
+ *
+ * Every field is required, so a partially filled placeholder is still "not configured":
+ * the card never hands the host a request it cannot have meant to send.
+ */
+function isPaymentConfigured(request: MiniAppSdk.PaymentRequest): boolean {
+  return (
+    request.timeStamp.trim().length > 0 &&
+    request.nonceStr.trim().length > 0 &&
+    request.package.trim().length > 0 &&
+    (request.signType === 'MD5' || request.signType === 'HMAC-SHA256') &&
+    request.paySign.trim().length > 0
+  );
+}
+
+/**
+ * Reduces a payment failure to a closed label.
+ *
+ * The raw message is deliberately never printed. A payment failure can carry text the
+ * payment backend produced, and a screenshot of this page must not carry anything from a
+ * payment interaction, so the page reports only which kind of problem it saw.
+ */
+function paymentFailureReason(error: unknown): string {
+  if (typeof error !== 'object' || error === null) {
+    return 'unknown';
+  }
+  switch ((error as { name?: unknown }).name) {
+    case 'UnsupportedCapability':
+      return 'unsupported';
+    case 'InvalidResponse':
+      return 'invalid-response';
+    case 'HostFailure':
+      return 'host-failure';
+    default:
+      return 'other';
+  }
+}
+
+/**
+ * Reports how the gate answers for the payment API.
+ *
+ * This is the API answer alone. Whether a merchant is configured, an order exists, or the
+ * parameters the backend produced are acceptable are all answers the host gives when it
+ * is called, so none of them belongs in this card's capability answer.
+ */
+function checkPaymentCapability(this: IndexPage): void {
+  try {
+    const support: MiniAppSdk.CapabilitySupportResult =
+      MiniAppSdk.capabilitySupport('wechat.request-payment');
+    console.log(
+      '[kmp-miniapp-sdk] payment capability: PASS wechat.request-payment=' + support.state,
+    );
+    this.setData({
+      paymentStatus: support.state,
+      paymentDetails: 'wechat.request-payment=' + support.state,
+    });
+  } catch (error) {
+    console.error('[kmp-miniapp-sdk] payment capability: FAIL', error);
+    this.setData({ paymentStatus: 'FAIL', paymentDetails: String(error) });
+  }
+}
+
+/**
+ * Runs the payment interaction for whatever the local placeholder holds.
+ *
+ * **This runs only from this button.** WeChat requires a payment to follow a user
+ * gesture, and nothing here — or in the SDK — calls it while the page loads.
+ *
+ * With the committed placeholder empty this reports NOT CONFIGURED and never reaches the
+ * host, because there is no legal way to produce payment parameters in this repository:
+ * they come from a trusted backend and a real merchant account. A PASS below means the
+ * host reported the interaction completed. It does not mean an order was paid, and the
+ * card says so, because the answer to that is the consumer backend's.
+ */
+async function requestPayment(this: IndexPage): Promise<void> {
+  if (!isPaymentConfigured(paymentRequest)) {
+    console.log('[kmp-miniapp-sdk] payment request: NOT CONFIGURED');
+    this.setData({
+      paymentStatus: 'NOT CONFIGURED',
+      paymentDetails: 'no backend payment parameters configured locally',
+    });
+    return;
+  }
+
+  try {
+    const outcome: MiniAppSdk.PaymentOutcome =
+      await MiniAppSdk.wechatRequestPayment(paymentRequest);
+    const details = `interactionCompleted=${outcome.interactionCompleted}`;
+    console.log('[kmp-miniapp-sdk] payment request: PASS', details);
+    this.setData({
+      paymentStatus: 'PASS',
+      paymentDetails: details + '; the order state belongs to your backend, not this page',
+    });
+  } catch (error) {
+    // One host signal covers a dismissal and any other way the interaction ended, and the
+    // SDK does not attribute it to the user. The label below matches that limit.
+    if (isHostInteractionInterrupted(error)) {
+      console.log('[kmp-miniapp-sdk] payment request: CANCELLED cause=indeterminate');
+      this.setData({
+        paymentStatus: 'CANCELLED',
+        paymentDetails: 'the payment interaction ended without completing',
+      });
+      return;
+    }
+
+    const reason = paymentFailureReason(error);
+    console.error('[kmp-miniapp-sdk] payment request: FAIL reason=' + reason);
+    this.setData({ paymentStatus: 'FAIL', paymentDetails: 'reason=' + reason });
+  }
+}
+
 async function runStorageCheck(page: IndexPage): Promise<void> {
   try {
     await MiniAppSdk.storageSet(storageKey, 'first');
@@ -1370,6 +1498,8 @@ Page<IndexPageData>({
     uploadDetails: 'Tap a button; nothing is uploaded on load.',
     downloadStatus: 'NOT RUN',
     downloadDetails: 'Tap a button; nothing is downloaded on load.',
+    paymentStatus: 'NOT CONFIGURED',
+    paymentDetails: 'no backend payment parameters configured locally',
     permissionStatus: 'UNKNOWN',
     permissionDetails:
       'Permission is never requested on load. Tap a button to query or request it.',
@@ -1418,4 +1548,6 @@ Page<IndexPageData>({
   cancelUpload,
   runDownloadCheck,
   cancelDownload,
+  checkPaymentCapability,
+  requestPayment,
 });
