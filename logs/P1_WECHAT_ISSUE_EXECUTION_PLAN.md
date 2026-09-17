@@ -45,6 +45,16 @@ BOB-75 只有在 BOB-83、BOB-78、BOB-76、BOB-82、BOB-81、BOB-84、BOB-80、
 
 **本轮进展（2026-09-17）**：`:miniapp-gradle-plugin` module 已建立，插件 ID `io.github.bobcgn.miniapp`，实现类 `io.github.bobcgn.miniapp.gradle.MiniAppGradlePlugin`。应用 KMP 插件时只做一件事：调用 `kotlin.js("miniapp")` 注册平台 target（ADR 0010 的最小入口）；未应用 KMP 时在 `afterEvaluate` 抛出指明缺失插件与修复写法的错误。`:miniapp-gradle-plugin:test` 6 个测试全部通过（TestKit：可被普通 KMP fixture 应用、缺 KMP 时报错；契约：插件 ID→实现类、`Plugin<Project>`、插件产物不含微信类、WeChat host runtime 不在插件 classpath）。变异探针已执行：注释掉 `kotlin.js(...)` 后 KMP fixture 测试失败（`[commonMain, commonTest]` 缺少 `miniappMain`）。**未实现**：source set 提供（BOB-76）、SDK 依赖接线（BOB-82）、产物组装（BOB-81）、微信 DSL（BOB-84）、发布、多 Host、P2。本轮不提交 Git，交 Codex 审查，状态保持 `in_progress`。
 
+**收尾（2026-09-17）**：BOB-78 已 **Done**，交付 commit `19e807e feat(gradle): bootstrap Mini App Gradle plugin skeleton`。Codex 审查后补齐了中文版 `PROJECT_FACTS-ch.md` 两处遗漏：§3 当前 Gradle Modules 未列出 `:miniapp-gradle-plugin`，§10 仍写着「Gradle plugin」。现中英文 §2 状态、§3 modules、§10 非能力、§11 命令四处一致。验证命令 `./gradlew --no-daemon --console=plain projects clean check :miniapp-gradle-plugin:test` BUILD SUCCESSFUL，插件测试 6 个 0 失败，`git diff --check` 通过。
+
+### 架构纠偏：BOB-86 `[P1][紧急][架构纠偏] Backend 事实、KMP 客户端行为与宿主渲染边界`
+
+**本轮进展（2026-09-17）**：审计结论是**当前不存在层级混合**：仓库内 Compose / `@Composable` / Material 命中 0 处代码（22 处 `compose` 字样全部是文档中的非目标声明），`UiState` / `Action` / `Store` / `Effect` / `Reducer` / `UseCase` 命中 0 处，`Renderer` / `setData` / `WXML` / `Virtual DOM` 在 `sdk/src` 与 `miniapp-gradle-plugin/src` 命中 0 处，`:sdk` 的生产依赖只有 `kotlinx-coroutines-core`，`examples/` 不是 Gradle module 因此结构上不存在 SDK → app 反向依赖。
+
+因此本轮不做代码搬迁，交付的是把边界固化：新增 [ADR 0011](docs/decisions/0011-presentation-state-shared-rendering-host-native-ch.md)（Backend owns business truth / Kotlin owns client behavior / rendering 保持宿主原生 / Compose 是 consumer），ARCHITECTURE 增加四层边界与责任矩阵（Auth、Payment、Network、Storage、Business Rule、UiState、Navigation、Permission、Rendering、Cache、Error、Lifecycle），AGENTS 与 CLAUDE 增加 UI 与渲染硬性约束，PROJECT_FACTS / ROADMAP 记录定位与 P2 规划且明确 Presentation Core **尚未实现**，并新增可执行的架构约束检查 `:sdk:checkArchitectureBoundaries`（接入 `:sdk:check`）。
+
+已执行变异探针两例：向 `sdk/src` 加入 `import androidx.compose.runtime.Composable` → 检查失败并打印文件与行号；向 `:sdk` 声明 `org.jetbrains.compose.runtime:runtime` → 检查失败。第二个探针暴露了初版的 group 前缀匹配缺陷（`org.jetbrains.compose.runtime` 不匹配 `org.jetbrains.compose:`），已修正为按 group 的点分前缀匹配。
+
 ### 紧急第 C 步：BOB-76 `[P1][URGENT] Provision miniappMain and miniappTest source sets automatically`
 
 插件自动建立 `commonMain → miniappMain` 与 `commonTest → miniappTest`，消费者不得手写 `sourceSets.create(...)`。验收必须覆盖 IDEA 将两者识别为 Kotlin source sets、代码补全、`miniappMain` 复用 `commonMain`，以及 `miniappTest` 实际执行。当前 Host API 可以由 `miniappMain` 使用，但总体插件架构不得写死 `MiniApp == WeChat`。
@@ -83,7 +93,8 @@ BOB-75 只有在 BOB-83、BOB-78、BOB-76、BOB-82、BOB-81、BOB-84、BOB-80、
 | --- | --- | --- | --- |
 | 总目标 | BOB-75 | Todo | A–I 与 Release Gate 全部完成 |
 | A | BOB-83 | Done（2026-09-17） | PoC 选型、否决项、KGP 限制和必要 ADR 可核对 |
-| B | BOB-78 | In Progress（2026-09-17） | 插件可应用并 sync；缺少 KMP 时明确失败 |
+| B | BOB-78 | Done（2026-09-17，commit `19e807e`） | 插件可应用并 sync；缺少 KMP 时明确失败 |
+| B+ | BOB-86 | In Progress（2026-09-17） | 架构边界已记录并被构建强制；无 Compose / Renderer 泄漏 |
 | C | BOB-76 | Blocked by A、B | source sets 自动创建、IDEA 识别、`miniappTest` 可执行 |
 | D | BOB-82 | Blocked by B、C | 公共 SDK 依赖自动接入且不泄漏内部 artifact |
 | E | BOB-81 | Blocked by B、C、D | 稳定任务生成完整微信消费产物且无需手工接线 |

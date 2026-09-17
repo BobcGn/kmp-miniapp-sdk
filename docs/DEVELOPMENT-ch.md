@@ -27,6 +27,7 @@ VS Code 可用于处理 `examples/wechat-miniprogram` 下的文件。Consumer Br
 ./gradlew clean build
 ./gradlew :sdk:jsNodeTest
 ./gradlew :sdk:jsTest
+./gradlew :sdk:checkArchitectureBoundaries
 ./gradlew :miniapp-gradle-plugin:test
 ./gradlew buildMiniAppSdk
 ```
@@ -34,6 +35,18 @@ VS Code 可用于处理 `examples/wechat-miniprogram` 下的文件。Consumer Br
 这些命令有效，并已于 2026-09-15 完成验证；其中 `:miniapp-gradle-plugin:test` 于 2026-09-17 完成验证。
 
 `:sdk:jsTest` suite 覆盖 Host boundary、error model、callback adaptation、cancellation、double completion、可选 abort、微信 error mapping、包含取消时宿主中止的 HTTP transport adaptation、生命周期状态迁移、导航适配、capability support 状态与版本门控、包含并发请求合并的权限生命周期行为、包含拒绝分类的隐私授权、包含过期分类的微信会话检查、包含逐项门控的微信剪贴板与震动 adapter、包含沙箱与文本边界的微信文件系统 adapter、包含坐标校验与隐私前置条件的微信定位 adapter、包含不可归因中断分类与结果校验的微信扫码 adapter、包含请求边界、结果校验与中断分类的微信媒体 adapter、包含模板校验与逐模板结果策略的微信订阅消息 adapter、包含逐 collector 监听配对的网络状态 adapter、包含 abort、进度与超时行为的微信上传与下载 adapter、包含参数转发、空白参数拒绝、精确中断分类与单次终态行为的微信支付 adapter，以及 interop object construction。这些测试使用 fake callbacks，不代表能够访问真实 `wx` runtime。
+
+## 架构边界
+
+runtime SDK 共享客户端行为、宿主能力与 presentation state，从不渲染。[ADR 0011](decisions/0011-presentation-state-shared-rendering-host-native-ch.md) 固定了四层职责，责任矩阵见 [ARCHITECTURE-ch.md](ARCHITECTURE-ch.md)。
+
+```shell
+./gradlew :sdk:checkArchitectureBoundaries
+```
+
+当 `sdk/**` 下任何内容导入 UI framework namespace 或声明 UI framework 依赖时，该任务会失败，并且它是 `:sdk:check` 的一部分。它被有意设计为构建失败而不是评审提醒，因为「SDK 不依赖 Compose」这条不变量必须能在没有读过 ADR 的贡献者手中存活。
+
+该检查不做的事：它无法发现不导入任何 UI framework 却写出来的 renderer。一个 WXML generator，或用 SDK 自身类型拼装的 view tree，都能通过它。这类错误仍由评审与 `sdk/AGENTS.md` 规则拦截，而不是由构建拦截。
 
 ## Mini App Gradle 插件
 

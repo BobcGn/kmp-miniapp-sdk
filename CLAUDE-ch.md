@@ -8,7 +8,7 @@
 
 ## 1. 本项目是什么
 
-`kmp-miniapp-sdk` 是一个 Kotlin Multiplatform SDK，通过 Kotlin/JS 将共享 Kotlin 逻辑桥接到微信小程序。
+`kmp-miniapp-sdk` 是一个 Kotlin Multiplatform client runtime，用于跨 Mini App 平台共享客户端行为、宿主能力与 presentation state，同时保持渲染由宿主原生负责。当前微信桥接由 Kotlin/JS 承载。
 
 ```text
 commonMain
@@ -22,7 +22,7 @@ TypeScript / JavaScript
 WeChat Mini Program
 ```
 
-它是一个 SDK / library，不是 application、UI framework、Kuikly replacement、Compose renderer、Virtual DOM 或 WXML replacement。
+它是一个 SDK / library。后端拥有业务事实，Kotlin 拥有客户端行为，宿主拥有渲染 —— 见 [ADR 0011](docs/decisions/0011-presentation-state-shared-rendering-host-native-ch.md)。它不是 application、UI framework、Kuikly replacement、Compose renderer、Virtual DOM 或 WXML replacement，并且它从不渲染。
 
 ## 2. 修改前必读
 
@@ -52,6 +52,8 @@ WeChat Mini Program
 ## 4. 不可违反的规则
 
 **范围纪律。** 在没有明确任务的情况下，不要添加 Android、iOS、JVM 或 Wasm target；不要添加 Compose、Ktor、serialization 或依赖注入框架；不要添加 npm 或 Maven 发布；不要添加投机性的 Gradle module。
+
+**UI 与渲染边界。** runtime SDK 与未来的 Presentation Core 不得依赖 Compose、其他 UI framework，或 WXML、WXSS 这类宿主 markup。Compose 是客户端 UI consumer。Mini App host integration 只做宿主状态与宿主事件的 binding，从不渲染。`./gradlew :sdk:checkArchitectureBoundaries` 强制其中的依赖部分，并且是 `:sdk:check` 的一部分；见 `AGENTS.md` 第 10 节与 [ADR 0011](docs/decisions/0011-presentation-state-shared-rendering-host-native-ch.md)。
 
 **最小改动。** 只做当前任务所需的最小改动。不要因为"以后可能有用"而添加基础设施。
 

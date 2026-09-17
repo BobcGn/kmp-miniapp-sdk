@@ -20,3 +20,4 @@ Accepted ADRs are historical records. If a decision changes, add a new ADR that 
 - [0008 — Permission lifecycle boundary](0008-permission-lifecycle-boundary-en.md)
 - [0009 — Privacy authorization boundary](0009-privacy-authorization-boundary-en.md)
 - [0010 — Mini App Gradle plugin source-set model](0010-miniapp-gradle-plugin-source-set-model-en.md)
+- [0011 — Presentation state is shared; rendering remains host-native](0011-presentation-state-shared-rendering-host-native-en.md)

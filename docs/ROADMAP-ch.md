@@ -92,11 +92,14 @@ BOB-85 必须同时具备以下证据，缺一项都不得用“实现完成”�
 - 虚拟支付边界已在 BOB-74 中确定并记录于 [ARCHITECTURE-ch.md](ARCHITECTURE-ch.md)：它是与标准支付相互独立的 capability，拥有自己的 key、请求、结果与后端流程，两者之间不存在降级路径。P1 不实现其中任何部分 —— 该能力在[微信能力矩阵](platforms/wechat/WECHAT_CAPABILITIES-ch.md)中为 `Planned`，且不存在任何代码、catalog 注册或导出。标准支付（BOB-59）已实现并具备自动化测试，其真实宿主验收被合法商户环境阻塞，属于环境阻塞而不是实现缺口。
 - Build automation 与 consumer distribution 由上面的 BOB-75 至 BOB-85 紧急主线收口。
 
-## 未来 / 探索性内容
+## P1 之后：Client Presentation 与新增 Host
 
-- Page runtime integration
-- Component binding
-- Declarative UI research
-- Renderer research
+分层已由 [ADR 0011](decisions/0011-presentation-state-shared-rendering-host-native-ch.md) 固定：后端拥有业务事实，SDK 共享客户端行为、宿主能力与 presentation state，宿主负责渲染。以下全部是计划，没有任何一项已实现。
 
-探索性内容没有承诺版本。任何对 UI 非目标的变更都需要明确的 architecture decision。
+- **P2 —— Client Presentation Core。** `UiState`、`Action`、`Store`、`Effect`、state machine 与 presentation logic。它不得依赖 Compose 或任何 renderer。当前不存在，也没有为它创建占位 module 或占位类型。
+- **P3 —— 微信 presentation binding。** `StateFlow` → JavaScript → `setData`，以及宿主事件 → `Action`。仅做 binding：没有 view tree、layout engine、Kotlin UI DSL 或 WXML generator。
+- **P4 —— Backend 与 presentation 编排成熟度。** API client、session、cache、offline 行为、retry，以及认证与支付流程。
+- **P5 —— 新增 Host。** 支付宝与 Telegram。新增 Host 时不得重写 Presentation Core。
+- **P6 —— 可选的 Compose UI adapter** 与更丰富的客户端集成。Compose 始终是客户端 UI consumer。
+
+渲染不在这条路径上。renderer、virtual DOM、view tree、layout engine 或 WXML generator 仍是明确的非目标；改变这一点需要一个新的 architecture decision，而不是一条 roadmap 条目。

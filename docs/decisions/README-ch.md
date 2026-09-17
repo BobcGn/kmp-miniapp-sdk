@@ -20,3 +20,4 @@
 - [0008 — 权限生命周期边界](0008-permission-lifecycle-boundary-ch.md)
 - [0009 — 隐私授权边界](0009-privacy-authorization-boundary-ch.md)
 - [0010 — Mini App Gradle 插件 source set 模型](0010-miniapp-gradle-plugin-source-set-model-ch.md)
+- [0011 — Presentation state 共享，渲染保持宿主原生](0011-presentation-state-shared-rendering-host-native-ch.md)

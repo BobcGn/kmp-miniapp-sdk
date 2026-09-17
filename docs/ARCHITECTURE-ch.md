@@ -20,6 +20,45 @@ TypeScript / JavaScript
 WeChat Mini Program runtime
 ```
 
+### SDK 是什么
+
+A Kotlin Multiplatform client runtime for sharing client behavior, host capabilities, and presentation state across Mini App platforms, while keeping rendering host-native.
+
+SDK 当前共享客户端行为与宿主能力，从 P2 起共享 presentation state；它从不渲染。[ADR 0011](decisions/0011-presentation-state-shared-rendering-host-native-ch.md) 记录了这条边界及其理由。
+
+### 四层职责
+
+| 层 | 负责 | 不得 |
+| --- | --- | --- |
+| **Backend** | 认证与服务端 session、token 生命周期、订单与支付最终状态、库存、预约、业务规则、服务端授权 | 在客户端被重新实现 |
+| **KMP Client Runtime** | Domain model、UseCase、Repository contract、error model、async 抽象、宿主能力 contract、缓存策略，以及从 P2 起的 `UiState` / `Action` / `Store` / `Effect` / presentation logic | 依赖 Compose、任何 UI framework 或宿主 markup；复制服务端权威规则；把自己的缓存当作事实 |
+| **Host Integration** | 微信 adapter 与错误映射、runtime 与能力检测、permission、privacy、lifecycle、navigation、JS binding、presentation binding | 定义 view、layout、view tree 或 renderer |
+| **Platform UI** | 最终视图与布局：微信宿主用 WXML 与 WXSS，Android / iOS / 桌面客户端用 Compose，未来支付宝宿主用 AXML 与 ACSS，未来 Telegram 宿主用 HTML | 出现在 SDK 内部 |
+
+共享分为四个层级。客户端基础设施与宿主能力抽象现在即共享；presentation state 与行为从 P2 起共享；渲染永不共享。**当前不存在 Presentation Core** —— `UiState`、`Action`、`Store` 与 `Effect` 已有明确定义归属但没有任何实现，也没有为它们创建占位 module 或占位类型。
+
+### 责任矩阵
+
+| 关注点 | Backend | KMP Client Runtime | Host Integration | Platform UI |
+| --- | --- | --- | --- | --- |
+| Auth | 校验登录凭证；签发并拥有可信 session 与 token | 编排宿主登录 → 后端交换；不持有可信身份 | `wx.login` 凭证、`wx.checkSession` 状态 | 登录界面元素 |
+| Payment | 创建订单、产出签名参数、确认最终状态 | 转发后端产出的参数；暴露 processing、interruption 与 error state | 仅执行 `wx.requestPayment` 调用 | 支付界面元素 |
+| Network | 提供 API 并拥有业务响应 | Transport contract、retry 与 cancellation 策略、错误映射 | `wx.request`、upload、download、network status | — |
+| Storage | — | 缓存策略：什么可以缓存、缓存多久 | `wx.getStorage`、文件系统沙箱 | — |
+| Business rule | 权威 | 仅做展示层校验；永不成为第二个真相源 | — | 输入界面元素 |
+| UiState | — | P2 的归属层；**未实现** | State → `setData` binding，自 P3 起 | — |
+| Navigation | — | 作为 presentation 行为的导航意图与 effect，自 P2 起 | `wx.navigateTo`、`wx.redirectTo`、`wx.navigateBack` | 页面栈与转场 |
+| Permission | — | 宿主无关的 permission contract 与策略 | `wx.getSetting`、`wx.authorize`、`wx.openSetting` | 向用户展示的理由 |
+| Rendering | — | 永不 | 仅 binding，永不做 renderer | 微信用 WXML 与 WXSS；Android / iOS / 桌面用 Compose |
+| Cache | 权威存储 | last-known 客户端状态；永不作为事实 | 宿主存储原语 | — |
+| Error | 定义业务错误 | 宿主无关的 error model 与映射 | 宿主失败文本 → SDK error | 错误展示 |
+| Lifecycle | — | App 级 lifecycle capability | `App.onLaunch` / `onShow` / `onHide`、页面 lifecycle | 视觉状态转场 |
+
+由该矩阵而非偏好推出两条结论：
+
+- 宿主成功回调解决的是「一次交互」，它永远不确立业务事实。订单已支付是因为后端这样说；用户已认证是因为后端签发了 session。
+- 每一个可能产生分歧的关注点上，答案都不会同时属于后端与客户端：凡是两者都可能持有答案的地方（支付状态、认证、库存），客户端那一格都被显式标注为非权威。
+
 ## 2. 依赖方向
 
 平台无关的 interfaces、models、errors 和 shared logic 属于 `commonMain`。平台实现属于 `jsMain`，并依赖平台无关 contracts。

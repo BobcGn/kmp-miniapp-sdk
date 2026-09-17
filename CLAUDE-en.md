@@ -8,7 +8,7 @@ This file summarizes the repository rules so they load automatically at the star
 
 ## 1. What this project is
 
-`kmp-miniapp-sdk` is a Kotlin Multiplatform SDK that bridges shared Kotlin logic into WeChat Mini Programs through Kotlin/JS.
+`kmp-miniapp-sdk` is a Kotlin Multiplatform client runtime for sharing client behaviour, host capabilities, and presentation state across Mini App platforms, while keeping rendering host-native. Kotlin/JS carries the current WeChat bridge.
 
 ```text
 commonMain
@@ -22,7 +22,7 @@ TypeScript / JavaScript
 WeChat Mini Program
 ```
 
-It is an SDK / library. It is not an application, a UI framework, a Kuikly replacement, a Compose renderer, a Virtual DOM, or a WXML replacement.
+It is an SDK / library. The backend owns business truth, Kotlin owns client behaviour, and the host owns rendering — see [ADR 0011](docs/decisions/0011-presentation-state-shared-rendering-host-native-en.md). It is not an application, a UI framework, a Kuikly replacement, a Compose renderer, a Virtual DOM, or a WXML replacement, and it never renders.
 
 ## 2. Read before changing
 
@@ -52,6 +52,8 @@ Never infer an implemented capability from the roadmap. Roadmap entries, TODOs, 
 ## 4. Non-negotiable rules
 
 **Scope discipline.** Without an explicit task, do not add Android, iOS, JVM, or Wasm targets; Compose, Ktor, serialization, or dependency injection frameworks; npm or Maven publication; or speculative Gradle modules.
+
+**UI and rendering boundary.** The runtime SDK and any future Presentation Core must not depend on Compose, another UI framework, or host markup such as WXML or WXSS. Compose is a client UI consumer. Mini App host integration binds host state and host events and never renders. `./gradlew :sdk:checkArchitectureBoundaries` enforces the dependency half and runs as part of `:sdk:check`; see `AGENTS.md` §10 and [ADR 0011](docs/decisions/0011-presentation-state-shared-rendering-host-native-en.md).
 
 **Minimal change.** Make the smallest change the current task requires. Do not add infrastructure because it might be useful later.
 

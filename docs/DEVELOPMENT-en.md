@@ -27,6 +27,7 @@ When running WeChat host acceptance, use the [WeChat real-host verification matr
 ./gradlew clean build
 ./gradlew :sdk:jsNodeTest
 ./gradlew :sdk:jsTest
+./gradlew :sdk:checkArchitectureBoundaries
 ./gradlew :miniapp-gradle-plugin:test
 ./gradlew buildMiniAppSdk
 ```
@@ -34,6 +35,18 @@ When running WeChat host acceptance, use the [WeChat real-host verification matr
 These commands are valid and were verified on 2026-09-15, except `:miniapp-gradle-plugin:test`, which was verified on 2026-09-17.
 
 The `:sdk:jsTest` suite includes host-boundary, error-model, callback adaptation, cancellation, double-completion, optional abort, WeChat error-mapping, HTTP transport adaptation including host abort on cancellation, lifecycle state transitions, navigation adaptation, capability-support states and version gating, permission lifecycle behaviour including concurrent request merging, privacy authorization including the refusal classification, WeChat session checking including the expiry classification, the WeChat clipboard and vibration adapters including their per-capability gating, the WeChat file-system adapter including its sandbox and text boundaries, the WeChat location adapter including its coordinate validation and privacy precondition, the WeChat scan adapter including indeterminate-interruption classification and result validation, the WeChat media adapter including its request boundaries, result validation, and interruption classification, the WeChat subscription adapter including its template validation and per-template result policy, the network status adapter including its per-collector listener pairing, the WeChat upload and download adapters including their abort, progress, and timeout behaviour, the WeChat payment adapter including its parameter forwarding, blank-parameter refusal, exact interruption classification, and single-terminal-state behaviour, and interop object-construction coverage. These tests use fake callbacks and do not claim access to a real `wx` runtime.
+
+## Architecture boundaries
+
+The runtime SDK shares client behaviour, host capabilities and presentation state; it never renders. [ADR 0011](decisions/0011-presentation-state-shared-rendering-host-native-en.md) fixes the four layers, and [ARCHITECTURE-en.md](ARCHITECTURE-en.md) carries the responsibility matrix.
+
+```shell
+./gradlew :sdk:checkArchitectureBoundaries
+```
+
+This task fails when anything under `sdk/**` imports a UI framework namespace or declares a UI framework dependency, and it runs as part of `:sdk:check`. It is a build failure rather than a review note on purpose: "the SDK does not depend on Compose" has to survive contributors who have not read the ADR.
+
+What the check does not do: it cannot detect a renderer that imports no UI framework. A WXML generator or a view tree assembled from the SDK's own types would pass it. That class of mistake is still caught by review and by the rules in `sdk/AGENTS.md`, not by the build.
 
 ## Mini App Gradle plugin
 

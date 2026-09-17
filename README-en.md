@@ -2,7 +2,7 @@
 
 [中文](README-ch.md)
 
-A Kotlin Multiplatform SDK for bridging shared Kotlin logic into WeChat Mini Programs through Kotlin/JS.
+A Kotlin Multiplatform client runtime for sharing client behaviour, host capabilities, and presentation state across Mini App platforms, while keeping rendering host-native. Kotlin/JS carries the current WeChat bridge.
 
 ## Status
 
@@ -10,7 +10,7 @@ Experimental / pre-alpha. The Consumer Bridge, Storage, `wx.login` client authen
 
 ## What this project is
 
-- A Kotlin Multiplatform library for shared Kotlin logic
+- A Kotlin Multiplatform library for shared client behaviour and host capabilities
 - A Kotlin/JS library intended for a WeChat Mini Program host
 - A foundation for a typed JavaScript and TypeScript runtime bridge
 
@@ -19,6 +19,7 @@ Experimental / pre-alpha. The Consumer Bridge, Storage, `wx.login` client authen
 - A UI framework or Kuikly replacement
 - A Compose renderer or Virtual DOM
 - A replacement for WXML
+- A renderer of any kind: the backend owns business truth, Kotlin owns client behaviour, and the host owns rendering. See [ADR 0011](docs/decisions/0011-presentation-state-shared-rendering-host-native-en.md).
 
 ## Architecture
 

@@ -20,6 +20,45 @@ TypeScript / JavaScript
 WeChat Mini Program runtime
 ```
 
+### What the SDK is
+
+A Kotlin Multiplatform client runtime for sharing client behaviour, host capabilities, and presentation state across Mini App platforms, while keeping rendering host-native.
+
+The SDK shares client behaviour and host capabilities today, and presentation state from P2. It never renders. [ADR 0011](decisions/0011-presentation-state-shared-rendering-host-native-en.md) records that boundary and the reasoning behind it.
+
+### The four layers
+
+| Layer | Owns | Must not |
+| --- | --- | --- |
+| **Backend** | Authentication and server sessions, token lifetime, order and payment final state, inventory, reservations, business rules, server-side authorisation | Be reimplemented on the client |
+| **KMP Client Runtime** | Domain model, use cases, repository contracts, error model, async abstraction, host-capability contracts, cache policy, and from P2 `UiState` / `Action` / `Store` / `Effect` / presentation logic | Depend on Compose, any UI framework, or host markup; copy server-authoritative rules; treat its own cache as truth |
+| **Host Integration** | WeChat adapters and error mapping, runtime and capability detection, permission, privacy, lifecycle, navigation, JS binding, presentation binding | Define a view, a layout, a view tree, or a renderer |
+| **Platform UI** | The final view and layout: WXML and WXSS for the WeChat host, Compose for Android / iOS / desktop clients, AXML and ACSS for a future Alipay host, HTML for a future Telegram host | Live inside the SDK |
+
+Sharing has four levels. Client infrastructure and host-capability abstraction are shared now; presentation state and behaviour are shared from P2; rendering is never shared. **There is no Presentation Core today** — `UiState`, `Action`, `Store` and `Effect` have a defined owner and no implementation, and no placeholder module or type exists for them.
+
+### Responsibility matrix
+
+| Concern | Backend | KMP Client Runtime | Host Integration | Platform UI |
+| --- | --- | --- | --- | --- |
+| Auth | Verifies the login credential; issues and owns the trusted session and token | Orchestrates host login → backend exchange; holds no trusted identity | `wx.login` credential, `wx.checkSession` state | Sign-in affordances |
+| Payment | Creates the order, produces the signed parameters, confirms the final state | Forwards backend-produced parameters; exposes processing, interruption and error state | `wx.requestPayment` invocation only | Payment affordances |
+| Network | Serves the API and owns the business response | Transport contract, retry and cancellation policy, error mapping | `wx.request`, upload, download, network status | — |
+| Storage | — | Cache policy: what may be cached and for how long | `wx.getStorage`, the file-system sandbox | — |
+| Business rule | Authoritative | Presentation-level validation only; never a second source of truth | — | Input affordances |
+| UiState | — | Owning layer from P2; **not implemented** | State → `setData` binding, from P3 | — |
+| Navigation | — | Navigation intent and effect as presentation behaviour, from P2 | `wx.navigateTo`, `wx.redirectTo`, `wx.navigateBack` | Page stack and transitions |
+| Permission | — | Host-neutral permission contract and policy | `wx.getSetting`, `wx.authorize`, `wx.openSetting` | The rationale shown to the user |
+| Rendering | — | Never | Binding only, never a renderer | WXML and WXSS for WeChat; Compose for Android / iOS / desktop |
+| Cache | The authoritative store | Last-known client state; never truth | Host storage primitives | — |
+| Error | Defines business errors | Host-neutral error model and mapping | Host failure text → SDK error | Error presentation |
+| Lifecycle | — | App-level lifecycle capability | `App.onLaunch` / `onShow` / `onHide`, page lifecycle | Visual state transitions |
+
+Two consequences follow from the matrix rather than from preference:
+
+- A host success callback resolves an interaction; it never establishes a business fact. An order is paid because the backend says so, a user is authenticated because the backend issued the session.
+- No row has the same owner twice in the columns that could disagree. Where the backend and the client could both hold an answer — payment state, authentication, inventory — the client's entry is explicitly the non-authoritative one.
+
 ## 2. Dependency Direction
 
 Platform-neutral interfaces, models, errors, and shared logic belong in `commonMain`. Platform implementations belong in `jsMain` and depend on the neutral contracts.

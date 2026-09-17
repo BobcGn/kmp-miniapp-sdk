@@ -92,11 +92,14 @@ An internal callback-to-coroutine primitive now adapts suitable callback APIs in
 - The virtual-payment boundary is decided in BOB-74 and recorded in [ARCHITECTURE-en.md](ARCHITECTURE-en.md): a capability separate from Standard Payment, with its own key, request, outcome and backend workflow, and no fallback between the two. P1 implements none of it — the capability is `Planned` in the [WeChat capability matrix](platforms/wechat/WECHAT_CAPABILITIES-en.md) and no code, catalog entry or export exists. Standard payment (BOB-59) is implemented and automated-tested, and its real-host acceptance is blocked on a legal merchant environment, which is an environment block rather than an implementation gap.
 - Build automation and consumer distribution close through the urgent BOB-75 to BOB-85 track above.
 
-## Future / Exploratory
+## After P1: Client Presentation and Additional Hosts
 
-- Page runtime integration
-- Component binding
-- Declarative UI research
-- Renderer research
+The layering is fixed by [ADR 0011](decisions/0011-presentation-state-shared-rendering-host-native-en.md): the backend owns business truth, the SDK shares client behaviour, host capabilities and presentation state, and the host renders. Everything below is a plan; none of it is implemented.
 
-Exploratory items have no committed version. Any change to the UI non-goal requires an explicit architecture decision.
+- **P2 — Client Presentation Core.** `UiState`, `Action`, `Store`, `Effect`, state machine and presentation logic. It must not depend on Compose or any renderer. It does not exist today, and no placeholder module or type has been created for it.
+- **P3 — WeChat presentation binding.** `StateFlow` → JavaScript → `setData`, and host event → `Action`. Binding only: no view tree, layout engine, Kotlin UI DSL or WXML generator.
+- **P4 — Backend and presentation orchestration maturity.** API client, session, cache, offline behaviour, retry, and the authentication and payment flows.
+- **P5 — Additional hosts.** Alipay and Telegram. Adding a host must not require rewriting a Presentation Core.
+- **P6 — Optional Compose UI adapter** and richer client integrations. Compose remains a client UI consumer.
+
+Rendering is not on this path. A renderer, virtual DOM, view tree, layout engine or WXML generator remains an explicit non-goal, and changing that requires a new architecture decision rather than a roadmap entry.

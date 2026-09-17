@@ -11,8 +11,10 @@
 ## 1. 项目标识
 
 - 项目：`kmp-miniapp-sdk`
-- 目的：使用官方 Kotlin Multiplatform 和 Kotlin/JS，让共享 Kotlin 逻辑可由微信小程序 JavaScript 或 TypeScript runtime 消费。
+- 目的：一个 Kotlin Multiplatform client runtime，用于跨 Mini App 平台共享客户端行为、宿主能力与 presentation state，同时保持渲染由宿主原生负责。它使用官方 Kotlin Multiplatform 和 Kotlin/JS，让共享 Kotlin 逻辑可由微信小程序 JavaScript 或 TypeScript runtime 消费。
 - 类型：SDK / library。
+
+后端拥有业务事实，Kotlin 拥有客户端行为，宿主拥有渲染。[ADR 0011](decisions/0011-presentation-state-shared-rendering-host-native-ch.md) 固定了四层 —— backend、KMP client runtime、host integration、platform UI —— 及其责任矩阵；矩阵内容见 [ARCHITECTURE-ch.md](ARCHITECTURE-ch.md)。
 
 本项目不是微信小程序 UI framework、Kuikly replacement、Compose renderer、Virtual DOM 或 WXML replacement。
 
@@ -43,6 +45,7 @@
 - 微信标准支付已实现，并作为「后端参数的类型化转发器」通过自动化检查；Android 真机已验证运行时支持与「未配置参数」保护，真实支付验收仍受阻塞于合法商户环境与可信后端
 - 虚拟支付未实现：不存在请求、结果、capability 条目或导出，且所带开发者工具基础库中没有可发现的虚拟支付契约。其边界记录于 ARCHITECTURE，状态在能力矩阵中为 `Planned`
 - `io.github.bobcgn.miniapp` Gradle 插件骨架已实现并有自动化覆盖：它在 Kotlin Multiplatform 项目中注册 `miniapp` 平台 target，并对未应用 Kotlin Multiplatform 插件的项目报错。它尚未提供 source set、尚未接线 SDK 依赖、尚未组装微信产物，也未提供 Gradle DSL
+- 客户端 / runtime 架构边界已记录并被强制：后端拥有业务事实，本 SDK 拥有客户端行为与宿主能力，宿主拥有渲染。当 runtime SDK 导入或声明 UI framework namespace 或 artifact 时，`:sdk:checkArchitectureBoundaries` 会让构建失败，且它是 `:sdk:check` 的一部分
 
 构建基线与第一条端到端消费链路均已通过验证。Common layer 包含最小 Host identity、Capability support 与强类型 platform escape-hatch contracts。Production code 通过 Host 与 adapter boundaries 调用 typed 微信 Storage contracts，完整 Storage 链路已通过真实宿主验证。
 
@@ -275,6 +278,8 @@ Kotlin/JS platform variants 及其传递依赖由 Gradle 在依赖解析期间�
 - 服务端 code exchange、已认证用户/session 管理和 token refresh
 - 公共通用 callback-to-coroutine API
 - Compose integration、UI DSL、renderer 或 Virtual DOM
+- Presentation Core：`UiState`、`Action`、`Store`、`Effect` 与 state machine 已有明确定义归属（未来的 `presentation` module，P2），但不存在任何实现、module 或占位类型
+- Mini App renderer、view tree、layout engine、Kotlin view DSL 或 WXML generator；`miniappMain` 与 `jsMain` 只做宿主状态与宿主事件的 binding，从不渲染
 - npm publication
 - Maven publication
 - 能够自动提供 `miniappMain` / `miniappTest` hierarchy、接入 runtime SDK 依赖、组装微信产物或暴露 Mini App Gradle DSL 的完整 Gradle 插件；`:miniapp-gradle-plugin` 目前只是骨架，上述四项均未实现
@@ -315,6 +320,7 @@ Kotlin/JS platform variants 及其传递依赖由 Gradle 在依赖解析期间�
 | --- | --- |
 | `./gradlew --no-daemon --console=plain clean check` | VERIFIED — `:sdk` 与 `:miniapp-gradle-plugin` 均 BUILD SUCCESSFUL |
 | `./gradlew --no-daemon --console=plain :miniapp-gradle-plugin:test` | VERIFIED — 6 个测试，无失败 |
+| `./gradlew --no-daemon --console=plain :sdk:checkArchitectureBoundaries` | VERIFIED — SDK 未导入也未声明任何 UI framework |
 
 早期微信开发者工具证据覆盖版本、Storage 与 authentication 检查；network 检查于 2026-09-14 单独完成验收。用户于 2026-09-15 确认 lifecycle 前台状态、页面 route，以及 `navigateTo`、`redirectTo`、`navigateBack` 的真实宿主验收通过。后台状态迁移不属于开发者工具模拟器可验证范围。权限生命周期定义了宿主无关的三态模型 —— `NotRequested`、`Granted`、`Denied` —— 由命名权限「为了什么」的 `PermissionKey` 标识，并通过微信 adapter 适配 `wx.getSetting`、`wx.authorize` 与 `wx.openSetting`。不做任何缓存；拒绝是 `MiniAppException.PermissionDenied` 而不是宿主失败；请求权限与打开设置绝不在缺少用户手势时执行。Kotlin/JS、fake-host、CommonJS 与 TypeScript 自动检查均已通过。微信开发者工具（基础库 3.17.2）与 Android 真机（OnePlus PLQ110、Android 36、微信 8.0.76）验证了：宿主能够报告 `Granted` 与 `Denied`；设置页返回的是宿主的决定而不是被假定为已授权；对已拒绝权限再次请求会报告 `DENIED` 且不出现第二次弹窗。`NotRequested` 无法在所用账号上产出，因为该账号已对所映射权限持有决定；该状态改由自动化测试覆盖。
 

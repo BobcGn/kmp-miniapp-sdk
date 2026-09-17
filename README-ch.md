@@ -2,7 +2,7 @@
 
 [English](README-en.md)
 
-一个通过 Kotlin/JS 将共享 Kotlin 逻辑桥接到微信小程序的 Kotlin Multiplatform SDK。
+一个 Kotlin Multiplatform client runtime，用于跨 Mini App 平台共享客户端行为、宿主能力与 presentation state，同时保持渲染由宿主原生负责。当前微信桥接由 Kotlin/JS 承载。
 
 ## 状态
 
@@ -10,7 +10,7 @@
 
 ## 本项目是什么
 
-- 承载共享 Kotlin 逻辑的 Kotlin Multiplatform library
+- 承载共享客户端行为与宿主能力的 Kotlin Multiplatform library
 - 面向微信小程序宿主的 Kotlin/JS library
 - 构建强类型 JavaScript / TypeScript runtime bridge 的基础
 
@@ -19,6 +19,7 @@
 - UI framework 或 Kuikly replacement
 - Compose renderer 或 Virtual DOM
 - WXML replacement
+- 任何形式的 renderer：后端拥有业务事实，Kotlin 拥有客户端行为，宿主拥有渲染。见 [ADR 0011](docs/decisions/0011-presentation-state-shared-rendering-host-native-ch.md)。
 
 ## 架构
 
