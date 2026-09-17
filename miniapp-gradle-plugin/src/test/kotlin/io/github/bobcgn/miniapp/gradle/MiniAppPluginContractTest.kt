@@ -46,6 +46,48 @@ class MiniAppPluginContractTest {
     }
 
     @Test
+    fun `the host boundary rejects renderers without rejecting shared runtime`() {
+        listOf(
+            "org.jetbrains.compose" to "runtime",
+            "org.jetbrains.compose.ui" to "ui",
+            "androidx.compose.ui" to "ui",
+            "org.jetbrains.androidx.lifecycle" to "lifecycle-runtime-compose",
+            "org.jetbrains.androidx.lifecycle" to "lifecycle-runtime-compose-js",
+            "org.jetbrains.androidx.lifecycle" to "lifecycle-viewmodel-compose",
+            "org.jetbrains.androidx.savedstate" to "savedstate-compose",
+            "org.jetbrains.androidx.navigationevent" to "navigationevent-compose",
+            "org.jetbrains.skiko" to "skiko",
+            "org.jetbrains.kotlinx" to "kotlinx-browser",
+            "org.jetbrains.kotlinx" to "kotlinx-html-js",
+        ).forEach { (group, name) ->
+            assertTrue(
+                MiniAppHostBoundary.isForbiddenModule(group, name),
+                "$group:$name belongs to a client renderer and must be rejected",
+            )
+        }
+
+        // The runtime a Mini App legitimately carries must survive the same classifier.
+        listOf(
+            "org.jetbrains.kotlinx" to "kotlinx-coroutines-core",
+            "org.jetbrains.kotlinx" to "atomicfu",
+            "org.jetbrains.kotlin" to "kotlin-stdlib",
+            "org.jetbrains.kotlin" to "kotlin-test",
+            "org.jetbrains.kotlin" to "kotlin-dom-api-compat",
+            "org.jetbrains.androidx.lifecycle" to "lifecycle-common",
+            "org.jetbrains.androidx.lifecycle" to "lifecycle-runtime",
+            "org.jetbrains.androidx.lifecycle" to "lifecycle-viewmodel",
+            "org.jetbrains.androidx.lifecycle" to "lifecycle-viewmodel-savedstate",
+            "org.jetbrains.androidx.savedstate" to "savedstate",
+            "org.jetbrains.androidx.navigationevent" to "navigationevent",
+        ).forEach { (group, name) ->
+            assertTrue(
+                !MiniAppHostBoundary.isForbiddenModule(group, name),
+                "$group:$name is legitimate shared runtime and must be allowed",
+            )
+        }
+    }
+
+    @Test
     fun `the runtime coordinate is the decided public artifact id`() {
         // The one place the public coordinate is written outside the plugin's build script, and it
         // is a compatibility contract: consumers resolve exactly this module, and composite-build

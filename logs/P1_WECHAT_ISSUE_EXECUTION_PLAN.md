@@ -83,6 +83,28 @@ TestKit 由 13 个测试构成（含契约测试）：依赖接线位置、`comm
 
 把消费者所需的 Kotlin/JS、CommonJS、TypeScript declarations、runtime dependencies 与微信兼容产物组装隐藏在插件后。提供一个稳定、已文档化的组装任务；消费者不得调用 `useCommonJs()`、`generateTypeScriptDefinitions()` 或手工复制 artifact。不得机械照搬 SDK 仓库自己的 `buildMiniAppSdk`，而应明确真实消费者契约。
 
+**本轮进展（2026-09-17）**：插件把 Mini App target 的 Kotlin/JS 输出配置成宿主可消费形态（`nodejs()`、`useCommonJs()`、`binaries.library()`、`generateTypeScriptDefinitions()`），消费者不再手写其中任何一项；并新增稳定组装任务 **`assembleMiniAppBundle`**，把 Kotlin/JS production library 发布到 **`build/miniapp/bundle/`**。任务是 `Sync`，输入取自 distribution task 的**已声明输出**而非手写路径。
+
+实测产物契约（TestKit fixture）：`<project>-miniapp.js`（消费者入口模块，含其编译代码与 `@JsExport` 导出）、`<project>-miniapp.d.ts`、`kmp-miniapp-sdk-kotlin.js`（runtime SDK 作为**独立模块**，而非内联）、`kotlin-kotlin-stdlib.js`、`kotlinx-coroutines-core.js`、`kotlinx-atomicfu.js`、`kotlin_org_jetbrains_kotlin_kotlin_dom_api_compat.js`、`package.json` 及各 `.js.map`。
+
+两项审计结论：其一，Kotlin/JS library **只导出 `@JsExport` 声明**，其余被消除 —— 消费者的宿主侧表面就是其 `miniappMain` 中的导出，未被导出的代码不会进入 bundle；其二，runtime SDK 因声明了自己的输出模块名而成为独立 JS 模块，因此 bundle 中存在多个宿主需要加载的文件。二者均写入 DEVELOPMENT 与 ARCHITECTURE。
+
+TestKit 由 13 个测试扩展到 **17 个**：新增稳定任务发现与产物契约、重复执行 UP-TO-DATE、编译失败时错误明确（含 `compileKotlinMiniapp` 与未定义符号）、configuration cache 存储与复用。两例变异探针：移除 bundle 任务注册后 4 个测试失败；移除 `generateTypeScriptDefinitions()` 后产物契约测试失败（缺 declaration）。两者均已还原。
+
+**纠偏（2026-09-17，外部 Demo 验证后）**：外部 Demo 的 `assembleMiniAppBundle` 可以执行，但 bundle 约 12 MB，包含 `androidx-compose-*`、`compose-multiplatform-*`、`skiko-kjs.js`、`skiko.wasm`、`kotlinx-browser.js` 与 Compose lifecycle/navigation/resource runtime。根因不是插件复制了文件，而是该 Demo 的 `app/shared/commonMain` 含 Compose UI，而 `miniappMain` 继承 `commonMain`，于是整条 UI stack 进入 Mini App production distribution。
+
+三条处理，均不改 Demo、也不做文件过滤：
+
+1. **新增 `checkMiniAppHostBoundary`**，作为 `assembleMiniAppBundle` 的前置任务。它解析 `miniappRuntimeClasspath`（正是 distribution 据以构建的那一组依赖），在其携带 Compose（`org.jetbrains.compose` / `androidx.compose` / 明确的 `org.jetbrains.androidx` Compose 集成模块）、Skiko（`org.jetbrains.skiko`）、`kotlinx-browser` 或 `kotlinx-html` 时失败，并说明 Compose 属于 client UI、Mini App 宿主使用 WXML/WXSS 等原生 UI。非 Compose 的 lifecycle、saved-state 与 navigation primitives 不受该规则误伤。这是**依赖规则而不是文件规则**：Kotlin/JS distribution 中的文件通过 `require()` 彼此引用，删除「看起来像 renderer」的文件只会把构建失败换成加载失败。
+2. **文档措辞纠正**：不再称输出为 host-ready / WeChat-compatible / 可直接交给微信加载；统一改为 compiler-managed Mini App distribution、stable host-integration input、awaiting external host validation。消费者架构前置条件写明：`miniappMain` 可继承共享行为与 state，但不得继承 Compose UI / Skiko / 浏览器 renderer；Compose UI 必须位于不作为 `miniappMain` 父 source set 的客户端 module 或 source set。
+3. **测试区分两个结论**：「bundle 不含 `.wxml`/`.wxss`」只证明插件不生成宿主 markup；「distribution 不携带 renderer」是关于依赖图的结论，由 host-boundary 检查断言。二者不再互相冒充。
+
+TestKit 由 17 个测试扩展到 **19 个**：新增 host-boundary 分类器测试（Compose / Skiko / 明确的 `org.jetbrains.androidx` Compose 集成模块 / `kotlinx-browser` / `kotlinx-html-js` 被拒；非 Compose 的 lifecycle / saved-state / navigation primitives 以及 `kotlinx-coroutines-core`、`atomicfu`、`kotlin-stdlib`、`kotlin-test`、`kotlin-dom-api-compat` 不受误伤）与「Compose 泄漏时在产出 bundle 前失败」的集成测试（fixture 在 `commonMain` 声明 `org.jetbrains.compose.runtime:runtime`，断言失败信息含 "client renderer" 与坐标，且 bundle 目录不存在）。
+
+另记录一项消费者侧摩擦（归属 BOB-80 / BOB-77，不在本轮解决）：应用插件会新增一个 Kotlin/JS target，从而改变 npm 依赖集合，已有 yarn lock 的工程需要执行一次 `kotlinUpgradeYarnLock`；Kotlin Gradle Plugin 不会自行覆盖已有锁文件。
+
+**验收收尾（2026-09-17）**：外部真实 KMP Demo 完成正反两条证据。不含 Compose 的 `:core` 执行 `checkMiniAppHostBoundary` 与 `assembleMiniAppBundle` 成功，产出 1.5 MB 的 `core/build/miniapp/bundle`，含消费者 `.js` / `.d.ts`、SDK runtime、stdlib、coroutines、atomicfu 与 `package.json`，不含 Compose、Skiko、browser 或 HTML runtime；含 Compose UI 的 `:app:shared` 则在组装前被 `checkMiniAppHostBoundary` 准确拒绝，列出 Compose-specific AndroidX、Compose、Skiko 与 `kotlinx-browser` 坐标。分类器同时通过契约测试证明不会误伤非 Compose 的 lifecycle、saved-state 与 navigation primitives。BOB-81 的 Gradle 组装与边界验收完成；真实微信宿主加载仍属 BOB-85 Consumer Bridge release gate，不由本 Issue 冒充声称。Mini App Gradle DSL（BOB-84）仍未实现，插件不做上传、发布或宿主部署。
+
 ### 紧急第 F 步：BOB-84 `[P1][URGENT] Add Mini App Gradle extension and WeChat host configuration`
 
 提供最小且可扩展的 Gradle DSL，候选形态为 `miniapp { wechat { ... } }`。DSL 只承载真正属于构建的配置，不把业务配置整体迁入 Gradle。架构必须表达 Mini App Platform → 当前 Host WeChat，并允许未来新增 Host，但本步骤不实现支付宝、Telegram 或多 Host source-set hierarchy。
@@ -113,7 +135,7 @@ TestKit 由 13 个测试构成（含契约测试）：依赖接线位置、`comm
 | B+ | BOB-86 | In Progress（2026-09-17） | 架构边界已记录并被构建强制；无 Compose / Renderer 泄漏 |
 | C | BOB-76 | Done（2026-09-17） | source sets 自动创建、IDEA 识别、`miniappTest` 可执行 |
 | D | BOB-82 | In Progress（2026-09-17） | 公共 SDK 依赖自动接入且不泄漏内部 artifact |
-| E | BOB-81 | Blocked by B、C、D | 稳定任务生成完整微信消费产物且无需手工接线 |
+| E | BOB-81 | Done（2026-09-17） | 稳定任务生成完整 Mini App distribution，且依赖边界由正反外部 Demo 验收 |
 | F | BOB-84 | Blocked by B；在 E 后执行 | 最小 DSL 通过架构审查且不承载业务配置 |
 | G | BOB-80 | Blocked by C、D、E、F | 普通 KMP fixture 完成编译、测试和微信消费闭环 |
 | H | BOB-79 | Blocked by B、C；在 G 后执行 | 插件关键路径由自动化 integration tests 覆盖 |

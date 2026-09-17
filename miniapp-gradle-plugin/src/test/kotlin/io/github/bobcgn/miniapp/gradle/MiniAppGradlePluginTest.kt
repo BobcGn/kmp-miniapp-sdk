@@ -194,6 +194,144 @@ class MiniAppGradlePluginTest {
     }
 
     @Test
+    fun `the plugin exposes a stable assembly task and the bundle matches its contract`() {
+        val projectDir = newFixture("kmp-bundle")
+        writeConsumerBuildScript(projectDir)
+        writeConsumerSources(projectDir)
+        assertConsumerScriptDoesNothing(projectDir)
+
+        val result = runner(
+            projectDir,
+            MiniAppPluginDiagnostics.ASSEMBLE_MINIAPP_BUNDLE_TASK_NAME,
+            "miniAppModelReport",
+        ).build()
+        val report = MiniAppModelReport(result)
+
+        assertEquals(
+            TaskOutcome.SUCCESS,
+            result.task(":${MiniAppPluginDiagnostics.ASSEMBLE_MINIAPP_BUNDLE_TASK_NAME}")?.outcome,
+        )
+
+        val bundleDir = projectDir.resolve("build/${MiniAppPluginDiagnostics.MINIAPP_BUNDLE_DIRECTORY}")
+        assertTrue(bundleDir.isDirectory, "expected the bundle at $bundleDir")
+        val bundle = bundleDir.listFiles()!!.map { it.name }.sorted()
+
+        // Exactly one declaration identifies the consumer's own module; everything else is runtime.
+        val declarations = bundle.filter { it.endsWith(".d.ts") }
+        assertEquals(1, declarations.size, "expected one TypeScript declaration in $bundle")
+        val moduleName = declarations.single().removeSuffix(".d.ts")
+        assertContains(bundle, "$moduleName.js")
+
+        // The Kotlin runtime travels with the module.
+        assertContains(bundle, "kotlin-kotlin-stdlib.js")
+        assertContains(bundle, "kotlinx-coroutines-core.js")
+        assertContains(bundle, "kotlinx-atomicfu.js")
+        assertContains(bundle, "package.json")
+
+        // The runtime SDK is a separate module in the bundle, not inlined into the consumer's, so a
+        // host must load it too; the consumer's entry module requires it by relative path.
+        val sdkModule = "${MiniAppRuntimeDependency.name}-kotlin.js"
+        assertContains(bundle, sdkModule)
+        val moduleJs = bundleDir.resolve("$moduleName.js").readText()
+        assertContains(moduleJs, "./$sdkModule")
+
+        // The bundle really carries the consumer's own code and its host-facing exports...
+        assertContains(moduleJs, "hello from commonMain")
+        assertContains(moduleJs, "sample")
+        assertContains(moduleJs, "miniAppGreeting")
+        // ...and the SDK runtime it calls.
+        assertContains(moduleJs, MiniAppRuntimeDependency.version)
+
+        // Conclusion 1: the plugin generates no host markup. This says nothing about renderers.
+        assertTrue(
+            bundle.none { it.endsWith(".wxml") || it.endsWith(".wxss") },
+            "the SDK must not generate host markup, found: $bundle",
+        )
+
+        // Conclusion 2, kept separate on purpose: the bundle carries no renderer. That is a statement
+        // about the dependency graph, not about the file list, so it is asserted where it is true —
+        // the host-boundary check passed on the classpath this bundle was built from.
+        assertEquals(
+            TaskOutcome.SUCCESS,
+            result.task(":${MiniAppPluginDiagnostics.CHECK_MINIAPP_HOST_BOUNDARY_TASK_NAME}")?.outcome,
+        )
+        // The boundary check is what makes the assembly safe to trust, so it must run first. The edge
+        // is asserted here because reproducing a leaky assembly would drag the npm install into a
+        // test that is about the dependency graph.
+        assertContains(report.valuesAfter("miniapp.bundleDependencies="), MiniAppPluginDiagnostics.CHECK_MINIAPP_HOST_BOUNDARY_TASK_NAME)
+    }
+
+    @Test
+    fun `a client renderer on the Mini App runtime classpath is rejected`() {
+        val projectDir = newFixture("kmp-renderer-leak")
+        writeConsumerBuildScript(
+            projectDir,
+            consumerEpilogue = consumerDependency("org.jetbrains.compose.runtime:runtime:1.7.0"),
+        )
+        writeConsumerSources(projectDir)
+
+        // The check alone, deliberately: reaching the assembly task would run the npm install behind
+        // the Kotlin/JS distribution, and a network hiccup there must not turn a boundary assertion
+        // into a resolution failure.
+        val result = runner(projectDir, MiniAppPluginDiagnostics.CHECK_MINIAPP_HOST_BOUNDARY_TASK_NAME)
+            .buildAndFail()
+
+        assertContains(result.output, "client renderer")
+        assertContains(result.output, "org.jetbrains.compose.runtime:runtime")
+        assertContains(result.output, "Compose is a client UI consumer")
+        assertEquals(
+            TaskOutcome.FAILED,
+            result.task(":${MiniAppPluginDiagnostics.CHECK_MINIAPP_HOST_BOUNDARY_TASK_NAME}")?.outcome,
+        )
+    }
+
+    @Test
+    fun `the assembly task is up to date on a repeat run`() {
+        val projectDir = newFixture("kmp-bundle-incremental")
+        writeConsumerBuildScript(projectDir)
+        writeConsumerSources(projectDir)
+
+        val task = ":${MiniAppPluginDiagnostics.ASSEMBLE_MINIAPP_BUNDLE_TASK_NAME}"
+        assertEquals(TaskOutcome.SUCCESS, runner(projectDir, task).build().task(task)?.outcome)
+        assertEquals(TaskOutcome.UP_TO_DATE, runner(projectDir, task).build().task(task)?.outcome)
+    }
+
+    @Test
+    fun `the assembly task fails on the compilation when the consumer code does not compile`() {
+        val projectDir = newFixture("kmp-bundle-broken")
+        writeConsumerBuildScript(projectDir)
+        writeConsumerSources(projectDir)
+        projectDir.resolve("src/miniappMain/kotlin/sample/Broken.kt").apply {
+            parentFile.mkdirs()
+            writeText(
+                """
+                package sample
+
+                fun broken(): String = undefinedSymbol()
+                """.trimIndent() + "\n",
+            )
+        }
+
+        val result = runner(projectDir, MiniAppPluginDiagnostics.ASSEMBLE_MINIAPP_BUNDLE_TASK_NAME).buildAndFail()
+
+        assertContains(result.output, "compileKotlinMiniapp")
+        assertContains(result.output, "undefinedSymbol")
+    }
+
+    @Test
+    fun `the assembly task works under the configuration cache`() {
+        val projectDir = newFixture("kmp-bundle-configuration-cache")
+        writeConsumerBuildScript(projectDir, includeInspection = false)
+        writeConsumerSources(projectDir)
+
+        val task = MiniAppPluginDiagnostics.ASSEMBLE_MINIAPP_BUNDLE_TASK_NAME
+        runner(projectDir, task, "--configuration-cache").build()
+        val second = runner(projectDir, task, "--configuration-cache").build()
+
+        assertContains(second.output, "Reusing configuration cache")
+    }
+
+    @Test
     fun `a missing runtime fails with a resolution error naming the coordinate`() {
         val projectDir = newFixture("kmp-missing-runtime", includeSdkBuild = false)
         writeConsumerBuildScript(projectDir)
@@ -271,11 +409,19 @@ class MiniAppGradlePluginTest {
         projectDir: File,
         consumerPreamble: String = "",
         consumerEpilogue: String = "",
+        includeInspection: Boolean = true,
     ) {
         // The consumer script is exactly what a consumer would write. The model inspection lives in
         // a separate script, so `assertConsumerScriptDoesNothing` can check the consumer's own words
         // rather than the test harness's.
-        projectDir.resolve("inspection.gradle").writeText(INSPECTION_SCRIPT)
+        // The inspection script reads the project at execution time, so it is not
+        // configuration-cache compatible; a fixture that tests the configuration cache omits it.
+        val inspection = if (includeInspection) {
+            projectDir.resolve("inspection.gradle").writeText(INSPECTION_SCRIPT)
+            "apply(from = \"inspection.gradle\")"
+        } else {
+            ""
+        }
         projectDir.resolve("build.gradle.kts").writeText(
             """
             buildscript {
@@ -299,10 +445,19 @@ class MiniAppGradlePluginTest {
                 add("commonTestImplementation", "org.jetbrains.kotlin:kotlin-test:$kotlinVersion")
             }
 
-            apply(from = "inspection.gradle")
+            $inspection
             """.trimIndent(),
         )
     }
+    /**
+     * A dependency the consumer declares itself, used to reproduce a leak the plugin does not cause.
+     * The fixture's own build script still names the runtime nowhere.
+     */
+    private fun consumerDependency(coordinate: String): String = """
+        dependencies {
+            add("commonMainImplementation", "$coordinate")
+        }
+    """.trimIndent()
 
     private fun writeConsumerSources(projectDir: File) {
         projectDir.resolve("src/commonMain/kotlin/sample/Shared.kt").apply {
@@ -322,11 +477,16 @@ class MiniAppGradlePluginTest {
                 package sample
 
                 import io.github.bobcgn.miniapp.api.MiniAppSdk
+                import kotlin.js.JsExport
 
-                // Compiles only when miniappMain can see commonMain.
+                // An exported declaration is what a Kotlin/JS library hands to the host; unexported
+                // code is eliminated from the module, so a consumer's host-facing surface is its
+                // exports. Only compiles when miniappMain can see commonMain.
+                @JsExport
                 fun miniAppGreeting(): String = "miniapp:" + sharedGreeting()
 
                 // Compiles only when the plugin wired the runtime SDK into miniappMain.
+                @JsExport
                 fun miniAppRuntimeVersion(): String = MiniAppSdk.VERSION
                 """.trimIndent() + "\n",
             )
@@ -514,6 +674,12 @@ class MiniAppGradlePluginTest {
                         println("miniapp." + name + ".directDependsOn=" + direct)
                         println("miniapp." + name + ".transitiveDependsOn=" + seen.toList().sort())
                     }
+                    println(
+                        "miniapp.bundleDependencies=" +
+                            project.tasks.getByName("assembleMiniAppBundle")
+                                .taskDependencies.getDependencies(null)
+                                .collect { it.name }.sort()
+                    )
                     println(
                         "miniapp.testTasks=" +
                             project.tasks.names.findAll { it == "miniappTest" || it == "miniappNodeTest" }.sort()

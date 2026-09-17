@@ -65,6 +65,14 @@ Add a new capability guarantee to the shared check object rather than to one ada
 cd examples/wechat-miniprogram && npm run smoke && npm run typecheck
 ```
 
+### Gradle plugin suite
+
+`:miniapp-gradle-plugin:test` drives the plugin through Gradle TestKit fixtures in temporary consumer projects. It covers plugin application, the missing-Kotlin-Multiplatform failure, source-set provisioning and compilation ownership, test execution, runtime dependency wiring, the `assembleMiniAppBundle` contract, the renderer rejection that guards that contract, repeat-run incrementality and configuration-cache compatibility.
+
+The fixtures resolve the runtime SDK through a composite build of this repository, because nothing is published yet. They assert on real output — the executed test report, and the files a bundle actually contains — rather than on task names alone: a task existing is not evidence that it produced anything. The bundle tests keep two conclusions apart: that the plugin generates no host markup, and that the distribution carries no renderer. The first is a statement about generated files; the second is a statement about the dependency graph and is asserted by the host-boundary check.
+
+These tests establish that a distribution is produced and what it contains. They do not establish that any host can load it; that needs a real host run.
+
 ## 3. Real-host layer
 
 ### Reproducible checklist

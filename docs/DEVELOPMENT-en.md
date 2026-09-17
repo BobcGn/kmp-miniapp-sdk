@@ -60,6 +60,56 @@ What the check does not do: it cannot detect a renderer that imports no UI frame
 
 The runtime is a **public module coordinate**, `io.github.bobcgn:kmp-miniapp-sdk:<version>`, so the plugin never names this repository's project paths — a consumer build has no access to them, and `project(":kmp-miniapp-sdk")` is not available to it. The runtime's directory is `sdk/`; its project name is `kmp-miniapp-sdk`, because that name is the artifact id composite-build substitution matches and a publication would publish. `miniappTest` inherits the runtime through the source-set hierarchy; no other source set and no other target receives it.
 
+### The host bundle
+
+The plugin configures the Mini App target's Kotlin/JS output for a host: a CommonJS library binary with TypeScript declarations, on top of the Node.js test run. The consumer writes none of `useCommonJs()`, `binaries.library()`, `generateTypeScriptDefinitions()` or `nodejs()`.
+
+```shell
+./gradlew assembleMiniAppBundle
+```
+
+The task republishes the Kotlin/JS production library at `build/miniapp/bundle/`. It is a `Sync`, so a runtime module that leaves the compilation also leaves the bundle, and it copies the distribution task's *declared output* rather than a hand-written path, so a Kotlin Gradle Plugin layout change moves the bundle instead of quietly emptying it. It reads and writes nothing outside the Mini App target.
+
+For a project whose `miniappMain` uses the runtime SDK, the bundle looks like this:
+
+```text
+build/miniapp/bundle/
+  <project>-miniapp.js        the consumer's entry module: its compiled code and its @JsExport
+                              declarations, re-exporting the runtime's namespace and requiring
+                              the runtime module below
+  <project>-miniapp.d.ts      the declaration the thin host code compiles against
+  kmp-miniapp-sdk-kotlin.js   the runtime SDK, as its own module
+  kotlin-kotlin-stdlib.js     the Kotlin runtime its compilation resolved
+  kotlinx-coroutines-core.js
+  kotlinx-atomicfu.js
+  kotlin_org_jetbrains_kotlin_kotlin_dom_api_compat.js
+  package.json
+  *.js.map                    external source maps, for local host-side debugging
+```
+
+What the contract promises: the consumer's entry module, its TypeScript declaration, the runtime SDK module, the Kotlin runtime modules the compilation resolved, and `package.json`. What it deliberately does not promise: a fixed list of runtime modules. That set is whatever the compilation resolves, so it moves when the SDK's own dependencies move; a host loads the entry module and whatever that module requires.
+
+Two consequences are worth stating because they surprise people:
+
+- **A Kotlin/JS library exports only `@JsExport` declarations, and eliminates everything else.** A consumer's host-facing surface is therefore its own `@JsExport` declarations in `miniappMain`; code nothing exports never reaches the bundle. This is why the fixtures export what they assert on.
+- **The runtime SDK is a separate module, not inlined** into the consumer's module, because the runtime declares its own Kotlin/JS output module name. The bundle therefore has more than one JavaScript file a host must load, and the entry module requires the rest.
+
+### The Mini App source set's architecture precondition
+
+`miniappMain` inherits `commonMain`, so whatever a common source set carries reaches the Mini App compilation. It may inherit shared behaviour, models and state. It may **not** inherit Compose UI, Skiko, or a browser renderer: Compose UI belongs in a client module or source set that is not a parent of `miniappMain`, such as a Compose client application's own UI source set.
+
+The plugin enforces that instead of only documenting it:
+
+```shell
+./gradlew checkMiniAppHostBoundary
+```
+
+The check resolves `miniappRuntimeClasspath` — the exact set the distribution is built from — and fails when it carries Compose, Skiko, a Compose-specific AndroidX integration artifact, `kotlinx-browser` or `kotlinx-html`. Non-Compose lifecycle, saved-state and navigation primitives are allowed. It runs before `assembleMiniAppBundle`, so a distribution no host could run is never produced. It is a **dependency** rule, not a file rule: the files in a Kotlin/JS distribution reach one another through `require()`, so deleting the ones that look like a renderer would turn a build failure into a load failure.
+
+A consumer that already had a Kotlin/JS target before applying the plugin may need to run `./gradlew kotlinUpgradeYarnLock` once. Applying the plugin adds a target, which changes the npm dependency set, and the Kotlin Gradle Plugin will not overwrite an existing yarn lock on its own.
+
+**What none of this establishes:** that a host can load the distribution. No mini app host has loaded one. It is a stable host-integration input whose host compatibility is still outstanding, and neither the task's success nor the boundary check is evidence for it.
+
 ### Where the version lives
 
 `gradle/libs.versions.toml` holds the one version the runtime SDK and this plugin share. The plugin's build generates `miniapp-plugin-metadata.properties` from it, and the plugin reads the coordinate from that resource at runtime, so neither the plugin's source nor its tests contain the version as a literal.
@@ -76,7 +126,7 @@ A consumer whose `commonMain` depends on another Kotlin Multiplatform project mu
 
 The tests are Gradle TestKit fixtures plus a contract test. The fixtures put the Kotlin Gradle Plugin and the plugin under test on one buildscript classpath deliberately: `withPluginClasspath()` injects the plugin under test into the plugin-resolution classpath only, so a fixture that resolves a second plugin separately cannot reproduce the classpath a real consumer build gives the plugin. One fixture carries `commonMain`, `miniappMain`, `commonTest` and `miniappTest` sources and asserts the executed test report, so the source-set wiring and the test execution are both proved by running tests rather than by reading the model. The fixtures consume the runtime through a composite build (`includeBuild` of this repository), which is how the unpublished coordinate resolves; the plugin itself never sees that path.
 
-Still absent, and owned by later issues: WeChat artifact assembly (BOB-81) and the Mini App Gradle DSL (BOB-84).
+Still absent, and owned by the later issue: the Mini App Gradle DSL, including any WeChat-specific host configuration (BOB-84).
 
 ## Mini App Gradle plugin model PoC
 

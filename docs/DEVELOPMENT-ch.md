@@ -60,6 +60,55 @@ runtime SDK 共享客户端行为、宿主能力与 presentation state，从不�
 
 runtime 是**公共 module 坐标** `io.github.bobcgn:kmp-miniapp-sdk:<version>`，因此插件从不写出本仓库的 project path —— 消费者构建无法访问它们，`project(":kmp-miniapp-sdk")` 对它不可用。runtime 的目录是 `sdk/`，project 名是 `kmp-miniapp-sdk`，因为该名字正是 composite build substitution 匹配、也是正式发布将要使用的 artifact id。`miniappTest` 通过 source-set hierarchy 继承该 runtime；其他 source set 与其他 target 都不会获得它。
 
+### 宿主 bundle
+
+插件把 Mini App target 的 Kotlin/JS 输出配置成宿主可消费的形态：在 Node.js test run 之上，再加 CommonJS library binary 与 TypeScript declaration。消费者不需要写 `useCommonJs()`、`binaries.library()`、`generateTypeScriptDefinitions()` 或 `nodejs()` 中的任何一项。
+
+```shell
+./gradlew assembleMiniAppBundle
+```
+
+该任务把 Kotlin/JS production library 重新发布到 `build/miniapp/bundle/`。它使用 `Sync`，因此一个从 compilation 中消失的 runtime 模块也会从 bundle 中消失；它复制的是 distribution task 的**已声明输出**而不是手写路径，因此 Kotlin Gradle Plugin 的目录布局变化会让 bundle 跟着移动，而不是悄悄变空。它只读写 Mini App target 的范围，不触碰其他任何东西。
+
+对于一个 `miniappMain` 使用 runtime SDK 的项目，bundle 形如：
+
+```text
+build/miniapp/bundle/
+  <project>-miniapp.js        消费者入口模块：其编译后的代码与 @JsExport 声明，
+                              并 re-export runtime 的 namespace、require 下面的 runtime 模块
+  <project>-miniapp.d.ts      薄宿主代码据以编译的 declaration
+  kmp-miniapp-sdk-kotlin.js   runtime SDK，作为独立模块
+  kotlin-kotlin-stdlib.js     该 compilation 解析出的 Kotlin runtime
+  kotlinx-coroutines-core.js
+  kotlinx-atomicfu.js
+  kotlin_org_jetbrains_kotlin_kotlin_dom_api_compat.js
+  package.json
+  *.js.map                    外部 source map，供宿主侧本地调试
+```
+
+契约承诺的内容：消费者入口模块、其 TypeScript declaration、runtime SDK 模块、该 compilation 解析出的 Kotlin runtime 模块，以及 `package.json`。契约**有意不承诺**固定的 runtime 模块列表：那一组取决于解析结果，SDK 自身依赖变化时它也会变化；宿主加载入口模块以及该模块 require 的一切。
+
+有两点值得明说，因为它们与人直觉不符：
+
+- **Kotlin/JS library 只导出 `@JsExport` 声明，其余一律被消除。** 因此消费者的宿主侧表面就是其 `miniappMain` 中自己的 `@JsExport` 声明；没有被导出的代码永远不会进入 bundle。测试 fixture 之所以给被断言的对象加上导出，正是这个原因。
+- **runtime SDK 是独立模块，而不是被内联进消费者模块**，因为 runtime 声明了自己的 Kotlin/JS 输出模块名。因此 bundle 中有多个 JavaScript 文件需要宿主加载，入口模块会 require 其余部分。
+
+### Mini App source set 的架构前置条件
+
+`miniappMain` 继承 `commonMain`，因此 common source set 中的内容都会进入 Mini App compilation。它可以继承共享行为、model 与 state，但**不得**继承 Compose UI、Skiko 或浏览器 renderer：Compose UI 必须位于不作为 `miniappMain` 父 source set 的客户端 module 或 source set 中，例如 Compose 客户端应用自身的 UI source set。
+
+插件把这一点作为约束强制，而不只是写在文档里：
+
+```shell
+./gradlew checkMiniAppHostBoundary
+```
+
+该检查解析 `miniappRuntimeClasspath` —— 正是 distribution 据以构建的那一组依赖 —— 并在其携带 Compose、Skiko、Compose 专用的 AndroidX 集成 artifact、`kotlinx-browser` 或 `kotlinx-html` 时失败。非 Compose 的 lifecycle、saved-state 与 navigation primitives 仍被允许。它在 `assembleMiniAppBundle` 之前运行，因此不会产出任何宿主都无法运行的 distribution。它是**依赖**规则而不是文件规则：Kotlin/JS distribution 中的文件通过 `require()` 彼此引用，删除看起来像 renderer 的文件只会把构建失败变成加载失败。
+
+若消费者在应用插件前已存在 Kotlin/JS target，可能需要执行一次 `./gradlew kotlinUpgradeYarnLock`。应用插件会新增一个 target，从而改变 npm 依赖集合，而 Kotlin Gradle Plugin 不会自行覆盖已有的 yarn lock。
+
+**以上任何一项都不代表**宿主能够加载该 distribution。没有任何小程序宿主加载过它。它是稳定的宿主集成输入，其宿主兼容性仍然未完成验证；任务成功与边界检查都不是它的证据。
+
 ### 版本来源
 
 `gradle/libs.versions.toml` 保存 runtime SDK 与本插件共享的唯一版本。插件构建据此生成 `miniapp-plugin-metadata.properties`，插件运行期从该资源读取坐标，因此插件源码与测试中都不含版本字面量。
@@ -76,7 +125,7 @@ SDK 尚未发布，因此该坐标今天经 composite build 解析，发布后�
 
 测试由 Gradle TestKit fixture 与契约测试组成。fixture 有意把 Kotlin Gradle Plugin 与被测插件放在同一个 buildscript classpath 上：`withPluginClasspath()` 只把被测插件注入 plugin-resolution classpath，因此单独解析第二个插件的 fixture 无法复现真实消费者构建给插件的 classpath。其中一个 fixture 带有 `commonMain`、`miniappMain`、`commonTest` 与 `miniappTest` 源码，并断言实际执行出的测试报告，因此 source set 接线与测试执行都是由运行测试证明的，而不是靠读模型。fixture 经 composite build（`includeBuild` 本仓库）消费 runtime，这是尚未发布的坐标当前的解析方式；插件自身永远看不到该路径。
 
-仍未实现、归属后续 Issue：微信产物组装（BOB-81）、Mini App Gradle DSL（BOB-84）。
+仍未实现、归属后续 Issue：Mini App Gradle DSL，包含任何微信专属宿主配置（BOB-84）。
 
 ## Mini App Gradle 插件模型 PoC
 
