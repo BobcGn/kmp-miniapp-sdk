@@ -13,7 +13,7 @@
 | 自动化 | Node.js，通过 Gradle Wrapper 与示例的 npm scripts | 共享 Kotlin 逻辑、通过 fake port 驱动的 adapter 行为、模块与类型声明形状、TypeScript 契约 | 任何关于微信小程序 runtime 的事实 |
 | 真实宿主 | 微信开发者工具 | 生成的产物能在目标宿主中编译、加载并运行 | 除此之外无其他结论，也不能证明宿主自身行为没有回归 |
 
-**Kotlin 或 Node.js 测试通过，不等于微信小程序集成通过。** `:sdk:jsNodeTest`、`npm run smoke`、`npm run typecheck` 的通过结果与真实宿主结果必须始终分别记录。Node.js 只是本地构建与测试环境，生产宿主是微信小程序 JavaScript runtime。
+**Kotlin 或 Node.js 测试通过，不等于微信小程序集成通过。** `:kmp-miniapp-sdk:jsNodeTest`、`npm run smoke`、`npm run typecheck` 的通过结果与真实宿主结果必须始终分别记录。Node.js 只是本地构建与测试环境，生产宿主是微信小程序 JavaScript runtime。
 
 ## 2. 自动化层
 
@@ -58,7 +58,7 @@ Storage 与 network 的检查各跑两遍：一遍跑在中性实现上（`MiniA
 ### 命令
 
 ```shell
-./gradlew :sdk:jsNodeTest
+./gradlew :kmp-miniapp-sdk:jsNodeTest
 ```
 
 ```shell

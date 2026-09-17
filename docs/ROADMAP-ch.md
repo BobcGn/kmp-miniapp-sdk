@@ -8,7 +8,7 @@
 
 ## V0.1 Bootstrap — DONE
 
-- 建立单一 `:sdk` Kotlin Multiplatform module。
+- 建立单一 `:kmp-miniapp-sdk` Kotlin Multiplatform module。
 - 配置 Kotlin/JS CommonJS library target 和 Node.js tests。
 - 建立最小 source sets、构建验证、文档和仓库规则。
 
@@ -46,7 +46,11 @@ plugins {
 
 第 A 步已有结论。`poc/kgp-model` 中的 PoC 选定「由插件管理、以平台命名的 Kotlin/JS target」，因为只有在它之下 `miniappMain` 与 `miniappTest` 才是由 compilation 拥有的真实 Kotlin source set。[ADR 0010](decisions/0010-miniapp-gradle-plugin-source-set-model-ch.md) 记录了该决策、被否决的替代方案与 Kotlin Gradle Plugin 的限制。`miniappMain` / `miniappTest` 的硬性要求不变。
 
-第 B 步已完成，第 C 步进行中。`:miniapp-gradle-plugin` 发布 `io.github.bobcgn.miniapp`；应用它会注册 `miniapp` target 及其 Node.js test run，因此消费者得到的是由 compilation 拥有、以 `commonMain` / `commonTest` 为父边的 `miniappMain` 与 `miniappTest`，以及一个真正执行的 `miniappTest` 任务。SDK 依赖接线（BOB-82）、产物组装（BOB-81）与微信 DSL（BOB-84）尚未实现，因此这些阶段仍处于门禁之下。
+第 B、C 步已完成，第 D 步进行中。`:miniapp-gradle-plugin` 发布 `io.github.bobcgn.miniapp`；应用它会注册 `miniapp` target 及其 Node.js test run，因此消费者得到的是由 compilation 拥有、以 `commonMain` / `commonTest` 为父边的 `miniappMain` 与 `miniappTest` 以及一个真正执行的 `miniappTest` 任务；它还会把 runtime SDK 接入 `miniappMain`，使消费者无需声明 artifact 即可针对公开 API 编译。
+
+runtime 的公共坐标是 `io.github.bobcgn:kmp-miniapp-sdk`。第 D 步正式确定了该 artifact id：module 目录仍为 `sdk/`，而其 Gradle project 名 —— 也就是 composite build substitution 匹配、正式发布将要使用的 artifact id —— 是 `kmp-miniapp-sdk`。版本只有 `gradle/libs.versions.toml` 一个来源：插件声明的坐标与 SDK 自身的 `MiniAppSdk.VERSION` 都由它生成，因此二者不可能漂移。
+
+产物组装（BOB-81）与微信 DSL（BOB-84）尚未实现，因此这些阶段仍处于门禁之下。
 
 ### P1 完成证据
 

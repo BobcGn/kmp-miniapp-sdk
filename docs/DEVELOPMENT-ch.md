@@ -25,26 +25,26 @@ VS Code 可用于处理 `examples/wechat-miniprogram` 下的文件。Consumer Br
 ```shell
 ./gradlew projects
 ./gradlew clean build
-./gradlew :sdk:jsNodeTest
-./gradlew :sdk:jsTest
-./gradlew :sdk:checkArchitectureBoundaries
+./gradlew :kmp-miniapp-sdk:jsNodeTest
+./gradlew :kmp-miniapp-sdk:jsTest
+./gradlew :kmp-miniapp-sdk:checkArchitectureBoundaries
 ./gradlew :miniapp-gradle-plugin:test
 ./gradlew buildMiniAppSdk
 ```
 
 这些命令有效，并已于 2026-09-15 完成验证；其中 `:miniapp-gradle-plugin:test` 于 2026-09-17 完成验证。
 
-`:sdk:jsTest` suite 覆盖 Host boundary、error model、callback adaptation、cancellation、double completion、可选 abort、微信 error mapping、包含取消时宿主中止的 HTTP transport adaptation、生命周期状态迁移、导航适配、capability support 状态与版本门控、包含并发请求合并的权限生命周期行为、包含拒绝分类的隐私授权、包含过期分类的微信会话检查、包含逐项门控的微信剪贴板与震动 adapter、包含沙箱与文本边界的微信文件系统 adapter、包含坐标校验与隐私前置条件的微信定位 adapter、包含不可归因中断分类与结果校验的微信扫码 adapter、包含请求边界、结果校验与中断分类的微信媒体 adapter、包含模板校验与逐模板结果策略的微信订阅消息 adapter、包含逐 collector 监听配对的网络状态 adapter、包含 abort、进度与超时行为的微信上传与下载 adapter、包含参数转发、空白参数拒绝、精确中断分类与单次终态行为的微信支付 adapter，以及 interop object construction。这些测试使用 fake callbacks，不代表能够访问真实 `wx` runtime。
+`:kmp-miniapp-sdk:jsTest` suite 覆盖 Host boundary、error model、callback adaptation、cancellation、double completion、可选 abort、微信 error mapping、包含取消时宿主中止的 HTTP transport adaptation、生命周期状态迁移、导航适配、capability support 状态与版本门控、包含并发请求合并的权限生命周期行为、包含拒绝分类的隐私授权、包含过期分类的微信会话检查、包含逐项门控的微信剪贴板与震动 adapter、包含沙箱与文本边界的微信文件系统 adapter、包含坐标校验与隐私前置条件的微信定位 adapter、包含不可归因中断分类与结果校验的微信扫码 adapter、包含请求边界、结果校验与中断分类的微信媒体 adapter、包含模板校验与逐模板结果策略的微信订阅消息 adapter、包含逐 collector 监听配对的网络状态 adapter、包含 abort、进度与超时行为的微信上传与下载 adapter、包含参数转发、空白参数拒绝、精确中断分类与单次终态行为的微信支付 adapter，以及 interop object construction。这些测试使用 fake callbacks，不代表能够访问真实 `wx` runtime。
 
 ## 架构边界
 
 runtime SDK 共享客户端行为、宿主能力与 presentation state，从不渲染。[ADR 0011](decisions/0011-presentation-state-shared-rendering-host-native-ch.md) 固定了四层职责，责任矩阵见 [ARCHITECTURE-ch.md](ARCHITECTURE-ch.md)。
 
 ```shell
-./gradlew :sdk:checkArchitectureBoundaries
+./gradlew :kmp-miniapp-sdk:checkArchitectureBoundaries
 ```
 
-当 `sdk/**` 下任何内容导入 UI framework namespace 或声明 UI framework 依赖时，该任务会失败，并且它是 `:sdk:check` 的一部分。它被有意设计为构建失败而不是评审提醒，因为「SDK 不依赖 Compose」这条不变量必须能在没有读过 ADR 的贡献者手中存活。
+当 `sdk/**` 下任何内容导入 UI framework namespace 或声明 UI framework 依赖时，该任务会失败，并且它是 `:kmp-miniapp-sdk:check` 的一部分。它被有意设计为构建失败而不是评审提醒，因为「SDK 不依赖 Compose」这条不变量必须能在没有读过 ADR 的贡献者手中存活。
 
 依赖匹配分两种：当某个 group 只为 UI framework 服务时按 group 匹配；当该 group 同时承载本 SDK 正当使用的依赖时，按精确 module coordinate 匹配。`org.jetbrains.kotlinx` 承载 `kotlinx-coroutines-core`，因此不能封禁整个 group；改为封禁 `kotlinx-html` 及其 `-js` / `-jvm` 变体这些 module。在把分类器用于真实模型之前，任务会先拿一张固定的期望结论表跑一遍，任何坐标被分类成与预期不符即失败，因此后续改动无法悄悄放宽或收紧规则。
 
@@ -52,10 +52,19 @@ runtime SDK 共享客户端行为、宿主能力与 presentation state，从不�
 
 ## Mini App Gradle 插件
 
-`:miniapp-gradle-plugin` 由实现类 `io.github.bobcgn.miniapp.gradle.MiniAppGradlePlugin` 发布 `io.github.bobcgn.miniapp` 插件。把它应用到 Kotlin Multiplatform 项目会做两件事：
+`:miniapp-gradle-plugin` 由实现类 `io.github.bobcgn.miniapp.gradle.MiniAppGradlePlugin` 发布 `io.github.bobcgn.miniapp` 插件。把它应用到 Kotlin Multiplatform 项目会做三件事：
 
 - 注册一个名为 `miniapp` 的 Kotlin/JS target —— 正是这次注册让 `miniappMain` 与 `miniappTest` 成为由 compilation 拥有、以 `commonMain` / `commonTest` 为父边的真实 source set；
-- 注册该 target 的 Node.js test run —— 正是它让 `miniappTest` 拥有一个真正执行的任务。
+- 注册该 target 的 Node.js test run —— 正是它让 `miniappTest` 拥有一个真正执行的任务；
+- 把 runtime SDK 接入 `miniappMain` 的 api configuration —— 正是它让消费者代码无需声明 artifact 即可针对公开 API 编译。
+
+runtime 是**公共 module 坐标** `io.github.bobcgn:kmp-miniapp-sdk:<version>`，因此插件从不写出本仓库的 project path —— 消费者构建无法访问它们，`project(":kmp-miniapp-sdk")` 对它不可用。runtime 的目录是 `sdk/`，project 名是 `kmp-miniapp-sdk`，因为该名字正是 composite build substitution 匹配、也是正式发布将要使用的 artifact id。`miniappTest` 通过 source-set hierarchy 继承该 runtime；其他 source set 与其他 target 都不会获得它。
+
+### 版本来源
+
+`gradle/libs.versions.toml` 保存 runtime SDK 与本插件共享的唯一版本。插件构建据此生成 `miniapp-plugin-metadata.properties`，插件运行期从该资源读取坐标，因此插件源码与测试中都不含版本字面量。
+
+SDK 尚未发布，因此该坐标今天经 composite build 解析，发布后由仓库解析，两处的 group、name、version 完全相同。无法解析时消费者会看到 Gradle 指明该坐标的依赖解析错误；插件有意不回退到其他版本、其他 artifact 或 project path。
 
 插件自身不创建任何 source set 与 `dependsOn` 边：手工搭建的正是 [ADR 0010](decisions/0010-miniapp-gradle-plugin-source-set-model-ch.md) 否决的「未使用 source set」模型。把它应用到未应用 Kotlin Multiplatform 插件的项目会失败，并给出指明缺失插件的错误信息。
 
@@ -65,9 +74,9 @@ runtime SDK 共享客户端行为、宿主能力与 presentation state，从不�
 
 若消费者的 `commonMain` 依赖另一个 Kotlin Multiplatform project，则必须对该 project 同样应用本插件。该依赖经由 Mini App variant 解析，不提供该 variant 的 project 会解析失败；插件不提供回退，把依赖移出 `commonMain` 也不是可接受的变通。
 
-测试由 Gradle TestKit fixture 与契约测试组成。fixture 有意把 Kotlin Gradle Plugin 与被测插件放在同一个 buildscript classpath 上：`withPluginClasspath()` 只把被测插件注入 plugin-resolution classpath，因此单独解析第二个插件的 fixture 无法复现真实消费者构建给插件的 classpath。其中一个 fixture 带有 `commonMain`、`miniappMain`、`commonTest` 与 `miniappTest` 源码，并断言实际执行出的测试报告，因此 source set 接线与测试执行都是由运行测试证明的，而不是靠读模型。
+测试由 Gradle TestKit fixture 与契约测试组成。fixture 有意把 Kotlin Gradle Plugin 与被测插件放在同一个 buildscript classpath 上：`withPluginClasspath()` 只把被测插件注入 plugin-resolution classpath，因此单独解析第二个插件的 fixture 无法复现真实消费者构建给插件的 classpath。其中一个 fixture 带有 `commonMain`、`miniappMain`、`commonTest` 与 `miniappTest` 源码，并断言实际执行出的测试报告，因此 source set 接线与测试执行都是由运行测试证明的，而不是靠读模型。fixture 经 composite build（`includeBuild` 本仓库）消费 runtime，这是尚未发布的坐标当前的解析方式；插件自身永远看不到该路径。
 
-仍未实现、归属后续 Issue：SDK 依赖接线（BOB-82）、微信产物组装（BOB-81）、Mini App Gradle DSL（BOB-84）。
+仍未实现、归属后续 Issue：微信产物组装（BOB-81）、Mini App Gradle DSL（BOB-84）。
 
 ## Mini App Gradle 插件模型 PoC
 

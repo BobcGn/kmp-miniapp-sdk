@@ -64,7 +64,7 @@ Do not add public API casually. Every public declaration must have explicit visi
 
 The SDK shares client behaviour, host capabilities, and presentation state. It never renders. [ADR 0011](docs/decisions/0011-presentation-state-shared-rendering-host-native-en.md) records the boundary.
 
-- **The runtime SDK, and any Presentation Core, must not depend on Compose** — not on `androidx.compose.*`, `org.jetbrains.compose.*`, Material or the Compose compiler plugin, not on Android views, UIKit or SwiftUI, and not on host markup such as WXML, WXSS, AXML or HTML. `./gradlew :sdk:checkArchitectureBoundaries` enforces this and runs as part of `:sdk:check`.
+- **The runtime SDK, and any Presentation Core, must not depend on Compose** — not on `androidx.compose.*`, `org.jetbrains.compose.*`, Material or the Compose compiler plugin, not on Android views, UIKit or SwiftUI, and not on host markup such as WXML, WXSS, AXML or HTML. `./gradlew :kmp-miniapp-sdk:checkArchitectureBoundaries` enforces this and runs as part of `:kmp-miniapp-sdk:check`.
 - **Compose is a client UI consumer, not SDK infrastructure.** A client application may use Compose; the SDK must not know it exists.
 - **Mini App host integration binds, it does not render.** Code under `sdk/src/jsMain` and a consumer's `miniappMain` may bind state to the host's own view mechanism and turn host events into actions. It must not contain a renderer, virtual DOM, view tree, layout engine, Kotlin UI DSL or WXML generator.
 - **WXML and WXSS belong to the WeChat host UI**, which today means `examples/wechat-miniprogram`. They do not enter SDK source.

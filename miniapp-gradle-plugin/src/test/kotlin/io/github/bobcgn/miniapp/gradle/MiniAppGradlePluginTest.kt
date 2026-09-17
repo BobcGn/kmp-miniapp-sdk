@@ -31,6 +31,12 @@ class MiniAppGradlePluginTest {
         "miniappPlugin.kotlinVersion is not set; miniapp-gradle-plugin/build.gradle.kts sets it."
     }
 
+    private val sdkRepository: File = File(
+        checkNotNull(System.getProperty("miniappPlugin.sdkRepository")) {
+            "miniappPlugin.sdkRepository is not set; miniapp-gradle-plugin/build.gradle.kts sets it."
+        },
+    )
+
     @Test
     fun `the plugin provisions miniappMain and miniappTest as compilation-owned source sets`() {
         val projectDir = newFixture("kmp-provisioning")
@@ -75,11 +81,84 @@ class MiniAppGradlePluginTest {
         assertEquals(TaskOutcome.SUCCESS, result.task(":miniappTest")?.outcome)
 
         val executed = executedTests(projectDir)
-        // Only in miniappTest.
+        // Only in miniappTest, and it calls the runtime SDK's public API.
         assertContains(executed, "miniAppMainIsCompiledAndSeesCommonMain")
+        assertContains(executed, "theMiniAppTestCompilationSeesTheRuntimeSdk")
         // Declared in commonTest and reused by the miniappTest compilation.
         assertContains(executed, "commonTestIsReusedByTheMiniAppTestCompilation")
-        assertEquals(2, executed.size, "expected exactly the two fixture tests, got $executed")
+        assertEquals(3, executed.size, "expected exactly the three fixture tests, got $executed")
+    }
+
+    @Test
+    fun `the plugin wires the runtime SDK into miniappMain and nowhere else`() {
+        val projectDir = newFixture("kmp-dependency-wiring")
+        writeConsumerBuildScript(projectDir)
+        writeConsumerSources(projectDir)
+        assertConsumerScriptDeclaresNoRuntime(projectDir)
+
+        val result = runner(projectDir, "miniAppModelReport").build()
+        val report = MiniAppModelReport(result)
+
+        // Declared exactly once, on miniappMain's api configuration. miniappTest reaches it through
+        // the source-set hierarchy rather than through a second declaration that could resolve
+        // differently.
+        assertEquals(listOf("miniappMainApi"), report.configurationsDeclaring(MiniAppRuntimeDependency.coordinate))
+
+        assertContains(report.compileClasspaths, "miniappCompileClasspath")
+        assertContains(report.compileClasspaths, "miniappTestCompileClasspath")
+        assertContains(report.compileClasspaths, "metadataCompileClasspath")
+
+        // Resolved through the composite build rather than from a repository, because nothing is
+        // published yet; the coordinate is the same one publication would use.
+        assertEquals(
+            1,
+            report.classpathEntries("miniappCompileClasspath").count {
+                it.contains(MiniAppRuntimeDependency.name)
+            },
+            "miniappMain must compile against exactly one runtime SDK and no ambiguous variant",
+        )
+        assertTrue(
+            report.classpathEntries("miniappTestCompileClasspath").any {
+                it.contains(MiniAppRuntimeDependency.name)
+            },
+            "miniappTest must inherit the runtime SDK through the source-set hierarchy",
+        )
+        assertEquals(
+            emptyList(),
+            report.classpathEntries("metadataCompileClasspath").filter {
+                it.contains(MiniAppRuntimeDependency.name)
+            },
+            "the common/metadata compilation must not receive the Mini App runtime",
+        )
+    }
+
+    @Test
+    fun `the runtime is not injected into another target`() {
+        val projectDir = newFixture("kmp-other-target")
+        writeConsumerBuildScript(
+            projectDir,
+            consumerEpilogue = """
+            // A consumer that also targets the JVM. The Mini App runtime is a Kotlin/JS artifact, so
+            // a leak into commonMain would break this compilation rather than quietly mis-resolve.
+            project.extensions.getByType(
+                org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension::class.java,
+            ).jvm()
+            """.trimIndent(),
+        )
+        writeConsumerSources(projectDir)
+
+        val result = runner(projectDir, "compileKotlinJvm", "miniAppModelReport").build()
+        val report = MiniAppModelReport(result)
+
+        assertEquals(TaskOutcome.SUCCESS, result.task(":compileKotlinJvm")?.outcome)
+        assertEquals(
+            emptyList(),
+            report.classpathEntries("jvmCompileClasspath").filter {
+                it.contains(MiniAppRuntimeDependency.name)
+            },
+            "the JVM compilation must not receive the Mini App runtime",
+        )
+        assertEquals(listOf("miniappMainApi"), report.configurationsDeclaring(MiniAppRuntimeDependency.coordinate))
     }
 
     @Test
@@ -115,6 +194,21 @@ class MiniAppGradlePluginTest {
     }
 
     @Test
+    fun `a missing runtime fails with a resolution error naming the coordinate`() {
+        val projectDir = newFixture("kmp-missing-runtime", includeSdkBuild = false)
+        writeConsumerBuildScript(projectDir)
+        writeConsumerSources(projectDir)
+
+        val result = runner(projectDir, "compileKotlinMiniapp").buildAndFail()
+
+        assertContains(result.output, MiniAppRuntimeDependency.coordinate)
+        assertTrue(
+            result.output.contains("Could not find") || result.output.contains("Could not resolve"),
+            "expected a dependency-resolution failure, got:\n${result.output}",
+        )
+    }
+
+    @Test
     fun `a project without the Kotlin Multiplatform plugin fails with a clear message`() {
         val projectDir = newFixture("missing-kmp-project")
         projectDir.resolve("build.gradle.kts").writeText(
@@ -138,8 +232,18 @@ class MiniAppGradlePluginTest {
 
     // --- fixtures -------------------------------------------------------------------------------
 
-    private fun newFixture(name: String): File {
+    private fun newFixture(name: String, includeSdkBuild: Boolean = true): File {
         val projectDir = createTempDirectory(name).toFile()
+        val sdkBuild = if (includeSdkBuild) {
+            """
+            // The fixture consumes the Mini App runtime as a public module coordinate. Nothing is
+            // published yet, so the coordinate resolves through this composite build; after
+            // publication it resolves from a repository with the same group, name and version.
+            includeBuild("${sdkRepository.invariantSeparatorsPath}")
+            """.trimIndent()
+        } else {
+            ""
+        }
         projectDir.resolve("settings.gradle.kts").writeText(
             """
             pluginManagement {
@@ -154,6 +258,8 @@ class MiniAppGradlePluginTest {
                     mavenCentral()
                 }
             }
+
+            $sdkBuild
 
             rootProject.name = "$name"
             """.trimIndent(),
@@ -215,8 +321,13 @@ class MiniAppGradlePluginTest {
                 """
                 package sample
 
+                import io.github.bobcgn.miniapp.api.MiniAppSdk
+
                 // Compiles only when miniappMain can see commonMain.
                 fun miniAppGreeting(): String = "miniapp:" + sharedGreeting()
+
+                // Compiles only when the plugin wired the runtime SDK into miniappMain.
+                fun miniAppRuntimeVersion(): String = MiniAppSdk.VERSION
                 """.trimIndent() + "\n",
             )
         }
@@ -244,13 +355,20 @@ class MiniAppGradlePluginTest {
                 """
                 package sample
 
+                import io.github.bobcgn.miniapp.api.MiniAppSdk
                 import kotlin.test.Test
                 import kotlin.test.assertEquals
+                import kotlin.test.assertTrue
 
                 class MiniAppTest {
                     @Test
                     fun miniAppMainIsCompiledAndSeesCommonMain() {
                         assertEquals("miniapp:hello from commonMain", miniAppGreeting())
+                    }
+
+                    @Test
+                    fun theMiniAppTestCompilationSeesTheRuntimeSdk() {
+                        assertTrue(MiniAppSdk.VERSION.isNotEmpty())
                     }
                 }
                 """.trimIndent() + "\n",
@@ -261,6 +379,29 @@ class MiniAppGradlePluginTest {
     private fun assertConsumerScriptDoesNothing(projectDir: File) {
         val script = projectDir.resolve("build.gradle.kts").readText()
         listOf("sourceSets", "js(", "js {", "nodejs(", "useCommonJs", "binaries.library").forEach { token ->
+            assertTrue(
+                !script.contains(token),
+                "the consumer build script must not contain '$token'; the plugin owns that wiring",
+            )
+        }
+    }
+
+    /**
+     * The consumer says nothing about the Mini App runtime: no coordinate, no project path, no
+     * repository path, no generated directory, and no configuration name. Everything below comes
+     * from the plugin, so the same build works against a published artifact.
+     */
+    private fun assertConsumerScriptDeclaresNoRuntime(projectDir: File) {
+        val script = projectDir.resolve("build.gradle.kts").readText()
+        listOf(
+            MiniAppRuntimeDependency.coordinate,
+            "io.github.bobcgn.miniapp.api",
+            "project(\":sdk\")",
+            "project(\":kmp-miniapp-sdk\")",
+            "build/generated",
+            "miniappMainApi",
+            "miniappMainImplementation",
+        ).forEach { token ->
             assertTrue(
                 !script.contains(token),
                 "the consumer build script must not contain '$token'; the plugin owns that wiring",
@@ -314,6 +455,7 @@ class MiniAppGradlePluginTest {
         val targets: List<String> = valuesAfter("miniapp.targets=")
         val sourceSets: List<String> = valuesAfter("miniapp.sourceSets=")
         val testTasks: List<String> = valuesAfter("miniapp.testTasks=")
+        val compileClasspaths: List<String> = valuesAfter("miniapp.compileClasspaths=")
 
         fun owningCompilations(sourceSet: String): List<String> =
             valuesAfter("miniapp.$sourceSet.owningCompilations=")
@@ -321,7 +463,16 @@ class MiniAppGradlePluginTest {
         fun transitiveDependencies(sourceSet: String): List<String> =
             valuesAfter("miniapp.$sourceSet.transitiveDependsOn=")
 
-        private fun valuesAfter(prefix: String): List<String> {
+        /** Configurations that declare exactly this module coordinate. */
+        fun configurationsDeclaring(coordinate: String): List<String> =
+            valuesAfter("miniapp.declaredDependencies=")
+                .filter { it.endsWith(coordinate) }
+                .map { it.substringBefore('=') }
+
+        fun classpathEntries(configurationName: String): List<String> =
+            valuesAfter("miniapp.classpath.$configurationName=")
+
+        fun valuesAfter(prefix: String): List<String> {
             val line = lines.firstOrNull { it.startsWith(prefix) }
                 ?: error("no line starting with '$prefix' in:\n${lines.joinToString("\n")}")
             return line.removePrefix(prefix).removeSurrounding("[", "]")
@@ -367,6 +518,26 @@ class MiniAppGradlePluginTest {
                         "miniapp.testTasks=" +
                             project.tasks.names.findAll { it == "miniappTest" || it == "miniappNodeTest" }.sort()
                     )
+                    // The fixture reports facts only; it never states the runtime coordinate, so the
+                    // assertions are about what the plugin published to the consumer rather than
+                    // about a name this harness copied down.
+                    def declaredDependencies = project.configurations.collectMany { configuration ->
+                        configuration.dependencies
+                            .findAll { dependency -> dependency.group != null }
+                            .collect { configuration.name + "=" + it.group + ":" + it.name + ":" + it.version }
+                    }.sort()
+                    println("miniapp.declaredDependencies=" + declaredDependencies)
+                    def compileClasspaths = project.configurations.names
+                        .findAll { it.toLowerCase().contains("compileclasspath") }
+                        .sort()
+                    println("miniapp.compileClasspaths=" + compileClasspaths)
+                    compileClasspaths.each { configurationName ->
+                        def resolved = project.configurations.getByName(configurationName)
+                            .incoming.resolutionResult.allComponents
+                            .collect { it.id.displayName }
+                            .sort()
+                        println("miniapp.classpath." + configurationName + "=" + resolved)
+                    }
                 }
             }
         """.trimIndent()

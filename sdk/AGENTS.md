@@ -46,7 +46,7 @@ Own Kotlin-to-JavaScript and TypeScript boundaries. Do not turn the export layer
 
 This module is client runtime and host capability. It does not render.
 
-- No Compose, Material, Android view, UIKit, SwiftUI or host-markup dependency or import, anywhere in `sdk/**`. `./gradlew :sdk:checkArchitectureBoundaries` enforces this.
+- No Compose, Material, Android view, UIKit, SwiftUI or host-markup dependency or import, anywhere in `sdk/**`. `./gradlew :kmp-miniapp-sdk:checkArchitectureBoundaries` enforces this.
 - `jsMain` binds host state and host events; it does not contain a renderer, virtual DOM, view tree, layout engine, Kotlin UI DSL or WXML generator.
 - Presentation state and presentation logic have a defined home — a future `presentation` module, P2 — and no implementation exists today. Do not create placeholder modules or types for them.
 - The backend owns business truth. Nothing in this module may present a cache, a `UiState`, or a host success callback as the authoritative answer for authentication, payment, inventory, or any other business rule.

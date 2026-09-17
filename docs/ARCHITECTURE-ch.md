@@ -322,7 +322,11 @@ Kotlin/JS compilation
 
 插件隐藏构建接线，而不隐藏语义。它不手工搭建 compilation 或 source set，不通过不受支持的 API 把 source set 挂到 compilation 上，也不把产物组装任务呈现为消费者契约。把本仓库自身 SDK 分发到微信示例的 `buildMiniAppSdk`，是组装环节的基础证据，而不是消费者工作流。
 
-`:miniapp-gradle-plugin` module 就是该插件本身。它注册 `miniapp` target 与该 target 的 Node.js test run，并对未应用 Kotlin Multiplatform 插件的项目报错。这两次注册就是它全部的提供内容：`miniappMain`、`miniappTest`、拥有它们的 compilation，以及它们与 `commonMain` / `commonTest` 的边，全部来自 Kotlin Gradle Plugin；插件从不手工搭建 source set 或层级边，因为手工搭建的正是 [ADR 0010](decisions/0010-miniapp-gradle-plugin-source-set-model-ch.md) 否决的「未使用 source set」模型。SDK 依赖接线、微信产物组装与 Host Gradle DSL 属于后续工作。
+`:miniapp-gradle-plugin` module 就是该插件本身。它注册 `miniapp` target 与该 target 的 Node.js test run，把 runtime SDK 接入 `miniappMain`，并对未应用 Kotlin Multiplatform 插件的项目报错。这些注册就是它全部的提供内容：`miniappMain`、`miniappTest`、拥有它们的 compilation，以及它们与 `commonMain` / `commonTest` 的边，全部来自 Kotlin Gradle Plugin；插件从不手工搭建 source set 或层级边，因为手工搭建的正是 [ADR 0010](decisions/0010-miniapp-gradle-plugin-source-set-model-ch.md) 否决的「未使用 source set」模型。
+
+runtime 以**公共 module 坐标**（`io.github.bobcgn:kmp-miniapp-sdk`）到达消费者，而不是 project path。消费者构建无法访问本仓库结构，因此插件不能、也不得写出 `project(":kmp-miniapp-sdk")`；同一个坐标今天经 composite build 解析，发布后由仓库解析。它只被加入 `miniappMain`，因此同时面向 Android、iOS 或 JVM 的项目不会在这些平台上获得 Mini App runtime；`miniappTest` 通过 source-set hierarchy 继承，而不是再次声明。
+
+微信产物组装与 Host Gradle DSL 属于后续工作。
 
 若消费者的 `commonMain` 依赖另一个 Kotlin Multiplatform project，则必须对该 project 同样应用本插件。该依赖经由 Mini App variant 解析，不提供该 variant 的 project 会解析失败；不存在回退，把依赖移出 `commonMain` 也不是变通办法。
 

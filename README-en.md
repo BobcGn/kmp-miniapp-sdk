@@ -37,7 +37,7 @@ WeChat Mini Program
 
 ## Current scope
 
-The repository currently provides the `:sdk` module with its CommonJS and TypeScript consumer artifacts, plus a `:miniapp-gradle-plugin` skeleton that registers the Mini App platform target in a Kotlin Multiplatform project. Platform-neutral contracts live in `commonMain`; WeChat interop, adapter, runtime, and export boundaries live in `jsMain`. Only capabilities explicitly listed as implemented in the matrix are currently supported; planned entries are not implementation facts.
+The repository currently provides the `:kmp-miniapp-sdk` module with its CommonJS and TypeScript consumer artifacts, plus a `:miniapp-gradle-plugin` skeleton that registers the Mini App platform target in a Kotlin Multiplatform project. Platform-neutral contracts live in `commonMain`; WeChat interop, adapter, runtime, and export boundaries live in `jsMain`. Only capabilities explicitly listed as implemented in the matrix are currently supported; planned entries are not implementation facts.
 
 ## Build
 
@@ -46,7 +46,7 @@ Use the checked-in Gradle Wrapper:
 ```shell
 ./gradlew projects
 ./gradlew clean build
-./gradlew :sdk:jsNodeTest
+./gradlew :kmp-miniapp-sdk:jsNodeTest
 ./gradlew :miniapp-gradle-plugin:test
 ./gradlew buildMiniAppSdk
 ```

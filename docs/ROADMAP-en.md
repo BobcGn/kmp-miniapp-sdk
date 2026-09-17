@@ -8,7 +8,7 @@ All items below are plans. Completion status must be supported by executable con
 
 ## V0.1 Bootstrap — DONE
 
-- Establish the single `:sdk` Kotlin Multiplatform module.
+- Establish the single `:kmp-miniapp-sdk` Kotlin Multiplatform module.
 - Configure the Kotlin/JS CommonJS library target and Node.js tests.
 - Establish minimal source sets, build validation, documentation, and repository rules.
 
@@ -46,7 +46,11 @@ Only one critical-path stage advances at a time. A later issue must not become R
 
 Stage A is decided. The PoC in `poc/kgp-model` selects a plugin-managed Kotlin/JS target named after the platform, because that is the only model in which `miniappMain` and `miniappTest` are real Kotlin source sets owned by a compilation. [ADR 0010](decisions/0010-miniapp-gradle-plugin-source-set-model-en.md) records the decision, the rejected alternatives, and the Kotlin Gradle Plugin limits. The hard `miniappMain` / `miniappTest` requirement is unchanged.
 
-Stage B is done and stage C is in progress. `:miniapp-gradle-plugin` publishes `io.github.bobcgn.miniapp`; applying it registers the `miniapp` target and that target's Node.js test run, so a consumer gets `miniappMain` and `miniappTest` as compilation-owned source sets with `commonMain` and `commonTest` as their parents, plus a `miniappTest` task that actually executes. SDK dependency wiring (BOB-82), artifact assembly (BOB-81) and the WeChat DSL (BOB-84) are not implemented, so those stages remain gated.
+Stages B and C are done and stage D is in progress. `:miniapp-gradle-plugin` publishes `io.github.bobcgn.miniapp`; applying it registers the `miniapp` target and that target's Node.js test run, so a consumer gets `miniappMain` and `miniappTest` as compilation-owned source sets with `commonMain` and `commonTest` as their parents plus a `miniappTest` task that actually executes, and it adds the runtime SDK to `miniappMain` so the consumer compiles against the public API without declaring an artifact.
+
+The runtime's public coordinate is `io.github.bobcgn:kmp-miniapp-sdk`. Stage D formalised that artifact id: the module's directory stays `sdk/`, while its Gradle project name — and therefore the artifact id composite-build substitution matches and a publication would publish — is `kmp-miniapp-sdk`. The version has one source, `gradle/libs.versions.toml`: the plugin's declared coordinate and the SDK's own `MiniAppSdk.VERSION` are both generated from it, so neither can drift.
+
+Artifact assembly (BOB-81) and the WeChat DSL (BOB-84) are not implemented, so those stages remain gated.
 
 ### P1 completion evidence
 

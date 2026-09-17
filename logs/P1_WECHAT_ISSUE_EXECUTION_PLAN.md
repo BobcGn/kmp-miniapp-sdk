@@ -35,7 +35,7 @@ BOB-75 只有在 BOB-83、BOB-78、BOB-76、BOB-82、BOB-81、BOB-84、BOB-80、
 
 **本轮结论（2026-09-17）**：PoC 落于 `poc/kgp-model`（独立 Gradle build，根构建不包含它）。选定「插件管理、以平台命名的 Kotlin/JS target」—— 只有在它之下 `miniappMain` / `miniappTest` 才是由 compilation 拥有的真实 Kotlin source set。被否决：方案 A（消费者 build script 自行声明命名 JS target —— 机制相同，但把 BOB-81 要求隐藏的接线留给消费者）；方案 B（仅创建自定义 source sets —— KGP 报告 `Unused Kotlin Source Sets`，无 compilation 消费、无 `miniappTest` 任务，`miniappMainImplementation` 等 configuration 成为死配置）；方案 C 的隐藏 target 变体（保留内部 `js` target 同时暴露 `miniappMain` —— 公开 API 无法把任意 source set 挂到既有 compilation，`KotlinCompilationSourceSetsContainer` 为 internal）。决策、原因与 KGP 限制记录于 ADR 0010（中英同步），并在 ARCHITECTURE 第 7 节引用。
 
-事实证据（Kotlin 2.4.20 / Gradle 9.3.1）：`model-c` 的 `miniappNodeTest` 实际执行 4 个测试（1 个来自 `commonTest`、3 个来自 `miniappTest`），`checkMiniAppModel` 10/10 通过；`model-b` 6/10 失败、`model-c2` 5/10 失败、`model-a` 因消费者 build script 含 `useCommonJs()` 等手工接线而在 1 项上失败；`poc/kgp-model` 的 `clean check` 通过；`:model-c:check` 成功存储并复用 configuration cache，`--warning-mode all` 未出现弃用警告；commit `6812814` 的 `clean check` 通过（`:sdk:jsNodeTest` 598 个测试，无失败）。IDEA 识别仍属人工验收，本轮未执行，不得声称已通过。
+事实证据（Kotlin 2.4.20 / Gradle 9.3.1）：`model-c` 的 `miniappNodeTest` 实际执行 4 个测试（1 个来自 `commonTest`、3 个来自 `miniappTest`），`checkMiniAppModel` 10/10 通过；`model-b` 6/10 失败、`model-c2` 5/10 失败、`model-a` 因消费者 build script 含 `useCommonJs()` 等手工接线而在 1 项上失败；`poc/kgp-model` 的 `clean check` 通过；`:model-c:check` 成功存储并复用 configuration cache，`--warning-mode all` 未出现弃用警告；commit `6812814` 的 `clean check` 通过（`:kmp-miniapp-sdk:jsNodeTest` 598 个测试，无失败）。IDEA 识别仍属人工验收，本轮未执行，不得声称已通过。
 
 **收尾（2026-09-17）**：BOB-83 已 **Done**，交付 commit `72fdb49 docs(gradle): decide miniapp source set model`。真实 KMP Demo（独立仓库，Kotlin 2.4.20 / Gradle 9.5.1，含 Android/iOS/JVM/Compose）补充验证：`:app:shared` 的 `miniappMain` / `miniappTest` 目录与其他平台 source set 对称，`compileKotlinMiniapp`、`compileTestKotlinMiniapp`、`miniappTest` 通过，`miniappNodeTest` 实际执行而非 SKIPPED。IDEA 人工识别由用户完成 Gradle Sync 后确认。跨模块约束：`app:shared(miniapp)` 依赖 `project(:core)` 时，`:core` 也必须提供 Mini App 变体，否则出现 6 个 variant resolution 错误 —— 该约束保留给 BOB-76、BOB-82、BOB-79 的诊断与测试。
 
@@ -49,11 +49,11 @@ BOB-75 只有在 BOB-83、BOB-78、BOB-76、BOB-82、BOB-81、BOB-84、BOB-80、
 
 ### 架构纠偏：BOB-86 `[P1][紧急][架构纠偏] Backend 事实、KMP 客户端行为与宿主渲染边界`
 
-**本轮进展（2026-09-17）**：审计结论是**当前不存在层级混合**：仓库内 Compose / `@Composable` / Material 命中 0 处代码（22 处 `compose` 字样全部是文档中的非目标声明），`UiState` / `Action` / `Store` / `Effect` / `Reducer` / `UseCase` 命中 0 处，`Renderer` / `setData` / `WXML` / `Virtual DOM` 在 `sdk/src` 与 `miniapp-gradle-plugin/src` 命中 0 处，`:sdk` 的生产依赖只有 `kotlinx-coroutines-core`，`examples/` 不是 Gradle module 因此结构上不存在 SDK → app 反向依赖。
+**本轮进展（2026-09-17）**：审计结论是**当前不存在层级混合**：仓库内 Compose / `@Composable` / Material 命中 0 处代码（22 处 `compose` 字样全部是文档中的非目标声明），`UiState` / `Action` / `Store` / `Effect` / `Reducer` / `UseCase` 命中 0 处，`Renderer` / `setData` / `WXML` / `Virtual DOM` 在 `sdk/src` 与 `miniapp-gradle-plugin/src` 命中 0 处，`:kmp-miniapp-sdk` 的生产依赖只有 `kotlinx-coroutines-core`，`examples/` 不是 Gradle module 因此结构上不存在 SDK → app 反向依赖。
 
-因此本轮不做代码搬迁，交付的是把边界固化：新增 [ADR 0011](docs/decisions/0011-presentation-state-shared-rendering-host-native-ch.md)（Backend owns business truth / Kotlin owns client behavior / rendering 保持宿主原生 / Compose 是 consumer），ARCHITECTURE 增加四层边界与责任矩阵（Auth、Payment、Network、Storage、Business Rule、UiState、Navigation、Permission、Rendering、Cache、Error、Lifecycle），AGENTS 与 CLAUDE 增加 UI 与渲染硬性约束，PROJECT_FACTS / ROADMAP 记录定位与 P2 规划且明确 Presentation Core **尚未实现**，并新增可执行的架构约束检查 `:sdk:checkArchitectureBoundaries`（接入 `:sdk:check`）。
+因此本轮不做代码搬迁，交付的是把边界固化：新增 [ADR 0011](docs/decisions/0011-presentation-state-shared-rendering-host-native-ch.md)（Backend owns business truth / Kotlin owns client behavior / rendering 保持宿主原生 / Compose 是 consumer），ARCHITECTURE 增加四层边界与责任矩阵（Auth、Payment、Network、Storage、Business Rule、UiState、Navigation、Permission、Rendering、Cache、Error、Lifecycle），AGENTS 与 CLAUDE 增加 UI 与渲染硬性约束，PROJECT_FACTS / ROADMAP 记录定位与 P2 规划且明确 Presentation Core **尚未实现**，并新增可执行的架构约束检查 `:kmp-miniapp-sdk:checkArchitectureBoundaries`（接入 `:kmp-miniapp-sdk:check`）。
 
-已执行变异探针两例：向 `sdk/src` 加入 `import androidx.compose.runtime.Composable` → 检查失败并打印文件与行号；向 `:sdk` 声明 `org.jetbrains.compose.runtime:runtime` → 检查失败。第二个探针暴露了初版的 group 前缀匹配缺陷（`org.jetbrains.compose.runtime` 不匹配 `org.jetbrains.compose:`），已修正为按 group 的点分前缀匹配。
+已执行变异探针两例：向 `sdk/src` 加入 `import androidx.compose.runtime.Composable` → 检查失败并打印文件与行号；向 `:kmp-miniapp-sdk` 声明 `org.jetbrains.compose.runtime:runtime` → 检查失败。第二个探针暴露了初版的 group 前缀匹配缺陷（`org.jetbrains.compose.runtime` 不匹配 `org.jetbrains.compose:`），已修正为按 group 的点分前缀匹配。
 
 ### 紧急第 C 步：BOB-76 `[P1][URGENT] Provision miniappMain and miniappTest source sets automatically`
 
@@ -61,11 +61,23 @@ BOB-75 只有在 BOB-83、BOB-78、BOB-76、BOB-82、BOB-81、BOB-84、BOB-80、
 
 **本轮进展（2026-09-17）**：插件在 BOB-78 的 `kotlin.js("miniapp")` 之上补上该 target 的 **Node.js test run** —— 这是让 `miniappTest` 拥有真正执行任务的关键一步；source set、compilation 与层级边仍全部由 Kotlin Gradle Plugin 派生，插件不手工创建任何 source set 或 `dependsOn` 边。Gradle TestKit 由 4 个测试扩展到 **8 个**：新增「插件提供 compilation-owned 的 miniappMain / miniappTest（含 owning compilation 与传递 dependsOn）」「miniappTest 实际执行自身测试并复用 commonTest 测试」「消费者已自行声明 miniapp target 时插件不重复创建且仍补齐 test run」。真实 consumer fixture 的 `miniappNodeTest` 执行了 2 个测试：一个只存在于 `miniappTest`，一个来自 `commonTest`，标识符带 `[miniapp, node]` 后缀。变异探针：移除 `nodejs()` 后 3 个测试失败。跨模块约束仍成立：消费者 `commonMain` 依赖另一个 KMP project 时，该 project 也必须应用插件，插件不提供回退，也不允许把依赖移出 `commonMain` 规避。**未实现**：SDK 依赖接线（BOB-82）、产物组装（BOB-81）、微信 DSL（BOB-84）。IDEA 识别属人工证据，待用户截图确认。
 
-**验收（2026-09-17）**：BOB-76 已 **Done**。自动化：`./gradlew --no-daemon --console=plain projects clean check :miniapp-gradle-plugin:test --rerun-tasks :sdk:checkArchitectureBoundaries` BUILD SUCCESSFUL，插件 8 个测试通过，SDK 598 个测试通过。人工 IDEA + 外部真实 KMP Demo 验收（Gradle 9.5.1 / Kotlin 2.4.20，含 Android、iOS、JVM、Compose）：`:core` 与 `:app:shared` 同时应用正式插件，IDEA 正确识别 `commonMain`、`commonTest`、`miniappMain`、`miniappTest`，`actual getPlatform()` 能识别 `commonMain` 的 expect/API，`miniappTest` 被识别为测试，Gradle Sync BUILD SUCCESSFUL。最终执行 `:core:compileKotlinMiniapp`、`:core:miniappTest`、`:app:shared:compileKotlinMiniapp`、`:app:shared:miniappTest` 全部 BUILD SUCCESSFUL（21s，configuration cache reused）；`:core:miniappTest` 为 NO-SOURCE 属正常结果（`:core` 当前无测试源码）。新增 JS target 后 Yarn lock 经 `kotlinUpgradeYarnLock` 正常更新。
+**验收（2026-09-17）**：BOB-76 已 **Done**。自动化：`./gradlew --no-daemon --console=plain projects clean check :miniapp-gradle-plugin:test --rerun-tasks :kmp-miniapp-sdk:checkArchitectureBoundaries` BUILD SUCCESSFUL，插件 8 个测试通过，SDK 598 个测试通过。人工 IDEA + 外部真实 KMP Demo 验收（Gradle 9.5.1 / Kotlin 2.4.20，含 Android、iOS、JVM、Compose）：`:core` 与 `:app:shared` 同时应用正式插件，IDEA 正确识别 `commonMain`、`commonTest`、`miniappMain`、`miniappTest`，`actual getPlatform()` 能识别 `commonMain` 的 expect/API，`miniappTest` 被识别为测试，Gradle Sync BUILD SUCCESSFUL。最终执行 `:core:compileKotlinMiniapp`、`:core:miniappTest`、`:app:shared:compileKotlinMiniapp`、`:app:shared:miniappTest` 全部 BUILD SUCCESSFUL（21s，configuration cache reused）；`:core:miniappTest` 为 NO-SOURCE 属正常结果（`:core` 当前无测试源码）。新增 JS target 后 Yarn lock 经 `kotlinUpgradeYarnLock` 正常更新。
 
 ### 紧急第 D 步：BOB-82 `[P1][URGENT] Automate Mini App SDK dependency wiring`
 
-插件自动为 `miniappMain` 接入正式 SDK runtime 依赖，使消费者直接使用受支持公共 API，不必声明内部微信 artifact。验证依赖变体能够在 BOB-83 选定的 KGP 模型下解析，且不会把内部实现 artifact 泄漏为消费者配置责任。
+插件自动为 `miniappMain` 接入正式 SDK runtime 依赖，使消费者直接使用受支持公共 API，不必声明内部微信 artifact。验证依赖变体能够在 BOB-83 选定的 KGP 模型下解析，且不会把内部 implementation artifact 泄漏为消费者配置责任。
+
+**本轮进展（2026-09-17）**：插件把运行时接入 `miniappMain` 的 **api configuration**，坐标是公共 module 坐标 `io.github.bobcgn:kmp-miniapp-sdk:<version>` —— 插件运行在消费者构建中，无法访问本仓库的 project path，因此不得也不曾写出 `project(":kmp-miniapp-sdk")`。`miniappTest` 经 source-set hierarchy 继承，不重复声明；`commonMain`、metadata 编译与其他 target 均不获得该依赖。实测依赖报告：`sdkDeclarations=[miniappMainApi]`、`sdkDeclaredCoordinates=[io.github.bobcgn:kmp-miniapp-sdk:0.1.0-SNAPSHOT]`、`metadataCompileClasspath=[]`、`miniappCompileClasspath` 与 `miniappTestCompileClasspath` 均解析到 SDK。
+
+版本单一来源：`gradle/libs.versions.toml` 的 `miniapp` version 同时驱动 `:kmp-miniapp-sdk` 与 `:miniapp-gradle-plugin` 的 version，并由插件构建期生成 `miniapp-plugin-metadata.properties`，插件运行期从该资源读取坐标 —— 插件源码与测试中都不含版本字面量。SDK 尚未发布，因此 fixture 经 **composite build**（`includeBuild` 本仓库）解析该坐标，正式发布后由仓库解析同一坐标。
+
+TestKit 由 13 个测试构成（含契约测试）：依赖接线位置、`commonMain`/metadata 不注入、另一个 target（JVM）不注入、`miniappMain` 编译公共 SDK API、`miniappTest` 运行使用 SDK 的测试、缺失 runtime 时错误指明坐标、插件 JAR 只含自身 Gradle 集成类且 classpath 无 SDK / 微信 runtime 类。变异探针：移除依赖接线后 4 个测试失败。
+
+**正式公共坐标（2026-09-17 决定）**：runtime 的 artifact id 定为 `io.github.bobcgn:kmp-miniapp-sdk`，不再沿用 Gradle 目录名派生的 `io.github.bobcgn:sdk`。实现方式是保留目录 `sdk/`、把 settings 中的 project 名设为 `:kmp-miniapp-sdk`（`projectDir = file("sdk")`），因此 `outgoingVariants` 报告的 capability、composite build substitution 匹配的坐标与将来正式发布的坐标三者一致，都是 `io.github.bobcgn:kmp-miniapp-sdk`。实测 capability：`io.github.bobcgn:kmp-miniapp-sdk:0.1.0-SNAPSHOT`。
+
+**版本单一来源（2026-09-17）**：`gradle/libs.versions.toml` 的 `miniapp` version 现同时驱动 `:kmp-miniapp-sdk` 与 `:miniapp-gradle-plugin` 的 version；SDK 的公共版本常量由 `:kmp-miniapp-sdk:generateSdkVersionSource` 生成（`GeneratedMiniAppSdkVersion.VALUE`），`MiniAppSdk.VERSION` 引用它，`MiniAppSdkTest` 断言二者一致。两例变异探针：把 catalog 改为 `9.9.9-PROBE` 后生成文件与编译产物 `kmp-miniapp-sdk-kotlin.js` 均变为该值（catalog 单向驱动，不存在可漂移的第二侧）；把 `MiniAppSdk.VERSION` 写死为 `0.0.0-stale` 后 `MiniAppSdkTest` 失败。两者随后均已还原。
+
+**未实现**：微信产物组装（BOB-81）、Gradle DSL（BOB-84）、Maven Central / npm 发布。跨模块约束仍成立：consumer 的 `commonMain` 依赖没有 miniapp variant 的 KMP project 时保留明确的 variant resolution 失败，不提供回退。
 
 ### 紧急第 E 步：BOB-81 `[P1][URGENT] Automate WeChat-compatible Kotlin/JS compilation and packaging`
 
@@ -100,7 +112,7 @@ BOB-75 只有在 BOB-83、BOB-78、BOB-76、BOB-82、BOB-81、BOB-84、BOB-80、
 | B | BOB-78 | Done（2026-09-17，commit `19e807e`） | 插件可应用并 sync；缺少 KMP 时明确失败 |
 | B+ | BOB-86 | In Progress（2026-09-17） | 架构边界已记录并被构建强制；无 Compose / Renderer 泄漏 |
 | C | BOB-76 | Done（2026-09-17） | source sets 自动创建、IDEA 识别、`miniappTest` 可执行 |
-| D | BOB-82 | Blocked by B、C | 公共 SDK 依赖自动接入且不泄漏内部 artifact |
+| D | BOB-82 | In Progress（2026-09-17） | 公共 SDK 依赖自动接入且不泄漏内部 artifact |
 | E | BOB-81 | Blocked by B、C、D | 稳定任务生成完整微信消费产物且无需手工接线 |
 | F | BOB-84 | Blocked by B；在 E 后执行 | 最小 DSL 通过架构审查且不承载业务配置 |
 | G | BOB-80 | Blocked by C、D、E、F | 普通 KMP fixture 完成编译、测试和微信消费闭环 |

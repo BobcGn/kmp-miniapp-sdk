@@ -25,26 +25,26 @@ When running WeChat host acceptance, use the [WeChat real-host verification matr
 ```shell
 ./gradlew projects
 ./gradlew clean build
-./gradlew :sdk:jsNodeTest
-./gradlew :sdk:jsTest
-./gradlew :sdk:checkArchitectureBoundaries
+./gradlew :kmp-miniapp-sdk:jsNodeTest
+./gradlew :kmp-miniapp-sdk:jsTest
+./gradlew :kmp-miniapp-sdk:checkArchitectureBoundaries
 ./gradlew :miniapp-gradle-plugin:test
 ./gradlew buildMiniAppSdk
 ```
 
 These commands are valid and were verified on 2026-09-15, except `:miniapp-gradle-plugin:test`, which was verified on 2026-09-17.
 
-The `:sdk:jsTest` suite includes host-boundary, error-model, callback adaptation, cancellation, double-completion, optional abort, WeChat error-mapping, HTTP transport adaptation including host abort on cancellation, lifecycle state transitions, navigation adaptation, capability-support states and version gating, permission lifecycle behaviour including concurrent request merging, privacy authorization including the refusal classification, WeChat session checking including the expiry classification, the WeChat clipboard and vibration adapters including their per-capability gating, the WeChat file-system adapter including its sandbox and text boundaries, the WeChat location adapter including its coordinate validation and privacy precondition, the WeChat scan adapter including indeterminate-interruption classification and result validation, the WeChat media adapter including its request boundaries, result validation, and interruption classification, the WeChat subscription adapter including its template validation and per-template result policy, the network status adapter including its per-collector listener pairing, the WeChat upload and download adapters including their abort, progress, and timeout behaviour, the WeChat payment adapter including its parameter forwarding, blank-parameter refusal, exact interruption classification, and single-terminal-state behaviour, and interop object-construction coverage. These tests use fake callbacks and do not claim access to a real `wx` runtime.
+The `:kmp-miniapp-sdk:jsTest` suite includes host-boundary, error-model, callback adaptation, cancellation, double-completion, optional abort, WeChat error-mapping, HTTP transport adaptation including host abort on cancellation, lifecycle state transitions, navigation adaptation, capability-support states and version gating, permission lifecycle behaviour including concurrent request merging, privacy authorization including the refusal classification, WeChat session checking including the expiry classification, the WeChat clipboard and vibration adapters including their per-capability gating, the WeChat file-system adapter including its sandbox and text boundaries, the WeChat location adapter including its coordinate validation and privacy precondition, the WeChat scan adapter including indeterminate-interruption classification and result validation, the WeChat media adapter including its request boundaries, result validation, and interruption classification, the WeChat subscription adapter including its template validation and per-template result policy, the network status adapter including its per-collector listener pairing, the WeChat upload and download adapters including their abort, progress, and timeout behaviour, the WeChat payment adapter including its parameter forwarding, blank-parameter refusal, exact interruption classification, and single-terminal-state behaviour, and interop object-construction coverage. These tests use fake callbacks and do not claim access to a real `wx` runtime.
 
 ## Architecture boundaries
 
 The runtime SDK shares client behaviour, host capabilities and presentation state; it never renders. [ADR 0011](decisions/0011-presentation-state-shared-rendering-host-native-en.md) fixes the four layers, and [ARCHITECTURE-en.md](ARCHITECTURE-en.md) carries the responsibility matrix.
 
 ```shell
-./gradlew :sdk:checkArchitectureBoundaries
+./gradlew :kmp-miniapp-sdk:checkArchitectureBoundaries
 ```
 
-This task fails when anything under `sdk/**` imports a UI framework namespace or declares a UI framework dependency, and it runs as part of `:sdk:check`. It is a build failure rather than a review note on purpose: "the SDK does not depend on Compose" has to survive contributors who have not read the ADR.
+This task fails when anything under `sdk/**` imports a UI framework namespace or declares a UI framework dependency, and it runs as part of `:kmp-miniapp-sdk:check`. It is a build failure rather than a review note on purpose: "the SDK does not depend on Compose" has to survive contributors who have not read the ADR.
 
 A dependency is matched by group when the group exists only to serve a UI framework, and by exact module coordinate when the group also carries a dependency this SDK legitimately uses. `org.jetbrains.kotlinx` carries `kotlinx-coroutines-core`, so the whole group cannot be forbidden; `kotlinx-html` and its `-js` / `-jvm` variants are forbidden as modules instead. Before the task trusts the classifier on the real model, it runs it against a fixed table of expected verdicts and fails if any coordinate is classified against expectation, so a later edit cannot silently widen or narrow the rule.
 
@@ -52,10 +52,19 @@ What the check does not do: it cannot detect a renderer that imports no UI frame
 
 ## Mini App Gradle plugin
 
-`:miniapp-gradle-plugin` publishes the `io.github.bobcgn.miniapp` plugin from the implementation class `io.github.bobcgn.miniapp.gradle.MiniAppGradlePlugin`. Applying it to a Kotlin Multiplatform project does two things:
+`:miniapp-gradle-plugin` publishes the `io.github.bobcgn.miniapp` plugin from the implementation class `io.github.bobcgn.miniapp.gradle.MiniAppGradlePlugin`. Applying it to a Kotlin Multiplatform project does three things:
 
 - registers one Kotlin/JS target named `miniapp`, which is what makes `miniappMain` and `miniappTest` real, compilation-owned source sets with `commonMain` and `commonTest` as their parents;
-- registers that target's Node.js test run, which is what gives `miniappTest` a task that actually executes.
+- registers that target's Node.js test run, which is what gives `miniappTest` a task that actually executes;
+- adds the runtime SDK to `miniappMain`'s api configuration, which is what lets consumer code compile against the public API without declaring an artifact.
+
+The runtime is a **public module coordinate**, `io.github.bobcgn:kmp-miniapp-sdk:<version>`, so the plugin never names this repository's project paths — a consumer build has no access to them, and `project(":kmp-miniapp-sdk")` is not available to it. The runtime's directory is `sdk/`; its project name is `kmp-miniapp-sdk`, because that name is the artifact id composite-build substitution matches and a publication would publish. `miniappTest` inherits the runtime through the source-set hierarchy; no other source set and no other target receives it.
+
+### Where the version lives
+
+`gradle/libs.versions.toml` holds the one version the runtime SDK and this plugin share. The plugin's build generates `miniapp-plugin-metadata.properties` from it, and the plugin reads the coordinate from that resource at runtime, so neither the plugin's source nor its tests contain the version as a literal.
+
+The SDK is not published yet, so the coordinate resolves through a composite build today and from a repository after publication, with the same group, name and version either way. A consumer that cannot resolve it fails with Gradle's dependency-resolution error naming the coordinate; the plugin deliberately does not fall back to another version, another artifact, or a project path.
 
 The plugin creates no source set and no `dependsOn` edge of its own: hand-built ones are the unused-source-set model [ADR 0010](decisions/0010-miniapp-gradle-plugin-source-set-model-en.md) rejected. Applying it to a project that does not apply the Kotlin Multiplatform plugin fails with a message naming the missing plugin.
 
@@ -65,9 +74,9 @@ The plugin creates no source set and no `dependsOn` edge of its own: hand-built 
 
 A consumer whose `commonMain` depends on another Kotlin Multiplatform project must apply this plugin to that project as well. The dependency resolves through a Mini App variant, so a project that offers none fails variant resolution; the plugin provides no fallback, and moving the dependency out of `commonMain` is not a supported workaround.
 
-The tests are Gradle TestKit fixtures plus a contract test. The fixtures put the Kotlin Gradle Plugin and the plugin under test on one buildscript classpath deliberately: `withPluginClasspath()` injects the plugin under test into the plugin-resolution classpath only, so a fixture that resolves a second plugin separately cannot reproduce the classpath a real consumer build gives the plugin. One fixture carries `commonMain`, `miniappMain`, `commonTest` and `miniappTest` sources and asserts the executed test report, so the source-set wiring and the test execution are both proved by running tests rather than by reading the model.
+The tests are Gradle TestKit fixtures plus a contract test. The fixtures put the Kotlin Gradle Plugin and the plugin under test on one buildscript classpath deliberately: `withPluginClasspath()` injects the plugin under test into the plugin-resolution classpath only, so a fixture that resolves a second plugin separately cannot reproduce the classpath a real consumer build gives the plugin. One fixture carries `commonMain`, `miniappMain`, `commonTest` and `miniappTest` sources and asserts the executed test report, so the source-set wiring and the test execution are both proved by running tests rather than by reading the model. The fixtures consume the runtime through a composite build (`includeBuild` of this repository), which is how the unpublished coordinate resolves; the plugin itself never sees that path.
 
-Still absent, and owned by later issues: SDK dependency wiring (BOB-82), WeChat artifact assembly (BOB-81), and the Mini App Gradle DSL (BOB-84).
+Still absent, and owned by later issues: WeChat artifact assembly (BOB-81) and the Mini App Gradle DSL (BOB-84).
 
 ## Mini App Gradle plugin model PoC
 

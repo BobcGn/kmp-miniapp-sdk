@@ -53,7 +53,7 @@ Never infer an implemented capability from the roadmap. Roadmap entries, TODOs, 
 
 **Scope discipline.** Without an explicit task, do not add Android, iOS, JVM, or Wasm targets; Compose, Ktor, serialization, or dependency injection frameworks; npm or Maven publication; or speculative Gradle modules.
 
-**UI and rendering boundary.** The runtime SDK and any future Presentation Core must not depend on Compose, another UI framework, or host markup such as WXML or WXSS. Compose is a client UI consumer. Mini App host integration binds host state and host events and never renders. `./gradlew :sdk:checkArchitectureBoundaries` enforces the dependency half and runs as part of `:sdk:check`; see `AGENTS.md` §10 and [ADR 0011](docs/decisions/0011-presentation-state-shared-rendering-host-native-en.md).
+**UI and rendering boundary.** The runtime SDK and any future Presentation Core must not depend on Compose, another UI framework, or host markup such as WXML or WXSS. Compose is a client UI consumer. Mini App host integration binds host state and host events and never renders. `./gradlew :kmp-miniapp-sdk:checkArchitectureBoundaries` enforces the dependency half and runs as part of `:kmp-miniapp-sdk:check`; see `AGENTS.md` §10 and [ADR 0011](docs/decisions/0011-presentation-state-shared-rendering-host-native-en.md).
 
 **Minimal change.** Make the smallest change the current task requires. Do not add infrastructure because it might be useful later.
 
@@ -79,7 +79,7 @@ CLAUDE-en.md / CLAUDE-ch.md  this operating guide
 README-en.md / README-ch.md
 docs/                      PROJECT_FACTS, ARCHITECTURE, DEVELOPMENT, TESTING, ROADMAP, decisions/ (ADRs)
 gradle/libs.versions.toml  single source of dependency and plugin versions
-settings.gradle.kts        includes :sdk and :miniapp-gradle-plugin
+settings.gradle.kts        includes :kmp-miniapp-sdk and :miniapp-gradle-plugin
 sdk/                       the Kotlin/JS runtime SDK module
 miniapp-gradle-plugin/     the io.github.bobcgn.miniapp Gradle plugin skeleton
 examples/                  integration host; not a Gradle module
@@ -104,7 +104,7 @@ Verified on 2026-09-14:
 | --- | --- |
 | `./gradlew projects` | VERIFIED |
 | `./gradlew clean build` | VERIFIED |
-| `./gradlew :sdk:jsNodeTest` | VERIFIED |
+| `./gradlew :kmp-miniapp-sdk:jsNodeTest` | VERIFIED |
 
 ```bash
 ./gradlew clean build
@@ -115,7 +115,7 @@ Toolchain: Gradle 9.3.1 from the checked-in Wrapper, project Kotlin 2.4.20 from 
 Current state, as of 2026-09-15:
 
 - Status is experimental / pre-alpha. Bootstrap is complete, and every implemented capability is verified in WeChat Developer Tools and, where applicable, on a real device. The one gap is the permission `NotRequested` state, which the account used could not reproduce and which automated tests cover instead.
-- Module list is `:sdk` and `:miniapp-gradle-plugin`. `examples/` is an integration host directory, not a Gradle module. The plugin registers the `miniapp` target and that target's Node.js test run, which is what provisions `miniappMain` / `miniappTest` as compilation-owned source sets and makes `miniappTest` execute; it does not yet wire the SDK dependency, assemble artifacts, or expose a DSL.
+- Module list is `:kmp-miniapp-sdk` and `:miniapp-gradle-plugin`. `examples/` is an integration host directory, not a Gradle module. The plugin registers the `miniapp` target and that target's Node.js test run, provisioning `miniappMain` / `miniappTest` as compilation-owned source sets and making `miniappTest` execute, and it adds the runtime SDK to `miniappMain` as the public coordinate `io.github.bobcgn:kmp-miniapp-sdk`; it does not yet assemble artifacts or expose a DSL.
 - The JavaScript target is configured with `nodejs()`, `useCommonJs()`, `binaries.library()`, and `generateTypeScriptDefinitions()`.
 - `sdk/src/commonMain/.../api/MiniAppSdk.kt` declares `MiniAppSdk.VERSION = "0.1.0-SNAPSHOT"`; `commonTest` asserts it.
 - `commonMain` contains `MiniAppHost` / `HostPlatformApi`, `HostVersion`, `CapabilityKey` / `CapabilitySupport` with its `Supported` / `Unsupported` / `VersionDependent` / `PermissionDependent` states and the `requireSupported` guard, `MiniAppStorage` with `StorageCapabilityProvider`, `MiniAppHttpTransport` with `NetworkCapabilityProvider`, `MiniAppLifecycle` with `LifecycleCapabilityProvider`, `MiniAppPermissions` with `PermissionCapabilityProvider` and its `PermissionKey` / `PermissionState` model, `MiniAppException`, and the internal `awaitHostCallback` primitive.

@@ -53,7 +53,7 @@ WeChat Mini Program
 
 **范围纪律。** 在没有明确任务的情况下，不要添加 Android、iOS、JVM 或 Wasm target；不要添加 Compose、Ktor、serialization 或依赖注入框架；不要添加 npm 或 Maven 发布；不要添加投机性的 Gradle module。
 
-**UI 与渲染边界。** runtime SDK 与未来的 Presentation Core 不得依赖 Compose、其他 UI framework，或 WXML、WXSS 这类宿主 markup。Compose 是客户端 UI consumer。Mini App host integration 只做宿主状态与宿主事件的 binding，从不渲染。`./gradlew :sdk:checkArchitectureBoundaries` 强制其中的依赖部分，并且是 `:sdk:check` 的一部分；见 `AGENTS.md` 第 10 节与 [ADR 0011](docs/decisions/0011-presentation-state-shared-rendering-host-native-ch.md)。
+**UI 与渲染边界。** runtime SDK 与未来的 Presentation Core 不得依赖 Compose、其他 UI framework，或 WXML、WXSS 这类宿主 markup。Compose 是客户端 UI consumer。Mini App host integration 只做宿主状态与宿主事件的 binding，从不渲染。`./gradlew :kmp-miniapp-sdk:checkArchitectureBoundaries` 强制其中的依赖部分，并且是 `:kmp-miniapp-sdk:check` 的一部分；见 `AGENTS.md` 第 10 节与 [ADR 0011](docs/decisions/0011-presentation-state-shared-rendering-host-native-ch.md)。
 
 **最小改动。** 只做当前任务所需的最小改动。不要因为"以后可能有用"而添加基础设施。
 
@@ -79,7 +79,7 @@ CLAUDE-en.md / CLAUDE-ch.md  本操作指南
 README-en.md / README-ch.md
 docs/                        PROJECT_FACTS、ARCHITECTURE、DEVELOPMENT、TESTING、ROADMAP、decisions/（ADR）
 gradle/libs.versions.toml    依赖与插件版本的唯一来源
-settings.gradle.kts          include :sdk 与 :miniapp-gradle-plugin
+settings.gradle.kts          include :kmp-miniapp-sdk 与 :miniapp-gradle-plugin
 sdk/                         Kotlin/JS runtime SDK module
 miniapp-gradle-plugin/       io.github.bobcgn.miniapp Gradle 插件骨架
 examples/                    集成宿主；不是 Gradle module
@@ -104,7 +104,7 @@ examples/                    集成宿主；不是 Gradle module
 | --- | --- |
 | `./gradlew projects` | VERIFIED |
 | `./gradlew clean build` | VERIFIED |
-| `./gradlew :sdk:jsNodeTest` | VERIFIED |
+| `./gradlew :kmp-miniapp-sdk:jsNodeTest` | VERIFIED |
 
 ```bash
 ./gradlew clean build
@@ -115,7 +115,7 @@ examples/                    集成宿主；不是 Gradle module
 截至 2026-09-15 的当前状态：
 
 - 状态为实验性 / pre-alpha。Bootstrap 已完成，所有已实现的 capability 均已通过微信开发者工具验证，并在适用处通过真机验证。唯一缺口是权限的 `NotRequested` 状态：所用账号无法复现，改由自动化测试覆盖。
-- module 列表为 `:sdk` 与 `:miniapp-gradle-plugin`。`examples/` 是集成宿主目录，不是 Gradle module。插件注册 `miniapp` target 及其 Node.js test run，由此提供由 compilation 拥有的 `miniappMain` / `miniappTest` 并让 `miniappTest` 真正执行；尚未接线 SDK 依赖、尚未组装产物，也未提供 DSL。
+- module 列表为 `:kmp-miniapp-sdk` 与 `:miniapp-gradle-plugin`。`examples/` 是集成宿主目录，不是 Gradle module。插件注册 `miniapp` target 及其 Node.js test run，由此提供由 compilation 拥有的 `miniappMain` / `miniappTest` 并让 `miniappTest` 真正执行，同时以公共坐标 `io.github.bobcgn:kmp-miniapp-sdk` 把 runtime SDK 接入 `miniappMain`；尚未组装产物，也未提供 DSL。
 - JavaScript target 配置为 `nodejs()`、`useCommonJs()`、`binaries.library()` 与 `generateTypeScriptDefinitions()`。
 - `sdk/src/commonMain/.../api/MiniAppSdk.kt` 声明 `MiniAppSdk.VERSION = "0.1.0-SNAPSHOT"`，`commonTest` 对其断言。
 - `commonMain` 包含 `MiniAppHost` / `HostPlatformApi`、`HostVersion`、`CapabilityKey` / `CapabilitySupport`（含 `Supported` / `Unsupported` / `VersionDependent` / `PermissionDependent` 四态与 `requireSupported` guard）、带 `StorageCapabilityProvider` 的 `MiniAppStorage`、带 `NetworkCapabilityProvider` 的 `MiniAppHttpTransport`、带 `LifecycleCapabilityProvider` 的 `MiniAppLifecycle`、带 `PermissionCapabilityProvider` 的 `MiniAppPermissions` 及其 `PermissionKey` / `PermissionState` 模型、`MiniAppException`，以及 internal 的 `awaitHostCallback` primitive。

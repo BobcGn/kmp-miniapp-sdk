@@ -18,9 +18,9 @@ tasks.register<Sync>("buildMiniAppSdk") {
     group = "distribution"
     description = "Builds and copies the Kotlin/JS SDK artifacts into the WeChat integration host."
 
-    dependsOn(":sdk:jsNodeProductionLibraryDistribution")
+    dependsOn(":kmp-miniapp-sdk:jsNodeProductionLibraryDistribution")
 
-    val compilerDistribution = project(":sdk").layout.buildDirectory.dir("dist/js/productionLibrary")
+    val compilerDistribution = project(":kmp-miniapp-sdk").layout.buildDirectory.dir("dist/js/productionLibrary")
     val consumerDistribution = layout.projectDirectory.dir(
         "examples/wechat-miniprogram/miniprogram/libs",
     )

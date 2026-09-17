@@ -3,7 +3,42 @@ plugins {
 }
 
 group = "io.github.bobcgn"
-version = "0.1.0-SNAPSHOT"
+version = libs.versions.miniapp.get()
+
+// The SDK's public version statement is generated from the version catalog rather than written in
+// MiniAppSdk.kt, so the constant a consumer reads cannot drift from the version this module is built
+// and published as. Anything that wants to assert the version would otherwise need a second copy of
+// it, which is exactly the drift this avoids.
+val sdkVersionSourceDir = layout.buildDirectory.dir("generated/miniappVersion/kotlin")
+
+val generateSdkVersionSource by tasks.registering {
+    group = "build"
+    description = "Generates the SDK's public version constant from gradle/libs.versions.toml."
+
+    val versionValue = project.version.toString()
+    val outputDir = sdkVersionSourceDir
+
+    inputs.property("miniappVersion", versionValue)
+    outputs.dir(outputDir)
+
+    doLast {
+        val sourceFile = outputDir.get().asFile.resolve(
+            "io/github/bobcgn/miniapp/api/GeneratedMiniAppSdkVersion.kt",
+        )
+        sourceFile.parentFile.mkdirs()
+        sourceFile.writeText(
+            """
+            |package io.github.bobcgn.miniapp.api
+            |
+            |/** Generated from gradle/libs.versions.toml. Do not edit. */
+            |internal object GeneratedMiniAppSdkVersion {
+            |    internal const val VALUE: String = "$versionValue"
+            |}
+            |
+            """.trimMargin(),
+        )
+    }
+}
 
 kotlin {
     explicitApi()
@@ -17,6 +52,10 @@ kotlin {
     }
 
     sourceSets {
+        commonMain {
+            kotlin.srcDir(generateSdkVersionSource)
+        }
+
         commonMain.dependencies {
             implementation(libs.kotlinx.coroutines.core)
         }

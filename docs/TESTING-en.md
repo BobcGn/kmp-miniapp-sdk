@@ -13,7 +13,7 @@ The two layers are the top-level automation and real-host categories. Release ev
 | Automated | Node.js, through the Gradle Wrapper and the example's npm scripts | Shared Kotlin logic, adapter behavior driven through fake ports, module and declaration shape, TypeScript contract | Anything about the WeChat Mini Program runtime |
 | Real host | WeChat Developer Tools | That the generated artifact compiles, loads, and runs in the intended host | Nothing further, and no regression in the host's own behavior |
 
-**A passing Kotlin or Node.js test does not establish a passing WeChat Mini Program integration.** A passing `:sdk:jsNodeTest`, `npm run smoke`, or `npm run typecheck` result and a real-host result are always recorded separately. Node.js is only the local build and test environment; the production host is the WeChat Mini Program JavaScript runtime.
+**A passing Kotlin or Node.js test does not establish a passing WeChat Mini Program integration.** A passing `:kmp-miniapp-sdk:jsNodeTest`, `npm run smoke`, or `npm run typecheck` result and a real-host result are always recorded separately. Node.js is only the local build and test environment; the production host is the WeChat Mini Program JavaScript runtime.
 
 ## 2. Automated layer
 
@@ -58,7 +58,7 @@ Add a new capability guarantee to the shared check object rather than to one ada
 ### Commands
 
 ```shell
-./gradlew :sdk:jsNodeTest
+./gradlew :kmp-miniapp-sdk:jsNodeTest
 ```
 
 ```shell

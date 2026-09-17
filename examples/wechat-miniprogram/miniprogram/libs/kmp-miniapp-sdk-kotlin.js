@@ -4997,7 +4997,7 @@
   var WeChatMediaFileType_VIDEO_instance;
   function Companion_8() {
   }
-  protoOf(Companion_8).fromHostValue_thokcm_k$ = function (hostValue) {
+  protoOf(Companion_8).fromHostValue_7yihi0_k$ = function (hostValue) {
     var tmp0 = get_entries_4();
     var tmp$ret$0;
     $l$block: {
@@ -5359,7 +5359,7 @@
   var WeChatScanFormat_CODE_25_instance;
   function Companion_10() {
   }
-  protoOf(Companion_10).fromHostValue_thokcm_k$ = function (hostValue) {
+  protoOf(Companion_10).fromHostValue_7yihi0_k$ = function (hostValue) {
     var tmp0 = get_entries_7();
     var tmp$ret$0;
     $l$block: {
@@ -5549,7 +5549,7 @@
   var WeChatSubscriptionStatus_ACCEPT_instance;
   function Companion_12() {
   }
-  protoOf(Companion_12).fromHostValue_thokcm_k$ = function (hostValue) {
+  protoOf(Companion_12).fromHostValue_7yihi0_k$ = function (hostValue) {
     var tmp0 = get_entries_8();
     var tmp$ret$0;
     $l$block: {
@@ -5860,7 +5860,7 @@
     return tmp.doResume_5yljmg_k$();
   };
   function toMediaFile(_this__u8e3s4) {
-    return new WeChatMediaFile(_this__u8e3s4.tempFilePath_1, _this__u8e3s4.sizeBytes_1, Companion_instance_10.fromHostValue_thokcm_k$(_this__u8e3s4.fileType_1), _this__u8e3s4.fileType_1, _this__u8e3s4.durationSeconds_1, _this__u8e3s4.width_1, _this__u8e3s4.height_1, _this__u8e3s4.thumbTempFilePath_1);
+    return new WeChatMediaFile(_this__u8e3s4.tempFilePath_1, _this__u8e3s4.sizeBytes_1, Companion_instance_10.fromHostValue_7yihi0_k$(_this__u8e3s4.fileType_1), _this__u8e3s4.fileType_1, _this__u8e3s4.durationSeconds_1, _this__u8e3s4.width_1, _this__u8e3s4.height_1, _this__u8e3s4.thumbTempFilePath_1);
   }
   function WxChooseMediaHost() {
   }
@@ -8104,7 +8104,7 @@
                     if (isBlank(entry.value_1)) {
                       throw new InvalidResponse('The WeChat host answered requestSubscribeMessage with a blank status');
                     }
-                    tmp_1 = new WeChatSubscriptionResult(item, Companion_instance_14.fromHostValue_thokcm_k$(entry.value_1), entry.value_1);
+                    tmp_1 = new WeChatSubscriptionResult(item, Companion_instance_14.fromHostValue_7yihi0_k$(entry.value_1), entry.value_1);
                   } else {
                     if (equals(entry, NotText_instance)) {
                       throw new InvalidResponse('The WeChat host answered requestSubscribeMessage with a status the SDK cannot read');
@@ -8272,7 +8272,7 @@
               if (tmp1_safe_receiver == null) {
                 tmp_1 = null;
               } else {
-                tmp_1 = Companion_instance_12.fromHostValue_thokcm_k$(tmp1_safe_receiver);
+                tmp_1 = Companion_instance_12.fromHostValue_7yihi0_k$(tmp1_safe_receiver);
               }
               tmp_0 = new WeChatScanResult(sample.text_1, tmp_1, sample.scanType_1, sample.charSet_1, sample.rawData_1, sample.path_1);
             } else {
