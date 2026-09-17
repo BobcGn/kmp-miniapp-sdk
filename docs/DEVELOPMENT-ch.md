@@ -34,6 +34,31 @@ VS Code 可用于处理 `examples/wechat-miniprogram` 下的文件。Consumer Br
 
 `:sdk:jsTest` suite 覆盖 Host boundary、error model、callback adaptation、cancellation、double completion、可选 abort、微信 error mapping、包含取消时宿主中止的 HTTP transport adaptation、生命周期状态迁移、导航适配、capability support 状态与版本门控、包含并发请求合并的权限生命周期行为、包含拒绝分类的隐私授权、包含过期分类的微信会话检查、包含逐项门控的微信剪贴板与震动 adapter、包含沙箱与文本边界的微信文件系统 adapter、包含坐标校验与隐私前置条件的微信定位 adapter、包含不可归因中断分类与结果校验的微信扫码 adapter、包含请求边界、结果校验与中断分类的微信媒体 adapter、包含模板校验与逐模板结果策略的微信订阅消息 adapter、包含逐 collector 监听配对的网络状态 adapter、包含 abort、进度与超时行为的微信上传与下载 adapter、包含参数转发、空白参数拒绝、精确中断分类与单次终态行为的微信支付 adapter，以及 interop object construction。这些测试使用 fake callbacks，不代表能够访问真实 `wx` runtime。
 
+## Mini App Gradle 插件模型 PoC
+
+`poc/kgp-model` 是一个独立 Gradle build，用于对比 `miniappMain` / `miniappTest` 的 Kotlin Gradle Plugin 模型。根构建不包含它，因此它不会作为 SDK 构建的一部分运行。请在它自己的目录下使用仓库根目录内置的 Wrapper 执行：
+
+```shell
+cd poc/kgp-model
+../../gradlew --no-daemon --console=plain clean check
+../../gradlew --no-daemon --console=plain :model-c:miniappTest
+../../gradlew --no-daemon --console=plain :model-c:checkMiniAppModel
+../../gradlew --no-daemon --console=plain :model-a:reportKgpModel
+```
+
+各模块：
+
+| 模块 | 说明 |
+| --- | --- |
+| `model-a` | 由消费者 build script 声明的命名 Kotlin/JS target。对照实验；作为交付模型被否决。 |
+| `model-b` | 背后没有任何东西的自定义 source set。复现「未使用 source set」失败形态。 |
+| `model-c` | 拥有 Kotlin/JS target 的 PoC 插件（`io.github.bobcgn.miniapp.poc`）。选定模型。 |
+| `model-c2` | 保留内部 `js` target 却仍试图暴露 `miniappMain` 的 PoC 插件。复现被否决的隐藏 target 变体。 |
+
+`reportKgpModel` 打印模块的模型形状；`checkMiniAppModel` 断言十项模型要求，任一项不满足即失败。`model-b` 与 `model-c2` 预期会在该检查中失败 —— 它们是被否决方案的实际执行证据，而不是通过模块。`model-a` 不满足的唯一一项要求是「消费者 build script 不包含手工 Kotlin/JS 接线」。
+
+该决策、被否决的替代方案以及 Kotlin Gradle Plugin 的限制记录于 [ADR 0010](decisions/0010-miniapp-gradle-plugin-source-set-model-ch.md)。PoC 是实验性工具：它不随 SDK 发布，也不定义任何 SDK 公共 API。
+
 ## Consumer Bridge
 
 构建并准备微信 integration host 所需的全部产物：

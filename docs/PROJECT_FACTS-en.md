@@ -68,6 +68,8 @@ Root project 'kmp-miniapp-sdk'
 
 `examples/` is an integration host directory, not a Gradle module.
 
+`poc/kgp-model` is the BOB-83 Kotlin Gradle Plugin model PoC. It is a standalone Gradle build that the root build does not include, so it contributes no module, target, or dependency to the SDK. Its decision is recorded in [ADR 0010](decisions/0010-miniapp-gradle-plugin-source-set-model-en.md).
+
 ## 4. Current Targets
 
 ```text
@@ -292,6 +294,16 @@ Verified on 2026-09-15:
 | Clipboard in WeChat Developer Tools | VERIFIED — base library 3.17.2; write PASS and read-back `matched=true` |
 | Permission in WeChat Developer Tools | VERIFIED — base library 3.17.2; the card showed `Granted` and `Denied`, and the settings visit reported the host's decision |
 | Permission on a real device | VERIFIED — the full `Granted` → `Denied` → `DENIED` → `Granted` transition, with no second prompt after the refusal |
+
+Verified on 2026-09-17 for the BOB-83 Kotlin Gradle Plugin model PoC, from `poc/kgp-model`:
+
+| Command | Result |
+| --- | --- |
+| `../../gradlew --no-daemon --console=plain clean check` | VERIFIED — BUILD SUCCESSFUL across all four PoC modules |
+| `../../gradlew --no-daemon --console=plain :model-c:miniappTest` | VERIFIED — `miniappNodeTest` executed 4 tests with no failures |
+| `../../gradlew --no-daemon --console=plain :model-c:checkMiniAppModel` | VERIFIED — all 10 model requirements pass |
+| `../../gradlew --no-daemon --console=plain --configuration-cache :model-c:check` | VERIFIED — configuration cache entry stored, then reused |
+| `./gradlew --no-daemon --console=plain clean check` at commit `6812814` | VERIFIED — `:sdk:jsNodeTest` ran 598 tests with no failures |
 
 Earlier WeChat Developer Tools evidence covers the version, Storage, and authentication checks; the network check was accepted separately on 2026-09-14. On 2026-09-15 the user confirmed real-host acceptance of the lifecycle foreground state, page route, and `navigateTo`, `redirectTo`, and `navigateBack`. The background-state transition is outside what the Developer Tools simulator can verify. The permission lifecycle defines a host-neutral three-state model — `NotRequested`, `Granted`, `Denied` — for a `PermissionKey` that names what a permission is for, and adapts `wx.getSetting`, `wx.authorize`, and `wx.openSetting` through the WeChat adapter. Nothing is cached, a refusal is `MiniAppException.PermissionDenied` rather than a host failure, and requesting a permission or opening settings never happens without a user gesture. Automated Kotlin/JS, fake-host, CommonJS, and TypeScript checks pass. WeChat Developer Tools (base library 3.17.2) and an Android device (OnePlus PLQ110, Android 36, WeChat 8.0.76) verified that the host reports `Granted` and `Denied`, that a settings visit reports the host's decision rather than assuming a grant, and that requesting a refused permission reports `DENIED` without a second prompt. `NotRequested` could not be produced on the account used, because it already holds a decision for the mapped permission; that state is covered by automated tests instead.
 

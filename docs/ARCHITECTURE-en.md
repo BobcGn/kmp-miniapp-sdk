@@ -264,7 +264,26 @@ The host-neutral export facade belongs under `jsMain/.../export` and may call sh
 
 Kotlin collections cannot cross the `@JsExport` boundary, because a JavaScript caller has no way to construct a Kotlin map. An export that needs key-value data therefore carries it in a primitively representable shape and lets the wrapper restore an object shape; the Kotlin API keeps its idiomatic collection types. The HTTP transport export follows this rule for headers, representing them as a flat sequence of alternating name and value strings.
 
-## 7. Non-goals
+## 7. Gradle Build Integration Boundary
+
+The Gradle Plugin owns platform and build integration; the Runtime SDK keeps owning APIs and Host capabilities. The plugin is a Kotlin/JS project integrator, not a second platform: it gives the consumer `miniappMain` and `miniappTest` by creating one Kotlin/JS target named after the platform, so the Kotlin Gradle Plugin — not the plugin — derives those source sets, the compilations that own them, and their `commonMain` / `commonTest` edges. [ADR 0010](decisions/0010-miniapp-gradle-plugin-source-set-model-en.md) records that decision and why the alternatives were rejected.
+
+```text
+miniappMain (consumer sources)      miniappTest (consumer tests)
+      ↓ derived by the Kotlin Gradle Plugin from one target named `miniapp`
+Kotlin/JS compilation
+      ↓ configured behind the boundary
+current WeChat Host distribution (CommonJS library, TypeScript declarations)
+```
+
+Two rules follow from that shape:
+
+- **The plugin chooses the platform's build shape; the Host chooses its distribution shape.** CommonJS output, library binaries, and TypeScript declaration generation describe how the current WeChat Host consumes the artifact. They belong to the Host configuration rather than to the platform identity, so a later Host may change them without renaming a source set.
+- **Mini App is the platform and WeChat is the current Host.** Nothing in the build-integration boundary may encode the two as the same thing.
+
+The plugin hides build wiring, never meaning. It does not hand-build compilations or source sets, does not attach a source set to a compilation through an unsupported API, and does not present an artifact-assembly task as a consumer contract. `buildMiniAppSdk`, which distributes this repository's own SDK into the WeChat example, is foundation evidence for the assembly step rather than the consumer workflow.
+
+## 8. Non-goals
 
 - Reimplementing Kuikly
 - Building a Compose Mini Program renderer

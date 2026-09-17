@@ -44,6 +44,8 @@ Only one critical-path stage advances at a time. A later issue must not become R
 | I | BOB-77 | First-class consumer workflow documentation | Synchronize README, PROJECT_FACTS, ARCHITECTURE, and DEVELOPMENT in English and Chinese; a new user builds Hello World from the README alone |
 | Release Gate | BOB-85 | Complete P1 Consumer Integration acceptance | After A–I have reviewable evidence, accept Gradle, IDEA, fixture, artifact, WeChat Developer Tools, and documentation; only then unblock the BOB-51 release gate |
 
+Stage A is decided. The PoC in `poc/kgp-model` selects a plugin-managed Kotlin/JS target named after the platform, because that is the only model in which `miniappMain` and `miniappTest` are real Kotlin source sets owned by a compilation. [ADR 0010](decisions/0010-miniapp-gradle-plugin-source-set-model-en.md) records the decision, the rejected alternatives, and the Kotlin Gradle Plugin limits. The hard `miniappMain` / `miniappTest` requirement is unchanged.
+
 ### P1 completion evidence
 
 BOB-85 requires all of the following evidence. An implementation report cannot substitute for a missing acceptance result:

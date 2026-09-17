@@ -1,0 +1,6 @@
+build/
+**/build/
+.kotlin/
+**/.kotlin/
+kotlin-js-store/
+**/kotlin-js-store/

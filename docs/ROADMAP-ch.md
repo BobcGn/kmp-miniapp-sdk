@@ -44,6 +44,8 @@ plugins {
 | I | BOB-77 | 一等消费者工作流文档 | README、PROJECT_FACTS、ARCHITECTURE、DEVELOPMENT 中英文同步；新用户只读 README 即可建立 Hello World |
 | Release Gate | BOB-85 | P1 Consumer Integration 总验收 | A–I 全部有可核对证据后，完成 Gradle、IDEA、fixture、产物、微信开发者工具与文档验收；通过后才解除 BOB-51 的发布阻塞 |
 
+第 A 步已有结论。`poc/kgp-model` 中的 PoC 选定「由插件管理、以平台命名的 Kotlin/JS target」，因为只有在它之下 `miniappMain` 与 `miniappTest` 才是由 compilation 拥有的真实 Kotlin source set。[ADR 0010](decisions/0010-miniapp-gradle-plugin-source-set-model-ch.md) 记录了该决策、被否决的替代方案与 Kotlin Gradle Plugin 的限制。`miniappMain` / `miniappTest` 的硬性要求不变。
+
 ### P1 完成证据
 
 BOB-85 必须同时具备以下证据，缺一项都不得用“实现完成”代替验收：

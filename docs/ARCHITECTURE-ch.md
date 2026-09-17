@@ -264,7 +264,26 @@ Export surface 可以适配 Kotlin API，但不得成为业务实现层。
 
 Kotlin collection 无法跨越 `@JsExport` 边界，因为 JavaScript 调用方无法构造 Kotlin map。需要键值数据的 export 因此改用可原生表示的形状承载，并由 wrapper 还原为对象形状；Kotlin API 仍保留符合习惯的 collection 类型。HTTP transport export 对 headers 采用该规则，将其表示为 name 与 value 交替的扁平字符串序列。
 
-## 7. 非目标
+## 7. Gradle 构建集成边界
+
+Gradle Plugin 负责平台与构建集成；Runtime SDK 继续负责 API 与 Host 能力。插件是 Kotlin/JS 项目集成器，而不是第二个平台：它通过创建一个以平台命名的 Kotlin/JS target 来为消费者提供 `miniappMain` 与 `miniappTest`，因此派生这些 source set、拥有它们的 compilation，以及它们与 `commonMain` / `commonTest` 的边的是 Kotlin Gradle Plugin，而不是插件本身。[ADR 0010](decisions/0010-miniapp-gradle-plugin-source-set-model-ch.md) 记录了该决策以及被否决方案的原因。
+
+```text
+miniappMain（消费者源码）      miniappTest（消费者测试）
+      ↓ 由 Kotlin Gradle Plugin 依据名为 `miniapp` 的单个 target 派生
+Kotlin/JS compilation
+      ↓ 在边界内配置
+当前微信宿主分发形态（CommonJS library、TypeScript 声明）
+```
+
+由此产生两条规则：
+
+- **插件决定平台的构建形态，Host 决定自己的分发形态。** CommonJS 输出、library binary 与 TypeScript 声明生成描述的是当前微信宿主如何消费产物，属于 Host 配置而非平台身份，因此后续宿主可以在不改名 source set 的前提下改变它们。
+- **Mini App 是平台，微信是当前 Host。** 构建集成边界内不得把两者编码为同一件事。
+
+插件隐藏构建接线，而不隐藏语义。它不手工搭建 compilation 或 source set，不通过不受支持的 API 把 source set 挂到 compilation 上，也不把产物组装任务呈现为消费者契约。把本仓库自身 SDK 分发到微信示例的 `buildMiniAppSdk`，是组装环节的基础证据，而不是消费者工作流。
+
+## 8. 非目标
 
 - 重新实现 Kuikly
 - 构建 Compose Mini Program renderer

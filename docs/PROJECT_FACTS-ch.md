@@ -68,6 +68,8 @@ Root project 'kmp-miniapp-sdk'
 
 `examples/` 是 integration host 目录，不是 Gradle module。
 
+`poc/kgp-model` 是 BOB-83 的 Kotlin Gradle Plugin 模型 PoC。它是一个独立 Gradle build，根构建不包含它，因此不为 SDK 贡献任何 module、target 或依赖。其决策记录于 [ADR 0010](decisions/0010-miniapp-gradle-plugin-source-set-model-ch.md)。
+
 ## 4. 当前 Targets
 
 ```text
@@ -292,6 +294,16 @@ Kotlin/JS platform variants 及其传递依赖由 Gradle 在依赖解析期间�
 | 微信开发者工具中的 Clipboard | VERIFIED — 基础库 3.17.2；写入 PASS，读回 `matched=true` |
 | 微信开发者工具中的 Permission | VERIFIED — 基础库 3.17.2；卡片显示 `Granted` 与 `Denied`，设置页返回的是宿主的决定 |
 | 真机中的 Permission | VERIFIED — 完整走通 `Granted` → `Denied` → `DENIED` → `Granted`，拒绝后未出现第二次弹窗 |
+
+2026-09-17 针对 BOB-83 的 Kotlin Gradle Plugin 模型 PoC 验证，均在 `poc/kgp-model` 下执行：
+
+| 命令 | 结果 |
+| --- | --- |
+| `../../gradlew --no-daemon --console=plain clean check` | VERIFIED — 四个 PoC 模块全部 BUILD SUCCESSFUL |
+| `../../gradlew --no-daemon --console=plain :model-c:miniappTest` | VERIFIED — `miniappNodeTest` 实际执行 4 个测试，无失败 |
+| `../../gradlew --no-daemon --console=plain :model-c:checkMiniAppModel` | VERIFIED — 10 项模型要求全部通过 |
+| `../../gradlew --no-daemon --console=plain --configuration-cache :model-c:check` | VERIFIED — configuration cache 条目成功存储并复用 |
+| 在 commit `6812814` 上执行 `./gradlew --no-daemon --console=plain clean check` | VERIFIED — `:sdk:jsNodeTest` 执行 598 个测试，无失败 |
 
 早期微信开发者工具证据覆盖版本、Storage 与 authentication 检查；network 检查于 2026-09-14 单独完成验收。用户于 2026-09-15 确认 lifecycle 前台状态、页面 route，以及 `navigateTo`、`redirectTo`、`navigateBack` 的真实宿主验收通过。后台状态迁移不属于开发者工具模拟器可验证范围。权限生命周期定义了宿主无关的三态模型 —— `NotRequested`、`Granted`、`Denied` —— 由命名权限「为了什么」的 `PermissionKey` 标识，并通过微信 adapter 适配 `wx.getSetting`、`wx.authorize` 与 `wx.openSetting`。不做任何缓存；拒绝是 `MiniAppException.PermissionDenied` 而不是宿主失败；请求权限与打开设置绝不在缺少用户手势时执行。Kotlin/JS、fake-host、CommonJS 与 TypeScript 自动检查均已通过。微信开发者工具（基础库 3.17.2）与 Android 真机（OnePlus PLQ110、Android 36、微信 8.0.76）验证了：宿主能够报告 `Granted` 与 `Denied`；设置页返回的是宿主的决定而不是被假定为已授权；对已拒绝权限再次请求会报告 `DENIED` 且不出现第二次弹窗。`NotRequested` 无法在所用账号上产出，因为该账号已对所映射权限持有决定；该状态改由自动化测试覆盖。
 

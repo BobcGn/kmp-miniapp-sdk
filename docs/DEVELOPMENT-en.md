@@ -34,6 +34,31 @@ These commands are valid and were verified on 2026-09-15.
 
 The `:sdk:jsTest` suite includes host-boundary, error-model, callback adaptation, cancellation, double-completion, optional abort, WeChat error-mapping, HTTP transport adaptation including host abort on cancellation, lifecycle state transitions, navigation adaptation, capability-support states and version gating, permission lifecycle behaviour including concurrent request merging, privacy authorization including the refusal classification, WeChat session checking including the expiry classification, the WeChat clipboard and vibration adapters including their per-capability gating, the WeChat file-system adapter including its sandbox and text boundaries, the WeChat location adapter including its coordinate validation and privacy precondition, the WeChat scan adapter including indeterminate-interruption classification and result validation, the WeChat media adapter including its request boundaries, result validation, and interruption classification, the WeChat subscription adapter including its template validation and per-template result policy, the network status adapter including its per-collector listener pairing, the WeChat upload and download adapters including their abort, progress, and timeout behaviour, the WeChat payment adapter including its parameter forwarding, blank-parameter refusal, exact interruption classification, and single-terminal-state behaviour, and interop object-construction coverage. These tests use fake callbacks and do not claim access to a real `wx` runtime.
 
+## Mini App Gradle plugin model PoC
+
+`poc/kgp-model` is a standalone Gradle build that compares the Kotlin Gradle Plugin models for `miniappMain` / `miniappTest`. The root build does not include it, so it never runs as part of the SDK build. Run it from its own directory with the repository root's checked-in Wrapper:
+
+```shell
+cd poc/kgp-model
+../../gradlew --no-daemon --console=plain clean check
+../../gradlew --no-daemon --console=plain :model-c:miniappTest
+../../gradlew --no-daemon --console=plain :model-c:checkMiniAppModel
+../../gradlew --no-daemon --console=plain :model-a:reportKgpModel
+```
+
+The modules are:
+
+| Module | What it is |
+| --- | --- |
+| `model-a` | A named Kotlin/JS target declared in the consumer build script. Control experiment; rejected as a delivery model. |
+| `model-b` | Custom source sets with nothing behind them. Reproduces the unused-source-set failure. |
+| `model-c` | A PoC plugin (`io.github.bobcgn.miniapp.poc`) that owns the Kotlin/JS target. The chosen model. |
+| `model-c2` | A PoC plugin that keeps an internal `js` target and still tries to expose `miniappMain`. Reproduces the rejected hidden-target variant. |
+
+`reportKgpModel` prints a module's model shape; `checkMiniAppModel` asserts ten model requirements and fails when any is not met. `model-b` and `model-c2` are expected to fail that check — they exist as the executed evidence for the rejected models, not as passing modules. `model-a` fails the one requirement that the consumer build script contain no manual Kotlin/JS wiring.
+
+The decision, the rejected alternatives, and the Kotlin Gradle Plugin limitations are recorded in [ADR 0010](decisions/0010-miniapp-gradle-plugin-source-set-model-en.md). The PoC is experimental tooling: it does not ship in the SDK and it defines no SDK public API.
+
 ## Consumer Bridge
 
 Build and prepare every artifact required by the WeChat integration host:

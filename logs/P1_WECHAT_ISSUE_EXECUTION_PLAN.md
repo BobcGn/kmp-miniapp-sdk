@@ -33,6 +33,10 @@ BOB-75 只有在 BOB-83、BOB-78、BOB-76、BOB-82、BOB-81、BOB-84、BOB-80、
 
 先用最小 PoC 比较命名 Kotlin/JS target、自定义 source sets、以及 plugin 管理的 compilation/source-set hierarchy。在 Kotlin 2.4.20 与 Gradle 9.3.1 下验证 Gradle sync、IDEA 识别、`commonMain` 依赖、`miniappTest` 执行、任务命名和后续扩展性。必须记录选型、否决方案、原因和已知 KGP 限制；若决定会长期约束架构，则形成 ADR。不得降低 `miniappMain` / `miniappTest` 的硬性用户体验要求。
 
+**本轮结论（2026-09-17）**：PoC 落于 `poc/kgp-model`（独立 Gradle build，根构建不包含它）。选定「插件管理、以平台命名的 Kotlin/JS target」—— 只有在它之下 `miniappMain` / `miniappTest` 才是由 compilation 拥有的真实 Kotlin source set。被否决：方案 A（消费者 build script 自行声明命名 JS target —— 机制相同，但把 BOB-81 要求隐藏的接线留给消费者）；方案 B（仅创建自定义 source sets —— KGP 报告 `Unused Kotlin Source Sets`，无 compilation 消费、无 `miniappTest` 任务，`miniappMainImplementation` 等 configuration 成为死配置）；方案 C 的隐藏 target 变体（保留内部 `js` target 同时暴露 `miniappMain` —— 公开 API 无法把任意 source set 挂到既有 compilation，`KotlinCompilationSourceSetsContainer` 为 internal）。决策、原因与 KGP 限制记录于 ADR 0010（中英同步），并在 ARCHITECTURE 第 7 节引用。
+
+事实证据（Kotlin 2.4.20 / Gradle 9.3.1）：`model-c` 的 `miniappNodeTest` 实际执行 4 个测试（1 个来自 `commonTest`、3 个来自 `miniappTest`），`checkMiniAppModel` 10/10 通过；`model-b` 6/10 失败、`model-c2` 5/10 失败、`model-a` 因消费者 build script 含 `useCommonJs()` 等手工接线而在 1 项上失败；`poc/kgp-model` 的 `clean check` 通过；`:model-c:check` 成功存储并复用 configuration cache，`--warning-mode all` 未出现弃用警告；commit `6812814` 的 `clean check` 通过（`:sdk:jsNodeTest` 598 个测试，无失败）。IDEA 识别仍属人工验收，本轮未执行，不得声称已通过。
+
 ### 紧急第 B 步：BOB-78 `[P1][URGENT] Bootstrap Mini App Gradle Plugin`
 
 建立独立的 `io.github.bobcgn.miniapp` Gradle Plugin 骨架，检测 Kotlin Multiplatform 插件并建立 Mini App 平台集成入口。普通 KMP 项目必须能应用插件并完成 Gradle sync；缺少 KMP 插件时必须给出明确错误。插件只负责构建集成和开发体验，不承载微信 runtime API，也不在本步骤实现多 Host 或发布流程。
