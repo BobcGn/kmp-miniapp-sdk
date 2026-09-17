@@ -60,6 +60,37 @@ runtime SDK 共享客户端行为、宿主能力与 presentation state，从不�
 
 runtime 是**公共 module 坐标** `io.github.bobcgn:kmp-miniapp-sdk:<version>`，因此插件从不写出本仓库的 project path —— 消费者构建无法访问它们，`project(":kmp-miniapp-sdk")` 对它不可用。runtime 的目录是 `sdk/`，project 名是 `kmp-miniapp-sdk`，因为该名字正是 composite build substitution 匹配、也是正式发布将要使用的 artifact id。`miniappTest` 通过 source-set hierarchy 继承该 runtime；其他 source set 与其他 target 都不会获得它。
 
+### `miniapp { }` extension
+
+插件注册一个名为 `miniapp` 的 extension。它配置的是当前宿主，而宿主目前唯一的设置是 bundle 的写入位置：
+
+```kotlin
+plugins {
+    kotlin("multiplatform")
+    id("io.github.bobcgn.miniapp")
+}
+
+miniapp {
+    wechat {
+        bundleDirectory.set(layout.buildDirectory.dir("miniapp/bundle"))
+    }
+}
+```
+
+| 字段 | 默认值 | 改变什么 |
+| --- | --- | --- |
+| `wechat.bundleDirectory` | `build/miniapp/bundle` | `assembleMiniAppBundle` 写入宿主 bundle 的位置 |
+
+宿主块与字段都是可选的。`bundleDirectory` 默认为 `build/miniapp/bundle`，因此不做任何配置的消费者得到的行为与引入该 extension 之前完全一致。
+
+**为什么需要 `wechat { }`。** Mini App 平台不是宿主：平台是源码与 runtime SDK 所针对的对象，宿主是加载 bundle 的 runtime。`MiniAppExtension` 是平台，`WeChatHostConfiguration` 是宿主。新增宿主意味着新增一个 `MiniAppHostConfiguration` 子类型并在 extension 上新增一个访问器 —— 既不是把 WeChat 那个加宽，也不是添加根级 `wechatXxx` 属性把平台写死成微信的形状。
+
+**为什么可配置项这么少。** Gradle DSL 里的每个字段都是消费者必须做出的决定，因此这里只承载构建确实需要与宿主达成一致的内容。Kotlin/JS 输出形态、CommonJS、TypeScript declaration 与 renderer 边界都不是消费者的选择 —— 它们正是插件存在的理由，暴露它们等于把接线又放回消费者的 build script。该 extension 既不改变 `checkMiniAppHostBoundary`（平台级保证），也不改变宿主输出形态。
+
+**有意不放在这里的内容。** AppID 与密钥、商户与支付材料、订单或签名数据、API token、用户身份、订阅消息模板 ID、权限状态、presentation state、页面 route、markup、View 定义，以及其他任何业务或后台配置。它们不是构建输入。Gradle extension 不是宿主控制台的副本；SDK 在构建期不为它们建模，理由与它在运行期不为它们建模相同。
+
+**唯一的一条校验。** `bundleDirectory` 必须是项目内的目录。`assembleMiniAppBundle` 使用 `Sync`，会删除目标目录中 bundle 不包含的文件，因此项目之外的目录、或项目目录本身，会被删除而不是被组装进去。失败信息会指出字段、两个路径与期望值。写入项目内的小程序目录是允许的；放宽该规则需要有真实的外部用例。
+
 ### 宿主 bundle
 
 插件把 Mini App target 的 Kotlin/JS 输出配置成宿主可消费的形态：在 Node.js test run 之上，再加 CommonJS library binary 与 TypeScript declaration。消费者不需要写 `useCommonJs()`、`binaries.library()`、`generateTypeScriptDefinitions()` 或 `nodejs()` 中的任何一项。

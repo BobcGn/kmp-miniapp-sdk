@@ -14,6 +14,12 @@ import org.gradle.api.Project
 public class MiniAppGradlePlugin : Plugin<Project> {
 
     override fun apply(target: Project) {
+        // Registered before the Kotlin Multiplatform plugin arrives, so the extension exists even on
+        // the failure path, and guarded so applying this plugin twice does not create a second one.
+        if (target.extensions.findByType(MiniAppExtension::class.java) == null) {
+            target.extensions.create(MiniAppExtension.NAME, MiniAppExtension::class.java)
+        }
+
         target.pluginManager.withPlugin(MiniAppPluginDiagnostics.KOTLIN_MULTIPLATFORM_PLUGIN_ID) {
             MiniAppPlatformSupport.registerMiniAppPlatformTarget(target)
         }

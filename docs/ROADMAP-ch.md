@@ -50,7 +50,7 @@ plugins {
 
 runtime 的公共坐标是 `io.github.bobcgn:kmp-miniapp-sdk`。第 D 步正式确定了该 artifact id：module 目录仍为 `sdk/`，而其 Gradle project 名 —— 也就是 composite build substitution 匹配、正式发布将要使用的 artifact id —— 是 `kmp-miniapp-sdk`。版本只有 `gradle/libs.versions.toml` 一个来源：插件声明的坐标与 SDK 自身的 `MiniAppSdk.VERSION` 都由它生成，因此二者不可能漂移。
 
-第 E 步的实现已就位，等待外部消费者验收：`assembleMiniAppBundle` 把 Mini App target 的 Kotlin/JS production library —— 消费者模块与其声明，以及它解析出的 runtime 模块 —— 重新发布到 `build/miniapp/bundle/`，且消费者不写任何 Kotlin/JS 构建配置。该 distribution 是稳定的宿主集成输入，而不是已验证的产物：没有任何小程序宿主加载过它。`checkMiniAppHostBoundary` 会在组装前拒绝携带客户端 renderer 的 runtime classpath，因为这类 distribution 会构建成功却仍然不可用；因此 Mini App source set 不得从 common source set 继承 Compose UI。微信 DSL（BOB-84）尚未实现，因此该阶段仍处于门禁之下。
+第 E 步的实现已就位，等待外部消费者验收：`assembleMiniAppBundle` 把 Mini App target 的 Kotlin/JS production library —— 消费者模块与其声明，以及它解析出的 runtime 模块 —— 重新发布到 `build/miniapp/bundle/`，且消费者不写任何 Kotlin/JS 构建配置。该 distribution 是稳定的宿主集成输入，而不是已验证的产物：没有任何小程序宿主加载过它。`checkMiniAppHostBoundary` 会在组装前拒绝携带客户端 renderer 的 runtime classpath，因为这类 distribution 会构建成功却仍然不可用；因此 Mini App source set 不得从 common source set 继承 Compose UI。第 F 步的实现已就位：插件注册 `miniapp` extension，其唯一宿主是 `wechat`，只承载一个构建设置 —— 宿主 bundle 目录 —— 并把宿主建模为 `MiniAppHostConfiguration` 子类型，而不是平台本身。业务与后台配置按设计留在 Gradle 之外。
 
 ### P1 完成证据
 

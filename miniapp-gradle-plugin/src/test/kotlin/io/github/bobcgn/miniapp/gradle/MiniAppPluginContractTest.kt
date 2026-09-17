@@ -1,13 +1,17 @@
 package io.github.bobcgn.miniapp.gradle
 
+import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import java.io.File
 import java.lang.reflect.ParameterizedType
 import java.util.Properties
+import kotlin.io.path.createTempDirectory
 import java.util.jar.JarFile
 import kotlin.test.Test
+import kotlin.test.assertContains
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
@@ -84,6 +88,42 @@ class MiniAppPluginContractTest {
                 !MiniAppHostBoundary.isForbiddenModule(group, name),
                 "$group:$name is legitimate shared runtime and must be allowed",
             )
+        }
+    }
+
+    @Test
+    fun `the extension models WeChat as a host rather than as the platform`() {
+        assertEquals("miniapp", MiniAppExtension.NAME)
+        assertEquals("wechat", WeChatHostConfiguration.NAME)
+        assertTrue(
+            MiniAppHostConfiguration::class.java.isAssignableFrom(WeChatHostConfiguration::class.java),
+            "WeChat must be a host configuration",
+        )
+        assertTrue(
+            !MiniAppHostConfiguration::class.java.isAssignableFrom(MiniAppExtension::class.java),
+            "the platform extension must not itself be a host configuration",
+        )
+    }
+
+    @Test
+    fun `the bundle directory must stay inside the project`() {
+        val project = createTempDirectory("miniapp-bundle-validation").toFile()
+        project.resolve("build").mkdirs()
+
+        // Inside the project is allowed, including a host folder of the consumer's own.
+        MiniAppBundleDirectoryDiagnostics.requireInsideProject(project.resolve("build/miniapp/bundle"), project)
+        MiniAppBundleDirectoryDiagnostics.requireInsideProject(project.resolve("wechat/libs"), project)
+
+        // The project directory itself and anything outside it are not: Sync would delete them.
+        listOf(project, project.parentFile, project.parentFile.resolve("elsewhere")).forEach { rejected ->
+            val failure = try {
+                MiniAppBundleDirectoryDiagnostics.requireInsideProject(rejected, project)
+                null
+            } catch (exception: GradleException) {
+                exception
+            }
+            assertNotNull(failure, "$rejected must be rejected as a bundle directory")
+            assertContains(failure.message!!, MiniAppBundleDirectoryDiagnostics.MESSAGE_HEADER)
         }
     }
 

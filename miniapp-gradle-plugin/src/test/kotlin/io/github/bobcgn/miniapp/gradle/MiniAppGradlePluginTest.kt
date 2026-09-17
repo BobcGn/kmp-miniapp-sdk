@@ -286,6 +286,120 @@ class MiniAppGradlePluginTest {
     }
 
     @Test
+    fun `the canonical miniapp wechat DSL compiles and executes`() {
+        // The Kotlin fixtures drive the extension through `configure<...>` because they apply the
+        // plugin from the buildscript classpath, which does not generate type-safe accessors. A
+        // consumer applies the plugin in the `plugins { }` block and gets them, so the bare
+        // `miniapp { }` syntax is checked here, in Groovy, where it needs no accessor at all.
+        val projectDir = newFixture("kmp-groovy-dsl")
+        projectDir.resolve("build.gradle").writeText(
+            """
+            buildscript {
+                repositories {
+                    gradlePluginPortal()
+                    mavenCentral()
+                }
+                dependencies {
+                    classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
+                    classpath(${pluginUnderTestClasspathExpression()})
+                }
+            }
+
+            apply plugin: 'org.jetbrains.kotlin.multiplatform'
+            apply plugin: 'io.github.bobcgn.miniapp'
+
+            miniapp {
+                wechat {
+                    bundleDirectory.set(layout.buildDirectory.dir('wechat-host-bundle'))
+                }
+            }
+
+            tasks.register('reportBundleDirectory') {
+                doLast {
+                    def extension = project.extensions.getByName('miniapp')
+                    println('miniapp.bundleDirectory=' + extension.wechat.bundleDirectory.get().asFile.name)
+                }
+            }
+            """.trimIndent(),
+        )
+
+        val result = runner(projectDir, "reportBundleDirectory").build()
+
+        assertContains(result.output, "miniapp.bundleDirectory=wechat-host-bundle")
+    }
+
+    @Test
+    fun `the extension configures where the bundle is written`() {
+        val projectDir = newFixture("kmp-extension")
+        writeConsumerBuildScript(
+            projectDir,
+            consumerEpilogue = "configure<io.github.bobcgn.miniapp.gradle.MiniAppExtension> {\n" +
+                "    wechat {\n" +
+                "        bundleDirectory.set(project.layout.buildDirectory.dir(\"host-bundle\"))\n" +
+                "    }\n" +
+                "}",
+        )
+        writeConsumerSources(projectDir)
+
+        val result = runner(projectDir, MiniAppPluginDiagnostics.ASSEMBLE_MINIAPP_BUNDLE_TASK_NAME).build()
+
+        assertEquals(
+            TaskOutcome.SUCCESS,
+            result.task(":${MiniAppPluginDiagnostics.ASSEMBLE_MINIAPP_BUNDLE_TASK_NAME}")?.outcome,
+        )
+        val configured = projectDir.resolve("build/host-bundle")
+        assertTrue(configured.isDirectory, "expected the bundle at the configured directory")
+        val bundle = configured.listFiles()!!.map { it.name }
+        assertTrue(bundle.any { it.endsWith(".d.ts") }, "expected a declaration in $bundle")
+        assertTrue(bundle.any { it == "kotlin-kotlin-stdlib.js" }, "expected the runtime in $bundle")
+        // The default location must not also be written.
+        assertTrue(
+            !projectDir.resolve("build/${MiniAppPluginDiagnostics.MINIAPP_BUNDLE_DIRECTORY}").exists(),
+            "the default bundle directory must not be used when one is configured",
+        )
+    }
+
+    @Test
+    fun `a bundle directory outside the project fails with an actionable error`() {
+        val projectDir = newFixture("kmp-extension-invalid")
+        writeConsumerBuildScript(
+            projectDir,
+            consumerEpilogue = "configure<io.github.bobcgn.miniapp.gradle.MiniAppExtension> {\n" +
+                "    wechat {\n" +
+                "        bundleDirectory.set(project.layout.projectDirectory.dir(\"../\" + project.name + \"-outside-bundle\"))\n" +
+                "    }\n" +
+                "}",
+        )
+        writeConsumerSources(projectDir)
+
+        val result = runner(projectDir, MiniAppPluginDiagnostics.ASSEMBLE_MINIAPP_BUNDLE_TASK_NAME).buildAndFail()
+
+        assertContains(result.output, MiniAppBundleDirectoryDiagnostics.MESSAGE_HEADER)
+        assertContains(result.output, "configured:")
+        assertContains(result.output, "bundleDirectory.set")
+        // Nothing outside the project may be created by a rejected configuration.
+        assertTrue(
+            !projectDir.parentFile.resolve("${projectDir.name}-outside-bundle").exists(),
+            "a rejected configuration must not have written anything",
+        )
+    }
+
+    @Test
+    fun `applying the plugin twice does not create a second extension`() {
+        val projectDir = newFixture("kmp-extension-idempotent")
+        writeConsumerBuildScript(
+            projectDir,
+            consumerEpilogue = "apply(plugin = \"io.github.bobcgn.miniapp\")",
+        )
+
+        // The build succeeding at all is the idempotency evidence: Gradle refuses a second
+        // extension with the same name, so a duplicate registration would have failed the build.
+        val report = MiniAppModelReport(runner(projectDir, "miniAppModelReport").build())
+
+        assertContains(report.valuesAfter("miniapp.extensionType=").single(), "MiniAppExtension")
+    }
+
+    @Test
     fun `the assembly task is up to date on a repeat run`() {
         val projectDir = newFixture("kmp-bundle-incremental")
         writeConsumerBuildScript(projectDir)
@@ -674,6 +788,8 @@ class MiniAppGradlePluginTest {
                         println("miniapp." + name + ".directDependsOn=" + direct)
                         println("miniapp." + name + ".transitiveDependsOn=" + seen.toList().sort())
                     }
+                    println("miniapp.extensionType=" +
+                        project.extensions.getByName("miniapp").getClass().name)
                     println(
                         "miniapp.bundleDependencies=" +
                             project.tasks.getByName("assembleMiniAppBundle")

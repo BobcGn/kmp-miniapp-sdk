@@ -115,16 +115,17 @@ internal object MiniAppPlatformSupport {
 
     /**
      * Registers the stable, documented assembly task a consumer runs to get the compiler-managed
-     * distribution at a fixed path. That the distribution is *loadable* by a real host is a separate
-     * question this plugin does not answer, and must not be implied by the task's existence.
+     * distribution. That the distribution is *loadable* by a real host is a separate question this
+     * plugin does not answer, and must not be implied by the task's existence.
      *
      * The Kotlin/JS distribution already contains everything the host needs — the consumer's module,
      * its declaration, and the runtime modules its compilation requires — but its path and layout
-     * belong to the Kotlin Gradle Plugin. This task republishes that output at a stable path so a
-     * host integration depends on a contract instead of on a plugin's build directory.
+     * belong to the Kotlin Gradle Plugin. This task republishes that output at the host's configured
+     * path, so a host integration depends on a contract instead of on a plugin's build directory.
      *
      * `Sync` rather than `Copy`: a removed runtime module must disappear from the bundle, and a
-     * stale file in a directory a host loads verbatim is worse than an extra delete.
+     * stale file in a directory a host loads verbatim is worse than an extra delete. Because `Sync`
+     * also deletes, the destination is validated before it runs.
      *
      * The source is the distribution task's *declared output*, not a hand-written path, so a Kotlin
      * Gradle Plugin layout change moves the bundle with it instead of silently emptying it.
@@ -133,6 +134,9 @@ internal object MiniAppPlatformSupport {
      */
     private fun registerMiniAppBundleTask(project: Project) {
         val distribution = project.tasks.named(MiniAppPluginDiagnostics.MINIAPP_DISTRIBUTION_TASK_NAME)
+        val hostBundleDirectory = project.extensions.getByType(MiniAppExtension::class.java)
+            .wechat.bundleDirectory
+        val projectDirectory = project.layout.projectDirectory.asFile
 
         project.tasks.register(
             MiniAppPluginDiagnostics.ASSEMBLE_MINIAPP_BUNDLE_TASK_NAME,
@@ -143,8 +147,18 @@ internal object MiniAppPlatformSupport {
                 "Assembles the Mini App host bundle: the compiled module, its TypeScript " +
                     "declaration and the runtime modules it needs."
             task.dependsOn(MiniAppPluginDiagnostics.CHECK_MINIAPP_HOST_BOUNDARY_TASK_NAME)
-            task.into(project.layout.buildDirectory.dir(MiniAppPluginDiagnostics.MINIAPP_BUNDLE_DIRECTORY))
+            task.into(hostBundleDirectory)
             task.from(distribution.map { it.outputs.files })
+
+            // `doFirst`, so an unusable destination fails before Sync deletes anything.
+            val configuredBundleDirectory = hostBundleDirectory
+            val projectDir = projectDirectory
+            task.doFirst {
+                MiniAppBundleDirectoryDiagnostics.requireInsideProject(
+                    configuredBundleDirectory.get().asFile,
+                    projectDir,
+                )
+            }
         }
     }
 

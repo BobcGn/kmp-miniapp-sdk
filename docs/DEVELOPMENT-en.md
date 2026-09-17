@@ -60,6 +60,37 @@ What the check does not do: it cannot detect a renderer that imports no UI frame
 
 The runtime is a **public module coordinate**, `io.github.bobcgn:kmp-miniapp-sdk:<version>`, so the plugin never names this repository's project paths — a consumer build has no access to them, and `project(":kmp-miniapp-sdk")` is not available to it. The runtime's directory is `sdk/`; its project name is `kmp-miniapp-sdk`, because that name is the artifact id composite-build substitution matches and a publication would publish. `miniappTest` inherits the runtime through the source-set hierarchy; no other source set and no other target receives it.
 
+### The `miniapp { }` extension
+
+The plugin registers one extension named `miniapp`. Its configuration is the current host, and the host's only setting is where its bundle is written:
+
+```kotlin
+plugins {
+    kotlin("multiplatform")
+    id("io.github.bobcgn.miniapp")
+}
+
+miniapp {
+    wechat {
+        bundleDirectory.set(layout.buildDirectory.dir("miniapp/bundle"))
+    }
+}
+```
+
+| Field | Default | What it changes |
+| --- | --- | --- |
+| `wechat.bundleDirectory` | `build/miniapp/bundle` | where `assembleMiniAppBundle` writes the host bundle |
+
+Both the block and the field are optional. `bundleDirectory` defaults to `build/miniapp/bundle`, so a consumer that configures nothing gets exactly the behaviour the plugin had before this extension existed.
+
+**Why `wechat { }` exists at all.** A Mini App platform is not a host: the platform is what the sources and the runtime SDK are written against, and a host is the runtime that loads the bundle. `MiniAppExtension` is the platform; `WeChatHostConfiguration` is a host. Adding a second host means adding another `MiniAppHostConfiguration` subtype and another accessor on the extension — it does not mean widening the WeChat one, and it does not mean root-level `wechatXxx` properties that would make the platform look WeChat-shaped.
+
+**Why so little is configurable.** Every field in a Gradle DSL is a decision a consumer has to make, so this one carries only what a build genuinely needs to agree with its host about. The Kotlin/JS output shape, CommonJS, TypeScript declarations and the renderer boundary are not consumer choices — they are what the plugin exists to decide, and exposing them would put the wiring back into the consumer's build script. The extension changes neither `checkMiniAppHostBoundary`, which is a platform-level guarantee, nor the host output shape.
+
+**What is deliberately not here.** Application identifiers and secrets, merchant and payment material, order or signature data, API tokens, user identity, subscription template identifiers, permission state, presentation state, page routes, markup, view definitions, and any other business or backend configuration. Those are not build inputs. A Gradle extension is not a second copy of a host's console, and the SDK does not model them at build time for the same reason it does not model them at runtime.
+
+**The one validation.** `bundleDirectory` must be a directory inside the project. `assembleMiniAppBundle` is a `Sync`, which deletes files in its destination that the bundle does not contain, so a directory outside the project — or the project directory itself — would be deleted rather than assembled into. The failure names the field, both paths and the expected value. Writing into a mini program folder inside the project is allowed; relaxing the rule needs a real external case.
+
 ### The host bundle
 
 The plugin configures the Mini App target's Kotlin/JS output for a host: a CommonJS library binary with TypeScript declarations, on top of the Node.js test run. The consumer writes none of `useCommonJs()`, `binaries.library()`, `generateTypeScriptDefinitions()` or `nodejs()`.

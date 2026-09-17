@@ -44,7 +44,7 @@
 - 微信订阅消息请求已实现并通过自动化检查；Android 真机已验证运行时支持与零模板保护，弹窗结果仍受阻于当前 AppID 下的有效模板
 - 微信标准支付已实现，并作为「后端参数的类型化转发器」通过自动化检查；Android 真机已验证运行时支持与「未配置参数」保护，真实支付验收仍受阻塞于合法商户环境与可信后端
 - 虚拟支付未实现：不存在请求、结果、capability 条目或导出，且所带开发者工具基础库中没有可发现的虚拟支付契约。其边界记录于 ARCHITECTURE，状态在能力矩阵中为 `Planned`
-- `io.github.bobcgn.miniapp` Gradle 插件已实现并有自动化覆盖。把它应用到 Kotlin Multiplatform 项目会提供 `miniappMain` 与 `miniappTest`，二者是由 compilation 拥有、以 `commonMain` / `commonTest` 为父边的真实 source set；绑定 Node.js test run 使 `miniappTest` 真正执行测试；把 runtime SDK 接入 `miniappMain`，使消费者无需声明 artifact 即可针对公开 API 编译；并提供 `assembleMiniAppBundle`，把 Kotlin/JS production library —— 消费者模块与其声明，以及它所需的 runtime 模块 —— 重新发布到 `build/miniapp/bundle`，作为 compiler-managed Mini App distribution。它会对未应用 Kotlin Multiplatform 插件的项目报错，也会在 `miniappRuntimeClasspath` 携带客户端 renderer 时报错。它尚未提供 Gradle DSL
+- `io.github.bobcgn.miniapp` Gradle 插件已实现并有自动化覆盖。把它应用到 Kotlin Multiplatform 项目会提供 `miniappMain` 与 `miniappTest`，二者是由 compilation 拥有、以 `commonMain` / `commonTest` 为父边的真实 source set；绑定 Node.js test run 使 `miniappTest` 真正执行测试；把 runtime SDK 接入 `miniappMain`，使消费者无需声明 artifact 即可针对公开 API 编译；并提供 `assembleMiniAppBundle`，把 Kotlin/JS production library —— 消费者模块与其声明，以及它所需的 runtime 模块 —— 重新发布到 `build/miniapp/bundle`，作为 compiler-managed Mini App distribution。它会对未应用 Kotlin Multiplatform 插件的项目报错，也会在 `miniappRuntimeClasspath` 携带客户端 renderer 时报错。它通过 `miniapp { wechat { } }` extension 配置，其中唯一的设置是当前宿主的 bundle 目录，默认为 `build/miniapp/bundle`
 - 若消费者的 `commonMain` 依赖另一个 Kotlin Multiplatform project，则必须对该 project 同样应用 Mini App 插件：该依赖经由 Mini App variant 解析，不提供该 variant 的 project 会产生 variant 解析错误，且不存在自动回退。把依赖移出 `commonMain` 以规避该问题是不可接受的变通
 - 客户端 / runtime 架构边界已记录并被强制：后端拥有业务事实，本 SDK 拥有客户端行为与宿主能力，宿主拥有渲染。当 runtime SDK 导入或声明 UI framework namespace 或 artifact 时，`:kmp-miniapp-sdk:checkArchitectureBoundaries` 会让构建失败，且它是 `:kmp-miniapp-sdk:check` 的一部分
 
@@ -286,7 +286,8 @@ Kotlin/JS platform variants 及其传递依赖由 Gradle 在依赖解析期间�
 - 可以携带客户端 renderer 的 Mini App 宿主 bundle：当 `miniappRuntimeClasspath` 携带 Compose、Skiko、Compose 专用的 AndroidX 集成 artifact、`kotlinx-browser` 或 `kotlinx-html` 时，`checkMiniAppHostBoundary` 会让构建失败。非 Compose 的 lifecycle、saved-state 与 navigation primitives 仍允许作为共享行为。消费者的 `miniappMain` 可以继承共享行为与 state，但 Compose UI 必须位于不作为 `miniappMain` 父 source set 的客户端 module 或 source set 中
 - npm publication
 - Maven publication
-- Mini App Gradle DSL；宿主业务配置属于 BOB-84 的范围。插件会组装 compiler-managed Mini App distribution，但不执行上传、发布或宿主部署，且没有任何小程序宿主加载过它：其宿主兼容性尚未验证
+- 承载宿主业务配置的 Gradle DSL。`miniapp { }` extension 已存在，且只承载一个构建设置 —— 微信宿主的 bundle 目录 —— 并有意不含其他内容：没有 AppID 或密钥、没有商户或支付材料、没有订单或签名数据、没有 API token、没有模板 ID、没有 presentation state、没有 markup 或 View 定义。插件会组装 compiler-managed Mini App distribution，但不执行上传、发布或宿主部署，且没有任何小程序宿主加载过它：其宿主兼容性尚未验证
+- 第二个 Mini App 宿主。当前只有微信；extension 的形状使得新增宿主是「新增一个 `MiniAppHostConfiguration` 子类型与一个访问器」，而不是把微信那个类型加宽
 - 支付宝或 Telegram Host implementations
 
 ## 11. 已验证命令

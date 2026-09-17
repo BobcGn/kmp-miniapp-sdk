@@ -109,6 +109,20 @@ TestKit 由 17 个测试扩展到 **19 个**：新增 host-boundary 分类器测
 
 提供最小且可扩展的 Gradle DSL，候选形态为 `miniapp { wechat { ... } }`。DSL 只承载真正属于构建的配置，不把业务配置整体迁入 Gradle。架构必须表达 Mini App Platform → 当前 Host WeChat，并允许未来新增 Host，但本步骤不实现支付宝、Telegram 或多 Host source-set hierarchy。
 
+**本轮进展（2026-09-17）**：插件注册 `miniapp` extension，唯一宿主为 `wechat`。类型层级为 `MiniAppExtension`（平台）→ `WeChatHostConfiguration`（宿主）→ 继承 `MiniAppHostConfiguration`，因此新增宿主是「新增子类型 + 新增访问器」，而不是把微信类型加宽，也不是根级 `wechatXxx` 属性。
+
+DSL 只承载一个真正属于构建的字段：`wechat.bundleDirectory`（`DirectoryProperty`，默认 `build/miniapp/bundle`，即 BOB-81 之前的默认路径），`assembleMiniAppBundle` 读取该 Provider 作为 `Sync` 目标。`checkMiniAppHostBoundary` 与 Kotlin/JS 输出形态不受 DSL 影响 —— 前者是平台级保证，后者由插件决定而非消费者决定。
+
+新增一条校验并附理由：`bundleDirectory` 必须是项目内目录。理由是 `Sync` 会删除目标中 bundle 不含的文件，指向项目之外（或项目目录本身）会删除而非组装。失败信息给出字段、两个路径与期望值。写入项目内的小程序目录仍被允许。
+
+兼容性决定：宿主块与字段全部可选，未配置 DSL 时行为与 BOB-81 完全一致（默认目录），不要求消费者显式声明 `wechat { }`。理由：当前只有微信一个宿主，要求显式声明只增加噪音，且没有可选的第二宿主可供选择。
+
+TestKit 由 19 个测试扩展到 **25 个**：DSL 配置实际改变 bundle 写入位置（并断言默认目录未被写入）、规范的 `miniapp { wechat { ... } }` 在 Groovy fixture 中编译并执行、项目外目录被拒绝且错误可操作、重复应用插件不产生第二个 extension、以及微信是宿主配置而非平台 extension 的类型断言；另有目录校验的单元测试。变异探针：让 bundle task 忽略自定义目录后，只有 DSL 接线测试失败。
+
+**验收收尾（2026-09-17）**：`:miniapp-gradle-plugin:test` 的 25 个测试全部通过，`:kmp-miniapp-sdk:check` 与 `buildMiniAppSdk` 通过。外部真实 KMP Demo 的 Compose-free `:core` 显式配置 `miniapp { wechat { bundleDirectory.set(layout.buildDirectory.dir("verified-miniapp/bundle")) } }` 后，`:core:assembleMiniAppBundle` 构建成功，产物实际写入自定义目录且包含消费者模块、声明文件、SDK runtime 与 Kotlin/协程运行时。该证据证明 DSL 在独立消费者构建中生效，而不只是 TestKit fixture 内可编译。BOB-84 的最小宿主 DSL、兼容默认值和安全目录约束验收完成。
+
+**未完成**：真实微信宿主加载（BOB-85）。业务与后台配置不进 Gradle，属设计而非缺失。
+
 ### 紧急第 G 步：BOB-80 `[P1][URGENT] Create real consumer KMP integration fixture`
 
 建立真正独立、普通的 KMP consumer fixture，而不是 SDK 内部 demo。Fixture 只应用插件便可编译 `miniappMain`、复用 `commonMain`、运行 `miniappTest`、自动解析 runtime 依赖，并让微信 Host 消费最终产物。Android/iOS 仅在证明与普通 KMP target 共存确有必要时加入。
@@ -134,10 +148,10 @@ TestKit 由 17 个测试扩展到 **19 个**：新增 host-boundary 分类器测
 | B | BOB-78 | Done（2026-09-17，commit `19e807e`） | 插件可应用并 sync；缺少 KMP 时明确失败 |
 | B+ | BOB-86 | In Progress（2026-09-17） | 架构边界已记录并被构建强制；无 Compose / Renderer 泄漏 |
 | C | BOB-76 | Done（2026-09-17） | source sets 自动创建、IDEA 识别、`miniappTest` 可执行 |
-| D | BOB-82 | In Progress（2026-09-17） | 公共 SDK 依赖自动接入且不泄漏内部 artifact |
+| D | BOB-82 | Done（2026-09-17，commit `b4bfa38`） | 公共 SDK 依赖自动接入且不泄漏内部 artifact |
 | E | BOB-81 | Done（2026-09-17） | 稳定任务生成完整 Mini App distribution，且依赖边界由正反外部 Demo 验收 |
-| F | BOB-84 | Blocked by B；在 E 后执行 | 最小 DSL 通过架构审查且不承载业务配置 |
-| G | BOB-80 | Blocked by C、D、E、F | 普通 KMP fixture 完成编译、测试和微信消费闭环 |
+| F | BOB-84 | Done（2026-09-17） | 最小 DSL 通过架构审查且不承载业务配置；外部 Demo 自定义目录构建通过 |
+| G | BOB-80 | Ready（C、D、E、F 已完成） | 普通 KMP fixture 完成编译、测试和微信消费闭环 |
 | H | BOB-79 | Blocked by B、C；在 G 后执行 | 插件关键路径由自动化 integration tests 覆盖 |
 | I | BOB-77 | Blocked by G、H | 中英文文档只描述已验证消费者工作流 |
 | Release Gate | BOB-85 | Blocked by A–I | 完整 Consumer Integration 验收通过并可解除 BOB-51 阻塞 |

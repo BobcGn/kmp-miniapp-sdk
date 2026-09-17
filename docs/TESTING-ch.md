@@ -67,7 +67,7 @@ cd examples/wechat-miniprogram && npm run smoke && npm run typecheck
 
 ### Gradle 插件套件
 
-`:miniapp-gradle-plugin:test` 通过 Gradle TestKit 在临时消费者工程中驱动插件。它覆盖插件应用、缺少 Kotlin Multiplatform 时的失败、source set 提供与 compilation 归属、测试执行、runtime 依赖接线、`assembleMiniAppBundle` 契约、为该契约把关的 renderer 拒绝、重复执行的增量行为，以及 configuration cache 兼容性。
+`:miniapp-gradle-plugin:test` 通过 Gradle TestKit 在临时消费者工程中驱动插件。它覆盖插件应用、缺少 Kotlin Multiplatform 时的失败、source set 提供与 compilation 归属、测试执行、runtime 依赖接线、`assembleMiniAppBundle` 契约、为该契约把关的 renderer 拒绝、重复执行的增量行为，以及 configuration cache 兼容性。它还覆盖 `miniapp { }` extension：规范的 `miniapp { wechat { ... } }` 块能编译并执行；配置的 bundle 目录确实是 bundle 的写入位置；项目之外的目录会被拒绝并给出可操作的错误信息；重复应用插件不会创建第二个 extension；以及微信是宿主配置而不是平台 extension 本身。
 
 fixture 经本仓库的 composite build 解析 runtime SDK，因为目前尚未发布。它们断言真实输出 —— 实际执行出的测试报告，以及 bundle 中真实存在的文件 —— 而不是只断言任务名：任务存在不能证明它产出了任何东西。bundle 测试刻意把两个结论分开：插件不生成宿主 markup；以及 distribution 不携带 renderer。前者是关于生成文件的陈述，后者是关于依赖图的陈述，由 host-boundary 检查断言。
 
