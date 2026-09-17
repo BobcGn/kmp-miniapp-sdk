@@ -91,7 +91,35 @@ tasks.register("verifyMiniAppConsumerFixture") {
     dependsOn("verifyMiniAppConsumer", "verifyMiniAppConsumerHostSmoke")
 }
 
+// The single entry point CI calls for the Mini App plugin's integration suite: the plugin's own
+// contract and TestKit suites, the architecture boundary that keeps the SDK free of a renderer, and
+// the consumer fixture above.
+//
+// It is deliberately not wired into `check`. The fixture drives a nested Gradle build from clean
+// that compiles Kotlin/JS and installs npm dependencies, so making `check` depend on it would put
+// several minutes and a network dependency in front of every ordinary build, and would make `check`
+// re-enter Gradle. `:miniapp-gradle-plugin:test` is already part of `check` through that project's
+// own `check` task; this entry adds the fixture, which `check` does not run.
+tasks.register("verifyMiniAppGradlePluginIntegration") {
+    group = "verification"
+    description =
+        "Runs the plugin test suite, the SDK architecture boundary check and the consumer fixture."
+
+    dependsOn(
+        ":miniapp-gradle-plugin:test",
+        ":kmp-miniapp-sdk:checkArchitectureBoundaries",
+        "verifyMiniAppConsumerFixture",
+    )
+}
+
 // Both fixture runs start with `clean`, so their order is fixed rather than left to the task graph.
 tasks.named("verifyMiniAppConsumerHostBundle") {
     mustRunAfter("verifyMiniAppConsumer")
+}
+
+// The fixture is a nested build that composite-includes this repository, so it writes to the same
+// build directories as the repository's own plugin and SDK tasks. Running them at the same time
+// would put two Gradle builds on one project directory; ordering them keeps that impossible.
+tasks.named("verifyMiniAppConsumer") {
+    mustRunAfter(":miniapp-gradle-plugin:test", ":kmp-miniapp-sdk:checkArchitectureBoundaries")
 }

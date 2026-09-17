@@ -153,11 +153,20 @@ The plugin creates no source set and no `dependsOn` edge of its own: hand-built 
 ./gradlew :miniapp-gradle-plugin:test
 ```
 
+The plugin's tests are layered: a contract test for the descriptor, the public coordinate, the
+extension's shape and the renderer classifier; TestKit fixtures for everything that only exists
+inside a real build; and the consumer fixture for the path an outside project takes. The single entry
+point that runs all of it is [described in TESTING](TESTING-en.md#gradle-plugin-integration-suite).
+
+```shell
+./gradlew --no-daemon --console=plain verifyMiniAppGradlePluginIntegration
+```
+
 A consumer whose `commonMain` depends on another Kotlin Multiplatform project must apply this plugin to that project as well. The dependency resolves through a Mini App variant, so a project that offers none fails variant resolution; the plugin provides no fallback, and moving the dependency out of `commonMain` is not a supported workaround.
 
 The tests are Gradle TestKit fixtures plus a contract test. The fixtures put the Kotlin Gradle Plugin and the plugin under test on one buildscript classpath deliberately: `withPluginClasspath()` injects the plugin under test into the plugin-resolution classpath only, so a fixture that resolves a second plugin separately cannot reproduce the classpath a real consumer build gives the plugin. One fixture carries `commonMain`, `miniappMain`, `commonTest` and `miniappTest` sources and asserts the executed test report, so the source-set wiring and the test execution are both proved by running tests rather than by reading the model. The fixtures consume the runtime through a composite build (`includeBuild` of this repository), which is how the unpublished coordinate resolves; the plugin itself never sees that path.
 
-Still absent, and owned by the later issue: the Mini App Gradle DSL, including any WeChat-specific host configuration (BOB-84).
+The extension carries one setting — where the host's bundle is written. Business and host configuration stays outside Gradle by design, and the reasons are in the [mini app extension section](#the-miniapp--extension) above.
 
 ## Mini App Gradle plugin model PoC
 

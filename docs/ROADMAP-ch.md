@@ -56,6 +56,8 @@ runtime 的公共坐标是 `io.github.bobcgn:kmp-miniapp-sdk`。第 D 步正式�
 
 第 G 步已验收：`fixtures/miniapp-consumer` 是真实消费者构建，按 id 应用插件、在 `miniappMain` 中复用 `commonMain`、由 `miniappTest` 运行自身测试与共享测试、自动解析 runtime，并从 clean 状态组装并校验其 bundle。其微信宿主同时通过 Node 接线 smoke 与基础库 3.17.3 的微信开发者工具验收；页面渲染共享 greeting、计数与 SDK 版本，Console 报告 `fixture.result=PASS`。
 
+第 H 步的实现已就位：插件集成套件分层为 contract 测试、Gradle TestKit fixture 与持久消费者 fixture，并以 `verifyMiniAppGradlePluginIntegration` 作为 CI 调用的唯一入口。它刻意不接入 `check`，因为该 fixture 会驱动一个编译 Kotlin/JS 并安装 npm 依赖的嵌套 Gradle 构建。套件还会拒绝未能解析的 Mini App runtime classpath，因此 renderer 检查不会对一张它从未看过的依赖图作出报告。
+
 ### P1 完成证据
 
 BOB-85 必须同时具备以下证据，缺一项都不得用“实现完成”代替验收：

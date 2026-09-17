@@ -261,28 +261,79 @@ class MiniAppGradlePluginTest {
         assertContains(report.valuesAfter("miniapp.bundleDependencies="), MiniAppPluginDiagnostics.CHECK_MINIAPP_HOST_BOUNDARY_TASK_NAME)
     }
 
+    /**
+     * Compose UI drags its renderer, Skiko, in transitively, so one build covers the forbidden-group
+     * rule for both — and shows the shared primitives the same graph carries are not misfiled.
+     */
     @Test
     fun `a client renderer on the Mini App runtime classpath is rejected`() {
-        val projectDir = newFixture("kmp-renderer-leak")
+        val output = boundaryCheckFailure("org.jetbrains.compose.runtime:runtime:1.7.0")
+        val offenders = offendersIn(output)
+
+        // The whole Compose group is rejected, including the modules Compose pulls in itself.
+        assertContains(offenders, "org.jetbrains.compose.runtime:runtime")
+        assertTrue(
+            offenders.all { it.startsWith("org.jetbrains.compose") || it.startsWith("org.jetbrains.skiko") },
+            "only renderer coordinates may be reported, got: $offenders",
+        )
+        // The same graph carries the shared runtime a Mini App legitimately uses, and the check must
+        // not misfire on it. This is the integration-level half of the classifier's allow-list.
+        listOf("kotlinx-coroutines-core", "atomicfu", "kotlin-stdlib", "kotlin-dom-api-compat", "kmp-miniapp-sdk")
+            .forEach { shared ->
+                assertTrue(
+                    offenders.none { it.contains(shared) },
+                    "'$shared' is shared runtime and must not be reported: $offenders",
+                )
+            }
+        assertContains(output, "Compose is a client UI consumer")
+        assertContains(output, MiniAppHostBoundary.MESSAGE_HEADER)
+    }
+
+    /**
+     * A classpath the check could not resolve is refused rather than read.
+     *
+     * This is the silent pass the check exists to prevent: Gradle's resolution result lists only the
+     * dependencies that resolved, so a check that reads it alone reports "no renderer" for a graph
+     * it never saw. The fixture declares a renderer coordinate whose variants do not match a
+     * Kotlin/JS compilation, which is exactly how a consumer ends up with an unreachable classpath.
+     */
+    @Test
+    fun `the boundary check refuses a classpath it could not resolve`() {
+        val output = boundaryCheckFailure("org.jetbrains.kotlinx:kotlinx-html-js:0.11.0")
+
+        assertContains(output, MiniAppHostBoundary.UNRESOLVED_HEADER)
+        assertContains(output, "org.jetbrains.kotlinx:kotlinx-html-js:0.11.0")
+        assertTrue(
+            !output.contains(MiniAppHostBoundary.MESSAGE_HEADER),
+            "an unresolved classpath must not be reported as a renderer finding:\n$output",
+        )
+    }
+
+    /**
+     * The boundary check is about the dependency graph, not about the consumer's own code, so a
+     * classpath carrying only shared runtime passes it — and the assertion is not vacuous, because
+     * the same fixture reports the classpath the check read.
+     */
+    @Test
+    fun `a classpath carrying only shared runtime passes the boundary check`() {
+        val projectDir = newFixture("kmp-shared-runtime")
         writeConsumerBuildScript(
             projectDir,
-            consumerEpilogue = consumerDependency("org.jetbrains.compose.runtime:runtime:1.7.0"),
+            consumerEpilogue = consumerDependency("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0"),
         )
         writeConsumerSources(projectDir)
 
-        // The check alone, deliberately: reaching the assembly task would run the npm install behind
-        // the Kotlin/JS distribution, and a network hiccup there must not turn a boundary assertion
-        // into a resolution failure.
-        val result = runner(projectDir, MiniAppPluginDiagnostics.CHECK_MINIAPP_HOST_BOUNDARY_TASK_NAME)
-            .buildAndFail()
+        val task = ":${MiniAppPluginDiagnostics.CHECK_MINIAPP_HOST_BOUNDARY_TASK_NAME}"
+        val result = runner(projectDir, MiniAppPluginDiagnostics.CHECK_MINIAPP_HOST_BOUNDARY_TASK_NAME, "miniAppModelReport").build()
+        val report = MiniAppModelReport(result)
 
-        assertContains(result.output, "client renderer")
-        assertContains(result.output, "org.jetbrains.compose.runtime:runtime")
-        assertContains(result.output, "Compose is a client UI consumer")
-        assertEquals(
-            TaskOutcome.FAILED,
-            result.task(":${MiniAppPluginDiagnostics.CHECK_MINIAPP_HOST_BOUNDARY_TASK_NAME}")?.outcome,
-        )
+        assertEquals(TaskOutcome.SUCCESS, result.task(task)?.outcome)
+        listOf("kotlinx-coroutines-core", MiniAppRuntimeDependency.name).forEach { shared ->
+            assertTrue(
+                report.runtimeClasspath.any { it.contains(shared) },
+                "the check passed, so '$shared' must really be on the classpath it read: ${report.runtimeClasspath}",
+            )
+        }
     }
 
     @Test
@@ -458,6 +509,83 @@ class MiniAppGradlePluginTest {
             result.output.contains("Could not find") || result.output.contains("Could not resolve"),
             "expected a dependency-resolution failure, got:\n${result.output}",
         )
+    }
+
+    /**
+     * The plugin defers a target-name collision to the Kotlin Gradle Plugin rather than replacing
+     * what the consumer declared: a project that already owns the name for another platform fails
+     * during plugin application, with Kotlin's own diagnostic, instead of acquiring a second target,
+     * a half-configured build, or a platform silently swapped underneath it.
+     */
+    @Test
+    fun `a target already using the platform name for another platform fails`() {
+        val projectDir = newFixture("kmp-incompatible-target")
+        writeConsumerBuildScript(
+            projectDir,
+            consumerPreamble = """
+            val consumerKotlin = project.extensions.getByType(
+                org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension::class.java,
+            )
+            consumerKotlin.jvm("miniapp")
+            """.trimIndent(),
+        )
+        writeConsumerSources(projectDir)
+
+        val result = runner(projectDir, "miniAppModelReport").buildAndFail()
+
+        assertContains(result.output, "Failed to apply plugin 'io.github.bobcgn.miniapp'")
+        assertContains(result.output, "The target 'miniapp' already exists")
+        assertContains(result.output, "not created with the 'js' preset")
+    }
+
+    /**
+     * BOB-83 recorded the cross-module constraint and left its diagnosis to this issue: a consumer
+     * whose `commonMain` depends on another Kotlin Multiplatform project needs that project to offer
+     * a Mini App variant too. Nothing may quietly substitute a different variant or move the
+     * dependency out of `commonMain`, so the failure has to be a resolution failure that names what
+     * the consumer must change.
+     */
+    @Test
+    fun `a shared dependency without a Mini App variant fails variant resolution`() {
+        val projectDir = newFixture("kmp-shared-module")
+        writeConsumerBuildScript(
+            projectDir,
+            consumerEpilogue = """
+            dependencies {
+                add("commonMainImplementation", project(":shared"))
+            }
+            """.trimIndent(),
+        )
+        writeConsumerSources(projectDir)
+        projectDir.resolve("settings.gradle.kts").appendText("\ninclude(\":shared\")\n")
+        // A Kotlin Multiplatform project that does not apply the Mini App plugin, so it offers no
+        // Mini App variant: the case BOB-83 recorded and left to this issue.
+        projectDir.resolve("shared/build.gradle.kts").apply {
+            parentFile.mkdirs()
+            writeText(
+                """
+                apply(plugin = "org.jetbrains.kotlin.multiplatform")
+
+                project.extensions.getByType(
+                    org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension::class.java,
+                ).jvm()
+                """.trimIndent() + "\n",
+            )
+        }
+        projectDir.resolve("shared/src/commonMain/kotlin/shared/Shared.kt").apply {
+            parentFile.mkdirs()
+            writeText("package shared\n\nfun sharedValue(): String = \"shared\"\n")
+        }
+
+        val result = runner(projectDir, "compileKotlinMiniapp").buildAndFail()
+
+        // A resolution failure, not a silent substitution and not an empty classpath: the consumer
+        // is told which project offers no Mini App variant and what attribute it was missing. It
+        // fails before the compilation runs, which is why no task outcome is asserted here.
+        assertContains(result.output, "Could not resolve project :shared")
+        assertContains(result.output, "miniappCompileClasspath")
+        assertContains(result.output, "No matching variant of project :shared was found")
+        assertContains(result.output, "org.jetbrains.kotlin.platform.type")
     }
 
     @Test
@@ -685,6 +813,40 @@ class MiniAppGradlePluginTest {
 
     // --- helpers --------------------------------------------------------------------------------
 
+    /**
+     * Runs the boundary check against a consumer that declares [coordinate] itself — a leak the
+     * plugin does not cause — and returns the failing build's output.
+     *
+     * The check alone, deliberately: reaching the assembly task would run the npm install behind the
+     * Kotlin/JS distribution, and a network hiccup there must not turn a boundary assertion into a
+     * resolution failure.
+     */
+    private fun boundaryCheckFailure(coordinate: String): String {
+        val projectDir = newFixture("kmp-renderer-leak")
+        writeConsumerBuildScript(projectDir, consumerEpilogue = consumerDependency(coordinate))
+        writeConsumerSources(projectDir)
+
+        val result = runner(projectDir, MiniAppPluginDiagnostics.CHECK_MINIAPP_HOST_BOUNDARY_TASK_NAME)
+            .buildAndFail()
+
+        assertEquals(
+            TaskOutcome.FAILED,
+            result.task(":${MiniAppPluginDiagnostics.CHECK_MINIAPP_HOST_BOUNDARY_TASK_NAME}")?.outcome,
+        )
+        return result.output
+    }
+
+    /**
+     * The module coordinates the boundary check listed, read from the lines it prints beneath its
+     * heading. Reading the report is what makes the assertion about *which* dependency was rejected
+     * rather than about the build merely failing.
+     */
+    private fun offendersIn(output: String): List<String> = output.lineSequence()
+        .map { it.trim() }
+        .filter { it.startsWith("- ") }
+        .map { it.removePrefix("- ").trim() }
+        .toList()
+
     private fun executedTests(projectDir: File): List<String> {
         val resultsDir = projectDir.resolve("build/test-results/miniappNodeTest")
         assertTrue(resultsDir.isDirectory, "no miniappNodeTest results at $resultsDir")
@@ -730,6 +892,8 @@ class MiniAppGradlePluginTest {
         val sourceSets: List<String> = valuesAfter("miniapp.sourceSets=")
         val testTasks: List<String> = valuesAfter("miniapp.testTasks=")
         val compileClasspaths: List<String> = valuesAfter("miniapp.compileClasspaths=")
+        /** What the host-boundary check reads, so a passing check can be shown to be non-vacuous. */
+        val runtimeClasspath: List<String> = valuesAfter("miniapp.runtimeClasspath=")
 
         fun owningCompilations(sourceSet: String): List<String> =
             valuesAfter("miniapp.$sourceSet.owningCompilations=")
@@ -820,6 +984,13 @@ class MiniAppGradlePluginTest {
                             .sort()
                         println("miniapp.classpath." + configurationName + "=" + resolved)
                     }
+                    println(
+                        "miniapp.runtimeClasspath=" + project.configurations
+                            .getByName("miniappRuntimeClasspath")
+                            .incoming.resolutionResult.allComponents
+                            .collect { it.id.displayName }
+                            .sort()
+                    )
                 }
             }
         """.trimIndent()

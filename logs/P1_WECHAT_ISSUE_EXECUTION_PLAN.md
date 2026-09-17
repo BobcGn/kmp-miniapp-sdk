@@ -148,6 +148,25 @@ TestKit 由 19 个测试扩展到 **25 个**：DSL 配置实际改变 bundle 写
 
 使用 Gradle TestKit 或与已选插件架构相符的可靠方案，自动覆盖：插件应用、缺少 KMP 的错误、`miniappMain` / `miniappTest` 创建、`miniappTest` 执行、依赖接线、构建任务注册与 consumer build。测试应以 BOB-80 的真实 fixture 和已接受模型为依据，不能只靠人工 IDEA 观察防回归。
 
+**本轮进展（2026-09-18）**：先审计后补测，没有重复既有覆盖。`MiniAppGradlePluginTest` 由 16 个扩充到 **20** 个，`MiniAppPluginContractTest` 保持 9 个，`:miniapp-gradle-plugin:test` 共 **29** 个测试、0 失败；BOB-80 的持久 fixture 保持不变，其 `miniappNodeTest` 仍执行 **5** 个测试（`consumer.SharedTest` 2 个来自 `commonTest`、`consumer.MiniAppTest` 3 个）。
+
+审计形成的覆盖矩阵（19 项）中，15 项在 BOB-78/76/82/81/84/80 已有有效证据，本轮不重复；新增的 4 个测试补齐真实缺口：同名但不兼容的 target、跨模块 variant 约束、未解析 classpath 的静默通过、共享 runtime 不被误伤。
+
+1. `a target already using the platform name for another platform fails` —— 消费者已把 `miniapp` 用于 `jvm()` 时，在插件应用阶段以 Kotlin Gradle Plugin 自身的诊断失败（`The target 'miniapp' already exists, but it was not created with the 'js' preset`），而不是被静默覆盖。插件刻意不预先拦截该冲突：KGP 的信息已指明原因与修复方式，插件不重复实现它。
+2. `a shared dependency without a Mini App variant fails variant resolution` —— BOB-83 记录、BOB-76 明确留给本 Issue 的跨模块约束：消费者 `commonMain` 依赖一个只提供 `jvm()` 的 KMP project 时，`miniappCompileClasspath` 以 `No matching variant of project :shared was found` 失败，并列出缺失的 `org.jetbrains.kotlin.platform.type` 属性；没有静默替换，也没有空 classpath。
+3. `the boundary check refuses a classpath it could not resolve` —— 本轮发现并修正的最小缺陷（见下）。
+4. `a classpath carrying only shared runtime passes the boundary check` —— 断言检查通过，并在同一 fixture 中打印 `miniappRuntimeClasspath` 的真实解析结果，因此该通过不是空断言。
+
+**发现并修正的最小缺陷**：`checkMiniAppHostBoundary` 只读取 `ResolutionResult.allComponents`，而 Gradle 的解析结果只列出解析成功的依赖 —— 未解析的依赖直接缺席。探针证明：声明一个变体不匹配的坐标（如 `org.jetbrains.kotlinx:kotlinx-html-js:0.11.0`）后，runtime classpath 上并没有它，检查却**成功**，即把「从未看过这张依赖图」报告成「没有 renderer」—— 正是 BOB-81 要消除的那类「看起来成功但不可用」。最小修正：classpath 未完整解析时拒绝作出报告并列出无法解析的坐标（`MiniAppHostBoundary.UNRESOLVED_HEADER` / `describeUnresolved`），判定数据由新的 `MiniAppRuntimeClasspath` 承载。该修正不新增限制：未解析的 classpath 本来也无法产出 bundle，区别只在于失败信息说明了原因。
+
+**统一入口**：根构建新增 `verifyMiniAppGradlePluginIntegration`，覆盖 `:miniapp-gradle-plugin:test`、`:kmp-miniapp-sdk:checkArchitectureBoundaries` 与 `verifyMiniAppConsumerFixture`。**不接入 `check`**：该 fixture 会驱动一个编译 Kotlin/JS 并安装 npm 依赖的嵌套 Gradle 构建，接入会让每次普通 `check` 增加数分钟与一个网络依赖；插件自身的套件已通过该工程的 `check` 属于 `check`。fixture 的三个 `Exec` 任务加了 `mustRunAfter`，避免嵌套构建与仓库自身的 plugin/SDK 任务同时写同一批构建目录。
+
+**已执行验证**：`:miniapp-gradle-plugin:test --rerun-tasks`（29/0）、`:kmp-miniapp-sdk:check`、`verifyMiniAppConsumerFixture`（默认目录 + 宿主目录 + Node smoke，两次 bundle 均 14 文件且 `consumerContract.verified=true`）、`verifyMiniAppGradlePluginIntegration` 连续两次 BUILD SUCCESSFUL 且夹具侧复用 configuration cache、`git diff --check` clean。
+
+**验收收尾（2026-09-18）**：Codex 复核生产修正、测试分层和任务顺序后，实际执行 `verifyMiniAppGradlePluginIntegration`，结果 `BUILD SUCCESSFUL`（3m19s）且复用 configuration cache。XML 再确认 TestKit 20 个、contract 9 个，均 0 failures / 0 errors；持久 fixture 的默认与宿主 bundle 各 14 个文件并输出 `consumerContract.verified=true`，Node smoke 输出 `fixture.result=PASS`。未发现需要进一步纠偏的代码或测试缺口，BOB-79 的集成测试套件验收完成。
+
+**边界**：真实微信宿主验收不属于本 Issue，也不被 Node smoke 冒充；该宿主证据已由 BOB-80 单独完成。IDEA 人工识别仍属前序人工证据。
+
 ### 紧急第 I 步：BOB-77 `[P1][URGENT] Document first-class KMP Mini App consumer workflow`
 
 在工作流被真实证明后，同步更新 README、PROJECT_FACTS、ARCHITECTURE 与 DEVELOPMENT 的中英文配对。新用户必须能只依靠 README 建立 `miniappMain` Hello World；文档要说明当前 Host 是 WeChat，同时保持 Mini App 平台边界，并移除已经被插件隐藏的 `jsMain`、CommonJS 接线和手工复制指导。
@@ -169,8 +188,8 @@ TestKit 由 19 个测试扩展到 **25 个**：DSL 配置实际改变 bundle 写
 | E | BOB-81 | Done（2026-09-17） | 稳定任务生成完整 Mini App distribution，且依赖边界由正反外部 Demo 验收 |
 | F | BOB-84 | Done（2026-09-17） | 最小 DSL 通过架构审查且不承载业务配置；外部 Demo 自定义目录构建通过 |
 | G | BOB-80 | Done（2026-09-17） | clean build、5 个测试、runtime 自动解析、两个 bundle 目录、Node smoke 与微信开发者工具 3.17.3 验收均通过 |
-| H | BOB-79 | Ready（B、C、G 已完成） | 插件关键路径由自动化 integration tests 覆盖 |
-| I | BOB-77 | Blocked by G、H | 中英文文档只描述已验证消费者工作流 |
+| H | BOB-79 | Done（2026-09-18） | 29 个自动化测试覆盖插件关键路径；统一入口 `verifyMiniAppGradlePluginIntegration` 复核通过 |
+| I | BOB-77 | Ready（G、H 已完成） | 中英文文档只描述已验证消费者工作流 |
 | Release Gate | BOB-85 | Blocked by A–I | 完整 Consumer Integration 验收通过并可解除 BOB-51 阻塞 |
 
 ## 3. 原微信能力落地顺序

@@ -3,6 +3,7 @@ package io.github.bobcgn.miniapp.gradle
 import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
+import org.gradle.api.artifacts.result.UnresolvedDependencyResult
 import org.gradle.api.tasks.Sync
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.targets.js.dsl.KotlinJsTargetDsl
@@ -79,17 +80,29 @@ internal object MiniAppPlatformSupport {
      *
      * It reads `miniappRuntimeClasspath`, which is exactly the set the Kotlin/JS production library
      * distribution is built from, and resolves it at execution time so no other task pays for it.
+     *
+     * A classpath that did not fully resolve is refused rather than read, because
+     * [ResolutionResult.allComponents] omits unresolved dependencies: without that refusal the check
+     * would report "no renderer" for a graph it never saw.
      */
     private fun registerMiniAppHostBoundaryCheck(project: Project) {
-        val runtimeModuleCoordinates = project.configurations
+        val runtimeClasspath = project.configurations
             .named(MiniAppPluginDiagnostics.MINIAPP_RUNTIME_CLASSPATH_CONFIGURATION_NAME)
             .map { configuration ->
-                configuration.incoming.resolutionResult.allComponents
-                    .mapNotNull { component ->
-                        (component.id as? ModuleComponentIdentifier)?.let { "${it.group}:${it.module}" }
-                    }
-                    .distinct()
-                    .sorted()
+                val resolution = configuration.incoming.resolutionResult
+                MiniAppRuntimeClasspath(
+                    coordinates = resolution.allComponents
+                        .mapNotNull { component ->
+                            (component.id as? ModuleComponentIdentifier)?.let { "${it.group}:${it.module}" }
+                        }
+                        .distinct()
+                        .sorted(),
+                    unresolved = resolution.allDependencies
+                        .filterIsInstance<UnresolvedDependencyResult>()
+                        .map { it.requested.displayName }
+                        .distinct()
+                        .sorted(),
+                )
             }
 
         project.tasks.register(MiniAppPluginDiagnostics.CHECK_MINIAPP_HOST_BOUNDARY_TASK_NAME) { task ->
@@ -98,9 +111,13 @@ internal object MiniAppPlatformSupport {
                 "Fails when the Mini App runtime classpath carries a client renderer such as " +
                     "Compose or Skiko, which a Mini App host cannot run."
 
-            val coordinates = runtimeModuleCoordinates
+            val classpath = runtimeClasspath
             task.doLast {
-                val offenders = coordinates.get().filter { coordinate ->
+                val resolved = classpath.get()
+                if (resolved.unresolved.isNotEmpty()) {
+                    throw GradleException(MiniAppHostBoundary.describeUnresolved(resolved.unresolved))
+                }
+                val offenders = resolved.coordinates.filter { coordinate ->
                     MiniAppHostBoundary.isForbiddenModule(
                         coordinate.substringBefore(':'),
                         coordinate.substringAfter(':'),

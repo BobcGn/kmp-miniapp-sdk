@@ -15,6 +15,14 @@ package io.github.bobcgn.miniapp.gradle
  */
 internal object MiniAppHostBoundary {
 
+    /** First line of the rejection; tests assert on this exact text. */
+    public const val MESSAGE_HEADER: String =
+        "The Mini App runtime classpath carries dependencies that belong to a client renderer,"
+
+    /** First line of the unresolved-classpath rejection; tests assert on this exact text. */
+    public const val UNRESOLVED_HEADER: String =
+        "The Mini App runtime classpath could not be resolved, so it cannot be checked for a client renderer."
+
     /** Groups that exist only to serve a client-side renderer or UI framework. */
     public val forbiddenGroupPrefixes: List<String> = listOf(
         "org.jetbrains.compose",
@@ -46,8 +54,27 @@ internal object MiniAppHostBoundary {
         return forbiddenModuleCoordinates.any { coordinate == it || coordinate.startsWith("$it-") }
     }
 
+    /**
+     * Reports a classpath the check could not read, rather than a renderer it found.
+     *
+     * `ResolutionResult.allComponents` lists only the dependencies that resolved: an unresolved one
+     * is simply absent from it, so a check that only looks for renderers reports "no renderer" for a
+     * graph it never saw. Failing here keeps the check's verdict true.
+     */
+    public fun describeUnresolved(coordinates: List<String>): String = buildString {
+        appendLine(UNRESOLVED_HEADER)
+        coordinates.forEach { appendLine("  - $it") }
+        appendLine()
+        appendLine("An unresolved dependency is missing from the resolved graph, so this check could")
+        appendLine("not tell 'no renderer is present' from 'this was never resolved'. It fails instead")
+        appendLine("of reporting on a classpath it did not see.")
+        appendLine()
+        appendLine("Fix the resolution failure: an unavailable version, a repository that is not")
+        appendLine("declared, or a coordinate whose variants do not match a Kotlin/JS compilation.")
+    }
+
     public fun describeOffenders(offenders: List<String>): String = buildString {
-        appendLine("The Mini App runtime classpath carries dependencies that belong to a client renderer,")
+        appendLine(MESSAGE_HEADER)
         appendLine("not to a Mini App host:")
         offenders.forEach { appendLine("  - $it") }
         appendLine()

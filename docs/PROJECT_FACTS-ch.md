@@ -326,7 +326,8 @@ Kotlin/JS platform variants 及其传递依赖由 Gradle 在依赖解析期间�
 | 命令 | 结果 |
 | --- | --- |
 | `./gradlew --no-daemon --console=plain clean check` | VERIFIED — `:kmp-miniapp-sdk` 与 `:miniapp-gradle-plugin` 均 BUILD SUCCESSFUL |
-| `./gradlew --no-daemon --console=plain :miniapp-gradle-plugin:test` | VERIFIED — 25 个测试，无失败 |
+| `./gradlew --no-daemon --console=plain :miniapp-gradle-plugin:test` | VERIFIED — 29 个测试，无失败（Gradle TestKit 20 个，contract 9 个） |
+| `./gradlew --no-daemon --console=plain verifyMiniAppGradlePluginIntegration` | VERIFIED — 插件套件、`:kmp-miniapp-sdk:checkArchitectureBoundaries` 与消费者 fixture 通过，第二次运行复用 configuration cache |
 | `./gradlew --no-daemon --console=plain :kmp-miniapp-sdk:checkArchitectureBoundaries` | VERIFIED — SDK 未导入也未声明任何 UI framework |
 
 早期微信开发者工具证据覆盖版本、Storage 与 authentication 检查；network 检查于 2026-09-14 单独完成验收。用户于 2026-09-15 确认 lifecycle 前台状态、页面 route，以及 `navigateTo`、`redirectTo`、`navigateBack` 的真实宿主验收通过。后台状态迁移不属于开发者工具模拟器可验证范围。权限生命周期定义了宿主无关的三态模型 —— `NotRequested`、`Granted`、`Denied` —— 由命名权限「为了什么」的 `PermissionKey` 标识，并通过微信 adapter 适配 `wx.getSetting`、`wx.authorize` 与 `wx.openSetting`。不做任何缓存；拒绝是 `MiniAppException.PermissionDenied` 而不是宿主失败；请求权限与打开设置绝不在缺少用户手势时执行。Kotlin/JS、fake-host、CommonJS 与 TypeScript 自动检查均已通过。微信开发者工具（基础库 3.17.2）与 Android 真机（OnePlus PLQ110、Android 36、微信 8.0.76）验证了：宿主能够报告 `Granted` 与 `Denied`；设置页返回的是宿主的决定而不是被假定为已授权；对已拒绝权限再次请求会报告 `DENIED` 且不出现第二次弹窗。`NotRequested` 无法在所用账号上产出，因为该账号已对所映射权限持有决定；该状态改由自动化测试覆盖。

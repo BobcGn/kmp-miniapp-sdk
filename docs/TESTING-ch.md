@@ -84,9 +84,36 @@ cd examples/wechat-miniprogram && npm run smoke && npm run typecheck
 
 `:miniapp-gradle-plugin:test` 通过 Gradle TestKit 在临时消费者工程中驱动插件。它覆盖插件应用、缺少 Kotlin Multiplatform 时的失败、source set 提供与 compilation 归属、测试执行、runtime 依赖接线、`assembleMiniAppBundle` 契约、为该契约把关的 renderer 拒绝、重复执行的增量行为，以及 configuration cache 兼容性。它还覆盖 `miniapp { }` extension：规范的 `miniapp { wechat { ... } }` 块能编译并执行；配置的 bundle 目录确实是 bundle 的写入位置；项目之外的目录会被拒绝并给出可操作的错误信息；重复应用插件不会创建第二个 extension；以及微信是宿主配置而不是平台 extension 本身。
 
+错误路径断言的是失败信息本身，而不是「构建失败了」：未应用 Kotlin Multiplatform 的项目；已把 `miniapp` 用于其他平台的同名 target（在插件应用阶段抛出 Kotlin 自身的诊断，而不是被静默替换）；未提供 Mini App variant 的共享 Kotlin Multiplatform 依赖；无法解析的 runtime 坐标；项目之外的 bundle 目录；以及携带 Compose 的 runtime classpath。每一条都指明消费者必须修改什么。
+
 fixture 经本仓库的 composite build 解析 runtime SDK，因为目前尚未发布。它们断言真实输出 —— 实际执行出的测试报告，以及 bundle 中真实存在的文件 —— 而不是只断言任务名：任务存在不能证明它产出了任何东西。bundle 测试刻意把两个结论分开：插件不生成宿主 markup；以及 distribution 不携带 renderer。前者是关于生成文件的陈述，后者是关于依赖图的陈述，由 host-boundary 检查断言。
 
 这些测试证明的是「产出了 distribution 以及它包含什么」，不证明任何宿主能够加载它；那需要真实宿主运行。
+
+#### 该套件拒绝猜测的部分
+
+`checkMiniAppHostBoundary` 读取的是已解析的依赖图，而 Gradle 的解析结果只列出解析成功的依赖。因此未能完整解析的 classpath 会以错误的理由通过检查 —— 不是「没有 renderer」而是「从未看过」—— 所以检查会拒绝它，并列出无法解析的坐标。藏在不可解析坐标背后的 renderer 无论如何都会让构建失败；区别在于失败信息说明了发生了什么。
+
+#### 测试分层
+
+| 层 | 证明什么 | 位置 |
+| --- | --- | --- |
+| Contract / unit | 插件 descriptor 到实现类、公共 runtime 坐标、extension 的平台/宿主层级形状、renderer 分类器的允许与拒绝清单、bundle 目录规则 | `miniapp-gradle-plugin/src/test/.../MiniAppPluginContractTest.kt` |
+| TestKit | 插件应用、缺少 Kotlin Multiplatform 时的失败、source set 与其 compilation 归属、`miniappTest` 执行、runtime 接线、任务注册、DSL、下文列出的全部错误路径、bundle 契约、configuration cache 兼容性 | `miniapp-gradle-plugin/src/test/.../MiniAppGradlePluginTest.kt` |
+| 持久消费者 fixture | 留在仓库中的普通消费者构建：clean 构建、`commonMain` 复用、两种 bundle 目录、bundle 内容、宿主的 CommonJS 消费路径 | `fixtures/miniapp-consumer` |
+| 真实宿主 | 微信开发者工具能加载并运行该 bundle | 人工，记录于第 3 节 |
+
+前三层是自动化且隔离的：TestKit fixture 位于临时目录，持久 fixture 从 clean 运行，二者都不读取开发者本机工程或绝对路径。第四层不自动化，Node 输出永远不会被当作宿主结果汇报。
+
+### Gradle 插件集成套件入口
+
+```shell
+./gradlew verifyMiniAppGradlePluginIntegration
+```
+
+一个入口即可运行插件的 contract 与 TestKit 套件、保护 SDK 不引入 renderer 的架构边界检查，以及从 clean 状态运行的消费者 fixture。这是 CI 应当调用的命令。
+
+它**刻意不接入 `check`**：该 fixture 会驱动一个编译 Kotlin/JS 并安装 npm 依赖的嵌套 Gradle 构建，因此让 `check` 依赖它会给每一次普通构建增加数分钟与一个网络依赖，并让 `check` 重新进入 Gradle。插件自身的套件已经通过该工程的 `check` 任务属于 `check`；这个入口增加的是 fixture 与 `check` 不会运行的 SDK 架构检查。
 
 ## 3. 真实宿主层
 

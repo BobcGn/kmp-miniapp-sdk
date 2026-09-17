@@ -56,6 +56,8 @@ Stage F's implementation is in place: the plugin registers a `miniapp` extension
 
 Stage G is accepted: `fixtures/miniapp-consumer` is a real consumer build that applies the plugin by id, reuses `commonMain` from `miniappMain`, runs both its own and the shared tests from `miniappTest`, resolves the runtime automatically, and assembles and verifies its bundle from clean. Its WeChat host passes both the Node wiring smoke and WeChat Developer Tools acceptance at base library 3.17.3; the page rendered the shared greeting, count and SDK version, while the Console reported `fixture.result=PASS`.
 
+Stage H's implementation is in place: the plugin's integration suite is layered into contract tests, Gradle TestKit fixtures and the persistent consumer fixture, with `verifyMiniAppGradlePluginIntegration` as the single entry point CI calls. It is deliberately not wired into `check`, because the fixture drives a nested Gradle build that compiles Kotlin/JS and installs npm dependencies. The suite also refuses a Mini App runtime classpath it could not resolve, so the renderer check cannot report on a graph it never saw.
+
 ### P1 completion evidence
 
 BOB-85 requires all of the following evidence. An implementation report cannot substitute for a missing acceptance result:

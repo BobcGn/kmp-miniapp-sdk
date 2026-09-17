@@ -152,11 +152,17 @@ SDK 尚未发布，因此该坐标今天经 composite build 解析，发布后�
 ./gradlew :miniapp-gradle-plugin:test
 ```
 
+插件测试是分层的：contract 测试覆盖 descriptor、公共坐标、extension 形状与 renderer 分类器；TestKit fixture 覆盖只有在真实构建中才存在的行为；消费者 fixture 覆盖外部项目所走的路径。运行全部内容只有一个入口，见 [TESTING](TESTING-ch.md#gradle-插件集成套件入口)。
+
+```shell
+./gradlew --no-daemon --console=plain verifyMiniAppGradlePluginIntegration
+```
+
 若消费者的 `commonMain` 依赖另一个 Kotlin Multiplatform project，则必须对该 project 同样应用本插件。该依赖经由 Mini App variant 解析，不提供该 variant 的 project 会解析失败；插件不提供回退，把依赖移出 `commonMain` 也不是可接受的变通。
 
 测试由 Gradle TestKit fixture 与契约测试组成。fixture 有意把 Kotlin Gradle Plugin 与被测插件放在同一个 buildscript classpath 上：`withPluginClasspath()` 只把被测插件注入 plugin-resolution classpath，因此单独解析第二个插件的 fixture 无法复现真实消费者构建给插件的 classpath。其中一个 fixture 带有 `commonMain`、`miniappMain`、`commonTest` 与 `miniappTest` 源码，并断言实际执行出的测试报告，因此 source set 接线与测试执行都是由运行测试证明的，而不是靠读模型。fixture 经 composite build（`includeBuild` 本仓库）消费 runtime，这是尚未发布的坐标当前的解析方式；插件自身永远看不到该路径。
 
-仍未实现、归属后续 Issue：Mini App Gradle DSL，包含任何微信专属宿主配置（BOB-84）。
+extension 只承载一个设置 —— 宿主 bundle 的写入位置。业务与宿主配置按设计留在 Gradle 之外，理由见上文 `miniapp { }` extension 一节。
 
 ## Mini App Gradle 插件模型 PoC
 

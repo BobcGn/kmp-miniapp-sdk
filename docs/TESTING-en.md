@@ -84,9 +84,52 @@ That last check runs on Node and establishes module wiring only. **It is not WeC
 
 `:miniapp-gradle-plugin:test` drives the plugin through Gradle TestKit fixtures in temporary consumer projects. It covers plugin application, the missing-Kotlin-Multiplatform failure, source-set provisioning and compilation ownership, test execution, runtime dependency wiring, the `assembleMiniAppBundle` contract, the renderer rejection that guards that contract, repeat-run incrementality and configuration-cache compatibility. It also covers the `miniapp { }` extension: that the canonical `miniapp { wechat { ... } }` block compiles and executes, that a configured bundle directory is where the bundle is actually written, that a directory outside the project is rejected with an actionable message, that applying the plugin twice creates no second extension, and that WeChat is a host configuration rather than the platform extension itself.
 
+The error paths are asserted on the failure's own words, not on the build merely failing: a
+project without the Kotlin Multiplatform plugin, a target that already uses `miniapp` for another
+platform (Kotlin's own diagnostic, raised during plugin application rather than a silent
+replacement), a shared Kotlin Multiplatform dependency that offers no Mini App variant, a runtime
+coordinate that cannot be resolved, a bundle directory outside the project, and a runtime classpath
+carrying Compose. Each names what the consumer has to change.
+
 The fixtures resolve the runtime SDK through a composite build of this repository, because nothing is published yet. They assert on real output — the executed test report, and the files a bundle actually contains — rather than on task names alone: a task existing is not evidence that it produced anything. The bundle tests keep two conclusions apart: that the plugin generates no host markup, and that the distribution carries no renderer. The first is a statement about generated files; the second is a statement about the dependency graph and is asserted by the host-boundary check.
 
 These tests establish that a distribution is produced and what it contains. They do not establish that any host can load it; that needs a real host run.
+
+#### What the plugin suite refuses to guess
+
+`checkMiniAppHostBoundary` reads the resolved dependency graph, and Gradle's resolution result lists
+only the dependencies that resolved. A classpath that did not fully resolve would therefore pass the
+check for the wrong reason — "no renderer" instead of "never seen" — so the check refuses it and
+names the coordinates it could not resolve. A renderer hidden behind an unresolvable coordinate
+fails the build either way; the difference is that the failure says what happened.
+
+#### Test layers
+
+| Layer | What it proves | Where |
+| --- | --- | --- |
+| Contract / unit | Plugin descriptor to implementation class, the public runtime coordinate, the extension's platform-versus-host shape, the renderer classifier's allow-list and deny-list, the bundle-directory rule | `miniapp-gradle-plugin/src/test/.../MiniAppPluginContractTest.kt` |
+| TestKit | Plugin application, the missing-Kotlin-Multiplatform failure, source sets and their owning compilations, `miniappTest` execution, runtime wiring, task registration, the DSL, every error path below, the bundle contract, configuration-cache compatibility | `miniapp-gradle-plugin/src/test/.../MiniAppGradlePluginTest.kt` |
+| Persistent consumer fixture | An ordinary consumer build that stays in the repository: clean build, `commonMain` reuse, both bundle directories, the bundle's contents, the host's CommonJS consumption path | `fixtures/miniapp-consumer` |
+| Real host | That WeChat Developer Tools loads the bundle and runs it | manual, recorded in section 3 |
+
+The first three layers are automated and isolated: TestKit fixtures live in temporary directories,
+the persistent fixture runs from clean, and neither reads a developer's own project or an absolute
+path. The fourth is not automated, and Node output is never reported as a host result.
+
+### Gradle plugin integration suite
+
+```shell
+./gradlew verifyMiniAppGradlePluginIntegration
+```
+
+One entry point runs the plugin's contract and TestKit suites, the architecture boundary that keeps a
+renderer out of the SDK, and the consumer fixture from clean. It is the command CI should call.
+
+It is deliberately **not** wired into `check`. The fixture drives a nested Gradle build that compiles
+Kotlin/JS and installs npm dependencies, so `check` depending on it would put several minutes and a
+network dependency in front of every ordinary build and would make `check` re-enter Gradle. The
+plugin's own suite is already part of `check` through that project's `check` task; this entry adds
+the fixture and the SDK architecture check, which `check` does not run.
 
 ## 3. Real-host layer
 
