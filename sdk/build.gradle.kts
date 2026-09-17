@@ -45,6 +45,8 @@ val forbiddenUiNamespacePrefixes = listOf(
     "preact",
 )
 
+// Groups that exist only to serve a UI framework or a host markup vocabulary, so the whole group is
+// forbidden.
 val forbiddenUiDependencyGroups = listOf(
     "androidx.compose",
     "org.jetbrains.compose",
@@ -52,6 +54,32 @@ val forbiddenUiDependencyGroups = listOf(
     "androidx.activity",
     "androidx.fragment",
     "com.android",
+)
+
+// Libraries whose group also carries dependencies this SDK legitimately uses. `org.jetbrains.kotlinx`
+// carries kotlinx-coroutines-core, so forbidding that group would ban a real dependency; only the
+// exact module can be forbidden. A coordinate matches when it equals the entry or continues with
+// "-", which covers the `-js`, `-jvm` and `-common` variants of the same library.
+val forbiddenUiDependencyModules = listOf(
+    "org.jetbrains.kotlinx:kotlinx-html",
+)
+
+// Pins the classifier's semantics. The task fails if any of these is classified against
+// expectation, so a later edit cannot silently widen or narrow the rule, and the shared-group case
+// above cannot regress into banning a whole group.
+val dependencyClassifierExpectations = listOf(
+    "org.jetbrains.compose.runtime:runtime" to true,
+    "androidx.compose.ui:ui" to true,
+    "androidx.compose.ui:ui-graphics" to true,
+    "com.android.tools.build:gradle" to true,
+    "org.jetbrains.kotlinx:kotlinx-html" to true,
+    "org.jetbrains.kotlinx:kotlinx-html-js" to true,
+    "org.jetbrains.kotlinx:kotlinx-html-jvm" to true,
+    "org.jetbrains.kotlinx:kotlinx-coroutines-core" to false,
+    "org.jetbrains.kotlinx:kotlinx-coroutines-test" to false,
+    "org.jetbrains.kotlinx:kotlinx-serialization-json" to false,
+    "org.jetbrains.kotlin:kotlin-test" to false,
+    "org.jetbrains.kotlin:kotlin-stdlib" to false,
 )
 
 val declaredDependencyCoordinates: List<String> = configurations
@@ -77,13 +105,29 @@ val checkArchitectureBoundaries by tasks.registering {
     val dependencyCoordinates = declaredDependencyCoordinates
     val namespacePrefixes = forbiddenUiNamespacePrefixes
     val dependencyGroups = forbiddenUiDependencyGroups
+    val dependencyModules = forbiddenUiDependencyModules
+    val classifierExpectations = dependencyClassifierExpectations
 
     inputs.dir(sourceRoot)
     inputs.property("declaredDependencies", dependencyCoordinates)
 
     doLast {
+        fun isForbiddenUiDependency(coordinate: String): Boolean {
+            val group = coordinate.substringBefore(':')
+            if (dependencyGroups.any { group == it || group.startsWith("$it.") }) return true
+            return dependencyModules.any { coordinate == it || coordinate.startsWith("$it-") }
+        }
+
         val violations = mutableListOf<String>()
         val sourceRootFile = sourceRoot.asFile
+
+        // The classifier is checked against its expectations before it is trusted on the model.
+        classifierExpectations
+            .filter { (coordinate, expected) -> isForbiddenUiDependency(coordinate) != expected }
+            .forEach { (coordinate, expected) ->
+                violations += "classifier expectation broken: '$coordinate' should be " +
+                    (if (expected) "forbidden" else "allowed") + " but is not"
+            }
 
         sourceRootFile.walkTopDown()
             .filter { it.isFile && it.extension == "kt" }
@@ -105,10 +149,7 @@ val checkArchitectureBoundaries by tasks.registering {
             }
 
         dependencyCoordinates
-            .filter { coordinate ->
-                val group = coordinate.substringBefore(':')
-                dependencyGroups.any { group == it || group.startsWith("$it.") }
-            }
+            .filter { isForbiddenUiDependency(it) }
             .forEach { coordinate -> violations += "declares a UI framework dependency: $coordinate" }
 
         if (violations.isNotEmpty()) {

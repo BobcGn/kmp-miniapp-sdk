@@ -17,6 +17,12 @@ internal object MiniAppPluginDiagnostics {
     /** The platform target name. ADR 0010 makes it the source of `miniappMain` / `miniappTest`. */
     public const val MINIAPP_TARGET_NAME: String = "miniapp"
 
+    /** The lifecycle test task the Kotlin Gradle Plugin derives from the target name. */
+    public const val MINIAPP_TEST_TASK_NAME: String = "miniappTest"
+
+    /** The task that actually runs the `miniappTest` compilation's tests on Node.js. */
+    public const val MINIAPP_NODE_TEST_TASK_NAME: String = "miniappNodeTest"
+
     /** First line of the missing-Kotlin-Multiplatform error; tests assert on this exact text. */
     public const val MISSING_KOTLIN_MULTIPLATFORM_MESSAGE: String =
         "The 'io.github.bobcgn.miniapp' plugin requires the Kotlin Multiplatform plugin."

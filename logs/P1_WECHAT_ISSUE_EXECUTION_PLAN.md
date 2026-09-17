@@ -59,6 +59,10 @@ BOB-75 只有在 BOB-83、BOB-78、BOB-76、BOB-82、BOB-81、BOB-84、BOB-80、
 
 插件自动建立 `commonMain → miniappMain` 与 `commonTest → miniappTest`，消费者不得手写 `sourceSets.create(...)`。验收必须覆盖 IDEA 将两者识别为 Kotlin source sets、代码补全、`miniappMain` 复用 `commonMain`，以及 `miniappTest` 实际执行。当前 Host API 可以由 `miniappMain` 使用，但总体插件架构不得写死 `MiniApp == WeChat`。
 
+**本轮进展（2026-09-17）**：插件在 BOB-78 的 `kotlin.js("miniapp")` 之上补上该 target 的 **Node.js test run** —— 这是让 `miniappTest` 拥有真正执行任务的关键一步；source set、compilation 与层级边仍全部由 Kotlin Gradle Plugin 派生，插件不手工创建任何 source set 或 `dependsOn` 边。Gradle TestKit 由 4 个测试扩展到 **8 个**：新增「插件提供 compilation-owned 的 miniappMain / miniappTest（含 owning compilation 与传递 dependsOn）」「miniappTest 实际执行自身测试并复用 commonTest 测试」「消费者已自行声明 miniapp target 时插件不重复创建且仍补齐 test run」。真实 consumer fixture 的 `miniappNodeTest` 执行了 2 个测试：一个只存在于 `miniappTest`，一个来自 `commonTest`，标识符带 `[miniapp, node]` 后缀。变异探针：移除 `nodejs()` 后 3 个测试失败。跨模块约束仍成立：消费者 `commonMain` 依赖另一个 KMP project 时，该 project 也必须应用插件，插件不提供回退，也不允许把依赖移出 `commonMain` 规避。**未实现**：SDK 依赖接线（BOB-82）、产物组装（BOB-81）、微信 DSL（BOB-84）。IDEA 识别属人工证据，待用户截图确认。
+
+**验收（2026-09-17）**：BOB-76 已 **Done**。自动化：`./gradlew --no-daemon --console=plain projects clean check :miniapp-gradle-plugin:test --rerun-tasks :sdk:checkArchitectureBoundaries` BUILD SUCCESSFUL，插件 8 个测试通过，SDK 598 个测试通过。人工 IDEA + 外部真实 KMP Demo 验收（Gradle 9.5.1 / Kotlin 2.4.20，含 Android、iOS、JVM、Compose）：`:core` 与 `:app:shared` 同时应用正式插件，IDEA 正确识别 `commonMain`、`commonTest`、`miniappMain`、`miniappTest`，`actual getPlatform()` 能识别 `commonMain` 的 expect/API，`miniappTest` 被识别为测试，Gradle Sync BUILD SUCCESSFUL。最终执行 `:core:compileKotlinMiniapp`、`:core:miniappTest`、`:app:shared:compileKotlinMiniapp`、`:app:shared:miniappTest` 全部 BUILD SUCCESSFUL（21s，configuration cache reused）；`:core:miniappTest` 为 NO-SOURCE 属正常结果（`:core` 当前无测试源码）。新增 JS target 后 Yarn lock 经 `kotlinUpgradeYarnLock` 正常更新。
+
 ### 紧急第 D 步：BOB-82 `[P1][URGENT] Automate Mini App SDK dependency wiring`
 
 插件自动为 `miniappMain` 接入正式 SDK runtime 依赖，使消费者直接使用受支持公共 API，不必声明内部微信 artifact。验证依赖变体能够在 BOB-83 选定的 KGP 模型下解析，且不会把内部实现 artifact 泄漏为消费者配置责任。
@@ -95,7 +99,7 @@ BOB-75 只有在 BOB-83、BOB-78、BOB-76、BOB-82、BOB-81、BOB-84、BOB-80、
 | A | BOB-83 | Done（2026-09-17） | PoC 选型、否决项、KGP 限制和必要 ADR 可核对 |
 | B | BOB-78 | Done（2026-09-17，commit `19e807e`） | 插件可应用并 sync；缺少 KMP 时明确失败 |
 | B+ | BOB-86 | In Progress（2026-09-17） | 架构边界已记录并被构建强制；无 Compose / Renderer 泄漏 |
-| C | BOB-76 | Blocked by A、B | source sets 自动创建、IDEA 识别、`miniappTest` 可执行 |
+| C | BOB-76 | Done（2026-09-17） | source sets 自动创建、IDEA 识别、`miniappTest` 可执行 |
 | D | BOB-82 | Blocked by B、C | 公共 SDK 依赖自动接入且不泄漏内部 artifact |
 | E | BOB-81 | Blocked by B、C、D | 稳定任务生成完整微信消费产物且无需手工接线 |
 | F | BOB-84 | Blocked by B；在 E 后执行 | 最小 DSL 通过架构审查且不承载业务配置 |

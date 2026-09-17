@@ -59,7 +59,9 @@ Level 3 is the boundary this ADR exists to fix: presentation *state and behaviou
 
 ### Enforcement
 
-`./gradlew :sdk:checkArchitectureBoundaries` fails when the runtime SDK imports or declares a dependency from a UI framework namespace, including `androidx.compose.*`, `org.jetbrains.compose.*`, `android.view.*`, `android.widget.*`, `androidx.activity.*`, `kotlinx.html.*` and `com.android.*`. It is wired into `:sdk:check`, so the constraint is a build failure rather than a review comment. The same check is the one to apply to a `presentation` module when one exists.
+`./gradlew :sdk:checkArchitectureBoundaries` fails when the runtime SDK imports or declares a dependency from a UI framework namespace, including `androidx.compose.*`, `org.jetbrains.compose.*`, `android.view.*`, `android.widget.*`, `androidx.activity.*`, `kotlinx.html.*` and `com.android.*`. A group that exists only to serve a UI framework is forbidden whole; a library whose group also carries a dependency this SDK legitimately uses is forbidden by exact module coordinate, so `org.jetbrains.kotlinx:kotlinx-html` is rejected without also rejecting `org.jetbrains.kotlinx:kotlinx-coroutines-core`. The task checks its own classifier against a fixed table of expected verdicts before it applies it to the model, so the rule cannot drift unnoticed. It is wired into `:sdk:check`, so the constraint is a build failure rather than a review comment. The same check is the one to apply to a `presentation` module when one exists.
+
+What the check cannot do is decide meaning. A renderer assembled from the SDK's own types imports no UI framework and declares no UI framework dependency, so it would pass; that class of mistake remains a review responsibility, and the check does not claim to cover it.
 
 ## Consequences
 

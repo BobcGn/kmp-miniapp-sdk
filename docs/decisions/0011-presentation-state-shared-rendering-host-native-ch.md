@@ -59,7 +59,9 @@ ADR 0010 解决了消费者如何获得 Mini App 平台 target。它没有回答
 
 ### 强制手段
 
-当 runtime SDK 导入或声明来自 UI framework namespace 的依赖时，`./gradlew :sdk:checkArchitectureBoundaries` 会失败，覆盖 `androidx.compose.*`、`org.jetbrains.compose.*`、`android.view.*`、`android.widget.*`、`androidx.activity.*`、`kotlinx.html.*` 与 `com.android.*`。该任务接入 `:sdk:check`，因此这条约束是构建失败而不是评审意见。将来出现 `presentation` module 时，同样应用这一检查。
+当 runtime SDK 导入或声明来自 UI framework namespace 的依赖时，`./gradlew :sdk:checkArchitectureBoundaries` 会失败，覆盖 `androidx.compose.*`、`org.jetbrains.compose.*`、`android.view.*`、`android.widget.*`、`androidx.activity.*`、`kotlinx.html.*` 与 `com.android.*`。只为 UI framework 服务的 group 会被整体封禁；若某个 group 同时承载本 SDK 正当使用的依赖，则按精确 module coordinate 封禁，因此 `org.jetbrains.kotlinx:kotlinx-html` 会被拒绝，而 `org.jetbrains.kotlinx:kotlinx-coroutines-core` 不会。任务在把分类器用于模型之前，先拿一张固定的期望结论表校验它，因此规则不会在无人察觉的情况下漂移。该任务接入 `:sdk:check`，因此这条约束是构建失败而不是评审意见。将来出现 `presentation` module 时，同样应用这一检查。
+
+该检查无法做的是判断语义。一个用 SDK 自身类型拼装出来的 renderer 既不导入 UI framework，也不声明 UI framework 依赖，因此可以通过；这类错误仍属评审职责，检查并不声称覆盖它。
 
 ## 后果
 

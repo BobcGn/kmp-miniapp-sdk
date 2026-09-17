@@ -46,7 +46,7 @@ Only one critical-path stage advances at a time. A later issue must not become R
 
 Stage A is decided. The PoC in `poc/kgp-model` selects a plugin-managed Kotlin/JS target named after the platform, because that is the only model in which `miniappMain` and `miniappTest` are real Kotlin source sets owned by a compilation. [ADR 0010](decisions/0010-miniapp-gradle-plugin-source-set-model-en.md) records the decision, the rejected alternatives, and the Kotlin Gradle Plugin limits. The hard `miniappMain` / `miniappTest` requirement is unchanged.
 
-Stage B is in progress. `:miniapp-gradle-plugin` publishes `io.github.bobcgn.miniapp`, registers the `miniapp` target in a Kotlin Multiplatform project, and rejects a project that does not apply the Kotlin Multiplatform plugin. Automatic source-set provisioning (BOB-76), SDK dependency wiring (BOB-82), artifact assembly (BOB-81) and the WeChat DSL (BOB-84) are not implemented, so the next stages remain gated.
+Stage B is done and stage C is in progress. `:miniapp-gradle-plugin` publishes `io.github.bobcgn.miniapp`; applying it registers the `miniapp` target and that target's Node.js test run, so a consumer gets `miniappMain` and `miniappTest` as compilation-owned source sets with `commonMain` and `commonTest` as their parents, plus a `miniappTest` task that actually executes. SDK dependency wiring (BOB-82), artifact assembly (BOB-81) and the WeChat DSL (BOB-84) are not implemented, so those stages remain gated.
 
 ### P1 completion evidence
 

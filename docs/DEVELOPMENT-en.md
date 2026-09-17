@@ -46,19 +46,28 @@ The runtime SDK shares client behaviour, host capabilities and presentation stat
 
 This task fails when anything under `sdk/**` imports a UI framework namespace or declares a UI framework dependency, and it runs as part of `:sdk:check`. It is a build failure rather than a review note on purpose: "the SDK does not depend on Compose" has to survive contributors who have not read the ADR.
 
+A dependency is matched by group when the group exists only to serve a UI framework, and by exact module coordinate when the group also carries a dependency this SDK legitimately uses. `org.jetbrains.kotlinx` carries `kotlinx-coroutines-core`, so the whole group cannot be forbidden; `kotlinx-html` and its `-js` / `-jvm` variants are forbidden as modules instead. Before the task trusts the classifier on the real model, it runs it against a fixed table of expected verdicts and fails if any coordinate is classified against expectation, so a later edit cannot silently widen or narrow the rule.
+
 What the check does not do: it cannot detect a renderer that imports no UI framework. A WXML generator or a view tree assembled from the SDK's own types would pass it. That class of mistake is still caught by review and by the rules in `sdk/AGENTS.md`, not by the build.
 
 ## Mini App Gradle plugin
 
-`:miniapp-gradle-plugin` publishes the `io.github.bobcgn.miniapp` plugin from the implementation class `io.github.bobcgn.miniapp.gradle.MiniAppGradlePlugin`. Applying it to a Kotlin Multiplatform project registers one Kotlin/JS target named `miniapp`, which is the whole of the registration; [ADR 0010](decisions/0010-miniapp-gradle-plugin-source-set-model-en.md) records why. Applying it to a project that does not apply the Kotlin Multiplatform plugin fails with a message naming the missing plugin.
+`:miniapp-gradle-plugin` publishes the `io.github.bobcgn.miniapp` plugin from the implementation class `io.github.bobcgn.miniapp.gradle.MiniAppGradlePlugin`. Applying it to a Kotlin Multiplatform project does two things:
+
+- registers one Kotlin/JS target named `miniapp`, which is what makes `miniappMain` and `miniappTest` real, compilation-owned source sets with `commonMain` and `commonTest` as their parents;
+- registers that target's Node.js test run, which is what gives `miniappTest` a task that actually executes.
+
+The plugin creates no source set and no `dependsOn` edge of its own: hand-built ones are the unused-source-set model [ADR 0010](decisions/0010-miniapp-gradle-plugin-source-set-model-en.md) rejected. Applying it to a project that does not apply the Kotlin Multiplatform plugin fails with a message naming the missing plugin.
 
 ```shell
 ./gradlew :miniapp-gradle-plugin:test
 ```
 
-The tests are Gradle TestKit fixtures plus a contract test. The fixtures put the Kotlin Gradle Plugin and the plugin under test on one buildscript classpath deliberately: `withPluginClasspath()` injects the plugin under test into the plugin-resolution classpath only, so a fixture that resolves a second plugin separately cannot reproduce the classpath a real consumer build gives the plugin.
+A consumer whose `commonMain` depends on another Kotlin Multiplatform project must apply this plugin to that project as well. The dependency resolves through a Mini App variant, so a project that offers none fails variant resolution; the plugin provides no fallback, and moving the dependency out of `commonMain` is not a supported workaround.
 
-The module is a skeleton. Source-set provisioning, SDK dependency wiring, WeChat artifact assembly and the Mini App Gradle DSL belong to later issues and are not implemented here.
+The tests are Gradle TestKit fixtures plus a contract test. The fixtures put the Kotlin Gradle Plugin and the plugin under test on one buildscript classpath deliberately: `withPluginClasspath()` injects the plugin under test into the plugin-resolution classpath only, so a fixture that resolves a second plugin separately cannot reproduce the classpath a real consumer build gives the plugin. One fixture carries `commonMain`, `miniappMain`, `commonTest` and `miniappTest` sources and asserts the executed test report, so the source-set wiring and the test execution are both proved by running tests rather than by reading the model.
+
+Still absent, and owned by later issues: SDK dependency wiring (BOB-82), WeChat artifact assembly (BOB-81), and the Mini App Gradle DSL (BOB-84).
 
 ## Mini App Gradle plugin model PoC
 

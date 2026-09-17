@@ -46,19 +46,28 @@ runtime SDK 共享客户端行为、宿主能力与 presentation state，从不�
 
 当 `sdk/**` 下任何内容导入 UI framework namespace 或声明 UI framework 依赖时，该任务会失败，并且它是 `:sdk:check` 的一部分。它被有意设计为构建失败而不是评审提醒，因为「SDK 不依赖 Compose」这条不变量必须能在没有读过 ADR 的贡献者手中存活。
 
+依赖匹配分两种：当某个 group 只为 UI framework 服务时按 group 匹配；当该 group 同时承载本 SDK 正当使用的依赖时，按精确 module coordinate 匹配。`org.jetbrains.kotlinx` 承载 `kotlinx-coroutines-core`，因此不能封禁整个 group；改为封禁 `kotlinx-html` 及其 `-js` / `-jvm` 变体这些 module。在把分类器用于真实模型之前，任务会先拿一张固定的期望结论表跑一遍，任何坐标被分类成与预期不符即失败，因此后续改动无法悄悄放宽或收紧规则。
+
 该检查不做的事：它无法发现不导入任何 UI framework 却写出来的 renderer。一个 WXML generator，或用 SDK 自身类型拼装的 view tree，都能通过它。这类错误仍由评审与 `sdk/AGENTS.md` 规则拦截，而不是由构建拦截。
 
 ## Mini App Gradle 插件
 
-`:miniapp-gradle-plugin` 由实现类 `io.github.bobcgn.miniapp.gradle.MiniAppGradlePlugin` 发布 `io.github.bobcgn.miniapp` 插件。把它应用到 Kotlin Multiplatform 项目会注册一个名为 `miniapp` 的 Kotlin/JS target，这就是全部注册内容；原因记录于 [ADR 0010](decisions/0010-miniapp-gradle-plugin-source-set-model-ch.md)。把它应用到未应用 Kotlin Multiplatform 插件的项目会失败，并给出指明缺失插件的错误信息。
+`:miniapp-gradle-plugin` 由实现类 `io.github.bobcgn.miniapp.gradle.MiniAppGradlePlugin` 发布 `io.github.bobcgn.miniapp` 插件。把它应用到 Kotlin Multiplatform 项目会做两件事：
+
+- 注册一个名为 `miniapp` 的 Kotlin/JS target —— 正是这次注册让 `miniappMain` 与 `miniappTest` 成为由 compilation 拥有、以 `commonMain` / `commonTest` 为父边的真实 source set；
+- 注册该 target 的 Node.js test run —— 正是它让 `miniappTest` 拥有一个真正执行的任务。
+
+插件自身不创建任何 source set 与 `dependsOn` 边：手工搭建的正是 [ADR 0010](decisions/0010-miniapp-gradle-plugin-source-set-model-ch.md) 否决的「未使用 source set」模型。把它应用到未应用 Kotlin Multiplatform 插件的项目会失败，并给出指明缺失插件的错误信息。
 
 ```shell
 ./gradlew :miniapp-gradle-plugin:test
 ```
 
-测试由 Gradle TestKit fixture 与契约测试组成。fixture 有意把 Kotlin Gradle Plugin 与被测插件放在同一个 buildscript classpath 上：`withPluginClasspath()` 只把被测插件注入 plugin-resolution classpath，因此单独解析第二个插件的 fixture 无法复现真实消费者构建给插件的 classpath。
+若消费者的 `commonMain` 依赖另一个 Kotlin Multiplatform project，则必须对该 project 同样应用本插件。该依赖经由 Mini App variant 解析，不提供该 variant 的 project 会解析失败；插件不提供回退，把依赖移出 `commonMain` 也不是可接受的变通。
 
-该 module 是骨架。source set 提供、SDK 依赖接线、微信产物组装与 Mini App Gradle DSL 属于后续 Issue，本轮未实现。
+测试由 Gradle TestKit fixture 与契约测试组成。fixture 有意把 Kotlin Gradle Plugin 与被测插件放在同一个 buildscript classpath 上：`withPluginClasspath()` 只把被测插件注入 plugin-resolution classpath，因此单独解析第二个插件的 fixture 无法复现真实消费者构建给插件的 classpath。其中一个 fixture 带有 `commonMain`、`miniappMain`、`commonTest` 与 `miniappTest` 源码，并断言实际执行出的测试报告，因此 source set 接线与测试执行都是由运行测试证明的，而不是靠读模型。
+
+仍未实现、归属后续 Issue：SDK 依赖接线（BOB-82）、微信产物组装（BOB-81）、Mini App Gradle DSL（BOB-84）。
 
 ## Mini App Gradle 插件模型 PoC
 

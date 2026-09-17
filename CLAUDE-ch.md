@@ -115,7 +115,7 @@ examples/                    集成宿主；不是 Gradle module
 截至 2026-09-15 的当前状态：
 
 - 状态为实验性 / pre-alpha。Bootstrap 已完成，所有已实现的 capability 均已通过微信开发者工具验证，并在适用处通过真机验证。唯一缺口是权限的 `NotRequested` 状态：所用账号无法复现，改由自动化测试覆盖。
-- module 列表为 `:sdk` 与 `:miniapp-gradle-plugin`。`examples/` 是集成宿主目录，不是 Gradle module。插件 module 是骨架：它注册 `miniapp` 平台 target 并校验 Kotlin Multiplatform 前置条件，尚未提供 source set、尚未接线 SDK 依赖、尚未组装产物，也未提供 DSL。
+- module 列表为 `:sdk` 与 `:miniapp-gradle-plugin`。`examples/` 是集成宿主目录，不是 Gradle module。插件注册 `miniapp` target 及其 Node.js test run，由此提供由 compilation 拥有的 `miniappMain` / `miniappTest` 并让 `miniappTest` 真正执行；尚未接线 SDK 依赖、尚未组装产物，也未提供 DSL。
 - JavaScript target 配置为 `nodejs()`、`useCommonJs()`、`binaries.library()` 与 `generateTypeScriptDefinitions()`。
 - `sdk/src/commonMain/.../api/MiniAppSdk.kt` 声明 `MiniAppSdk.VERSION = "0.1.0-SNAPSHOT"`，`commonTest` 对其断言。
 - `commonMain` 包含 `MiniAppHost` / `HostPlatformApi`、`HostVersion`、`CapabilityKey` / `CapabilitySupport`（含 `Supported` / `Unsupported` / `VersionDependent` / `PermissionDependent` 四态与 `requireSupported` guard）、带 `StorageCapabilityProvider` 的 `MiniAppStorage`、带 `NetworkCapabilityProvider` 的 `MiniAppHttpTransport`、带 `LifecycleCapabilityProvider` 的 `MiniAppLifecycle`、带 `PermissionCapabilityProvider` 的 `MiniAppPermissions` 及其 `PermissionKey` / `PermissionState` 模型、`MiniAppException`，以及 internal 的 `awaitHostCallback` primitive。

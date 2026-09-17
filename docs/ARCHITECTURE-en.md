@@ -322,7 +322,9 @@ Two rules follow from that shape:
 
 The plugin hides build wiring, never meaning. It does not hand-build compilations or source sets, does not attach a source set to a compilation through an unsupported API, and does not present an artifact-assembly task as a consumer contract. `buildMiniAppSdk`, which distributes this repository's own SDK into the WeChat example, is foundation evidence for the assembly step rather than the consumer workflow.
 
-The `:miniapp-gradle-plugin` module is this plugin's skeleton. It registers the `miniapp` target and rejects a project that does not apply the Kotlin Multiplatform plugin, and it does nothing else yet: source-set provisioning, SDK dependency wiring, WeChat artifact assembly and the host Gradle DSL are later work. Registering the target is the smallest shape that is still the chosen model, because that registration is what makes `miniappMain` and `miniappTest` real source sets rather than names in a model.
+The `:miniapp-gradle-plugin` module is this plugin. It registers the `miniapp` target together with that target's Node.js test run, and it rejects a project that does not apply the Kotlin Multiplatform plugin. Those two registrations are the whole of its provisioning: `miniappMain`, `miniappTest`, the compilations that own them and their `commonMain` / `commonTest` edges all come from the Kotlin Gradle Plugin, and the plugin never hand-builds a source set or a hierarchy edge, because hand-built ones are the unused-source-set model [ADR 0010](decisions/0010-miniapp-gradle-plugin-source-set-model-en.md) rejected. SDK dependency wiring, WeChat artifact assembly and the host Gradle DSL remain later work.
+
+A consumer whose `commonMain` depends on another Kotlin Multiplatform project must apply this plugin to that project as well. The dependency resolves through a Mini App variant, so a project that offers none fails variant resolution; there is no fallback, and moving the dependency out of `commonMain` is not a workaround.
 
 ## 8. Non-goals
 
