@@ -77,8 +77,9 @@ CLAUDE-en.md / CLAUDE-ch.md  本操作指南
 README-en.md / README-ch.md
 docs/                        PROJECT_FACTS、ARCHITECTURE、DEVELOPMENT、TESTING、ROADMAP、decisions/（ADR）
 gradle/libs.versions.toml    依赖与插件版本的唯一来源
-settings.gradle.kts          仅 include :sdk
-sdk/                         唯一的 Gradle module
+settings.gradle.kts          include :sdk 与 :miniapp-gradle-plugin
+sdk/                         Kotlin/JS runtime SDK module
+miniapp-gradle-plugin/       io.github.bobcgn.miniapp Gradle 插件骨架
 examples/                    集成宿主；不是 Gradle module
 ```
 
@@ -112,7 +113,7 @@ examples/                    集成宿主；不是 Gradle module
 截至 2026-09-15 的当前状态：
 
 - 状态为实验性 / pre-alpha。Bootstrap 已完成，所有已实现的 capability 均已通过微信开发者工具验证，并在适用处通过真机验证。唯一缺口是权限的 `NotRequested` 状态：所用账号无法复现，改由自动化测试覆盖。
-- module 列表仅有 `:sdk`。`examples/` 是集成宿主目录，不是 Gradle module。
+- module 列表为 `:sdk` 与 `:miniapp-gradle-plugin`。`examples/` 是集成宿主目录，不是 Gradle module。插件 module 是骨架：它注册 `miniapp` 平台 target 并校验 Kotlin Multiplatform 前置条件，尚未提供 source set、尚未接线 SDK 依赖、尚未组装产物，也未提供 DSL。
 - JavaScript target 配置为 `nodejs()`、`useCommonJs()`、`binaries.library()` 与 `generateTypeScriptDefinitions()`。
 - `sdk/src/commonMain/.../api/MiniAppSdk.kt` 声明 `MiniAppSdk.VERSION = "0.1.0-SNAPSHOT"`，`commonTest` 对其断言。
 - `commonMain` 包含 `MiniAppHost` / `HostPlatformApi`、`HostVersion`、`CapabilityKey` / `CapabilitySupport`（含 `Supported` / `Unsupported` / `VersionDependent` / `PermissionDependent` 四态与 `requireSupported` guard）、带 `StorageCapabilityProvider` 的 `MiniAppStorage`、带 `NetworkCapabilityProvider` 的 `MiniAppHttpTransport`、带 `LifecycleCapabilityProvider` 的 `MiniAppLifecycle`、带 `PermissionCapabilityProvider` 的 `MiniAppPermissions` 及其 `PermissionKey` / `PermissionState` 模型、`MiniAppException`，以及 internal 的 `awaitHostCallback` primitive。

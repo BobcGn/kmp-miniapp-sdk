@@ -283,6 +283,8 @@ Kotlin/JS compilation
 
 插件隐藏构建接线，而不隐藏语义。它不手工搭建 compilation 或 source set，不通过不受支持的 API 把 source set 挂到 compilation 上，也不把产物组装任务呈现为消费者契约。把本仓库自身 SDK 分发到微信示例的 `buildMiniAppSdk`，是组装环节的基础证据，而不是消费者工作流。
 
+`:miniapp-gradle-plugin` module 是该插件的骨架。它注册 `miniapp` target，并对未应用 Kotlin Multiplatform 插件的项目报错，除此之外暂不做任何事：source set 提供、SDK 依赖接线、微信产物组装与 Host Gradle DSL 属于后续工作。注册 target 是仍然构成选定模型的最小形态，因为正是这次注册让 `miniappMain` 与 `miniappTest` 成为真实 source set，而不是模型里的名字。
+
 ## 8. 非目标
 
 - 重新实现 Kuikly

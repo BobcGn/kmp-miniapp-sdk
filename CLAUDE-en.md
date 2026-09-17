@@ -77,8 +77,9 @@ CLAUDE-en.md / CLAUDE-ch.md  this operating guide
 README-en.md / README-ch.md
 docs/                      PROJECT_FACTS, ARCHITECTURE, DEVELOPMENT, TESTING, ROADMAP, decisions/ (ADRs)
 gradle/libs.versions.toml  single source of dependency and plugin versions
-settings.gradle.kts        includes only :sdk
-sdk/                       the only Gradle module
+settings.gradle.kts        includes :sdk and :miniapp-gradle-plugin
+sdk/                       the Kotlin/JS runtime SDK module
+miniapp-gradle-plugin/     the io.github.bobcgn.miniapp Gradle plugin skeleton
 examples/                  integration host; not a Gradle module
 ```
 
@@ -112,7 +113,7 @@ Toolchain: Gradle 9.3.1 from the checked-in Wrapper, project Kotlin 2.4.20 from 
 Current state, as of 2026-09-15:
 
 - Status is experimental / pre-alpha. Bootstrap is complete, and every implemented capability is verified in WeChat Developer Tools and, where applicable, on a real device. The one gap is the permission `NotRequested` state, which the account used could not reproduce and which automated tests cover instead.
-- Module list is `:sdk` only. `examples/` is an integration host directory, not a Gradle module.
+- Module list is `:sdk` and `:miniapp-gradle-plugin`. `examples/` is an integration host directory, not a Gradle module. The plugin module is a skeleton: it registers the `miniapp` platform target and validates the Kotlin Multiplatform precondition, and does not yet provision source sets, wire the SDK dependency, assemble artifacts, or expose a DSL.
 - The JavaScript target is configured with `nodejs()`, `useCommonJs()`, `binaries.library()`, and `generateTypeScriptDefinitions()`.
 - `sdk/src/commonMain/.../api/MiniAppSdk.kt` declares `MiniAppSdk.VERSION = "0.1.0-SNAPSHOT"`; `commonTest` asserts it.
 - `commonMain` contains `MiniAppHost` / `HostPlatformApi`, `HostVersion`, `CapabilityKey` / `CapabilitySupport` with its `Supported` / `Unsupported` / `VersionDependent` / `PermissionDependent` states and the `requireSupported` guard, `MiniAppStorage` with `StorageCapabilityProvider`, `MiniAppHttpTransport` with `NetworkCapabilityProvider`, `MiniAppLifecycle` with `LifecycleCapabilityProvider`, `MiniAppPermissions` with `PermissionCapabilityProvider` and its `PermissionKey` / `PermissionState` model, `MiniAppException`, and the internal `awaitHostCallback` primitive.

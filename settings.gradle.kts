@@ -14,3 +14,4 @@ dependencyResolutionManagement {
 rootProject.name = "kmp-miniapp-sdk"
 
 include(":sdk")
+include(":miniapp-gradle-plugin")

@@ -283,6 +283,8 @@ Two rules follow from that shape:
 
 The plugin hides build wiring, never meaning. It does not hand-build compilations or source sets, does not attach a source set to a compilation through an unsupported API, and does not present an artifact-assembly task as a consumer contract. `buildMiniAppSdk`, which distributes this repository's own SDK into the WeChat example, is foundation evidence for the assembly step rather than the consumer workflow.
 
+The `:miniapp-gradle-plugin` module is this plugin's skeleton. It registers the `miniapp` target and rejects a project that does not apply the Kotlin Multiplatform plugin, and it does nothing else yet: source-set provisioning, SDK dependency wiring, WeChat artifact assembly and the host Gradle DSL are later work. Registering the target is the smallest shape that is still the chosen model, because that registration is what makes `miniappMain` and `miniappTest` real source sets rather than names in a model.
+
 ## 8. Non-goals
 
 - Reimplementing Kuikly

@@ -27,12 +27,25 @@ When running WeChat host acceptance, use the [WeChat real-host verification matr
 ./gradlew clean build
 ./gradlew :sdk:jsNodeTest
 ./gradlew :sdk:jsTest
+./gradlew :miniapp-gradle-plugin:test
 ./gradlew buildMiniAppSdk
 ```
 
-These commands are valid and were verified on 2026-09-15.
+These commands are valid and were verified on 2026-09-15, except `:miniapp-gradle-plugin:test`, which was verified on 2026-09-17.
 
 The `:sdk:jsTest` suite includes host-boundary, error-model, callback adaptation, cancellation, double-completion, optional abort, WeChat error-mapping, HTTP transport adaptation including host abort on cancellation, lifecycle state transitions, navigation adaptation, capability-support states and version gating, permission lifecycle behaviour including concurrent request merging, privacy authorization including the refusal classification, WeChat session checking including the expiry classification, the WeChat clipboard and vibration adapters including their per-capability gating, the WeChat file-system adapter including its sandbox and text boundaries, the WeChat location adapter including its coordinate validation and privacy precondition, the WeChat scan adapter including indeterminate-interruption classification and result validation, the WeChat media adapter including its request boundaries, result validation, and interruption classification, the WeChat subscription adapter including its template validation and per-template result policy, the network status adapter including its per-collector listener pairing, the WeChat upload and download adapters including their abort, progress, and timeout behaviour, the WeChat payment adapter including its parameter forwarding, blank-parameter refusal, exact interruption classification, and single-terminal-state behaviour, and interop object-construction coverage. These tests use fake callbacks and do not claim access to a real `wx` runtime.
+
+## Mini App Gradle plugin
+
+`:miniapp-gradle-plugin` publishes the `io.github.bobcgn.miniapp` plugin from the implementation class `io.github.bobcgn.miniapp.gradle.MiniAppGradlePlugin`. Applying it to a Kotlin Multiplatform project registers one Kotlin/JS target named `miniapp`, which is the whole of the registration; [ADR 0010](decisions/0010-miniapp-gradle-plugin-source-set-model-en.md) records why. Applying it to a project that does not apply the Kotlin Multiplatform plugin fails with a message naming the missing plugin.
+
+```shell
+./gradlew :miniapp-gradle-plugin:test
+```
+
+The tests are Gradle TestKit fixtures plus a contract test. The fixtures put the Kotlin Gradle Plugin and the plugin under test on one buildscript classpath deliberately: `withPluginClasspath()` injects the plugin under test into the plugin-resolution classpath only, so a fixture that resolves a second plugin separately cannot reproduce the classpath a real consumer build gives the plugin.
+
+The module is a skeleton. Source-set provisioning, SDK dependency wiring, WeChat artifact assembly and the Mini App Gradle DSL belong to later issues and are not implemented here.
 
 ## Mini App Gradle plugin model PoC
 

@@ -42,6 +42,7 @@
 - 微信订阅消息请求已实现并通过自动化检查；Android 真机已验证运行时支持与零模板保护，弹窗结果仍受阻于当前 AppID 下的有效模板
 - 微信标准支付已实现，并作为「后端参数的类型化转发器」通过自动化检查；Android 真机已验证运行时支持与「未配置参数」保护，真实支付验收仍受阻塞于合法商户环境与可信后端
 - 虚拟支付未实现：不存在请求、结果、capability 条目或导出，且所带开发者工具基础库中没有可发现的虚拟支付契约。其边界记录于 ARCHITECTURE，状态在能力矩阵中为 `Planned`
+- `io.github.bobcgn.miniapp` Gradle 插件骨架已实现并有自动化覆盖：它在 Kotlin Multiplatform 项目中注册 `miniapp` 平台 target，并对未应用 Kotlin Multiplatform 插件的项目报错。它尚未提供 source set、尚未接线 SDK 依赖、尚未组装微信产物，也未提供 Gradle DSL
 
 构建基线与第一条端到端消费链路均已通过验证。Common layer 包含最小 Host identity、Capability support 与强类型 platform escape-hatch contracts。Production code 通过 Host 与 adapter boundaries 调用 typed 微信 Storage contracts，完整 Storage 链路已通过真实宿主验证。
 
@@ -63,8 +64,11 @@ Capability support 由正在运行的宿主回答，而不是依据硬编码清�
 
 ```text
 Root project 'kmp-miniapp-sdk'
-└── Project ':sdk'
++--- Project ':miniapp-gradle-plugin'
+\--- Project ':sdk'
 ```
+
+`:sdk` 是本文档其余部分描述的 Kotlin/JS runtime SDK。`:miniapp-gradle-plugin` 是 `io.github.bobcgn.miniapp` Gradle 插件骨架，只负责构建集成与开发体验：它在 Kotlin Multiplatform 项目中注册 [ADR 0010](decisions/0010-miniapp-gradle-plugin-source-set-model-ch.md) 选定的 `miniapp` 平台 target，并在缺少 Kotlin Multiplatform 插件时给出指明原因的报错。它不提供 source-set hierarchy、不接入 SDK 依赖、不组装微信产物、不暴露 Mini App DSL，也不包含微信 runtime 代码。
 
 `examples/` 是 integration host 目录，不是 Gradle module。
 
@@ -273,7 +277,7 @@ Kotlin/JS platform variants 及其传递依赖由 Gradle 在依赖解析期间�
 - Compose integration、UI DSL、renderer 或 Virtual DOM
 - npm publication
 - Maven publication
-- Gradle plugin
+- 能够自动提供 `miniappMain` / `miniappTest` hierarchy、接入 runtime SDK 依赖、组装微信产物或暴露 Mini App Gradle DSL 的完整 Gradle 插件；`:miniapp-gradle-plugin` 目前只是骨架，上述四项均未实现
 - 支付宝或 Telegram Host implementations
 
 ## 11. 已验证命令
@@ -304,6 +308,13 @@ Kotlin/JS platform variants 及其传递依赖由 Gradle 在依赖解析期间�
 | `../../gradlew --no-daemon --console=plain :model-c:checkMiniAppModel` | VERIFIED — 10 项模型要求全部通过 |
 | `../../gradlew --no-daemon --console=plain --configuration-cache :model-c:check` | VERIFIED — configuration cache 条目成功存储并复用 |
 | 在 commit `6812814` 上执行 `./gradlew --no-daemon --console=plain clean check` | VERIFIED — `:sdk:jsNodeTest` 执行 598 个测试，无失败 |
+
+2026-09-17 针对 Mini App Gradle 插件骨架的验证：
+
+| 命令 | 结果 |
+| --- | --- |
+| `./gradlew --no-daemon --console=plain clean check` | VERIFIED — `:sdk` 与 `:miniapp-gradle-plugin` 均 BUILD SUCCESSFUL |
+| `./gradlew --no-daemon --console=plain :miniapp-gradle-plugin:test` | VERIFIED — 6 个测试，无失败 |
 
 早期微信开发者工具证据覆盖版本、Storage 与 authentication 检查；network 检查于 2026-09-14 单独完成验收。用户于 2026-09-15 确认 lifecycle 前台状态、页面 route，以及 `navigateTo`、`redirectTo`、`navigateBack` 的真实宿主验收通过。后台状态迁移不属于开发者工具模拟器可验证范围。权限生命周期定义了宿主无关的三态模型 —— `NotRequested`、`Granted`、`Denied` —— 由命名权限「为了什么」的 `PermissionKey` 标识，并通过微信 adapter 适配 `wx.getSetting`、`wx.authorize` 与 `wx.openSetting`。不做任何缓存；拒绝是 `MiniAppException.PermissionDenied` 而不是宿主失败；请求权限与打开设置绝不在缺少用户手势时执行。Kotlin/JS、fake-host、CommonJS 与 TypeScript 自动检查均已通过。微信开发者工具（基础库 3.17.2）与 Android 真机（OnePlus PLQ110、Android 36、微信 8.0.76）验证了：宿主能够报告 `Granted` 与 `Denied`；设置页返回的是宿主的决定而不是被假定为已授权；对已拒绝权限再次请求会报告 `DENIED` 且不出现第二次弹窗。`NotRequested` 无法在所用账号上产出，因为该账号已对所映射权限持有决定；该状态改由自动化测试覆盖。
 

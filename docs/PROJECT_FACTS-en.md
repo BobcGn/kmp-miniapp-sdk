@@ -42,6 +42,7 @@ The project is not a WeChat Mini Program UI framework, Kuikly replacement, Compo
 - WeChat subscription-message requests implemented and covered by automated checks; an Android real-device run verified runtime support and the zero-template guard, while prompt outcomes remain blocked on a valid template for the current AppID
 - WeChat standard payment implemented and covered by automated checks as a typed forwarder of backend-produced parameters; an Android real-device run verified runtime support and the no-parameters guard, while real payment acceptance is blocked on a legal merchant environment and a trusted backend
 - Virtual payment is not implemented: no request, outcome, capability entry, or export exists, and the installed Developer Tools base library contains no discoverable virtual-payment contract. Its boundary is recorded in ARCHITECTURE and its status is `Planned` in the capability matrix
+- The `io.github.bobcgn.miniapp` Gradle plugin skeleton is implemented and covered by automated checks. It registers the `miniapp` platform target in a Kotlin Multiplatform project and rejects one that does not apply the Kotlin Multiplatform plugin. It does not yet provision source sets, wire the SDK dependency, assemble a WeChat artifact, or expose a Gradle DSL
 
 The build baseline and first end-to-end consumer bridge both pass verification. The common layer contains minimal host identity, capability support, and typed platform escape-hatch contracts. Production code invokes the typed WeChat Storage contracts through the Host and adapter boundaries, and the complete Storage path has passed real-host verification.
 
@@ -63,8 +64,11 @@ Verified with `./gradlew projects`:
 
 ```text
 Root project 'kmp-miniapp-sdk'
-└── Project ':sdk'
++--- Project ':miniapp-gradle-plugin'
+\--- Project ':sdk'
 ```
+
+`:sdk` is the Kotlin/JS runtime SDK described by the rest of this document. `:miniapp-gradle-plugin` is the `io.github.bobcgn.miniapp` Gradle plugin skeleton. It owns build integration and developer experience only: it detects the Kotlin Multiplatform plugin, registers the `miniapp` platform target chosen in [ADR 0010](decisions/0010-miniapp-gradle-plugin-source-set-model-en.md), and fails with a named error when the Kotlin Multiplatform plugin is absent. It provisions no source-set hierarchy, wires no SDK dependency, assembles no WeChat artifact, exposes no Mini App DSL, and contains no WeChat runtime code.
 
 `examples/` is an integration host directory, not a Gradle module.
 
@@ -273,7 +277,7 @@ The project currently has no:
 - Compose integration, UI DSL, renderer, or Virtual DOM
 - npm publication
 - Maven publication
-- Gradle plugin
+- A Gradle plugin that provisions the `miniappMain` / `miniappTest` hierarchy, wires the runtime SDK dependency, assembles a WeChat-consumable artifact, or exposes a Mini App Gradle DSL; the skeleton in `:miniapp-gradle-plugin` does none of these
 - Alipay or Telegram host implementations
 
 ## 11. Verified Commands
@@ -304,6 +308,13 @@ Verified on 2026-09-17 for the BOB-83 Kotlin Gradle Plugin model PoC, from `poc/
 | `../../gradlew --no-daemon --console=plain :model-c:checkMiniAppModel` | VERIFIED — all 10 model requirements pass |
 | `../../gradlew --no-daemon --console=plain --configuration-cache :model-c:check` | VERIFIED — configuration cache entry stored, then reused |
 | `./gradlew --no-daemon --console=plain clean check` at commit `6812814` | VERIFIED — `:sdk:jsNodeTest` ran 598 tests with no failures |
+
+Verified on 2026-09-17 for the Mini App Gradle plugin skeleton:
+
+| Command | Result |
+| --- | --- |
+| `./gradlew --no-daemon --console=plain clean check` | VERIFIED — BUILD SUCCESSFUL across `:sdk` and `:miniapp-gradle-plugin` |
+| `./gradlew --no-daemon --console=plain :miniapp-gradle-plugin:test` | VERIFIED — 6 tests, no failures |
 
 Earlier WeChat Developer Tools evidence covers the version, Storage, and authentication checks; the network check was accepted separately on 2026-09-14. On 2026-09-15 the user confirmed real-host acceptance of the lifecycle foreground state, page route, and `navigateTo`, `redirectTo`, and `navigateBack`. The background-state transition is outside what the Developer Tools simulator can verify. The permission lifecycle defines a host-neutral three-state model — `NotRequested`, `Granted`, `Denied` — for a `PermissionKey` that names what a permission is for, and adapts `wx.getSetting`, `wx.authorize`, and `wx.openSetting` through the WeChat adapter. Nothing is cached, a refusal is `MiniAppException.PermissionDenied` rather than a host failure, and requesting a permission or opening settings never happens without a user gesture. Automated Kotlin/JS, fake-host, CommonJS, and TypeScript checks pass. WeChat Developer Tools (base library 3.17.2) and an Android device (OnePlus PLQ110, Android 36, WeChat 8.0.76) verified that the host reports `Granted` and `Denied`, that a settings visit reports the host's decision rather than assuming a grant, and that requesting a refused permission reports `DENIED` without a second prompt. `NotRequested` could not be produced on the account used, because it already holds a decision for the mapped permission; that state is covered by automated tests instead.
 

@@ -27,12 +27,25 @@ VS Code 可用于处理 `examples/wechat-miniprogram` 下的文件。Consumer Br
 ./gradlew clean build
 ./gradlew :sdk:jsNodeTest
 ./gradlew :sdk:jsTest
+./gradlew :miniapp-gradle-plugin:test
 ./gradlew buildMiniAppSdk
 ```
 
-这些命令有效，并已于 2026-09-15 完成验证。
+这些命令有效，并已于 2026-09-15 完成验证；其中 `:miniapp-gradle-plugin:test` 于 2026-09-17 完成验证。
 
 `:sdk:jsTest` suite 覆盖 Host boundary、error model、callback adaptation、cancellation、double completion、可选 abort、微信 error mapping、包含取消时宿主中止的 HTTP transport adaptation、生命周期状态迁移、导航适配、capability support 状态与版本门控、包含并发请求合并的权限生命周期行为、包含拒绝分类的隐私授权、包含过期分类的微信会话检查、包含逐项门控的微信剪贴板与震动 adapter、包含沙箱与文本边界的微信文件系统 adapter、包含坐标校验与隐私前置条件的微信定位 adapter、包含不可归因中断分类与结果校验的微信扫码 adapter、包含请求边界、结果校验与中断分类的微信媒体 adapter、包含模板校验与逐模板结果策略的微信订阅消息 adapter、包含逐 collector 监听配对的网络状态 adapter、包含 abort、进度与超时行为的微信上传与下载 adapter、包含参数转发、空白参数拒绝、精确中断分类与单次终态行为的微信支付 adapter，以及 interop object construction。这些测试使用 fake callbacks，不代表能够访问真实 `wx` runtime。
+
+## Mini App Gradle 插件
+
+`:miniapp-gradle-plugin` 由实现类 `io.github.bobcgn.miniapp.gradle.MiniAppGradlePlugin` 发布 `io.github.bobcgn.miniapp` 插件。把它应用到 Kotlin Multiplatform 项目会注册一个名为 `miniapp` 的 Kotlin/JS target，这就是全部注册内容；原因记录于 [ADR 0010](decisions/0010-miniapp-gradle-plugin-source-set-model-ch.md)。把它应用到未应用 Kotlin Multiplatform 插件的项目会失败，并给出指明缺失插件的错误信息。
+
+```shell
+./gradlew :miniapp-gradle-plugin:test
+```
+
+测试由 Gradle TestKit fixture 与契约测试组成。fixture 有意把 Kotlin Gradle Plugin 与被测插件放在同一个 buildscript classpath 上：`withPluginClasspath()` 只把被测插件注入 plugin-resolution classpath，因此单独解析第二个插件的 fixture 无法复现真实消费者构建给插件的 classpath。
+
+该 module 是骨架。source set 提供、SDK 依赖接线、微信产物组装与 Mini App Gradle DSL 属于后续 Issue，本轮未实现。
 
 ## Mini App Gradle 插件模型 PoC
 

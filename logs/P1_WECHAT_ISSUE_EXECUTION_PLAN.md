@@ -37,9 +37,13 @@ BOB-75 只有在 BOB-83、BOB-78、BOB-76、BOB-82、BOB-81、BOB-84、BOB-80、
 
 事实证据（Kotlin 2.4.20 / Gradle 9.3.1）：`model-c` 的 `miniappNodeTest` 实际执行 4 个测试（1 个来自 `commonTest`、3 个来自 `miniappTest`），`checkMiniAppModel` 10/10 通过；`model-b` 6/10 失败、`model-c2` 5/10 失败、`model-a` 因消费者 build script 含 `useCommonJs()` 等手工接线而在 1 项上失败；`poc/kgp-model` 的 `clean check` 通过；`:model-c:check` 成功存储并复用 configuration cache，`--warning-mode all` 未出现弃用警告；commit `6812814` 的 `clean check` 通过（`:sdk:jsNodeTest` 598 个测试，无失败）。IDEA 识别仍属人工验收，本轮未执行，不得声称已通过。
 
+**收尾（2026-09-17）**：BOB-83 已 **Done**，交付 commit `72fdb49 docs(gradle): decide miniapp source set model`。真实 KMP Demo（独立仓库，Kotlin 2.4.20 / Gradle 9.5.1，含 Android/iOS/JVM/Compose）补充验证：`:app:shared` 的 `miniappMain` / `miniappTest` 目录与其他平台 source set 对称，`compileKotlinMiniapp`、`compileTestKotlinMiniapp`、`miniappTest` 通过，`miniappNodeTest` 实际执行而非 SKIPPED。IDEA 人工识别由用户完成 Gradle Sync 后确认。跨模块约束：`app:shared(miniapp)` 依赖 `project(:core)` 时，`:core` 也必须提供 Mini App 变体，否则出现 6 个 variant resolution 错误 —— 该约束保留给 BOB-76、BOB-82、BOB-79 的诊断与测试。
+
 ### 紧急第 B 步：BOB-78 `[P1][URGENT] Bootstrap Mini App Gradle Plugin`
 
 建立独立的 `io.github.bobcgn.miniapp` Gradle Plugin 骨架，检测 Kotlin Multiplatform 插件并建立 Mini App 平台集成入口。普通 KMP 项目必须能应用插件并完成 Gradle sync；缺少 KMP 插件时必须给出明确错误。插件只负责构建集成和开发体验，不承载微信 runtime API，也不在本步骤实现多 Host 或发布流程。
+
+**本轮进展（2026-09-17）**：`:miniapp-gradle-plugin` module 已建立，插件 ID `io.github.bobcgn.miniapp`，实现类 `io.github.bobcgn.miniapp.gradle.MiniAppGradlePlugin`。应用 KMP 插件时只做一件事：调用 `kotlin.js("miniapp")` 注册平台 target（ADR 0010 的最小入口）；未应用 KMP 时在 `afterEvaluate` 抛出指明缺失插件与修复写法的错误。`:miniapp-gradle-plugin:test` 6 个测试全部通过（TestKit：可被普通 KMP fixture 应用、缺 KMP 时报错；契约：插件 ID→实现类、`Plugin<Project>`、插件产物不含微信类、WeChat host runtime 不在插件 classpath）。变异探针已执行：注释掉 `kotlin.js(...)` 后 KMP fixture 测试失败（`[commonMain, commonTest]` 缺少 `miniappMain`）。**未实现**：source set 提供（BOB-76）、SDK 依赖接线（BOB-82）、产物组装（BOB-81）、微信 DSL（BOB-84）、发布、多 Host、P2。本轮不提交 Git，交 Codex 审查，状态保持 `in_progress`。
 
 ### 紧急第 C 步：BOB-76 `[P1][URGENT] Provision miniappMain and miniappTest source sets automatically`
 
@@ -75,11 +79,11 @@ BOB-75 只有在 BOB-83、BOB-78、BOB-76、BOB-82、BOB-81、BOB-84、BOB-80、
 
 ### 紧急主线顺序表
 
-| 顺序 | Multica Issue | 当前状态（2026-09-16） | 进入下一步的门禁 |
+| 顺序 | Multica Issue | 当前状态（快照 2026-09-16，A/B 更新至 2026-09-17） | 进入下一步的门禁 |
 | --- | --- | --- | --- |
 | 总目标 | BOB-75 | Todo | A–I 与 Release Gate 全部完成 |
-| A | BOB-83 | Todo | PoC 选型、否决项、KGP 限制和必要 ADR 可核对 |
-| B | BOB-78 | Blocked by A | 插件可应用并 sync；缺少 KMP 时明确失败 |
+| A | BOB-83 | Done（2026-09-17） | PoC 选型、否决项、KGP 限制和必要 ADR 可核对 |
+| B | BOB-78 | In Progress（2026-09-17） | 插件可应用并 sync；缺少 KMP 时明确失败 |
 | C | BOB-76 | Blocked by A、B | source sets 自动创建、IDEA 识别、`miniappTest` 可执行 |
 | D | BOB-82 | Blocked by B、C | 公共 SDK 依赖自动接入且不泄漏内部 artifact |
 | E | BOB-81 | Blocked by B、C、D | 稳定任务生成完整微信消费产物且无需手工接线 |
