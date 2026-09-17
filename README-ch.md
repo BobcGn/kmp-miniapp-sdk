@@ -39,6 +39,8 @@ WeChat Mini Program
 
 仓库当前提供 `:kmp-miniapp-sdk` module 及其 CommonJS 与 TypeScript consumer 产物，以及一个 `:miniapp-gradle-plugin` 插件，为 Kotlin Multiplatform 项目提供 `miniappMain` / `miniappTest`、runtime SDK，产出 compiler-managed Mini App distribution 的 `assembleMiniAppBundle` 任务，以及唯一设置是该 bundle 写入位置的 `miniapp { wechat { } }` extension。平台无关契约位于 `commonMain`，微信 interop、adapter、runtime 和 export boundary 位于 `jsMain`。当前只支持能力矩阵明确列出的微信能力；计划中的能力不视为已实现。
 
+`fixtures/miniapp-consumer` 是真实消费者构建，证明外部项目所走的同一条路径：插件按 id、runtime 按公共坐标、bundle 由任务组装。
+
 ## 构建
 
 使用仓库内置的 Gradle Wrapper：

@@ -65,6 +65,21 @@ Storage 与 network 的检查各跑两遍：一遍跑在中性实现上（`MiniA
 cd examples/wechat-miniprogram && npm run smoke && npm run typecheck
 ```
 
+### 消费者集成夹具
+
+`fixtures/miniapp-consumer` 是真实消费者构建，而不是临时夹具：与本仓库并列的普通 Gradle build，按 id 消费插件、按公共坐标消费 runtime。它覆盖临时目录中的 TestKit fixture 覆盖不到的那一层 —— 一个留在仓库里、像源码一样被评审的消费者形状项目。
+
+| 检查 | 证据 |
+| --- | --- |
+| 插件按 id 解析，runtime 按发布坐标解析 | 夹具的 `plugins { }` 块与 `settings.gradle.kts` |
+| `miniappMain` / `miniappTest` 存在，且测试 compilation 继承 `commonTest` | `build/test-results/miniappNodeTest/` 下实际执行出的报告，同时包含 `consumer.SharedTest` 与 `consumer.MiniAppTest` |
+| runtime SDK 无需消费者声明即可解析 | `sdkVersion()`，它调用 `MiniAppSdk.VERSION` |
+| bundle 满足其契约 | 夹具自身的 `verifyConsumerContract` 任务 |
+| DSL 改变真实输出 | 同一任务，分别在带与不带 `-PminiappBundleDirectory` 时运行 |
+| 宿主的消费路径可用 | `host/scripts/host-smoke.cjs`，以与页面相同的方式加载 bundle |
+
+最后一项运行在 Node 上，只证明模块接线。**它不是微信宿主验收**，两者分别记录。单独完成的开发者工具验收使用基础库 3.17.3，页面渲染共享 greeting、计数与 SDK 版本，Console 报告 `fixture.result=PASS`。
+
 ### Gradle 插件套件
 
 `:miniapp-gradle-plugin:test` 通过 Gradle TestKit 在临时消费者工程中驱动插件。它覆盖插件应用、缺少 Kotlin Multiplatform 时的失败、source set 提供与 compilation 归属、测试执行、runtime 依赖接线、`assembleMiniAppBundle` 契约、为该契约把关的 renderer 拒绝、重复执行的增量行为，以及 configuration cache 兼容性。它还覆盖 `miniapp { }` extension：规范的 `miniapp { wechat { ... } }` 块能编译并执行；配置的 bundle 目录确实是 bundle 的写入位置；项目之外的目录会被拒绝并给出可操作的错误信息；重复应用插件不会创建第二个 extension；以及微信是宿主配置而不是平台 extension 本身。

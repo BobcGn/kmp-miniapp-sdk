@@ -72,11 +72,13 @@ Root project 'kmp-miniapp-sdk'
 \--- Project ':kmp-miniapp-sdk'
 ```
 
-`:kmp-miniapp-sdk` 是本文档其余部分描述的 Kotlin/JS runtime SDK；其源码位于 `sdk/`，而其 Gradle project 名（也就是发布的 artifact id）是 `kmp-miniapp-sdk`，这正是 composite build substitution 匹配的名字。`:miniapp-gradle-plugin` 是 `io.github.bobcgn.miniapp` Gradle 插件，只负责构建集成与开发体验：它检测 Kotlin Multiplatform 插件，注册 [ADR 0010](decisions/0010-miniapp-gradle-plugin-source-set-model-ch.md) 选定的 `miniapp` 平台 target 及其 Node.js test run，把 runtime SDK 接入 `miniappMain`，并在缺少 Kotlin Multiplatform 插件时给出指明原因的报错。注册 target 才使 `miniappMain` 与 `miniappTest` 成为由 compilation 拥有、并带有 `commonMain` / `commonTest` 父边的真实 source set；test run 才使 `miniappTest` 拥有一个真正执行的任务；该依赖才使消费者能够直接针对公开 API 编写 `miniappMain` 代码而不必声明任何 artifact。它还提供 `assembleMiniAppBundle`，把 Kotlin/JS production library 重新发布到一个宿主集成可以依赖的稳定路径。该插件不暴露 Mini App DSL，也不包含微信 runtime 代码。
+`:kmp-miniapp-sdk` 是本文档其余部分描述的 Kotlin/JS runtime SDK；其源码位于 `sdk/`，而其 Gradle project 名（也就是发布的 artifact id）是 `kmp-miniapp-sdk`，这正是 composite build substitution 匹配的名字。`:miniapp-gradle-plugin` 是 `io.github.bobcgn.miniapp` Gradle 插件，只负责构建集成与开发体验：它检测 Kotlin Multiplatform 插件，注册 [ADR 0010](decisions/0010-miniapp-gradle-plugin-source-set-model-ch.md) 选定的 `miniapp` 平台 target 及其 Node.js test run，把 runtime SDK 接入 `miniappMain`，并在缺少 Kotlin Multiplatform 插件时给出指明原因的报错。注册 target 才使 `miniappMain` 与 `miniappTest` 成为由 compilation 拥有、并带有 `commonMain` / `commonTest` 父边的真实 source set；test run 才使 `miniappTest` 拥有一个真正执行的任务；该依赖才使消费者能够直接针对公开 API 编写 `miniappMain` 代码而不必声明任何 artifact。它还提供 `assembleMiniAppBundle`，把 Kotlin/JS production library 重新发布到一个宿主集成可以依赖的稳定路径，并通过 `miniapp { wechat { } }` extension 配置该路径。该插件不包含微信 runtime 代码。
 
 插件接入的 runtime 坐标为 `io.github.bobcgn:kmp-miniapp-sdk:<version>`。`gradle/libs.versions.toml` 是该版本的唯一来源：插件侧的坐标由它生成成资源，SDK 自身的 `MiniAppSdk.VERSION` 也由同一处生成，因此二者都不可能偏离实际发布的版本。插件只把它加入 `miniappMain`，`miniappTest` 通过 source-set hierarchy 继承。SDK 目前尚未发布到任何仓库，因此该坐标当前经 composite build 解析；正式发布后由仓库解析同一坐标。
 
 `examples/` 是 integration host 目录，不是 Gradle module。
+
+`fixtures/miniapp-consumer` 是消费者集成夹具：与本仓库并列的普通 Gradle build，而不是本仓库的 module，它按外部项目的方式消费插件与 runtime。它自带一个微信宿主，位于 `host/`。其 `miniappMain` / `miniappTest`、runtime 依赖与 bundle 全部来自插件。
 
 `poc/kgp-model` 是 BOB-83 的 Kotlin Gradle Plugin 模型 PoC。它是一个独立 Gradle build，根构建不包含它，因此不为 SDK 贡献任何 module、target 或依赖。其决策记录于 [ADR 0010](decisions/0010-miniapp-gradle-plugin-source-set-model-ch.md)。
 
@@ -286,7 +288,7 @@ Kotlin/JS platform variants 及其传递依赖由 Gradle 在依赖解析期间�
 - 可以携带客户端 renderer 的 Mini App 宿主 bundle：当 `miniappRuntimeClasspath` 携带 Compose、Skiko、Compose 专用的 AndroidX 集成 artifact、`kotlinx-browser` 或 `kotlinx-html` 时，`checkMiniAppHostBoundary` 会让构建失败。非 Compose 的 lifecycle、saved-state 与 navigation primitives 仍允许作为共享行为。消费者的 `miniappMain` 可以继承共享行为与 state，但 Compose UI 必须位于不作为 `miniappMain` 父 source set 的客户端 module 或 source set 中
 - npm publication
 - Maven publication
-- 承载宿主业务配置的 Gradle DSL。`miniapp { }` extension 已存在，且只承载一个构建设置 —— 微信宿主的 bundle 目录 —— 并有意不含其他内容：没有 AppID 或密钥、没有商户或支付材料、没有订单或签名数据、没有 API token、没有模板 ID、没有 presentation state、没有 markup 或 View 定义。插件会组装 compiler-managed Mini App distribution，但不执行上传、发布或宿主部署，且没有任何小程序宿主加载过它：其宿主兼容性尚未验证
+- 承载宿主业务配置的 Gradle DSL。`miniapp { }` extension 已存在，且只承载一个构建设置 —— 微信宿主的 bundle 目录 —— 并有意不含其他内容：没有 AppID 或密钥、没有商户或支付材料、没有订单或签名数据、没有 API token、没有模板 ID、没有 presentation state、没有 markup 或 View 定义。插件会组装 compiler-managed Mini App distribution，但不执行上传、发布或宿主部署。其消费者夹具 bundle 已在基础库 3.17.3 上完成微信开发者工具验收；该结果不会把部署变成插件职责
 - 第二个 Mini App 宿主。当前只有微信；extension 的形状使得新增宿主是「新增一个 `MiniAppHostConfiguration` 子类型与一个访问器」，而不是把微信那个类型加宽
 - 支付宝或 Telegram Host implementations
 
@@ -324,7 +326,7 @@ Kotlin/JS platform variants 及其传递依赖由 Gradle 在依赖解析期间�
 | 命令 | 结果 |
 | --- | --- |
 | `./gradlew --no-daemon --console=plain clean check` | VERIFIED — `:kmp-miniapp-sdk` 与 `:miniapp-gradle-plugin` 均 BUILD SUCCESSFUL |
-| `./gradlew --no-daemon --console=plain :miniapp-gradle-plugin:test` | VERIFIED — 13 个测试，无失败 |
+| `./gradlew --no-daemon --console=plain :miniapp-gradle-plugin:test` | VERIFIED — 25 个测试，无失败 |
 | `./gradlew --no-daemon --console=plain :kmp-miniapp-sdk:checkArchitectureBoundaries` | VERIFIED — SDK 未导入也未声明任何 UI framework |
 
 早期微信开发者工具证据覆盖版本、Storage 与 authentication 检查；network 检查于 2026-09-14 单独完成验收。用户于 2026-09-15 确认 lifecycle 前台状态、页面 route，以及 `navigateTo`、`redirectTo`、`navigateBack` 的真实宿主验收通过。后台状态迁移不属于开发者工具模拟器可验证范围。权限生命周期定义了宿主无关的三态模型 —— `NotRequested`、`Granted`、`Denied` —— 由命名权限「为了什么」的 `PermissionKey` 标识，并通过微信 adapter 适配 `wx.getSetting`、`wx.authorize` 与 `wx.openSetting`。不做任何缓存；拒绝是 `MiniAppException.PermissionDenied` 而不是宿主失败；请求权限与打开设置绝不在缺少用户手势时执行。Kotlin/JS、fake-host、CommonJS 与 TypeScript 自动检查均已通过。微信开发者工具（基础库 3.17.2）与 Android 真机（OnePlus PLQ110、Android 36、微信 8.0.76）验证了：宿主能够报告 `Granted` 与 `Denied`；设置页返回的是宿主的决定而不是被假定为已授权；对已拒绝权限再次请求会报告 `DENIED` 且不出现第二次弹窗。`NotRequested` 无法在所用账号上产出，因为该账号已对所映射权限持有决定；该状态改由自动化测试覆盖。

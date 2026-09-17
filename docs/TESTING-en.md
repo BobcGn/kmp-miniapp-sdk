@@ -65,6 +65,21 @@ Add a new capability guarantee to the shared check object rather than to one ada
 cd examples/wechat-miniprogram && npm run smoke && npm run typecheck
 ```
 
+### Consumer integration fixture
+
+`fixtures/miniapp-consumer` is a real consumer build rather than a temporary fixture: an ordinary Gradle build beside this repository that consumes the plugin by id and the runtime by its public coordinate. It is the layer that catches what a TestKit fixture in a temporary directory cannot — a consumer-shaped project that stays in the repository and is reviewed like source.
+
+| Check | Evidence |
+| --- | --- |
+| The plugin resolves by id, and the runtime by its published coordinate | the fixture's `plugins { }` block and `settings.gradle.kts` |
+| `miniappMain` / `miniappTest` exist and the test compilation inherits `commonTest` | the executed test report under `build/test-results/miniappNodeTest/`, which holds both `consumer.SharedTest` and `consumer.MiniAppTest` |
+| The runtime SDK resolves without a consumer declaration | `sdkVersion()`, which calls `MiniAppSdk.VERSION` |
+| The bundle satisfies its contract | the fixture's own `verifyConsumerContract` task |
+| The DSL changes real output | the same task, run with and without `-PminiappBundleDirectory` |
+| The host's consumption path works | `host/scripts/host-smoke.cjs`, which loads the bundle the way the page does |
+
+That last check runs on Node and establishes module wiring only. **It is not WeChat host acceptance**, and the two are recorded separately. The separate accepted Developer Tools run used base library 3.17.3, rendered the shared greeting, count and SDK version, and reported `fixture.result=PASS` in the Console.
+
 ### Gradle plugin suite
 
 `:miniapp-gradle-plugin:test` drives the plugin through Gradle TestKit fixtures in temporary consumer projects. It covers plugin application, the missing-Kotlin-Multiplatform failure, source-set provisioning and compilation ownership, test execution, runtime dependency wiring, the `assembleMiniAppBundle` contract, the renderer rejection that guards that contract, repeat-run incrementality and configuration-cache compatibility. It also covers the `miniapp { }` extension: that the canonical `miniapp { wechat { ... } }` block compiles and executes, that a configured bundle directory is where the bundle is actually written, that a directory outside the project is rejected with an actionable message, that applying the plugin twice creates no second extension, and that WeChat is a host configuration rather than the platform extension itself.

@@ -138,7 +138,7 @@ build/miniapp/bundle/
 
 若消费者在应用插件前已存在 Kotlin/JS target，可能需要执行一次 `./gradlew kotlinUpgradeYarnLock`。应用插件会新增一个 target，从而改变 npm 依赖集合，而 Kotlin Gradle Plugin 不会自行覆盖已有的 yarn lock。
 
-**以上任何一项都不代表**宿主能够加载该 distribution。没有任何小程序宿主加载过它。它是稳定的宿主集成输入，其宿主兼容性仍然未完成验证；任务成功与边界检查都不是它的证据。
+**以上任何一项本身都不代表**宿主能够加载该 distribution；任务成功与边界检查都不是宿主证据。该证据单独记录：消费者夹具 distribution 已在微信开发者工具基础库 3.17.3 中加载并报告 `fixture.result=PASS`。
 
 ### 版本来源
 
@@ -182,6 +182,50 @@ cd poc/kgp-model
 `reportKgpModel` 打印模块的模型形状；`checkMiniAppModel` 断言十项模型要求，任一项不满足即失败。`model-b` 与 `model-c2` 预期会在该检查中失败 —— 它们是被否决方案的实际执行证据，而不是通过模块。`model-a` 不满足的唯一一项要求是「消费者 build script 不包含手工 Kotlin/JS 接线」。
 
 该决策、被否决的替代方案以及 Kotlin Gradle Plugin 的限制记录于 [ADR 0010](decisions/0010-miniapp-gradle-plugin-source-set-model-ch.md)。PoC 是实验性工具：它不随 SDK 发布，也不定义任何 SDK 公共 API。
+
+## 消费者集成夹具
+
+`fixtures/miniapp-consumer` 是与本仓库并列的普通 Gradle build，而不是本仓库的一个 module。它的存在是为了按外部项目的方式证明消费者路径：插件经 `pluginManagement { includeBuild }` 按 id 解析，runtime 以公共坐标 `io.github.bobcgn:kmp-miniapp-sdk` 到达，其中没有任何一处引用内部实现。
+
+```shell
+cd fixtures/miniapp-consumer
+../../gradlew --no-daemon --console=plain clean miniappTest assembleMiniAppBundle verifyConsumerContract
+```
+
+它通过实际运行证明：
+
+| 证据 | 来源 |
+| --- | --- |
+| 插件按 id 解析且无需版本号 | 在一个从未见过本仓库的构建里写 `plugins { id("io.github.bobcgn.miniapp") }` |
+| `miniappMain` 与 `miniappTest` 存在并可编译 | `src/miniappMain`、`src/miniappTest` |
+| `miniappMain` 复用 `commonMain` | `hostGreeting()` 调用 `src/commonMain` 中的 `greeting()` |
+| `miniappTest` 运行自身测试**以及**共享测试 | `build/test-results/miniappNodeTest/` 下有 `consumer.SharedTest`（2 个）与 `consumer.MiniAppTest`（3 个） |
+| runtime SDK 自动解析 | `sdkVersion()` 调用 `MiniAppSdk.VERSION` |
+| bundle 满足其契约 | `verifyConsumerContract` 任务 |
+| DSL 真实生效 | 同一任务断言配置的目录，宿主运行则传入 `-PminiappBundleDirectory=host/miniprogram/libs` |
+
+消费者的 build script 中没有 source set 声明、没有 `dependsOn`、没有 `useCommonJs()`、没有 `generateTypeScriptDefinitions()`、没有 runtime artifact 坐标、也没有复制步骤。除两个插件外它只声明了一件事：`commonTest` 的 `kotlin-test`，这是每个 Kotlin Multiplatform 项目都会做的。
+
+### 从仓库运行
+
+```shell
+./gradlew --no-daemon --console=plain verifyMiniAppConsumerFixture
+```
+
+它会以三种方式运行该夹具：默认 bundle 目录、宿主目录，以及宿主自身的消费路径。这些任务未接入 `check`，因为它们会编译 Kotlin/JS 并安装 npm 依赖。
+
+### 微信宿主
+
+`fixtures/miniapp-consumer/host` 是一个最小微信小程序：WXML、WXSS 与调用组装产物的薄 JavaScript。它属于 Host UI，因此 markup 留在这里，永不进入 SDK 或夹具的共享 Kotlin。
+
+其 `miniprogram/libs/` 是构建产物并被 Git 忽略；在微信开发者工具中打开前请先运行 `verifyMiniAppConsumerHostBundle`。该夹具已完成基础库 3.17.3 的开发者工具验收：页面渲染 `Hello, WeChat, from commonMain`、`5` 与 `0.1.0-SNAPSHOT`，Console 报告 `fixture.result=PASS`。宿主另有一个 Node smoke 检查，以与页面完全相同的方式加载该 bundle：
+
+```shell
+cd fixtures/miniapp-consumer/host
+node scripts/host-smoke.cjs
+```
+
+那是在 Node 上的模块接线检查，不是宿主验收；两者分别记录。
 
 ## Consumer Bridge
 

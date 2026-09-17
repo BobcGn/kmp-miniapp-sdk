@@ -1,0 +1,22 @@
+.card {
+  margin: 24rpx;
+  padding: 24rpx;
+  background-color: #ffffff;
+  border-radius: 12rpx;
+}
+
+.title {
+  font-size: 34rpx;
+  font-weight: 600;
+  margin-bottom: 16rpx;
+}
+
+.row {
+  font-size: 28rpx;
+  color: #333333;
+  margin-top: 8rpx;
+}
+
+.failure {
+  color: #c0392b;
+}

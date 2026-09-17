@@ -1,0 +1,7 @@
+<view class="card">
+  <view class="title">Mini App consumer fixture</view>
+  <view class="row">greeting: {{greeting}}</view>
+  <view class="row">countUpTo(5): {{counted}}</view>
+  <view class="row">sdkVersion: {{version}}</view>
+  <view class="row failure" wx:if="{{failure}}">failure: {{failure}}</view>
+</view>

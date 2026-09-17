@@ -326,9 +326,13 @@ Kotlin/JS compilation
 
 runtime 以**公共 module 坐标**（`io.github.bobcgn:kmp-miniapp-sdk`）到达消费者，而不是 project path。消费者构建无法访问本仓库结构，因此插件不能、也不得写出 `project(":kmp-miniapp-sdk")`；同一个坐标今天经 composite build 解析，发布后由仓库解析。它只被加入 `miniappMain`，因此同时面向 Android、iOS 或 JVM 的项目不会在这些平台上获得 Mini App runtime；`miniappTest` 通过 source-set hierarchy 继承，而不是再次声明。
 
-宿主产物是一个 compiler-managed distribution：`assembleMiniAppBundle` 把 Mini App target 的 Kotlin/JS production library 重新发布到一个稳定的消费者路径，使宿主集成依赖一个有文档的目录，而不是依赖 Kotlin Gradle Plugin 的构建目录。它包含消费者编译后的模块及其 TypeScript declaration、作为独立模块的 runtime SDK，以及该 compilation 解析出的 Kotlin runtime，并且不包含任何 markup。**它是稳定的宿主集成输入，而不是已验证的产物**：没有任何小程序宿主加载过它，因此其宿主兼容性由上述边界与自动化检查保证，而不是被实际证明。
+宿主产物是一个 compiler-managed distribution：`assembleMiniAppBundle` 把 Mini App target 的 Kotlin/JS production library 重新发布到一个稳定的消费者路径，使宿主集成依赖一个有文档的目录，而不是依赖 Kotlin Gradle Plugin 的构建目录。它包含消费者编译后的模块及其 TypeScript declaration、作为独立模块的 runtime SDK，以及该 compilation 解析出的 Kotlin runtime，并且不包含任何 markup。任务成功本身只证明存在稳定的宿主集成输入；宿主兼容性需要单独举证。消费者夹具提供了这项证据：其组装后的 distribution 已在微信开发者工具基础库 3.17.3 中加载并报告 `fixture.result=PASS`。
 
-由于一个宿主无法运行的 distribution 同样会构建成功，插件拒绝产生它的依赖图。当 Mini App runtime classpath 携带客户端 renderer —— Compose、Skiko、Compose 专用的 AndroidX 集成 artifact、`kotlinx-browser` 或 `kotlinx-html` —— 时，`checkMiniAppHostBoundary` 会失败，并在组装之前运行，因此不会产出不可用的 bundle。非 Compose 的 lifecycle、saved-state 与 navigation primitives 仍属于合法的共享行为，不会被拒绝。消费者的 `miniappMain` 可以继承 common source set 中的共享行为与 state，但不能继承 Compose UI：Compose UI 必须位于不作为 `miniappMain` 父 source set 的客户端 module 或 source set 中。该强制手段是**依赖规则而不是文件规则**，因为 Kotlin/JS distribution 中的文件通过 `require()` 彼此引用，删除看起来像 renderer 的文件只会把构建失败换成加载失败。消费者侧构建配置只有一个 extension `miniapp`，其唯一宿主是 `wechat`。层级本身就是要点：`MiniAppExtension` 是平台，`WeChatHostConfiguration` 是宿主，因此新增宿主是新增一个子类型与一个访问器，而不是把微信那个类型加宽。它只承载宿主的 bundle 目录 —— Gradle DSL 中每个字段都是消费者必须做出的决定，而输出形态、CommonJS、declaration 与 renderer 边界是插件的决定，不是消费者的决定。业务与后台配置不在此建模，理由与它在运行期不被建模相同。
+由于一个宿主无法运行的 distribution 同样会构建成功，插件拒绝产生它的依赖图。当 Mini App runtime classpath 携带客户端 renderer —— Compose、Skiko、Compose 专用的 AndroidX 集成 artifact、`kotlinx-browser` 或 `kotlinx-html` —— 时，`checkMiniAppHostBoundary` 会失败，并在组装之前运行，因此不会产出不可用的 bundle。非 Compose 的 lifecycle、saved-state 与 navigation primitives 仍属于合法的共享行为，不会被拒绝。消费者的 `miniappMain` 可以继承 common source set 中的共享行为与 state，但不能继承 Compose UI：Compose UI 必须位于不作为 `miniappMain` 父 source set 的客户端 module 或 source set 中。该强制手段是**依赖规则而不是文件规则**，因为 Kotlin/JS distribution 中的文件通过 `require()` 彼此引用，删除看起来像 renderer 的文件只会把构建失败换成加载失败。
+
+`fixtures/miniapp-consumer` 是本仓库自己的消费者：与本仓库并列的普通构建，按 id 应用插件、按公共坐标解析 runtime，对本仓库结构一无所知。它是该边界的可执行形式 —— SDK 被消费、宿主集成被打包、宿主本身是 UI。其微信宿主是 WXML、WXSS 与薄 JavaScript，而这些 markup 留在宿主内：它们永不进入 SDK 或消费者的 Kotlin，因为某个宿主的视图词汇不是平台的词汇。
+
+消费者侧构建配置只有一个 extension `miniapp`，其唯一宿主是 `wechat`。层级本身就是要点：`MiniAppExtension` 是平台，`WeChatHostConfiguration` 是宿主，因此新增宿主是新增一个子类型与一个访问器，而不是把微信那个类型加宽。它只承载宿主的 bundle 目录 —— Gradle DSL 中每个字段都是消费者必须做出的决定，而输出形态、CommonJS、declaration 与 renderer 边界是插件的决定，不是消费者的决定。业务与后台配置不在此建模，理由与它在运行期不被建模相同。
 
 若消费者的 `commonMain` 依赖另一个 Kotlin Multiplatform project，则必须对该 project 同样应用本插件。该依赖经由 Mini App variant 解析，不提供该 variant 的 project 会解析失败；不存在回退，把依赖移出 `commonMain` 也不是变通办法。
 

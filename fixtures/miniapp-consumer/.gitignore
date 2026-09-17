@@ -1,0 +1,12 @@
+build/
+.gradle/
+.kotlin/
+kotlin-js-store/
+node_modules/
+
+# The WeChat host's copy of the assembled bundle. It is produced by `assembleMiniAppBundle` and must
+# never be committed: the bundle is build output, not source.
+host/miniprogram/libs/
+
+# WeChat Developer Tools writes machine-local preferences here after the project is opened.
+host/project.private.config.json

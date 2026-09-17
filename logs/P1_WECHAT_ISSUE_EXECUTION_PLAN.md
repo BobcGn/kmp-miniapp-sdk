@@ -127,6 +127,23 @@ TestKit 由 19 个测试扩展到 **25 个**：DSL 配置实际改变 bundle 写
 
 建立真正独立、普通的 KMP consumer fixture，而不是 SDK 内部 demo。Fixture 只应用插件便可编译 `miniappMain`、复用 `commonMain`、运行 `miniappTest`、自动解析 runtime 依赖，并让微信 Host 消费最终产物。Android/iOS 仅在证明与普通 KMP target 共存确有必要时加入。
 
+**本轮进展（2026-09-17）**：夹具位于 `fixtures/miniapp-consumer/`，是与本仓库并列的**普通 KMP 构建**，不是 SDK 内部 demo 或 `include(":...")` 子模块：它有自己的 `settings.gradle.kts` 与 `gradle.properties`，`build.gradle.kts` 只声明 `plugins { kotlin("multiplatform"); id("io.github.bobcgn.miniapp") }`、`commonTest` 的 `kotlin("test")` 以及 `miniapp { wechat { bundleDirectory.set(...) } }`。夹具中**没有** `sourceSets.create`、没有 target / compilation 配置、没有 `useCommonJs` / `moduleKind` / webpack、没有 `project(":kmp-miniapp-sdk")` 或任何内部 artifact 声明、没有绝对路径。插件与 runtime 目前尚未发布，因此复合构建（`pluginManagement { includeBuild("../..") }` 加 settings 级 `includeBuild("../..")`）是本仓库内唯一的接入手段；settings 级 `includeBuild` 负责把公共坐标 `io.github.bobcgn:kmp-miniapp-sdk` 替换为本仓库 project，这正是夹具不依赖本仓库结构、只依赖公共坐标的证明方式。
+
+已执行的自动化证据：
+
+| 命令 | 结果 |
+| --- | --- |
+| `./gradlew -p fixtures/miniapp-consumer clean miniappTest assembleMiniAppBundle verifyConsumerContract`（由根任务 `verifyMiniAppConsumer` 驱动） | 从 clean 通过；`miniappTest` 实际执行 **5** 个测试（`consumer.SharedTest` 2 个来自 `commonTest`、`consumer.MiniAppTest` 3 个只存在于 `miniappTest`），标识符后缀均为 `[miniapp, node]`，0 失败 |
+| 同上，默认 bundle 目录 | `fixtures/miniapp-consumer/build/miniapp/bundle`，**14** 个文件；`consumerContract.verified=true` |
+| `-PminiappBundleDirectory=host/miniprogram/libs` | bundle 实际写入 `fixtures/miniapp-consumer/host/miniprogram/libs`，**14** 个文件；DSL 的自定义目录确实生效，而不是仅可编译 |
+| `verifyConsumerContract` 断言 | 恰好一个 `.d.ts`（`miniapp-consumer-miniapp.d.ts`）、`miniapp-consumer-miniapp.js`、`kmp-miniapp-sdk-kotlin.js`、`kotlin-kotlin-stdlib.js`、`kotlinx-coroutines-core.js`、`package.json`；无 `.wxml` / `.wxss`；无 Compose / Skiko / `kotlinx-browser` 文件；消费者模块 JS 含 `hostGreeting`、`sdkVersion`、`Hello,` 与版本号 |
+| `node scripts/host-smoke.cjs`（由 `verifyMiniAppConsumerHostSmoke` 驱动） | 以宿主相同的方式 `require()` bundle：`fixture.greeting=Hello, WeChat, from commonMain`、`fixture.counted=5`、`fixture.sdkVersion=0.1.0-SNAPSHOT`、`fixture.result=PASS` |
+| 夹具配置缓存 | 首次 `Configuration cache entry stored`，再次运行 `Reusing configuration cache` |
+
+微信 Host 位于 `fixtures/miniapp-consumer/host/`：`project.config.json`（`miniprogramRoot: miniprogram/`）、`miniprogram/` 下的 `app.json` / `app.js` / `pages/index/*`，页面通过 `require` 加载 `libs/` 下的 bundle 并调用 `hostGreeting` / `countUpTo` / `sdkVersion`。**宿主侧 UI 只有 WXML 与 WXSS，且全部留在宿主内**，不进入 SDK、插件或消费者 Kotlin。
+
+**验收收尾（2026-09-17）**：用户先执行 `verifyMiniAppConsumerHostBundle`，得到自定义宿主目录、14 个文件与 `consumerContract.verified=true`，随后在微信开发者工具基础库 3.17.3 中导入 `fixtures/miniapp-consumer/host`。页面实际显示 `Hello, WeChat, from commonMain`、`countUpTo(5): 5` 与 `sdkVersion: 0.1.0-SNAPSHOT`；Console 输出相同 greeting、count 与版本，并以 `fixture.result=PASS` 收尾。截图与日志共同证明最终产物由真实微信小程序 runtime 加载，而不是用 Node smoke 代替宿主验收。BOB-80 的独立消费者、自动化和微信宿主标准全部满足。
+
 ### 紧急第 H 步：BOB-79 `[P1][URGENT] Define Gradle Plugin integration test suite`
 
 使用 Gradle TestKit 或与已选插件架构相符的可靠方案，自动覆盖：插件应用、缺少 KMP 的错误、`miniappMain` / `miniappTest` 创建、`miniappTest` 执行、依赖接线、构建任务注册与 consumer build。测试应以 BOB-80 的真实 fixture 和已接受模型为依据，不能只靠人工 IDEA 观察防回归。
@@ -151,8 +168,8 @@ TestKit 由 19 个测试扩展到 **25 个**：DSL 配置实际改变 bundle 写
 | D | BOB-82 | Done（2026-09-17，commit `b4bfa38`） | 公共 SDK 依赖自动接入且不泄漏内部 artifact |
 | E | BOB-81 | Done（2026-09-17） | 稳定任务生成完整 Mini App distribution，且依赖边界由正反外部 Demo 验收 |
 | F | BOB-84 | Done（2026-09-17） | 最小 DSL 通过架构审查且不承载业务配置；外部 Demo 自定义目录构建通过 |
-| G | BOB-80 | Ready（C、D、E、F 已完成） | 普通 KMP fixture 完成编译、测试和微信消费闭环 |
-| H | BOB-79 | Blocked by B、C；在 G 后执行 | 插件关键路径由自动化 integration tests 覆盖 |
+| G | BOB-80 | Done（2026-09-17） | clean build、5 个测试、runtime 自动解析、两个 bundle 目录、Node smoke 与微信开发者工具 3.17.3 验收均通过 |
+| H | BOB-79 | Ready（B、C、G 已完成） | 插件关键路径由自动化 integration tests 覆盖 |
 | I | BOB-77 | Blocked by G、H | 中英文文档只描述已验证消费者工作流 |
 | Release Gate | BOB-85 | Blocked by A–I | 完整 Consumer Integration 验收通过并可解除 BOB-51 阻塞 |
 

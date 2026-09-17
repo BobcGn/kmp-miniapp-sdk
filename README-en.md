@@ -39,6 +39,8 @@ WeChat Mini Program
 
 The repository currently provides the `:kmp-miniapp-sdk` module with its CommonJS and TypeScript consumer artifacts, plus a `:miniapp-gradle-plugin` plugin that gives a Kotlin Multiplatform project `miniappMain` / `miniappTest`, the runtime SDK, an `assembleMiniAppBundle` task that emits the compiler-managed Mini App distribution, and a `miniapp { wechat { } }` extension whose only setting is where that bundle is written. Platform-neutral contracts live in `commonMain`; WeChat interop, adapter, runtime, and export boundaries live in `jsMain`. Only capabilities explicitly listed as implemented in the matrix are currently supported; planned entries are not implementation facts.
 
+`fixtures/miniapp-consumer` is a real consumer build that proves the same path an outside project takes: plugin by id, runtime by its public coordinate, and a bundle assembled by task.
+
 ## Build
 
 Use the checked-in Gradle Wrapper:

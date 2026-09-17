@@ -139,7 +139,7 @@ The check resolves `miniappRuntimeClasspath` — the exact set the distribution 
 
 A consumer that already had a Kotlin/JS target before applying the plugin may need to run `./gradlew kotlinUpgradeYarnLock` once. Applying the plugin adds a target, which changes the npm dependency set, and the Kotlin Gradle Plugin will not overwrite an existing yarn lock on its own.
 
-**What none of this establishes:** that a host can load the distribution. No mini app host has loaded one. It is a stable host-integration input whose host compatibility is still outstanding, and neither the task's success nor the boundary check is evidence for it.
+**What none of this establishes by itself:** that a host can load the distribution. Neither task success nor the boundary check is host evidence. That evidence is recorded separately: the consumer fixture distribution loaded in WeChat Developer Tools at base library 3.17.3 and reported `fixture.result=PASS`.
 
 ### Where the version lives
 
@@ -183,6 +183,50 @@ The modules are:
 `reportKgpModel` prints a module's model shape; `checkMiniAppModel` asserts ten model requirements and fails when any is not met. `model-b` and `model-c2` are expected to fail that check — they exist as the executed evidence for the rejected models, not as passing modules. `model-a` fails the one requirement that the consumer build script contain no manual Kotlin/JS wiring.
 
 The decision, the rejected alternatives, and the Kotlin Gradle Plugin limitations are recorded in [ADR 0010](decisions/0010-miniapp-gradle-plugin-source-set-model-en.md). The PoC is experimental tooling: it does not ship in the SDK and it defines no SDK public API.
+
+## Consumer integration fixture
+
+`fixtures/miniapp-consumer` is an ordinary Gradle build beside this one, not a module of it. It exists to prove the consumer path the way an outside project experiences it: the plugin is resolved by id through `pluginManagement { includeBuild }`, the runtime arrives as the public coordinate `io.github.bobcgn:kmp-miniapp-sdk`, and nothing in it names an internal.
+
+```shell
+cd fixtures/miniapp-consumer
+../../gradlew --no-daemon --console=plain clean miniappTest assembleMiniAppBundle verifyConsumerContract
+```
+
+What it proves by running:
+
+| Evidence | Where it comes from |
+| --- | --- |
+| the plugin resolves by id, with no version | `plugins { id("io.github.bobcgn.miniapp") }`, in a build that has never seen this repository |
+| `miniappMain` and `miniappTest` exist and compile | `src/miniappMain`, `src/miniappTest` |
+| `miniappMain` reuses `commonMain` | `hostGreeting()` calls `greeting()` from `src/commonMain` |
+| `miniappTest` runs its own tests *and* the shared ones | `build/test-results/miniappNodeTest/` holds `consumer.SharedTest` (2 tests) and `consumer.MiniAppTest` (3) |
+| the runtime SDK resolves automatically | `sdkVersion()` calls `MiniAppSdk.VERSION` |
+| the bundle satisfies its contract | the `verifyConsumerContract` task |
+| the DSL takes effect | the same task asserts the configured directory, and the host run passes `-PminiappBundleDirectory=host/miniprogram/libs` |
+
+The consumer's build script contains no source-set declaration, no `dependsOn`, no `useCommonJs()`, no `generateTypeScriptDefinitions()`, no runtime artifact coordinate and no copy step. Besides the two plugins it declares exactly one thing: `kotlin-test` for `commonTest`, which every Kotlin Multiplatform project does.
+
+### Running it from the repository
+
+```shell
+./gradlew --no-daemon --console=plain verifyMiniAppConsumerFixture
+```
+
+That runs the fixture three ways: the default bundle directory, the host's directory, and the host's own consumption path. These tasks are not wired into `check`, because they compile Kotlin/JS and install npm dependencies.
+
+### The WeChat host
+
+`fixtures/miniapp-consumer/host` is a minimal WeChat mini program: WXML, WXSS and thin JavaScript that calls the assembled bundle. It is Host UI, so markup stays here and never enters the SDK or the fixture's shared Kotlin.
+
+Its `miniprogram/libs/` is build output and is git-ignored; run `verifyMiniAppConsumerHostBundle` before opening the project in WeChat Developer Tools. The fixture completed Developer Tools acceptance at base library 3.17.3: the page rendered `Hello, WeChat, from commonMain`, `5`, and `0.1.0-SNAPSHOT`, and the Console reported `fixture.result=PASS`. The host also has a Node smoke check that loads the bundle exactly the way the page does:
+
+```shell
+cd fixtures/miniapp-consumer/host
+node scripts/host-smoke.cjs
+```
+
+That is a module-wiring check on Node, not host acceptance; the two are recorded separately.
 
 ## Consumer Bridge
 
