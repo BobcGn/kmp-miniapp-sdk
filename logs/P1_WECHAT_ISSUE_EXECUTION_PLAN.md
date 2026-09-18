@@ -260,7 +260,7 @@ TestKit 由 19 个测试扩展到 **25 个**：DSL 配置实际改变 bundle 写
 
 | 顺序 | Multica Issue | 当前状态（快照 2026-09-16，A/B 更新至 2026-09-17） | 进入下一步的门禁 |
 | --- | --- | --- | --- |
-| 总目标 | BOB-75 | Todo | A–I 与 Release Gate 全部完成 |
+| 总目标 | BOB-75 | Done（2026-09-18） | A–I 与 Release Gate 全部完成；一等 KMP Mini App 消费者集成总目标验收通过 |
 | A | BOB-83 | Done（2026-09-17） | PoC 选型、否决项、KGP 限制和必要 ADR 可核对 |
 | B | BOB-78 | Done（2026-09-17，commit `19e807e`） | 插件可应用并 sync；缺少 KMP 时明确失败 |
 | B+ | BOB-86 | Done（2026-09-17） | 架构边界已记录并被构建强制；无 Compose / Renderer 泄漏 |
