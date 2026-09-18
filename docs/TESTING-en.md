@@ -138,6 +138,31 @@ network dependency in front of every ordinary build and would make `check` re-en
 plugin's own suite is already part of `check` through that project's `check` task; this entry adds
 the fixture and the SDK architecture check, which `check` does not run.
 
+### Bundle size report
+
+```shell
+./gradlew verifyMiniAppBundleSize
+./gradlew :build-logic:test
+```
+
+`verifyMiniAppBundleSize` measures the SDK's production distribution and compares it with the
+committed baseline. Its logic lives in `build-logic/`, with **25** unit tests: classification, raw size
+accuracy, gzip determinism, stable ordering, category and total arithmetic, the refusals (an empty
+directory, a missing expected artifact, host markup), the baseline round trip, the comparison's added,
+removed, changed and unchanged cases, and the threshold boundaries — a change exactly at both
+thresholds fails while one byte below does not.
+
+Reproducibility is evidence, not an assertion. Two runs over the same files produce an identical
+report, and the task reuses the configuration cache. A *rebuild* moves the input slightly: the Kotlin
+compiler re-emits `kotlinx-coroutines-core.js` and `kotlin-kotlin-stdlib.js` with a few bytes of
+difference, measured at 7 bytes of spread on the total gzip figure across four rebuilds. The baseline
+document records that, and the threshold rule's floors exist partly for it.
+
+The report measures bytes. It does not measure startup, and nothing in this repository can: the
+first-load observation is a person reading WeChat Developer Tools' own Launch Time, and
+[PERFORMANCE_BASELINE-en.md](PERFORMANCE_BASELINE-en.md) says exactly how and what that figure does
+and does not mean.
+
 ## 3. Real-host layer
 
 ### Reproducible checklist

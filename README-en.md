@@ -340,6 +340,7 @@ The repository builds the SDK and the plugin that the Quick Start consumes, and 
 ./gradlew :kmp-miniapp-sdk:jsNodeTest
 ./gradlew :miniapp-gradle-plugin:test
 ./gradlew verifyMiniAppGradlePluginIntegration
+./gradlew verifyMiniAppBundleSize
 ```
 
 `buildMiniAppSdk` is a repository-internal task that republishes the SDK into

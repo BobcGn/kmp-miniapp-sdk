@@ -3,6 +3,10 @@ pluginManagement {
         gradlePluginPortal()
         mavenCentral()
     }
+
+    // This repository's own build logic: the bundle-size tasks. It is included rather than
+    // published, because a consumer never applies it.
+    includeBuild("build-logic")
 }
 
 dependencyResolutionManagement {

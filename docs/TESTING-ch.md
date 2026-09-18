@@ -117,6 +117,19 @@ README 是消费者的入口，因此由 `verifyMiniAppConsumerDocs` 守护：�
 
 它**刻意不接入 `check`**：该 fixture 会驱动一个编译 Kotlin/JS 并安装 npm 依赖的嵌套 Gradle 构建，因此让 `check` 依赖它会给每一次普通构建增加数分钟与一个网络依赖，并让 `check` 重新进入 Gradle。插件自身的套件已经通过该工程的 `check` 任务属于 `check`；这个入口增加的是 fixture 与 `check` 不会运行的 SDK 架构检查。
 
+### 包体积报告
+
+```shell
+./gradlew verifyMiniAppBundleSize
+./gradlew :build-logic:test
+```
+
+`verifyMiniAppBundleSize` 测量 SDK 生产分发并与已提交的基线比较。其逻辑位于 `build-logic/`，带 **25** 个单元测试：分类、原始字节准确性、gzip 确定性、稳定排序、分类与合计的算术、各类拒绝（空目录、缺失预期产物、宿主 markup）、基线往返、比较中的新增/移除/变化/不变四种情形，以及阈值边界 —— 恰好达到两个阈值时失败，低一字节则不失败。
+
+可重复性是证据而非断言。对同一批文件的两次运行产生完全相同的报告，且任务复用 configuration cache。**重建**会让输入略微移动：Kotlin 编译器重新生成 `kotlinx-coroutines-core.js` 与 `kotlin-kotlin-stdlib.js` 时会有几字节差异，四次重建中总计 gzip 数字观察到的浮动为 7 字节。基线文档记录了这一点，阈值规则中的下限部分也正是为此存在。
+
+报告测量的字节数。它不测量启动，本仓库也无法测量：首次加载观察是人工读取微信开发者工具自身的 Launch Time，[PERFORMANCE_BASELINE-ch.md](PERFORMANCE_BASELINE-ch.md) 说明了具体方法以及该数字能与不能说明什么。
+
 ## 3. 真实宿主层
 
 ### 可复现检查清单

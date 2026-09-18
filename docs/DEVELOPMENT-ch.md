@@ -30,6 +30,7 @@ VS Code 可用于处理 `examples/wechat-miniprogram` 下的文件。Consumer Br
 ./gradlew :kmp-miniapp-sdk:checkArchitectureBoundaries
 ./gradlew :miniapp-gradle-plugin:test
 ./gradlew buildMiniAppSdk
+./gradlew verifyMiniAppBundleSize
 ```
 
 这些命令有效，并已于 2026-09-15 完成验证；其中 `:miniapp-gradle-plugin:test` 于 2026-09-17 完成验证。
@@ -163,6 +164,27 @@ SDK 尚未发布，因此该坐标今天经 composite build 解析，发布后�
 测试由 Gradle TestKit fixture 与契约测试组成。fixture 有意把 Kotlin Gradle Plugin 与被测插件放在同一个 buildscript classpath 上：`withPluginClasspath()` 只把被测插件注入 plugin-resolution classpath，因此单独解析第二个插件的 fixture 无法复现真实消费者构建给插件的 classpath。其中一个 fixture 带有 `commonMain`、`miniappMain`、`commonTest` 与 `miniappTest` 源码，并断言实际执行出的测试报告，因此 source set 接线与测试执行都是由运行测试证明的，而不是靠读模型。fixture 经 composite build（`includeBuild` 本仓库）消费 runtime，这是尚未发布的坐标当前的解析方式；插件自身永远看不到该路径。
 
 extension 只承载一个设置 —— 宿主 bundle 的写入位置。业务与宿主配置按设计留在 Gradle 之外，理由见上文 `miniapp { }` extension 一节。
+
+## 包体积
+
+`build-logic/` 是一个 included build，存放本仓库自己的构建逻辑：包体积任务。它只被 include，从不发布，消费者也不会应用它。
+
+```shell
+./gradlew verifyMiniAppBundleSize
+./gradlew updateMiniAppSizeBaseline
+```
+
+`verifyMiniAppBundleSize` 测量 SDK 生产分发 —— 逐文件、逐分类与合计的原始与 gzip 字节 —— 写出 `build/reports/miniapp-size/bundle-size.json`，并与提交在 `docs/performance-baseline.json` 的基线比较。它只在某个交付分类的增长同时超过 4 KB 下限与 5% 比例时才失败，因此编译器以几字节差异重新生成某个文件不会打断构建。`updateMiniAppSizeBaseline` 重写该基线；它是一次维护者操作，其 diff 按普通改动评审。
+
+用同一任务测量其他分发 —— 微信宿主的，或某个消费者 bundle —— 只需指向它：
+
+```shell
+./gradlew verifyMiniAppBundleSize -PminiappSizeDirectory=examples/wechat-miniprogram/miniprogram/libs
+```
+
+测量对象、分类、gzip 规则、阈值及其依据、以及编译器自身的不稳定性，记录在 [PERFORMANCE_BASELINE-ch.md](PERFORMANCE_BASELINE-ch.md)。
+
+它刻意不接入 `check`：尺寸任务依赖分发任务，接入后每次普通构建都会重新编译 Kotlin/JS 并重新测量，而一个针对有意体积变化的阈值会在那时阻断无关工作。CI 显式调用它，与调用 `verifyMiniAppGradlePluginIntegration` 的方式一致。
 
 ## Mini App Gradle 插件模型 PoC
 

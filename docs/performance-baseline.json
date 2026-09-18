@@ -1,0 +1,33 @@
+{
+  "schema": "miniapp-bundle-size-baseline/1",
+  "directory": "sdk/build/dist/js/productionLibrary",
+  "gzipLevel": -1,
+  "recorded": {
+    "commit": "c442de4",
+    "date": "2026-09-18",
+    "gradle": "9.3.1",
+    "kotlin": "2.4.20",
+    "sdk": "0.1.0-SNAPSHOT"
+  },
+  "total": { "raw": 1538258, "gzip": 279386, "files": 12 },
+  "categories": [
+    { "category": "sdk", "raw": 396978, "gzip": 49023, "files": 1 },
+    { "category": "runtime", "raw": 646015, "gzip": 102398, "files": 4 },
+    { "category": "consumer", "raw": 0, "gzip": 0, "files": 0 },
+    { "category": "development", "raw": 495265, "gzip": 127965, "files": 7 }
+  ],
+  "files": [
+    { "path": "kmp-miniapp-sdk-kotlin.d.ts", "category": "development", "raw": 13379, "gzip": 1897 },
+    { "path": "kmp-miniapp-sdk-kotlin.js", "category": "sdk", "raw": 396978, "gzip": 49023 },
+    { "path": "kmp-miniapp-sdk-kotlin.js.map", "category": "development", "raw": 154020, "gzip": 42220 },
+    { "path": "kotlin-kotlin-stdlib.js", "category": "runtime", "raw": 255917, "gzip": 42144 },
+    { "path": "kotlin-kotlin-stdlib.js.map", "category": "development", "raw": 154611, "gzip": 20943 },
+    { "path": "kotlin_org_jetbrains_kotlin_kotlin_dom_api_compat.js", "category": "runtime", "raw": 191, "gzip": 168 },
+    { "path": "kotlin_org_jetbrains_kotlin_kotlin_dom_api_compat.js.map", "category": "development", "raw": 151, "gzip": 133 },
+    { "path": "kotlinx-atomicfu.js", "category": "runtime", "raw": 9372, "gzip": 1431 },
+    { "path": "kotlinx-atomicfu.js.map", "category": "development", "raw": 4849, "gzip": 1532 },
+    { "path": "kotlinx-coroutines-core.js", "category": "runtime", "raw": 380535, "gzip": 58655 },
+    { "path": "kotlinx-coroutines-core.js.map", "category": "development", "raw": 167944, "gzip": 61065 },
+    { "path": "package.json", "category": "development", "raw": 311, "gzip": 175 }
+  ]
+}

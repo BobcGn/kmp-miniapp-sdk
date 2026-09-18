@@ -359,6 +359,24 @@ Page load 仍按 **ADR-0006** 保持为有意的 `Unsupported` 公共入口，�
 
 在能力实现基本稳定后，记录 SDK 自身、Kotlin 标准库、Coroutines、AtomicFU 和包装层的原始及 gzip 尺寸，提供可重复命令、首次加载观察方法和回归告警阈值。单次机器测量不能被描述为绝对性能保证。
 
+**本轮进展（2026-09-18）**：新增 `build-logic/`（included build，只在本仓库 include，不发布、消费者不应用），提供类型化的尺寸报告任务：
+
+- `verifyMiniAppBundleSize` —— 测量生产分发、逐文件与逐分类报告原始/gzip 字节、写出 `build/reports/miniapp-size/bundle-size.json`，并与提交的基线 `docs/performance-baseline.json` 比较。
+- `updateMiniAppSizeBaseline` —— 维护者显式操作，重写基线；其 diff 按普通改动评审。
+- 可用 `-PminiappSizeDirectory=<path>` 测量其他分发（微信宿主动态目录、消费者 bundle）。
+
+**基线（当前）**：被测目录 `sdk/build/dist/js/productionLibrary`，12 个文件。SDK 自身 396,978 原始 / 49,023 gzip；runtime 依赖 646,015 / 102,409；development（map、声明、metadata）495,264 / 127,964；合计 **1,538,257 原始 / 279,396 gzip**。host 分发（`examples/wechat-miniprogram/miniprogram/libs`）同日测得 SDK 408,958 / 51,734、runtime 646,015 / 102,241、development 526,559 / 137,095。结论：**runtime 约占运行时代码字节的 62%，仅 coroutines 一项就大于 SDK 自身**；map 与声明占目录三分之一，它们不是运行时代码，但当前 assembled distribution 包含它们，因此计入完整包体。
+
+**gzip 规则（固定并记录）**：`java.util.zip.GZIPOutputStream`，level 为 `Deflater.DEFAULT_COMPRESSION`（-1，记入基线的 `gzipLevel`），JDK 的 gzip header 不携带时间戳；逐文件独立压缩后求和；文件按相对路径排序；报告不含绝对路径。gzip 数字只作为比较指标，不是微信传输体积。
+
+**阈值及依据**：任一分类（sdk / runtime / consumer / development）或完整 assembled distribution 的增长**同时**达到 4,096 字节与 5% 时失败。下限依据是「几百字节不是可据以决策的量，4 KB 约为微信单包 2 MB 上限的 0.2%」；比例依据是「最小分类（atomicfu 9 KB）翻倍对总体影响仍小，只看比例会被噪声触发」。只有增长计数，变小永不失败；总量单独参与门禁，避免增长分散到多个分类后绕过门禁。
+
+**发现并记录的编译器不稳定性**：`jsNodeProductionLibraryDistribution` 重建后 `kotlinx-coroutines-core.js` 与 `kotlin-kotlin-stdlib.js` 会以几字节差异重新生成 —— 连续四次重建观察到总计 gzip 浮动 7 字节、单文件最多 11 字节、原始大小浮动不超过 1 字节。测量本身对给定文件是确定性的（同一目录总是产出同一份报告，已验证），阈值下限部分正是为吸收该浮动而存在。
+
+**测试**：`build-logic` 25 个单元测试（分类、字节准确性、gzip 确定性、稳定排序、分类/合计算术、空目录与缺失产物与宿主 markup 三类拒绝、基线往返、比较的新增/移除/变化/不变、阈值边界与「低一字节不失败」）。变异探针两例：把阈值比例 5% 改为 50%、把 `kmp-miniapp-sdk-*` 归入 runtime，均导致对应用例失败，恢复后 25/0。
+
+**宿主观察（完成，2026-09-18）**：微信开发者工具 `2.01.2510290 darwin-arm64`、基础库 `3.17.2`、SDK `0.1.0-SNAPSHOT`。关闭自动热重载，每轮清除数据/文件缓存并重新编译，三次冷启动 Launch Time 为 `784 / 851 / 807 ms`，中位数 `807 ms`、平均约 `814 ms`、极差 `67 ms`；三轮 SDK 版本输出与 runtime detection 均 PASS。该数据仅代表完整示例在开发者工具中的宿主冷启动观察，不归因于 SDK 单独耗时，也不作为发布环境性能保证。原始日志与截图已作为 BOB-62 验收证据提供。
+
 ## 4. 阶段 Gate
 
 ### Gate A：基础前置条件
@@ -397,7 +415,7 @@ BOB-62 完成后，回到 BOB-67 和 BOB-71 补齐全部状态与证据。原 17
 | 14 | BOB-59 | 实现微信标准支付能力 | 支付安全 |
 | 15 | BOB-74 | 定义虚拟支付能力边界 | 支付设计 |
 | 16 | BOB-69 | 验证 BLE 事件驱动能力模型 | 实验性架构验证 |
-| 17 | BOB-62 | 建立 Kotlin/JS 包体积基线 | 发布收尾 |
+| 17 | BOB-62 | 建立 Kotlin/JS 包体积基线 | Done（2026-09-18）：尺寸任务、基线、分类与总量阈值、回归测试及开发者工具三次冷启动观察均完成 |
 
 ## 6. 全量范围核对
 

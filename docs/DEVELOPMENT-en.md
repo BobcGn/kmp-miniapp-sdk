@@ -30,6 +30,7 @@ When running WeChat host acceptance, use the [WeChat real-host verification matr
 ./gradlew :kmp-miniapp-sdk:checkArchitectureBoundaries
 ./gradlew :miniapp-gradle-plugin:test
 ./gradlew buildMiniAppSdk
+./gradlew verifyMiniAppBundleSize
 ```
 
 These commands are valid and were verified on 2026-09-15, except `:miniapp-gradle-plugin:test`, which was verified on 2026-09-17.
@@ -167,6 +168,38 @@ A consumer whose `commonMain` depends on another Kotlin Multiplatform project mu
 The tests are Gradle TestKit fixtures plus a contract test. The fixtures put the Kotlin Gradle Plugin and the plugin under test on one buildscript classpath deliberately: `withPluginClasspath()` injects the plugin under test into the plugin-resolution classpath only, so a fixture that resolves a second plugin separately cannot reproduce the classpath a real consumer build gives the plugin. One fixture carries `commonMain`, `miniappMain`, `commonTest` and `miniappTest` sources and asserts the executed test report, so the source-set wiring and the test execution are both proved by running tests rather than by reading the model. The fixtures consume the runtime through a composite build (`includeBuild` of this repository), which is how the unpublished coordinate resolves; the plugin itself never sees that path.
 
 The extension carries one setting — where the host's bundle is written. Business and host configuration stays outside Gradle by design, and the reasons are in the [mini app extension section](#the-miniapp--extension) above.
+
+## Bundle size
+
+`build-logic/` is an included build that holds this repository's own build logic: the bundle-size
+tasks. It is included, never published, and a consumer never applies it.
+
+```shell
+./gradlew verifyMiniAppBundleSize
+./gradlew updateMiniAppSizeBaseline
+```
+
+`verifyMiniAppBundleSize` measures the SDK's production distribution — raw and gzip bytes per file,
+per category, and in total — writes `build/reports/miniapp-size/bundle-size.json`, and compares the
+result with the committed baseline in `docs/performance-baseline.json`. It fails only when a shipped
+category grows past both a 4 KB floor and a 5% share, so a compiler that re-emits a file with a few
+bytes of difference does not break the build. `updateMiniAppSizeBaseline` rewrites that baseline; it
+is a maintainer action, and its diff is reviewed like any other.
+
+Measure a different distribution — the WeChat host's, or a consumer bundle — by pointing the task at
+it:
+
+```shell
+./gradlew verifyMiniAppBundleSize -PminiappSizeDirectory=examples/wechat-miniprogram/miniprogram/libs
+```
+
+The measurement, the categories, the gzip rule, the thresholds and their basis, and the compiler's own
+instability are recorded in [PERFORMANCE_BASELINE-en.md](PERFORMANCE_BASELINE-en.md).
+
+It is deliberately not wired into `check`. A size task depends on the distribution task, so `check`
+would compile Kotlin/JS and re-measure on every ordinary build, and a threshold that fires on a
+deliberate size change would then block unrelated work. CI calls it explicitly, the same way it calls
+`verifyMiniAppGradlePluginIntegration`.
 
 ## Mini App Gradle plugin model PoC
 

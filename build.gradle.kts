@@ -1,5 +1,7 @@
 plugins {
     alias(libs.plugins.kotlin.multiplatform) apply false
+    // Registers verifyMiniAppBundleSize and updateMiniAppSizeBaseline. Repository-only build logic.
+    id("io.github.bobcgn.miniapp.size")
 }
 
 val miniAppSdkArtifacts = listOf(

@@ -320,6 +320,7 @@ fixture.result=PASS
 ./gradlew :kmp-miniapp-sdk:jsNodeTest
 ./gradlew :miniapp-gradle-plugin:test
 ./gradlew verifyMiniAppGradlePluginIntegration
+./gradlew verifyMiniAppBundleSize
 ```
 
 `buildMiniAppSdk` 是仓库内部任务，把 SDK 重新发布到 `examples/wechat-miniprogram`；该示例早于插件存在，
