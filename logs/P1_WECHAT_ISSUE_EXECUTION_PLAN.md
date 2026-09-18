@@ -194,7 +194,7 @@ TestKit 由 19 个测试扩展到 **25 个**：DSL 配置实际改变 bundle 写
 **验收结果（2026-09-18）：通过。**
 
 - 验收基线 commit：`ae65a41`（BOB-77 交付）。本轮在该基线上执行全部验证，未改动任何生产代码。
-- 环境：Gradle 9.3.1（仓库内置 Wrapper）、Kotlin 2.4.20、构建 JVM OpenJDK 25.0.2（插件字节码目标 JVM 17）、SDK 版本 `0.1.0-SNAPSHOT`、微信开发者工具基础库 3.17.3。IDEA 构建号未记录（见「IDEA 证据」）。
+- 环境：Gradle 9.3.1（仓库内置 Wrapper）、Kotlin 2.4.20、构建 JVM OpenJDK 25.0.2（插件字节码目标 JVM 17）、SDK 版本 `0.1.0-SNAPSHOT`、微信开发者工具基础库 3.17.3、IntelliJ IDEA 2026.2.2（Build `IU-262.10315.125`，Runtime 25.0.4+1-b508.27 aarch64）。
 
 **自动化结果（全部实际执行，非推断）**
 
@@ -221,7 +221,7 @@ TestKit 由 19 个测试扩展到 **25 个**：DSL 配置实际改变 bundle 写
 
 **IDEA 证据**
 
-来源为用户在 BOB-76 与 BOB-83 的外部真实 KMP Demo 上完成的 Gradle Sync 与观察：IDEA 将 `commonMain`、`commonTest`、`miniappMain`、`miniappTest` 识别为 Kotlin source set，`actual` 声明被识别，`miniappTest` 被识别为测试。与本基线的一致性依据（不是重新截图）：`registerMiniAppPlatformTarget` 中 `kotlin.js(MINIAPP_TARGET_NAME)` 与 `nodejs()` 自 `0921033` 起未变（`0921033..HEAD` 仅注释变化），其后新增的只是 output binary 配置、依赖接线、边界检查与 bundle 任务 —— 都不改变 KGP 从 target 名派生 source set 的方式。IDEA 构建号未记录；若后续需要在当前 HEAD 上刷新该证据，最小要求是在 IDEA 中对应用了插件的工程执行一次 Gradle Sync，并对 `miniappMain` / `miniappTest` 各截一张图。
+用户已在当前 HEAD `ffc7bae` 对外部真实 KMP Demo 重新执行 Gradle Sync，`prepareKotlinIdeaImport` 与相关项目模型任务完成，最终 `BUILD SUCCESSFUL in 25s`。IntelliJ IDEA 2026.2.2（Build `IU-262.10315.125`）将 `commonMain`、`commonTest`、`miniappMain`、`miniappTest` 识别为 Kotlin source set；截图同时证明 `Platform.miniapp.kt` 的 `actual getPlatform()` 与 SDK `MiniAppSdk.VERSION` 正常解析、无错误标记，`SharedLogicMiniAppTest` 的测试类与测试方法均出现运行入口。同步日志中的 Android SDK XML 版本警告来自 Android Studio/命令行工具版本差异，与 Mini App source-set 模型无关，不阻塞本闸门。
 
 **微信开发者工具证据**
 
@@ -252,7 +252,6 @@ TestKit 由 19 个测试扩展到 **25 个**：DSL 配置实际改变 bundle 写
 - 插件与 runtime SDK 未发布到任何仓库；消费者当前需源码检出 + composite build，README 已明写。
 - 微信宿主验收只覆盖该 bundle 形态与基础库 3.17.3 的页面路径；其他基础库、真机、其他微信能力按各自矩阵分别验收。
 - Node smoke 仅证明模块接线，不等于宿主验收。
-- IDEA 证据来自外部 Demo 且未记录 IDE 构建号；当前 HEAD 上未重新截图。
 - 隐私授权、订阅消息、网络扩展、标准支付的真实宿主验收仍按 PROJECT_FACTS 与能力矩阵记录的状态各自待办 —— 与本闸门无关，不得据此声称已完成。
 
 **结论**：BOB-85 的 18 项验收标准全部有证据支持，P1 Mini App 平台集成闸门通过；BOB-51 中的 Consumer Integration 发布阻塞可以解除。不自动进入 P2 Presentation Runtime。
@@ -264,7 +263,7 @@ TestKit 由 19 个测试扩展到 **25 个**：DSL 配置实际改变 bundle 写
 | 总目标 | BOB-75 | Todo | A–I 与 Release Gate 全部完成 |
 | A | BOB-83 | Done（2026-09-17） | PoC 选型、否决项、KGP 限制和必要 ADR 可核对 |
 | B | BOB-78 | Done（2026-09-17，commit `19e807e`） | 插件可应用并 sync；缺少 KMP 时明确失败 |
-| B+ | BOB-86 | In Progress（2026-09-17） | 架构边界已记录并被构建强制；无 Compose / Renderer 泄漏 |
+| B+ | BOB-86 | Done（2026-09-17） | 架构边界已记录并被构建强制；无 Compose / Renderer 泄漏 |
 | C | BOB-76 | Done（2026-09-17） | source sets 自动创建、IDEA 识别、`miniappTest` 可执行 |
 | D | BOB-82 | Done（2026-09-17，commit `b4bfa38`） | 公共 SDK 依赖自动接入且不泄漏内部 artifact |
 | E | BOB-81 | Done（2026-09-17） | 稳定任务生成完整 Mini App distribution，且依赖边界由正反外部 Demo 验收 |
