@@ -222,6 +222,7 @@ export declare namespace io.github.bobcgn.miniapp.export {
                 wechatNavigateTo(url: string): Promise<void>;
                 wechatRedirectTo(url: string): Promise<void>;
                 wechatNavigateBack(delta: Nullable<number>): Promise<void>;
+                wechatSwitchTab(url: string): Promise<void>;
                 capabilitySupport(capability: string): io.github.bobcgn.miniapp.export.JsCapabilitySupport;
                 requireCapability(capability: string): void;
                 wechatRuntimeInfo(): io.github.bobcgn.miniapp.export.JsRuntimeInfo;

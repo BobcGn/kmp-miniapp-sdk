@@ -663,6 +663,20 @@ export function wechatRedirectTo(url: string): Promise<void>;
 export function wechatNavigateBack(delta?: number | null): Promise<void>;
 
 /**
+ * Switches to the tabBar page named by `url`.
+ *
+ * WeChat accepts only a route declared in the mini program's own `tabBar`, and
+ * reports any other route as a failure; the SDK keeps no list of tabBar pages to
+ * check against. The route carries no query, because a tabBar page is switched
+ * to rather than opened with parameters. Switching to the page already shown is
+ * a success.
+ *
+ * Rejects with an `IllegalArgumentException` when `url` is blank, before the
+ * host is called.
+ */
+export function wechatSwitchTab(url: string): Promise<void>;
+
+/**
  * How the host currently supports a capability.
  *
  * A host answers from its own runtime, so the same build can answer differently

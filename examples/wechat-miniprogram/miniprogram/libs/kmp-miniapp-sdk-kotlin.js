@@ -175,6 +175,7 @@
   initMetadataForCoroutine($wechatNavigateTo$suspendBridgeCOROUTINE$, CoroutineImpl);
   initMetadataForCoroutine($wechatRedirectTo$suspendBridgeCOROUTINE$, CoroutineImpl);
   initMetadataForCoroutine($wechatNavigateBack$suspendBridgeCOROUTINE$, CoroutineImpl);
+  initMetadataForCoroutine($wechatSwitchTab$suspendBridgeCOROUTINE$, CoroutineImpl);
   initMetadataForCoroutine($permissionStateCOROUTINE$, CoroutineImpl);
   initMetadataForCoroutine($permissionState$suspendBridgeCOROUTINE$, CoroutineImpl);
   initMetadataForCoroutine($requestPermissionCOROUTINE$, CoroutineImpl);
@@ -2086,6 +2087,57 @@
       }
      while (true);
   };
+  function $wechatSwitchTab$suspendBridgeCOROUTINE$(_this__u8e3s4, url, resultContinuation) {
+    CoroutineImpl.call(this, resultContinuation);
+    this._this__u8e3s4__1 = _this__u8e3s4;
+    this.url_1 = url;
+  }
+  protoOf($wechatSwitchTab$suspendBridgeCOROUTINE$).doResume_5yljmg_k$ = function () {
+    var suspendResult = this.result_1;
+    $sm: do
+      try {
+        var tmp = this.state_1;
+        switch (tmp) {
+          case 0:
+            this.exceptionState_1 = 4;
+            if (this._this__u8e3s4__1.wechatSwitchTab === protoOf(MiniAppExports).wechatSwitchTab) {
+              this.state_1 = 2;
+              suspendResult = this._this__u8e3s4__1.wechatSwitchTab_z57jfs_k$(this.url_1, this);
+              if (suspendResult === get_COROUTINE_SUSPENDED()) {
+                return suspendResult;
+              }
+              continue $sm;
+            } else {
+              this.state_1 = 1;
+              suspendResult = await_0(this._this__u8e3s4__1.wechatSwitchTab(this.url_1), this);
+              if (suspendResult === get_COROUTINE_SUSPENDED()) {
+                return suspendResult;
+              }
+              continue $sm;
+            }
+
+          case 1:
+            this.state_1 = 3;
+            continue $sm;
+          case 2:
+            this.state_1 = 3;
+            continue $sm;
+          case 3:
+            return Unit_instance;
+          case 4:
+            throw this.exception_1;
+        }
+      } catch ($p) {
+        var e = $p;
+        if (this.exceptionState_1 === 4) {
+          throw e;
+        } else {
+          this.state_1 = this.exceptionState_1;
+          this.exception_1 = e;
+        }
+      }
+     while (true);
+  };
   function $permissionStateCOROUTINE$(_this__u8e3s4, permission, resultContinuation) {
     CoroutineImpl.call(this, resultContinuation);
     this._this__u8e3s4__1 = _this__u8e3s4;
@@ -3917,6 +3969,21 @@
   };
   protoOf(MiniAppExports).wechatNavigateBack$suspendBridge_hn0w4d_k$ = function (delta, $completion) {
     var tmp = new $wechatNavigateBack$suspendBridgeCOROUTINE$(this, delta, $completion);
+    tmp.result_1 = Unit_instance;
+    tmp.exception_1 = null;
+    return tmp.doResume_5yljmg_k$();
+  };
+  protoOf(MiniAppExports).wechatSwitchTab_z57jfs_k$ = function (url, $completion) {
+    return this.host_1.platform_1.navigation_1.switchTab_3ovb32_k$(url, $completion);
+  };
+  protoOf(MiniAppExports).wechatSwitchTab = function (url) {
+    var tmp = this;
+    return promisify(function ($completion) {
+      return tmp.wechatSwitchTab_z57jfs_k$(url, $completion);
+    });
+  };
+  protoOf(MiniAppExports).wechatSwitchTab$suspendBridge_jbln6h_k$ = function (url, $completion) {
+    var tmp = new $wechatSwitchTab$suspendBridgeCOROUTINE$(this, url, $completion);
     tmp.result_1 = Unit_instance;
     tmp.exception_1 = null;
     return tmp.doResume_5yljmg_k$();
@@ -6909,6 +6976,25 @@
       return null;
     };
   }
+  function WechatNavigation$switchTab$lambda$lambda($success) {
+    return function () {
+      $success(Unit_instance);
+      return Unit_instance;
+    };
+  }
+  function WechatNavigation$switchTab$lambda$lambda_0($failure) {
+    return function (result) {
+      $failure(mapWechatHostFailure('switchTab', result));
+      return Unit_instance;
+    };
+  }
+  function WechatNavigation$switchTab$lambda(this$0, $url) {
+    return function (success, failure) {
+      var tmp = WechatNavigation$switchTab$lambda$lambda(success);
+      this$0.host_1.switchTab_yxlxfo_k$($url, tmp, WechatNavigation$switchTab$lambda$lambda_0(failure));
+      return null;
+    };
+  }
   function WechatNavigation(host) {
     host = host === VOID ? WxNavigationHost_instance : host;
     this.host_1 = host;
@@ -6921,6 +7007,15 @@
   };
   protoOf(WechatNavigation).navigateBack_hskp56_k$ = function (delta, $completion) {
     return awaitHostCallback(WechatNavigation$navigateBack$lambda(this, delta), $completion);
+  };
+  protoOf(WechatNavigation).switchTab_3ovb32_k$ = function (url, $completion) {
+    // Inline function 'kotlin.text.isNotBlank' call
+    // Inline function 'kotlin.require' call
+    if (!!isBlank(url)) {
+      var message = "switchTab requires the route of a tabBar page, and '" + url + "' is blank.";
+      throw IllegalArgumentException_init_$Create$(toString_0(message));
+    }
+    return awaitHostCallback(WechatNavigation$switchTab$lambda(this, url), $completion);
   };
   function WxNavigationHost$navigateTo$lambda($success) {
     return function (it) {
@@ -6935,6 +7030,12 @@
     };
   }
   function WxNavigationHost$navigateBack$lambda($success) {
+    return function (it) {
+      $success();
+      return Unit_instance;
+    };
+  }
+  function WxNavigationHost$switchTab$lambda($success) {
     return function (it) {
       $success();
       return Unit_instance;
@@ -6959,6 +7060,12 @@
     options.success = WxNavigationHost$navigateBack$lambda(success);
     options.fail = failure;
     wx.navigateBack(options);
+  };
+  protoOf(WxNavigationHost).switchTab_yxlxfo_k$ = function (url, success, failure) {
+    var options = wxSwitchTabOptions(url);
+    options.success = WxNavigationHost$switchTab$lambda(success);
+    options.fail = failure;
+    wx.switchTab(options);
   };
   var WxNavigationHost_instance;
   function WxNavigationHost_getInstance() {
@@ -9271,6 +9378,11 @@
     if (!(delta == null)) {
       options.delta = delta;
     }
+    return options;
+  }
+  function wxSwitchTabOptions(url) {
+    var options = {};
+    options.url = url;
     return options;
   }
   function Present_4(isConnected, networkType) {

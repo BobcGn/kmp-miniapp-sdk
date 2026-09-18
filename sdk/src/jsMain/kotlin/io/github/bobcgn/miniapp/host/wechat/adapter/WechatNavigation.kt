@@ -68,4 +68,40 @@ internal class WechatNavigation(
         )
         null
     }
+
+    /**
+     * Switches to the tabBar page named by [url].
+     *
+     * WeChat applies three rules this operation cannot relax, and the SDK does not
+     * try to: [url] must name a page declared in the mini program's own `tabBar`,
+     * the tabBar page is switched to rather than opened with parameters, and any
+     * other route is reported by the host as a failure. The SDK keeps no list of
+     * tabBar pages and infers no page stack, so it cannot tell a caller in advance
+     * whether [url] is a tabBar route: that answer belongs to the mini program
+     * being run, not to the SDK.
+     *
+     * A blank [url] is rejected before the host is called, because it names no
+     * page at all. The existing three operations keep the pass-through behaviour
+     * they were verified with; this check is what a route that can only be a tabBar
+     * page makes possible.
+     *
+     * Switching to the page the user is already on is a host success, not an error.
+     *
+     * @throws IllegalArgumentException when [url] is blank
+     */
+    suspend fun switchTab(url: String): Unit {
+        require(url.isNotBlank()) {
+            "switchTab requires the route of a tabBar page, and '$url' is blank."
+        }
+        return awaitHostCallback { success, failure ->
+            host.switchTab(
+                url = url,
+                success = { success(Unit) },
+                failure = { result ->
+                    failure(mapWechatHostFailure(operation = "switchTab", result = result))
+                },
+            )
+            null
+        }
+    }
 }

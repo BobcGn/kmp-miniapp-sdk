@@ -58,7 +58,7 @@ HTTP transport capability 定义了宿主无关的 request 与 response 契约�
 
 App 级 lifecycle capability 建模应用是否呈现在用户面前。它是唯一被建模为公共概念的生命周期；Page 级生命周期与页面栈导航属于微信语义，保留在 platform escape hatch 之后。微信 adapter 转发消费者传入的 App 钩子。自动化检查已通过；用户于 2026-09-15 确认微信开发者工具中的前台状态与页面 route 验收通过。后台切换仍无法从开发者工具模拟器触发。
 
-微信导航桥接适配 `wx.navigateTo`、`wx.redirectTo` 与 `wx.navigateBack`，并将页面栈已满、route 未知、以及在首页执行返回映射为 `MiniAppException.HostFailure`，而不是报告成功。自动化检查已通过；用户于 2026-09-15 确认三种导航操作均在微信开发者工具中验收通过。
+微信导航桥接适配 `wx.navigateTo`、`wx.redirectTo`、`wx.navigateBack` 与 `wx.switchTab`，并将页面栈已满、route 未知、在首页执行返回、以及 `switchTab` 的 route 没有对应 tab 映射为 `MiniAppException.HostFailure`，而不是报告成功。`switchTab` 承载微信自身的约束：route 必须在小程序 `tabBar` 中声明，SDK 不保留 tabBar 页面清单可供比对，空白 route 在调用宿主前即被拒绝。自动化检查已通过。三项页面栈操作于 2026-09-15 通过开发者工具验收；2026-09-18 的开发者工具与 Android 真机进一步验证了成功 tab 切换、只有 `SHOWN`/`HIDDEN` 而无错误 `UNLOADED`，以及非 tab route 的封闭 `HostFailure`。
 
 Capability support 由正在运行的宿主回答，而不是依据硬编码清单。`MiniAppHost.capabilitySupport` 报告 `Supported`、`Unsupported`、`VersionDependent` 或 `PermissionDependent`，`requireSupported` 会把除 `Supported` 外的每个状态转换为 `MiniAppException.UnsupportedCapability`。微信 gate 读取 `wx.canIUse` 与基础库版本，优先使用 `wx.getAppBaseInfo`，并以已停止维护的 `wx.getSystemInfoSync` 作为回退，因此同一份构建在两个宿主上可以给出不同答案。版本与平台读取推迟到各自首次使用并分别缓存；`wx.canIUse` 保持实时查询。Kotlin/JS、fake-host、CommonJS 与 TypeScript 自动检查均已通过。开发者工具（基础库 3.17.2）与 Android 真机（OnePlus PLQ110、Android 36、微信 8.0.76）均已验证 `Supported` 与 `Unsupported` 两种状态。
 
@@ -191,8 +191,8 @@ Kotlin/JS platform variants 及其传递依赖由 Gradle 在依赖解析期间�
 - `MiniAppLifecycle` 定义 App 级 lifecycle capability：当前 `MiniAppLifecycleState` 与后续变化的 `Flow`。它是唯一事件形态的 capability，也是唯一被建模为公共概念的生命周期。
 - `WechatAppLifecycle` 由 `App.onLaunch` 与 `App.onShow` 上报前台、`App.onHide` 上报后台来实现该契约。
 - `WechatPageLifecycle` 跟踪 runtime 报告为已显示的页面 route。Page 级生命周期不是公共 capability，仅通过 `WechatPlatformApi` 可达。
-- `WechatNavigation` 适配 `wx.navigateTo`、`wx.redirectTo` 与 `wx.navigateBack`，仅通过 `WechatPlatformApi` 可达，并将微信的 failure callback 映射为 `MiniAppException.HostFailure`。
-- JavaScript / TypeScript facade 暴露 App 与 Page lifecycle 入口、lifecycle 状态与页面 route，以及三个导航函数。
+- `WechatNavigation` 适配 `wx.navigateTo`、`wx.redirectTo`、`wx.navigateBack` 与 `wx.switchTab`，仅通过 `WechatPlatformApi` 可达，并将微信的 failure callback 映射为 `MiniAppException.HostFailure`。
+- JavaScript / TypeScript facade 暴露 App 与 Page lifecycle 入口、lifecycle 状态与页面 route，以及四个导航函数。
 - `WechatCapabilityGate` 依据 `wx.canIUse` 与基础库版本判定支持状态，优先使用 `wx.getAppBaseInfo`，并在早于它的基础库上回退到已停止维护的 `wx.getSystemInfoSync`。每一次 runtime inspection 读取都有 guard，因此 `wx` 缺失时得到的是 `Unsupported` 而不是崩溃。
 - `WechatRuntimeInfo` 报告基础库版本、runtime platform，以及该 runtime 是否为开发者工具。版本与平台分别在首次使用时取值并保留；`canIUse` 保持实时查询，因此构造 SDK 的过程绝不触碰 `wx`，支持答案也不会因标量缓存而冻结。
 - 微信能力目录表记录每个纳入 gate 的能力所需条件。Storage 与 network 声明 `wx.canIUse` 必须确认的 schema，且不设最低版本；App lifecycle 没有可探测的宿主 API；runtime detection 记录有文档依据的 `2.20.1` 边界，这正是版本依赖答案可复现的原因。
@@ -257,7 +257,7 @@ Kotlin/JS platform variants 及其传递依赖由 Gradle 在依赖解析期间�
 - 虚拟支付未实现：不存在对应的请求、结果、capability 条目或导出。对同一离线基础库的探测结果是 `requestPayment` 出现 7 次（含其 `canIUse` 元数据条目），而 `requestVirtualPayment` 在整个文件中出现 0 次，因此该来源无法提供正向能力证据；本次探测没有执行运行时能力检查。这些是关于单一离线来源的事实，不是关于真实微信客户端的事实：参数表、最低基础库版本、平台可用性以及账号/类目资格均未确立，该能力在能力矩阵中保持 `Planned`，SDK 中没有任何注册。[ARCHITECTURE-ch.md](ARCHITECTURE-ch.md) 固定了未来实现必须遵守的边界 —— 独立 key、独立请求与结果模型、两种支付产品之间不存在降级路径，以及没有客户端签名、密钥、会话或订单。
 
 - 自动测试覆盖版本比较与解析、四种支持状态、版本边界本身、版本不可读时的回退、完全无法探测的宿主、runtime 只读取一次，以及 `UnsupportedCapability` guard。
-- 微信开发者工具已验证前台 lifecycle 状态、页面 route，以及 `navigateTo` → `redirectTo` → `navigateBack` 的完整页面栈路径。
+- 微信开发者工具已验证前台 lifecycle 状态、页面 route、`navigateTo` → `redirectTo` → `navigateBack` 的完整页面栈路径，以及 `switchTab` 的成功与拒绝路径；Android 真机另验证了 `switchTab` 与 tab 页 `SHOWN`/`HIDDEN` 语义。
 - [TESTING-ch.md](TESTING-ch.md) 记录了两层测试体系、各层可用的 fake，以及可复现的真实宿主检查清单。
 - `commonTest` 定义了宿主无关的 FakeHost 边界：`FakeMiniAppHost`、`InMemoryStorage`、`RecordingHttpTransport` 与 `FakeMiniAppLifecycle`。
 - `jsTest` 定义了面向原始微信 callback port 的 FakeAdapter 边界，使微信 adapter 无需微信 runtime、也无需 `wx` 即可被驱动。

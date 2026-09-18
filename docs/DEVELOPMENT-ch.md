@@ -34,7 +34,7 @@ VS Code 可用于处理 `examples/wechat-miniprogram` 下的文件。Consumer Br
 
 这些命令有效，并已于 2026-09-15 完成验证；其中 `:miniapp-gradle-plugin:test` 于 2026-09-17 完成验证。
 
-`:kmp-miniapp-sdk:jsTest` suite 覆盖 Host boundary、error model、callback adaptation、cancellation、double completion、可选 abort、微信 error mapping、包含取消时宿主中止的 HTTP transport adaptation、生命周期状态迁移、导航适配、capability support 状态与版本门控、包含并发请求合并的权限生命周期行为、包含拒绝分类的隐私授权、包含过期分类的微信会话检查、包含逐项门控的微信剪贴板与震动 adapter、包含沙箱与文本边界的微信文件系统 adapter、包含坐标校验与隐私前置条件的微信定位 adapter、包含不可归因中断分类与结果校验的微信扫码 adapter、包含请求边界、结果校验与中断分类的微信媒体 adapter、包含模板校验与逐模板结果策略的微信订阅消息 adapter、包含逐 collector 监听配对的网络状态 adapter、包含 abort、进度与超时行为的微信上传与下载 adapter、包含参数转发、空白参数拒绝、精确中断分类与单次终态行为的微信支付 adapter，以及 interop object construction。这些测试使用 fake callbacks，不代表能够访问真实 `wx` runtime。
+`:kmp-miniapp-sdk:jsTest` suite 覆盖 Host boundary、error model、callback adaptation、cancellation、double completion、可选 abort、微信 error mapping、包含取消时宿主中止的 HTTP transport adaptation、生命周期状态迁移、导航适配（含仅限 tabBar 的 `switchTab` 与其空白 route 拒绝）、capability support 状态与版本门控、包含并发请求合并的权限生命周期行为、包含拒绝分类的隐私授权、包含过期分类的微信会话检查、包含逐项门控的微信剪贴板与震动 adapter、包含沙箱与文本边界的微信文件系统 adapter、包含坐标校验与隐私前置条件的微信定位 adapter、包含不可归因中断分类与结果校验的微信扫码 adapter、包含请求边界、结果校验与中断分类的微信媒体 adapter、包含模板校验与逐模板结果策略的微信订阅消息 adapter、包含逐 collector 监听配对的网络状态 adapter、包含 abort、进度与超时行为的微信上传与下载 adapter、包含参数转发、空白参数拒绝、精确中断分类与单次终态行为的微信支付 adapter，以及 interop object construction。这些测试使用 fake callbacks，不代表能够访问真实 `wx` runtime。
 
 ## 架构边界
 
@@ -270,7 +270,7 @@ npm run smoke
 npm run typecheck
 ```
 
-smoke test 加载 consumer-facing CommonJS 模块、调用 `sdkVersion()`，并安装 fake global `wx` 验证 Storage、微信 login bootstrap、HTTP transport、lifecycle 转发、三种导航调用、运行时能力检测、权限生命周期、隐私授权、微信会话检查、剪贴板与震动能力、文件系统、定位、扫码、媒体选择、订阅消息请求、网络扩展（网络状态、上传与下载）与标准支付。它还会断言 HTTP transport 交给 fake host 的内容，包括原始文本响应模式、导航收到的绝对页面路径，以及每个纳入门控的能力所报告的支持状态。该测试还会断言扫码、媒体选择、订阅消息请求与每个网络扩展都不查询、不请求任何权限，覆盖交互中断与相似失败文本的分类，确认宿主自身的状态行永远不会被当作模板 ID，并验证支付只以宿主接受的五个字段到达宿主、其 resolve 值不携带任何订单字段，验证网络状态观察会注册一个 listener 后将其移除、以及中止传输会只停止一次宿主 task 并清理其进度 listener。该测试验证 module 与 adapter behavior，但不构成真实 Host 证据。TypeScript 使用 strict mode，并在不依赖 `any` 的情况下验证 Promise-based Storage、typed `WeChatLoginResult`、HTTP transport、lifecycle、导航、capability support、权限、隐私、会话检查、剪贴板、震动、文件系统、定位、扫码、媒体选择、订阅消息请求、网络状态、传输与支付 exports。
+smoke test 加载 consumer-facing CommonJS 模块、调用 `sdkVersion()`，并安装 fake global `wx` 验证 Storage、微信 login bootstrap、HTTP transport、lifecycle 转发、四种导航调用、运行时能力检测、权限生命周期、隐私授权、微信会话检查、剪贴板与震动能力、文件系统、定位、扫码、媒体选择、订阅消息请求、网络扩展（网络状态、上传与下载）与标准支付。它还会断言 HTTP transport 交给 fake host 的内容，包括原始文本响应模式、导航收到的绝对页面路径、`switchTab` 交给宿主的完整 option bag，以及每个纳入门控的能力所报告的支持状态。该测试还会断言扫码、媒体选择、订阅消息请求与每个网络扩展都不查询、不请求任何权限，覆盖交互中断与相似失败文本的分类，确认宿主自身的状态行永远不会被当作模板 ID，并验证支付只以宿主接受的五个字段到达宿主、其 resolve 值不携带任何订单字段，验证网络状态观察会注册一个 listener 后将其移除、以及中止传输会只停止一次宿主 task 并清理其进度 listener。该测试验证 module 与 adapter behavior，但不构成真实 Host 证据。TypeScript 使用 strict mode，并在不依赖 `any` 的情况下验证 Promise-based Storage、typed `WeChatLoginResult`、HTTP transport、lifecycle、导航、capability support、权限、隐私、会话检查、剪贴板、震动、文件系统、定位、扫码、媒体选择、订阅消息请求、网络状态、传输与支付 exports。
 
 真实宿主验证按 [TESTING-ch.md](TESTING-ch.md) 中的检查清单执行，该清单是页面取值、console 输出与准备步骤的权威来源。只有在完成该运行后，某项 capability 才会在 [PROJECT_FACTS-ch.md](PROJECT_FACTS-ch.md) 中被记录为已通过宿主验证。
 
@@ -280,7 +280,7 @@ Authentication 的真实宿主验收已于 2026-09-14 通过用户提供的微�
 
 HTTP transport capability 已于 2026-09-14 通过用户提供的微信开发者工具确认完成真实宿主验收。其 adapter、error mapping 与 cancellation 行为仍由 Kotlin/JS、fake-host、CommonJS 与 TypeScript 自动检查覆盖；真实宿主运行确认 index 页面上的 network 卡片可成功到达 `wx.request`。
 
-Lifecycle 与导航桥接已于 2026-09-15 通过用户确认完成微信开发者工具验收。运行结果覆盖前台 lifecycle 状态、当前页面 route，以及 `navigateTo` 打开第二页、`redirectTo` 替换为第三页、`navigateBack` 直接返回首页的完整页面栈路径。后台状态迁移仍需要真机将小程序切入后台，开发者工具模拟器不覆盖该行为。
+Lifecycle 与导航桥接已完成规定的宿主验收。2026-09-15 的开发者工具运行覆盖前台 lifecycle 状态、当前页面 route，以及 `navigateTo` 打开第二页、`redirectTo` 替换为第三页、`navigateBack` 直接返回首页的完整页面栈路径。2026-09-18 的开发者工具与 Android 真机进一步覆盖 `switchTab`：目标 tab 报告 `SHOWN`，切走时报告 `HIDDEN` 而不是 `UNLOADED`，没有对应 tab 的 route 只输出封闭的 `HostFailure` 分类。后台状态迁移仍需要真机将小程序切入后台；这是 App lifecycle 证据的剩余限制，不影响已完成的导航验收。
 
 Node/CommonJS smoke test 或 TypeScript check 通过，并不能证明微信小程序集成通过。必须分别记录两层结果。
 

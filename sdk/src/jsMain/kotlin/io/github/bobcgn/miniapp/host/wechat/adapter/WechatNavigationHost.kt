@@ -5,6 +5,7 @@ import io.github.bobcgn.miniapp.host.wechat.interop.wx
 import io.github.bobcgn.miniapp.host.wechat.interop.wxNavigateBackOptions
 import io.github.bobcgn.miniapp.host.wechat.interop.wxNavigateToOptions
 import io.github.bobcgn.miniapp.host.wechat.interop.wxRedirectToOptions
+import io.github.bobcgn.miniapp.host.wechat.interop.wxSwitchTabOptions
 
 /** Callback port that keeps [WechatNavigation] independently testable. */
 internal interface WechatNavigationHost {
@@ -22,6 +23,12 @@ internal interface WechatNavigationHost {
 
     fun navigateBack(
         delta: Int?,
+        success: () -> Unit,
+        failure: (WxGeneralCallbackResult) -> Unit,
+    ): Unit
+
+    fun switchTab(
+        url: String,
         success: () -> Unit,
         failure: (WxGeneralCallbackResult) -> Unit,
     ): Unit
@@ -60,5 +67,16 @@ internal object WxNavigationHost : WechatNavigationHost {
         options.success = { success() }
         options.fail = failure
         wx.navigateBack(options)
+    }
+
+    override fun switchTab(
+        url: String,
+        success: () -> Unit,
+        failure: (WxGeneralCallbackResult) -> Unit,
+    ) {
+        val options = wxSwitchTabOptions(url)
+        options.success = { success() }
+        options.fail = failure
+        wx.switchTab(options)
     }
 }

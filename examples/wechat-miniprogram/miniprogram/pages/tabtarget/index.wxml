@@ -1,0 +1,9 @@
+<view class="page">
+  <view class="card">
+    <text class="eyebrow">Tab Target Page</text>
+    <text class="label">Reached through wx.switchTab</text>
+    <text class="status">{{pageRoute}}</text>
+    <text class="details">App state: {{lifecycleState}}</text>
+    <text class="details">{{cardDetails}}</text>
+  </view>
+</view>

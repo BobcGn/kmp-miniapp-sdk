@@ -189,5 +189,14 @@
     <text class="status status--{{navigationStatus}}">{{navigationStatus}}</text>
     <text class="details">{{navigationDetails}}</text>
     <button class="action" bindtap="openSecondPage">Open second page (wx.navigateTo)</button>
+    <button class="action" bindtap="switchToTabTarget">Switch to the target tab (wx.switchTab)</button>
+    <button class="action" bindtap="switchToNonTabPage">Switch to a non-tab page (expect a refusal)</button>
+  </view>
+
+  <view class="card">
+    <text class="eyebrow">Tab Switching</text>
+    <text class="label">wx.switchTab</text>
+    <text class="status status--{{switchTabStatus}}">{{switchTabStatus}}</text>
+    <text class="details">{{switchTabDetails}}</text>
   </view>
 </view>

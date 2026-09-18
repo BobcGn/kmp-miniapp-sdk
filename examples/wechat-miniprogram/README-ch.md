@@ -18,7 +18,7 @@ TypeScript require()
 WeChat Developer Tools
 ```
 
-示例包含三个页面。index 页面导入规范化后的 CommonJS SDK，调用 `sdkVersion()`、验证 Storage、请求短期微信 login code、通过 SDK HTTP transport 发起一次 HTTPS 请求，并显示 App 生命周期状态、当前页面 route，以及 runtime 关于自身的报告与各纳入门控能力的支持状态。第二、第三页用于验证页面栈桥接：第二页由 `wx.navigateTo` 打开并用 `wx.redirectTo` 替换为第三页，第三页用 `wx.navigateBack` 返回。示例不会记录或渲染 login code 本身。
+示例包含四个页面，其中两个声明在 `app.json` 的 `tabBar` 中。index 页面导入规范化后的 CommonJS SDK，调用 `sdkVersion()`、验证 Storage、请求短期微信 login code、通过 SDK HTTP transport 发起一次 HTTPS 请求，并显示 App 生命周期状态、当前页面 route，以及 runtime 关于自身的报告与各纳入门控能力的支持状态。第二、第三页用于验证页面栈桥接：第二页由 `wx.navigateTo` 打开并用 `wx.redirectTo` 替换为第三页，第三页用 `wx.navigateBack` 返回。tabtarget 页面是 `tabBar` 的第二项，用于验证 `wx.switchTab`：切到它会让 tab bar 高亮移动、把 index 页面隐藏而不是卸载，而请求没有对应 tab 的 route 会被宿主拒绝并只报告一个封闭分类。示例不会记录或渲染 login code 本身。
 
 `app.ts` 转发微信的 App 钩子，因为微信只把生命周期投递给消费者自己注册的入口。每个页面转发自己的 Page 钩子，并传入自己的 `this.route`。
 
@@ -36,6 +36,7 @@ npm run typecheck
 
 ```text
 [kmp-miniapp-sdk] sdkVersion: 0.1.0-SNAPSHOT
+[kmp-miniapp-sdk] switch tab: PASS wx.switchTab /pages/tabtarget/index
 [kmp-miniapp-sdk] runtime detection: PASS baseLibrary=…, platform=…, runtime-detection=…, storage=Supported, ungated=Unsupported
 [kmp-miniapp-sdk] storage: PASS first=first, overwritten=second, missing=null
 [kmp-miniapp-sdk] auth bootstrap: PASS codeReceived=true, length=<正整数>
@@ -84,7 +85,7 @@ Standard Payment 卡片把可信后端产出的参数转发给微信自身的支
 
 Network 检查会向 `https://example.com/` 发起 `GET`。微信要求该 host 已列入 request domain 白名单，或编译时关闭域名校验。验证其他 endpoint 时请修改 `networkUrl` 常量。
 
-导航需要交互，无法只靠一次页面加载验证。依次点击第二、第三页会为 `wx.navigateTo`、`wx.redirectTo`、`wx.navigateBack` 分别打印 `[kmp-miniapp-sdk] navigation: PASS <action>`；点击顺序见检查清单。
+导航需要交互，无法只靠一次页面加载验证。依次点击第二、第三页会为 `wx.navigateTo`、`wx.redirectTo`、`wx.navigateBack` 分别打印 `[kmp-miniapp-sdk] navigation: PASS <action>`；点击顺序见检查清单。Tab Switching 卡片用 `wx.switchTab` 切到 tabtarget tab 并打印 `[kmp-miniapp-sdk] switch tab: PASS`；其第二个按钮请求第三页 —— 该页面没有 tab —— 只打印 SDK 报告的封闭分类，绝不打印宿主自身的失败原文。
 
 File System 卡片会向小程序沙箱中的固定文件名写入固定的非敏感字符串，读回、检查存在、删除，并再次检查已删除。页面加载期间不会触碰文件系统。仅支持沙箱内的 UTF-8 文本，且沙箱根本身从不显示或记录。删除不存在的文件会失败，遵循微信契约，因此删除与最后一步检查应按顺序各执行一次。
 

@@ -47,7 +47,7 @@ Sharing has four levels. Client infrastructure and host-capability abstraction a
 | Storage | — | Cache policy: what may be cached and for how long | `wx.getStorage`, the file-system sandbox | — |
 | Business rule | Authoritative | Presentation-level validation only; never a second source of truth | — | Input affordances |
 | UiState | — | Owning layer from P2; **not implemented** | State → `setData` binding, from P3 | — |
-| Navigation | — | Navigation intent and effect as presentation behaviour, from P2 | `wx.navigateTo`, `wx.redirectTo`, `wx.navigateBack` | Page stack and transitions |
+| Navigation | — | Navigation intent and effect as presentation behaviour, from P2 | `wx.navigateTo`, `wx.redirectTo`, `wx.navigateBack`, `wx.switchTab` | Page stack, tab switching and transitions |
 | Permission | — | Host-neutral permission contract and policy | `wx.getSetting`, `wx.authorize`, `wx.openSetting` | The rationale shown to the user |
 | Rendering | — | Never | Binding only, never a renderer | WXML and WXSS for WeChat; Compose for Android / iOS / desktop |
 | Cache | The authoritative store | Last-known client state; never truth | Host storage primitives | — |

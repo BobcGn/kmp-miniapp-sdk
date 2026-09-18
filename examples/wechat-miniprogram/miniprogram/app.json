@@ -2,13 +2,29 @@
   "pages": [
     "pages/index/index",
     "pages/second/index",
-    "pages/third/index"
+    "pages/third/index",
+    "pages/tabtarget/index"
   ],
   "window": {
     "navigationBarTitleText": "KMP MiniApp SDK",
     "navigationBarBackgroundColor": "#ffffff",
     "navigationBarTextStyle": "black",
     "backgroundColor": "#f5f7fa"
+  },
+  "tabBar": {
+    "color": "#6b7280",
+    "selectedColor": "#2563eb",
+    "backgroundColor": "#ffffff",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "Main"
+      },
+      {
+        "pagePath": "pages/tabtarget/index",
+        "text": "Tab target"
+      }
+    ]
   },
   "requiredPrivateInfos": [
     "getLocation"

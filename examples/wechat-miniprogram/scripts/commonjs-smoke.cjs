@@ -5,6 +5,7 @@ const assert = require('node:assert/strict');
 const storage = new Map();
 const requests = [];
 const navigations = [];
+const switchTabs = [];
 
 // What this fake base library claims to provide. The runtime-inspection calls
 // below are the only ones the SDK asks before touching a capability.
@@ -288,6 +289,12 @@ global.wx = {
     navigations.push({ operation: 'navigateBack', url: options.url, delta: options.delta });
     options.success({ errMsg: 'navigateBack:ok' });
   },
+  switchTab(options) {
+    // The recorded keys are the whole option bag the SDK handed the host, so a
+    // field WeChat does not have would show up here.
+    switchTabs.push({ operation: 'switchTab', url: options.url, keys: Object.keys(options).sort() });
+    options.success({ errMsg: 'switchTab:ok' });
+  },
   canIUse(schema) {
     return supportedSchemas.has(schema);
   },
@@ -544,6 +551,7 @@ async function main() {
     'wechatNavigateTo',
     'wechatRedirectTo',
     'wechatNavigateBack',
+    'wechatSwitchTab',
     'capabilitySupport',
     'requireCapability',
     'wechatRuntimeInfo',
@@ -633,6 +641,34 @@ async function main() {
     { operation: 'redirectTo', url: '/pages/third/index', delta: undefined },
     { operation: 'navigateBack', url: undefined, delta: undefined },
   ]);
+
+  await miniAppSdk.wechatSwitchTab('/pages/tabtarget/index');
+  assert.deepEqual(switchTabs, [
+    // url, success and fail are the only fields the SDK sets; `complete` stays
+    // absent, and no query or stack field is invented.
+    { operation: 'switchTab', url: '/pages/tabtarget/index', keys: ['fail', 'success', 'url'] },
+  ]);
+
+  // A blank route names no page, so it is refused before the host is called.
+  await assert.rejects(miniAppSdk.wechatSwitchTab('   '), /tabBar page/);
+  assert.equal(switchTabs.length, 1);
+
+  // WeChat reports a route with no tabBar entry through the failure callback, and
+  // that stays a HostFailure rather than becoming a refusal or a cancellation.
+  const switchTabImpl = global.wx.switchTab;
+  switchTabs.length = 0;
+  global.wx.switchTab = function switchTabWithoutATab(options) {
+    switchTabs.push({ operation: 'switchTab', url: options.url, keys: Object.keys(options).sort() });
+    options.fail({ errMsg: 'switchTab:fail can not switch to a non-tabBar page' });
+  };
+  await assert.rejects(
+    miniAppSdk.wechatSwitchTab('/pages/third/index'),
+    (error) => error.name === 'HostFailure',
+  );
+  assert.deepEqual(switchTabs, [
+    { operation: 'switchTab', url: '/pages/third/index', keys: ['fail', 'success', 'url'] },
+  ]);
+  global.wx.switchTab = switchTabImpl;
 
   // Runtime detection reads the host rather than a hardcoded list.
   const runtimeInfo = miniAppSdk.wechatRuntimeInfo();
@@ -1709,6 +1745,7 @@ async function main() {
   console.log('[node-smoke] network: PASS');
   console.log('[node-smoke] lifecycle: PASS');
   console.log('[node-smoke] navigation: PASS');
+  console.log('[node-smoke] switch tab: PASS');
   console.log('[node-smoke] runtime detection: PASS');
   console.log('[node-smoke] permission: PASS');
   console.log('[node-smoke] privacy: PASS');

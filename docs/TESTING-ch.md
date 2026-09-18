@@ -169,6 +169,15 @@ README 是消费者的入口，因此由 `verifyMiniAppConsumerDocs` 守护：�
 
 第 2 步正是让 `redirectTo` 可观测的关键：第二页是被替换而不是被覆盖，因此第 3 步露出的是 index 页面而不是第二页。
 
+tab 切换从 index 页面核对，它是唯一一个目标必须声明在小程序自身 `tabBar` 中的导航动作：
+
+| 步骤 | 点击 | 预期 |
+| --- | --- | --- |
+| 4 | index 页面的 `Switch to the target tab (wx.switchTab)` | 出现 Tab Target 页面，tab bar 高亮该项，且 index 页面是被隐藏而不是被卸载。Console：先 `[kmp-miniapp-sdk] tab target page: SHOWN pages/tabtarget/index`，再 `[kmp-miniapp-sdk] switch tab: PASS wx.switchTab /pages/tabtarget/index` |
+| 5 | index 页面的 `Switch to a non-tab page (expect a refusal)` | 页面停留在 Main tab，不输出任何微信原文。Console：`[kmp-miniapp-sdk] switch tab (non-tab route): REFUSED HostFailure` |
+
+第 5 步要求当前处于 Main tab，因此若已执行第 4 步，请先用 tab bar 返回。其预期行只给出封闭分类：原始宿主消息被有意不读取，因此 Console 的截图不携带微信关于该失败的任何原文。空白 route 在调用宿主前即被拒绝，由自动化检查覆盖，不提供按钮。
+
 7. 核对版本门控的状态。Runtime Detection 卡片的期望状态来自宿主，因此不需要改动代码即可观察：
 
 | 情形 | 如何构造 | 预期 |

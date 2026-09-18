@@ -143,6 +143,14 @@ class WxOptionsTest {
 
         val explicitBack = wxNavigateBackOptions(delta = 2)
         assertEquals(2, explicitBack.delta)
+
+        // switchTab carries a route and nothing else: the tabBar constraint lives in
+        // the mini program's own configuration, not in a parameter.
+        val switchTab = wxSwitchTabOptions(url = "pages/second/index")
+        assertEquals("pages/second/index", switchTab.url)
+        assertEquals("undefined", jsTypeOf(switchTab.success))
+        assertEquals("undefined", jsTypeOf(switchTab.fail))
+        assertEquals("undefined", jsTypeOf(switchTab.complete))
     }
 
     @Test

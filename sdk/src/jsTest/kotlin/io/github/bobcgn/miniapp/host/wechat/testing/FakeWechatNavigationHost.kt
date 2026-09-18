@@ -44,6 +44,12 @@ internal class FakeWechatNavigationHost(
         failure: (WxGeneralCallbackResult) -> Unit,
     ): Unit = dispatch("navigateBack", url = null, delta = delta, success = success, failure = failure)
 
+    override fun switchTab(
+        url: String,
+        success: () -> Unit,
+        failure: (WxGeneralCallbackResult) -> Unit,
+    ): Unit = dispatch("switchTab", url = url, delta = null, success = success, failure = failure)
+
     private fun dispatch(
         operation: String,
         url: String?,

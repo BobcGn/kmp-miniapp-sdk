@@ -18,7 +18,7 @@ TypeScript require()
 WeChat Developer Tools
 ```
 
-The example has three pages. The index page imports the normalized CommonJS SDK, calls `sdkVersion()`, exercises Storage, requests a short-lived WeChat login code, performs an HTTPS request through the SDK HTTP transport, and shows the app lifecycle state, the current page route, and what the runtime reports about itself together with the support state of each gated capability. The second and third pages exist so the page-stack bridge can be exercised: the second is opened with `wx.navigateTo` and replaces itself with the third using `wx.redirectTo`, and the third goes back with `wx.navigateBack`. The login code itself is never logged or rendered.
+The example has four pages, two of which are declared in `app.json`'s `tabBar`. The index page imports the normalized CommonJS SDK, calls `sdkVersion()`, exercises Storage, requests a short-lived WeChat login code, performs an HTTPS request through the SDK HTTP transport, and shows the app lifecycle state, the current page route, and what the runtime reports about itself together with the support state of each gated capability. The second and third pages exist so the page-stack bridge can be exercised: the second is opened with `wx.navigateTo` and replaces itself with the third using `wx.redirectTo`, and the third goes back with `wx.navigateBack`. The tabtarget page is the second `tabBar` entry, and it exists so `wx.switchTab` can be exercised: switching to it moves the tab bar's highlight, hides the index page rather than unloading it, and switching to a route with no tab is refused by the host and reported as a closed category. The login code itself is never logged or rendered.
 
 `app.ts` forwards WeChat's App hooks, because WeChat reports lifecycle only to the registration the consumer owns. Each page forwards its own Page hooks and supplies its own `this.route`.
 
@@ -36,6 +36,7 @@ Import this directory as a Mini Program project and compile it. The clipboard an
 
 ```text
 [kmp-miniapp-sdk] sdkVersion: 0.1.0-SNAPSHOT
+[kmp-miniapp-sdk] switch tab: PASS wx.switchTab /pages/tabtarget/index
 [kmp-miniapp-sdk] runtime detection: PASS baseLibrary=…, platform=…, runtime-detection=…, storage=Supported, ungated=Unsupported
 [kmp-miniapp-sdk] storage: PASS first=first, overwritten=second, missing=null
 [kmp-miniapp-sdk] auth bootstrap: PASS codeReceived=true, length=<positive integer>
@@ -84,7 +85,7 @@ The Standard Payment card forwards parameters a trusted backend produced to WeCh
 
 The network check issues a `GET` to `https://example.com/`. WeChat requires that host to be listed in the request domain whitelist, or the project must be compiled with domain checking disabled. Change the `networkUrl` constant to verify a different endpoint.
 
-Navigation needs interaction rather than a single page load. Tapping through the second and third pages prints `[kmp-miniapp-sdk] navigation: PASS <action>` for `wx.navigateTo`, `wx.redirectTo`, and `wx.navigateBack`; the tap sequence is in the checklist.
+Navigation needs interaction rather than a single page load. Tapping through the second and third pages prints `[kmp-miniapp-sdk] navigation: PASS <action>` for `wx.navigateTo`, `wx.redirectTo`, and `wx.navigateBack`; the tap sequence is in the checklist. The Tab Switching card switches to the tabtarget tab with `wx.switchTab` and prints `[kmp-miniapp-sdk] switch tab: PASS`; its second button asks for the third page, which has no tab, and prints only the closed category the SDK reported, never the host's own failure text.
 
 The File System card writes a fixed, non-sensitive string to a fixed file name in the mini program sandbox, reads it back, checks that it is there, removes it, and checks again that it is gone. Nothing touches the file system while the page loads. Only UTF-8 text is supported, only inside the sandbox, and the sandbox root itself is never displayed or logged. Removing a file that is not there fails, following WeChat's contract, so the remove and the final check are meant to be run once each, in order.
 

@@ -6,6 +6,11 @@ const storageKey = 'kmp-miniapp-sdk.storage-smoke';
 // host in the request domain whitelist or run with domain checking disabled.
 const networkUrl = 'https://example.com/';
 const secondPageRoute = '/pages/second/index';
+// Declared in app.json's tabBar, which is the only kind of route wx.switchTab accepts.
+const tabTargetRoute = '/pages/tabtarget/index';
+// A page the example deliberately registers outside the tabBar, to show what the host
+// reports when switchTab is asked for a route it has no tab for.
+const nonTabRoute = '/pages/third/index';
 // The only permission this SDK maps today. It is requested only from a button.
 const permissionName: MiniAppSdk.PermissionName = 'microphone';
 // A fixed, non-sensitive string this page writes itself. The page only ever
@@ -65,6 +70,8 @@ interface IndexPageData {
   networkDetails: string;
   navigationStatus: string;
   navigationDetails: string;
+  switchTabStatus: string;
+  switchTabDetails: string;
   permissionName: string;
   permissionStatus: string;
   permissionDetails: string;
@@ -1430,6 +1437,64 @@ function onUnload(this: IndexPage): void {
   MiniAppSdk.wechatPageOnUnload(this.route);
 }
 
+/**
+ * Closed classification of an SDK failure, for logging and for the card.
+ *
+ * Only the SDK's own failure names are reported; the raw host message the SDK
+ * carries inside a HostFailure is deliberately not read, so nothing WeChat said
+ * reaches the Console or the page.
+ */
+const sdkFailureNames: string[] = [
+  'HostFailure',
+  'HostInteractionInterrupted',
+  'Timeout',
+  'InvalidResponse',
+  'UnsupportedCapability',
+  'PermissionDenied',
+  'PrivacyAuthorizationRequired',
+  'UserCancelled',
+  'InternalFailure',
+];
+
+function classifyFailure(error: unknown): string {
+  const name: unknown = (error as { name?: unknown }).name;
+  const simple = typeof name === 'string' ? name.slice(name.lastIndexOf('.') + 1) : '';
+  return sdkFailureNames.indexOf(simple) >= 0 ? simple : 'Failure';
+}
+
+async function switchToTabTarget(this: IndexPage): Promise<void> {
+  try {
+    await MiniAppSdk.wechatSwitchTab(tabTargetRoute);
+    const details = `wx.switchTab ${tabTargetRoute}`;
+    console.log('[kmp-miniapp-sdk] switch tab: PASS', details);
+    this.setData({ switchTabStatus: 'PASS', switchTabDetails: details });
+  } catch (error) {
+    // The page stays on the Main tab, which is itself the evidence that the switch
+    // did not happen.
+    const category = classifyFailure(error);
+    console.error('[kmp-miniapp-sdk] switch tab: FAIL', category);
+    this.setData({ switchTabStatus: 'FAIL', switchTabDetails: category });
+  }
+}
+
+async function switchToNonTabPage(this: IndexPage): Promise<void> {
+  try {
+    await MiniAppSdk.wechatSwitchTab(nonTabRoute);
+    // WeChat is expected to refuse this, so a success here would mean the SDK
+    // reported a host failure as a success.
+    const details = `unexpectedly switched to ${nonTabRoute}`;
+    console.error('[kmp-miniapp-sdk] switch tab (non-tab route): FAIL', details);
+    this.setData({ switchTabStatus: 'FAIL', switchTabDetails: details });
+  } catch (error) {
+    const category = classifyFailure(error);
+    console.log('[kmp-miniapp-sdk] switch tab (non-tab route): REFUSED', category);
+    this.setData({
+      switchTabStatus: 'FAIL',
+      switchTabDetails: `expected refusal: ${category} for ${nonTabRoute}`,
+    });
+  }
+}
+
 async function openSecondPage(this: IndexPage): Promise<void> {
   try {
     await MiniAppSdk.wechatNavigateTo(secondPageRoute);
@@ -1458,6 +1523,8 @@ Page<IndexPageData>({
     networkDetails: 'Requesting an HTTPS endpoint through wx.request…',
     navigationStatus: 'READY',
     navigationDetails: 'Tap the button to open the second page.',
+    switchTabStatus: 'READY',
+    switchTabDetails: `Tap the button to switch to ${tabTargetRoute}; nothing navigates on load.`,
     permissionName,
     privacyRequirement: 'UNKNOWN',
     privacyContract: 'unavailable',
@@ -1509,6 +1576,8 @@ Page<IndexPageData>({
   onHide,
   onUnload,
   openSecondPage,
+  switchToTabTarget,
+  switchToNonTabPage,
   refreshPermission,
   requestPermission,
   openPermissionSettings,

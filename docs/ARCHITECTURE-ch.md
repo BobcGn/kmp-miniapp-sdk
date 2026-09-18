@@ -47,7 +47,7 @@ SDK 当前共享客户端行为与宿主能力，从 P2 起共享 presentation s
 | Storage | — | 缓存策略：什么可以缓存、缓存多久 | `wx.getStorage`、文件系统沙箱 | — |
 | Business rule | 权威 | 仅做展示层校验；永不成为第二个真相源 | — | 输入界面元素 |
 | UiState | — | P2 的归属层；**未实现** | State → `setData` binding，自 P3 起 | — |
-| Navigation | — | 作为 presentation 行为的导航意图与 effect，自 P2 起 | `wx.navigateTo`、`wx.redirectTo`、`wx.navigateBack` | 页面栈与转场 |
+| Navigation | — | 作为 presentation 行为的导航意图与 effect，自 P2 起 | `wx.navigateTo`、`wx.redirectTo`、`wx.navigateBack`、`wx.switchTab` | 页面栈、tab 切换与转场 |
 | Permission | — | 宿主无关的 permission contract 与策略 | `wx.getSetting`、`wx.authorize`、`wx.openSetting` | 向用户展示的理由 |
 | Rendering | — | 永不 | 仅 binding，永不做 renderer | 微信用 WXML 与 WXSS；Android / iOS / 桌面用 Compose |
 | Cache | 权威存储 | last-known 客户端状态；永不作为事实 | 宿主存储原语 | — |

@@ -256,6 +256,18 @@ TestKit 由 19 个测试扩展到 **25 个**：DSL 配置实际改变 bundle 写
 
 **结论**：BOB-85 的 18 项验收标准全部有证据支持，P1 Mini App 平台集成闸门通过；BOB-51 中的 Consumer Integration 发布阻塞可以解除。不自动进入 P2 Presentation Runtime。
 
+### 补充条目：BOB-49 `[微信][P1] 添加运行时生命周期与导航桥接`
+
+BOB-49 不在本计划原有的 28 个 Issue 范围内（第 3 节记录的是 BOB-58 至 BOB-74）。它早先已完成并验收，随后因 **P1 Release Readiness Audit 发现导航缺少 `switchTab`** 而被重新打开，因此在本计划中单独记录，不改动原有 28 项的编号与结论。
+
+**本轮进展（2026-09-18）**：保留既有并通过宿主验收的 App launch/show/hide、Page show/hide/unload 与 `navigateTo`/`redirectTo`/`navigateBack`，补齐强类型 `switchTab`：`WxSwitchTabOptions` 原始契约、`WechatNavigationHost.switchTab` 与生产 `WxNavigationHost` 的 `wx.switchTab` 调用、`WechatNavigation.switchTab`（复用既有 `awaitHostCallback` 与 `mapWechatHostFailure`）、导出 `wechatSwitchTab`、CommonJS wrapper 与 `.d.ts`。空白 route 在调用宿主前以 `IllegalArgumentException` 拒绝；SDK 不保存 tabBar 页面清单，非 tabBar route 的失败保持为 `HostFailure`。
+
+微信示例新增 `tabBar`（两项）与 `pages/tabtarget/index` 宿主页面、`Switch to the target tab` 与 `Switch to a non-tab page (expect a refusal)` 两个按钮；成功打印 `[kmp-miniapp-sdk] switch tab: PASS`，失败只打印封闭分类，不输出微信原始消息。`app.json` 页面数由三变为四。
+
+Page load 仍按 **ADR-0006** 保持为有意的 `Unsupported` 公共入口，并在能力矩阵中写明理由；本轮未新增任何 Page `onLoad` 公共 API，也未把微信 Page 语义提升为通用模型。
+
+**验收完成（2026-09-18）**：开发者工具（基础库 3.17.2）与 OnePlus PLQ110 真机（Android 36、微信 8.0.76）均验证目标 tab 的 `SHOWN`、`switch tab: PASS`、切走时 `HIDDEN` 而非 `UNLOADED`，以及非 tab route 的封闭 `HostFailure`；三项既有页面栈操作同时完成回归。真机 runtime 报告基础库 3.17.2，而调试面板显示 3.17.3 `[1641]`，按观测差异如实记录。自动化 604 个测试 / 0 失败，Node smoke 与 TypeScript 检查通过。Navigation 在能力矩阵升级为 `Stable`，BOB-49 可以 Done。
+
 ### 紧急主线顺序表
 
 | 顺序 | Multica Issue | 当前状态（快照 2026-09-16，A/B 更新至 2026-09-17） | 进入下一步的门禁 |
@@ -391,5 +403,5 @@ BOB-62 完成后，回到 BOB-67 和 BOB-71 补齐全部状态与证据。原 17
 
 - 原微信能力主线：BOB-58 至 BOB-74，共 17 个 Issue，均在第 3 节和第 5 节各有唯一执行条目与索引。
 - 紧急消费者集成主线：BOB-75 至 BOB-85，共 11 个 Issue；BOB-75 是总目标，BOB-83、78、76、82、81、84、80、79、77 是 A–I，BOB-85 是最终 Release Gate，均在第 2 节各有唯一条目。
-- 当前文档合计覆盖 28 个 Multica Issue，没有把父 Issue、子 Issue 或 Release Gate 合并为同一个验收结果。
+- 当前文档合计覆盖 28 个 Multica Issue，没有把父 Issue、子 Issue 或 Release Gate 合并为同一个验收结果。另有 BOB-49（导航与生命周期）因审计重新打开，在第 2 节末尾作为补充条目单独记录，不计入这 28 项。
 - 执行时必须重新读取 Multica 最新内容；本文件中的状态快照只表示 2026-09-16，不是持续同步的事实源。

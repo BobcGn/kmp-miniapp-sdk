@@ -196,6 +196,20 @@ public object MiniAppExports {
         host.platform.navigation.navigateBack(delta)
 
     /**
+     * Switches to the tabBar page named by [url].
+     *
+     * WeChat requires [url] to name a page declared in the mini program's own
+     * `tabBar`; any other route is reported by the host as a failure, and the SDK
+     * keeps no list of tabBar pages to check against. The route carries no query:
+     * a tabBar page is switched to rather than opened with parameters. Switching
+     * to the page already shown is a success.
+     *
+     * @throws IllegalArgumentException when [url] is blank
+     */
+    public suspend fun wechatSwitchTab(url: String): Unit =
+        host.platform.navigation.switchTab(url)
+
+    /**
      * Returns how the host currently supports the capability named by [capability].
      *
      * A host answers by inspecting its own runtime, so the same build can answer

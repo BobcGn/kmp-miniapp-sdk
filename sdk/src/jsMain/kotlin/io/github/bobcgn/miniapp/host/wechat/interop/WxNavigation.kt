@@ -51,6 +51,27 @@ internal external interface WxNavigateBackOptions {
 }
 
 /**
+ * Raw callback-style options accepted by [wx.switchTab].
+ *
+ * WeChat accepts only a route that names a page declared in the mini program's
+ * own `tabBar`, and the host fails the call for any other route. The route also
+ * carries no query: a tabBar page is switched to, not opened with parameters.
+ */
+internal external interface WxSwitchTabOptions {
+    /** Route of the tabBar page to switch to, relative to the mini program root. */
+    var url: String
+
+    /** Called only when the tab switched. */
+    var success: WxGeneralCallback?
+
+    /** Called when WeChat cannot complete the tab switch, including for a non-tabBar route. */
+    var fail: WxGeneralCallback?
+
+    /** Called after either [success] or [fail]. */
+    var complete: WxGeneralCallback?
+}
+
+/**
  * Creates a plain JavaScript option bag for [wx.navigateTo].
  *
  * Optional fields are assigned only when a caller supplies a value, so absent
@@ -85,5 +106,19 @@ internal fun wxNavigateBackOptions(delta: Int? = null): WxNavigateBackOptions {
     if (delta != null) {
         options.delta = delta
     }
+    return options
+}
+
+/**
+ * Creates a plain JavaScript option bag for [wx.switchTab].
+ *
+ * Only `url` is set: `success`, `fail` and `complete` stay absent until a port
+ * assigns the callbacks it needs.
+ *
+ * @param url route of the tabBar page to switch to
+ */
+internal fun wxSwitchTabOptions(url: String): WxSwitchTabOptions {
+    val options: WxSwitchTabOptions = js("({})")
+    options.url = url
     return options
 }

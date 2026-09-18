@@ -47,6 +47,14 @@ internal external object wx {
     fun navigateBack(options: WxNavigateBackOptions): Unit
 
     /**
+     * Switches to a page declared in this mini program's own `tabBar`.
+     *
+     * WeChat rejects any other route in the failure callback; the SDK does not
+     * keep its own list of tabBar pages to check against.
+     */
+    fun switchTab(options: WxSwitchTabOptions): Unit
+
+    /**
      * Reports whether an API, parameter, or component exists in this base library.
      *
      * The call is synchronous. A base library older than the one that introduced

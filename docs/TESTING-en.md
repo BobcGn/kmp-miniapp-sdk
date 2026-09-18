@@ -190,6 +190,15 @@ The following procedure is the DeveloperTools checklist for currently implemente
 
 Step 2 is what makes `redirectTo` observable: the second page is replaced rather than covered, so step 3 reveals the index page instead of the second one.
 
+The tab switch is checked from the index page, and it is the only navigation action whose target must be declared in the mini program's own `tabBar`:
+
+| Step | Tap | Expected |
+| --- | --- | --- |
+| 4 | `Switch to the target tab (wx.switchTab)` on the index page | The Tab Target page appears with the tab bar highlighting it, and the index page is hidden rather than unloaded. Console: `[kmp-miniapp-sdk] tab target page: SHOWN pages/tabtarget/index`, then `[kmp-miniapp-sdk] switch tab: PASS wx.switchTab /pages/tabtarget/index` |
+| 5 | `Switch to a non-tab page (expect a refusal)` on the index page | The page stays on the Main tab, and nothing WeChat said is printed. Console: `[kmp-miniapp-sdk] switch tab (non-tab route): REFUSED HostFailure` |
+
+Step 5 needs the Main tab to be the current one, so return with the tab bar first if step 4 ran. Its expected line names only a closed category: the raw host message is deliberately not read, so a screenshot of the Console carries nothing WeChat said about the failure. A blank route is refused before the host is called and is covered by the automated checks rather than by a button.
+
 7. Confirm the version-gate states. The Runtime Detection card reads its expected state from the host, so it shows them without a code change:
 
 | Case | How to produce it | Expected |

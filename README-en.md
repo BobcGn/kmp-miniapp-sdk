@@ -14,7 +14,7 @@ where the text says so, but do not introduce an unverified API or build step.
 ## Status
 
 Experimental / pre-alpha. The Consumer Bridge, Storage, `wx.login` client authentication bootstrap,
-`wx.request` HTTP transport, App lifecycle, part of WeChat page-stack navigation, runtime capability
+`wx.request` HTTP transport, App lifecycle, WeChat page-stack navigation, runtime capability
 detection, the permission lifecycle, the WeChat session check, WeChat clipboard and vibration, basic
 WeChat file-system access, one-shot on-demand WeChat location, WeChat scanning, and WeChat media
 selection are implemented and have the required real-host evidence. Privacy authorization is

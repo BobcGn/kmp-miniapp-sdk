@@ -296,6 +296,9 @@ module.exports = {
   wechatNavigateBack: function wechatNavigateBack(delta) {
     return miniAppExports.wechatNavigateBack(delta === undefined ? null : delta);
   },
+  wechatSwitchTab: function wechatSwitchTab(url) {
+    return miniAppExports.wechatSwitchTab(url);
+  },
   capabilitySupport: function capabilitySupport(capability) {
     return miniAppExports.capabilitySupport(capability);
   },
