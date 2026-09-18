@@ -502,7 +502,7 @@ macOS (`createBLEConnection:fail API_NOT_SUPPORT`), so the simulator can exercis
 discovery but not connection. That is a host limitation, and connection acceptance therefore needs a
 real device.
 
-Adapter and discovery were exercised on an Android real device on 2026-09-18 and passed: the three
+Adapter and discovery were exercised on 2026-09-18 on OnePlus PLQ110 / Android 36 / WeChat 8.0.76 and passed: the three
 capability keys read `Supported`, adapter open and close succeeded, discovery started and stopped, 32
 devices were reported, and the listener count fell 2 → 1 → 0. Connection and disconnection were not
 run, because no connectable peripheral was available. The capability keys therefore stay

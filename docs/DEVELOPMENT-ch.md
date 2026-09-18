@@ -470,7 +470,7 @@ BLE 是对 SDK **事件驱动资源模型**的概念验证，不是 Bluetooth AP
 
 已安装的开发者工具基础库在 macOS 上拒绝 `createBLEConnection` 与 `closeBLEConnection`（`createBLEConnection:fail API_NOT_SUPPORT`），因此模拟器可以验证 adapter 与 discovery，但无法验证连接。这是宿主限制，连接验收因此需要真机。
 
-adapter 与 discovery 已于 2026-09-18 在 Android 真机上执行并通过：三个能力键均为 `Supported`，adapter 开启与关闭均成功，discovery 正常启动与停止，共上报 32 个设备，listener 计数由 2 → 1 → 0。连接与断开未执行，因为当时没有可连接的外设。因此能力键在 [WECHAT_CAPABILITIES-ch.md](platforms/wechat/WECHAT_CAPABILITIES-ch.md) 中保持 `Experimental`：不完整的真机记录不构成完成的验收。
+adapter 与 discovery 已于 2026-09-18 在 OnePlus PLQ110 / Android 36 / WeChat 8.0.76 上执行并通过：三个能力键均为 `Supported`，adapter 开启与关闭均成功，discovery 正常启动与停止，共上报 32 个设备，listener 计数由 2 → 1 → 0。连接与断开未执行，因为当时没有可连接的外设。因此能力键在 [WECHAT_CAPABILITIES-ch.md](platforms/wechat/WECHAT_CAPABILITIES-ch.md) 中保持 `Experimental`：不完整的真机记录不构成完成的验收。
 
 ## 开发原则
 

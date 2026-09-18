@@ -270,7 +270,7 @@ Kotlin/JS platform variants 及其传递依赖由 Gradle 在依赖解析期间�
 - discovery 与 connection 流使用有界缓冲、丢弃最旧事件，而不是无界队列；adapter 也不接受来自宿主回调的背压。由于同时要求宿主不要重复上报，被丢弃的 discovery 事件可能不会再次出现，因此它是尽力而为的观察流，不是完整结果集。
 - BLE 不建模任何权限或隐私前置条件：微信把「蓝牙未开启」报告为普通的 `openBluetoothAdapter` 失败，且无法从宿主契约确认该能力的前置条件。adapter 唯一的端口就是 Bluetooth host，因此它无法查询二者。
 - 已安装的开发者工具基础库在 macOS 上拒绝 `createBLEConnection` 与 `closeBLEConnection`（`createBLEConnection:fail API_NOT_SUPPORT`），因此连接只能在真机上验收；这记录为宿主限制而非 SDK 缺陷。
-- adapter 与 discovery 已于 2026-09-18 在 Android 真机上执行：三个能力键均为 `Supported`，开启与关闭均成功，discovery 正常启动与停止，共上报 32 个设备，listener 计数由 2 → 1 → 0。连接与断开未执行，因为当时没有可连接的外设，因此这是不完整的真机记录而不是完整的 BLE 验收。adapter、interop 与 session 自动化测试通过，CommonJS smoke 也在 fake host 上驱动了完整表面，但两者都不替代宿主运行。
+- adapter 与 discovery 已于 2026-09-18 在 OnePlus PLQ110 / Android 36 / WeChat 8.0.76 上执行：三个能力键均为 `Supported`，开启与关闭均成功，discovery 正常启动与停止，共上报 32 个设备，listener 计数由 2 → 1 → 0。连接与断开未执行，因为当时没有可连接的外设，因此这是不完整的真机记录而不是完整的 BLE 验收。adapter、interop 与 session 自动化测试通过，CommonJS smoke 也在 fake host 上驱动了完整表面，但两者都不替代宿主运行。
 
 ## 10. 明确尚不具备的能力
 

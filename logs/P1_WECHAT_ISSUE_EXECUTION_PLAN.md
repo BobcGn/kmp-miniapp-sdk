@@ -367,7 +367,7 @@ Page load 仍按 **ADR-0006** 保持为有意的 `Unsupported` 公共入口，�
 
 **宿主限制（已从已安装基础库确认）**：开发者工具在 macOS 上对 `createBLEConnection`/`closeBLEConnection` 返回 `API_NOT_SUPPORT`，因此模拟器只能验证 adapter 与 discovery，**连接必须由真机验收**。该限制记录为宿主限制而非 SDK 缺陷。
 
-**真机验收（2026-09-18）**：Android 真机已执行 adapter 与 discovery —— 三个能力键均为 `Supported`，adapter 开启与关闭均成功，discovery 正常启动与停止，共上报 32 个设备，session 的 listener 计数在 stop discovery 与 close adapter 之间由 2 → 1 → 0。**连接与断开未执行**：当时没有可连接的外设，因此二者仍未验证。
+**真机验收（2026-09-18）**：OnePlus PLQ110 / Android 36 / WeChat 8.0.76 真机已执行 adapter 与 discovery —— 三个能力键均为 `Supported`，adapter 开启与关闭均成功，discovery 正常启动与停止，共上报 32 个设备，session 的 listener 计数在 stop discovery 与 close adapter 之间由 2 → 1 → 0。**连接与断开未执行**：当时没有可连接的外设，因此二者仍未验证。runtime 日志报告基础库 3.17.2，真机调试面板显示 3.17.3 [1641]，两者按原始证据保留。
 
 **未完成 / 边界**：能力矩阵中 BLE 保持 `Experimental`（未实现 service/characteristic/notify/MTU/RSSI/配对/重连/后台扫描/getBluetoothDevices）；自动化与 smoke 均不构成真机证据，上述真机记录也只覆盖 adapter 与 discovery，不构成完整 BLE 验收。BOB-69 因此保持 blocked，但其代码作为 Experimental 能力进入 0.1.0，不阻断首次发布。
 
