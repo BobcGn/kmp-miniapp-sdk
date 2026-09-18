@@ -294,15 +294,19 @@ class MiniAppGradlePluginTest {
      *
      * This is the silent pass the check exists to prevent: Gradle's resolution result lists only the
      * dependencies that resolved, so a check that reads it alone reports "no renderer" for a graph
-     * it never saw. The fixture declares a renderer coordinate whose variants do not match a
-     * Kotlin/JS compilation, which is exactly how a consumer ends up with an unreachable classpath.
+     * it never saw.
+     *
+     * The fixture names a coordinate that cannot exist, rather than a real artifact that happens to
+     * be unresolvable today. That distinction is the point: an earlier version of this test used a
+     * published coordinate whose variant did not match a Kotlin/JS compilation, which made the test
+     * depend on the state of a third-party repository instead of on the plugin.
      */
     @Test
     fun `the boundary check refuses a classpath it could not resolve`() {
-        val output = boundaryCheckFailure("org.jetbrains.kotlinx:kotlinx-html-js:0.11.0")
+        val output = boundaryCheckFailure("org.example.nowhere:not-a-real-module:1.0")
 
         assertContains(output, MiniAppHostBoundary.UNRESOLVED_HEADER)
-        assertContains(output, "org.jetbrains.kotlinx:kotlinx-html-js:0.11.0")
+        assertContains(output, "org.example.nowhere:not-a-real-module:1.0")
         assertTrue(
             !output.contains(MiniAppHostBoundary.MESSAGE_HEADER),
             "an unresolved classpath must not be reported as a renderer finding:\n$output",

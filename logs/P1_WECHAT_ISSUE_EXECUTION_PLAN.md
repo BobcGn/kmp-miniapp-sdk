@@ -191,6 +191,72 @@ TestKit 由 19 个测试扩展到 **25 个**：DSL 配置实际改变 bundle 写
 
 对 A–I 进行总验收。必须同时具备：普通 KMP fixture clean build、`miniappTest` 实际执行、source-set 与 dependsOn 自动断言、SDK 依赖自动解析、稳定产物组装、IDEA 识别证据、微信开发者工具 Consumer Bridge 验证、插件集成测试、真实 consumer fixture，以及同步的中英文文档。任何缺项都不能用“实现完成”替代。通过后才解除 BOB-51 的 Consumer Integration 发布阻塞；不得自动进入 P2 Presentation Runtime。
 
+**验收结果（2026-09-18）：通过。**
+
+- 验收基线 commit：`ae65a41`（BOB-77 交付）。本轮在该基线上执行全部验证，未改动任何生产代码。
+- 环境：Gradle 9.3.1（仓库内置 Wrapper）、Kotlin 2.4.20、构建 JVM OpenJDK 25.0.2（插件字节码目标 JVM 17）、SDK 版本 `0.1.0-SNAPSHOT`、微信开发者工具基础库 3.17.3。IDEA 构建号未记录（见「IDEA 证据」）。
+
+**自动化结果（全部实际执行，非推断）**
+
+| 命令 | 结果 |
+| --- | --- |
+| `./gradlew projects` | BUILD SUCCESSFUL |
+| `./gradlew clean check` | BUILD SUCCESSFUL（4m34s，含真实执行的插件测试套件与 `verifyMiniAppConsumerDocs`） |
+| `./gradlew :kmp-miniapp-sdk:checkArchitectureBoundaries` | BUILD SUCCESSFUL |
+| `./gradlew :kmp-miniapp-sdk:jsNodeTest --rerun-tasks` | BUILD SUCCESSFUL，**598** 个测试 / 0 失败 / 0 错误 |
+| `./gradlew :miniapp-gradle-plugin:test --rerun-tasks` | BUILD SUCCESSFUL，**29** 个测试 / 0 失败（TestKit 20 + contract 9） |
+| `./gradlew verifyMiniAppGradlePluginIntegration` | BUILD SUCCESSFUL |
+| `./gradlew verifyMiniAppConsumerDocs` | BUILD SUCCESSFUL（`sections=21`、`codeBlocks=12`、两语言一致） |
+| `./gradlew verifyMiniAppConsumerFixture` | BUILD SUCCESSFUL |
+| `git diff --check` | 通过（无空白错误） |
+
+**consumer fixture 结果**
+
+- `clean miniappTest`：**5** 个测试真实执行、0 失败 —— `consumer.SharedTest` 2 个（只存在于 `commonTest`，经 source-set 层级被 `miniappTest` 复用）+ `consumer.MiniAppTest` 3 个（只存在于 `miniappTest`）。
+- 默认 bundle 目录：`build/miniapp/bundle`，**14** 个文件，`consumerContract.verified=true`。
+- 自定义宿主目录：`-PminiappBundleDirectory=host/miniprogram/libs`，**14** 个文件，`consumerContract.verified=true`；契约同时断言默认目录未被写入。
+- bundle 文件集合：`miniapp-consumer-miniapp.js` / `.d.ts` / `.js.map`、`kmp-miniapp-sdk-kotlin.js`（+map）、`kotlin-kotlin-stdlib.js`（+map）、`kotlinx-coroutines-core.js`（+map）、`kotlinx-atomicfu.js`（+map）、`kotlin_org_jetbrains_kotlin_kotlin_dom_api_compat.js`（+map）、`package.json`；无 `.wxml` / `.wxss`，无 Compose / Skiko / `kotlinx-browser` 文件。
+- Node host smoke：`fixture.greeting=Hello, WeChat, from commonMain`、`fixture.counted=5`、`fixture.sdkVersion=0.1.0-SNAPSHOT`、`fixture.result=PASS`。**这是接线检查，不是微信宿主验收。**
+- configuration cache：夹具侧 `Reusing configuration cache.` / `Configuration cache entry reused.`。
+
+**IDEA 证据**
+
+来源为用户在 BOB-76 与 BOB-83 的外部真实 KMP Demo 上完成的 Gradle Sync 与观察：IDEA 将 `commonMain`、`commonTest`、`miniappMain`、`miniappTest` 识别为 Kotlin source set，`actual` 声明被识别，`miniappTest` 被识别为测试。与本基线的一致性依据（不是重新截图）：`registerMiniAppPlatformTarget` 中 `kotlin.js(MINIAPP_TARGET_NAME)` 与 `nodejs()` 自 `0921033` 起未变（`0921033..HEAD` 仅注释变化），其后新增的只是 output binary 配置、依赖接线、边界检查与 bundle 任务 —— 都不改变 KGP 从 target 名派生 source set 的方式。IDEA 构建号未记录；若后续需要在当前 HEAD 上刷新该证据，最小要求是在 IDEA 中对应用了插件的工程执行一次 Gradle Sync，并对 `miniappMain` / `miniappTest` 各截一张图。
+
+**微信开发者工具证据**
+
+来源为 BOB-80 在基础库 3.17.3 的验收：页面渲染 `Hello, WeChat, from commonMain`、`countUpTo(5): 5`、`sdkVersion: 0.1.0-SNAPSHOT`，Console 输出同样的三行并以 `fixture.result=PASS` 收尾。与本基线的一致性依据：`git diff 3952f2e..HEAD -- fixtures/ sdk/src/` 为空 —— 消费者源码、宿主工程与 SDK 源码与验收时完全相同；`configureMiniAppOutput`（`nodejs()` / `useCommonJs()` / `binaries.library()` / `generateTypeScriptDefinitions()`）与 bundle 任务自 `3952f2e` 起未改（`MiniAppPlatformSupport.kt` 的差异只在边界检查的判定与消息）。因此该证据仍然适用；未做字节级比对，因为验收时的产物未归档。
+
+**架构检查清单（静态审计，SDK `sdk/src` + 插件 `miniapp-gradle-plugin/src`）**
+
+| 检查 | 结果 |
+| --- | --- |
+| `@Composable` / MaterialTheme / LazyColumn / Modifier / Dp | 0 |
+| `androidx.compose` / `org.jetbrains.compose` | 仅出现在插件的**禁止坐标清单**与对应测试字符串，无依赖、无类型 |
+| `Column` / `Row` / `Button` / `Canvas` | 0 |
+| 整词 `Text` | 11 处，全部为 KDoc 文案与微信订阅消息 interop 的 `WxSubscriptionEntry.Text` 数据取值，非 UI 类型 |
+| Virtual DOM / Applier / View Tree / Layout Engine / setData / WXML generator | 0（`setData` 在 SDK 中不存在） |
+| `WXML` / `WXSS` | 仅在插件的边界检查**说明文本**中出现；宿主 markup 只存在于 `examples/wechat-miniprogram` 与 `fixtures/miniapp-consumer/host` |
+| `UiState` / `Store` / `Effect` / `Reducer` / `Presentation` | 0；`Action` 的 2 处均为 `org.gradle.api.Action`（Gradle DSL） |
+| SDK 生产依赖 | 仅 `kotlinx-coroutines-core` |
+| Gradle modules | 仅 `:kmp-miniapp-sdk` 与 `:miniapp-gradle-plugin`，不存在 `app` module，SDK 无法依赖 app |
+| `dynamic` / `external` / `js()` | 限于 `jsMain`（`commonMain` 为 0） |
+
+**闸门发现并修正的两处问题（均非生产代码）**
+
+1. **测试依赖外部仓库状态（已修正）。** `the boundary check refuses a classpath it could not resolve` 使用已发布的 `org.jetbrains.kotlinx:kotlinx-html-js:0.11.0` 作为「不可解析」的替身。BOB-79 时该坐标因缓存未命中而无法解析，测试因此通过；本轮缓存过期后该坐标可解析，检查随即按**精确模块规则**将其判定为 renderer，断言随之失败。这是测试的缺陷而非插件缺陷：插件两次行为都正确。修正为使用不可能存在的坐标 `org.example.nowhere:not-a-real-module:1.0`，使断言只依赖插件行为，并记录「不得用第三方坐标的解析状态构造断言」。本轮两次全量执行（`clean check` 4m34s、`test --rerun-tasks` 3m33s）均为 29/0。
+2. **AGENTS.md 宿主 UI 位置陈述过期（已修正）。** §10 仍写「WXML 与 WXSS 属于微信宿主 UI，今天即 `examples/wechat-miniprogram`」，而 BOB-80 之后消费者 fixture 的 `host/` 同样是微信宿主 UI。改为同时列出两处，规则不变。
+
+**剩余限制（真实存在，不阻塞本闸门）**
+
+- 插件与 runtime SDK 未发布到任何仓库；消费者当前需源码检出 + composite build，README 已明写。
+- 微信宿主验收只覆盖该 bundle 形态与基础库 3.17.3 的页面路径；其他基础库、真机、其他微信能力按各自矩阵分别验收。
+- Node smoke 仅证明模块接线，不等于宿主验收。
+- IDEA 证据来自外部 Demo 且未记录 IDE 构建号；当前 HEAD 上未重新截图。
+- 隐私授权、订阅消息、网络扩展、标准支付的真实宿主验收仍按 PROJECT_FACTS 与能力矩阵记录的状态各自待办 —— 与本闸门无关，不得据此声称已完成。
+
+**结论**：BOB-85 的 18 项验收标准全部有证据支持，P1 Mini App 平台集成闸门通过；BOB-51 中的 Consumer Integration 发布阻塞可以解除。不自动进入 P2 Presentation Runtime。
+
 ### 紧急主线顺序表
 
 | 顺序 | Multica Issue | 当前状态（快照 2026-09-16，A/B 更新至 2026-09-17） | 进入下一步的门禁 |
@@ -206,7 +272,7 @@ TestKit 由 19 个测试扩展到 **25 个**：DSL 配置实际改变 bundle 写
 | G | BOB-80 | Done（2026-09-17） | clean build、5 个测试、runtime 自动解析、两个 bundle 目录、Node smoke 与微信开发者工具 3.17.3 验收均通过 |
 | H | BOB-79 | Done（2026-09-18） | 29 个自动化测试覆盖插件关键路径；统一入口 `verifyMiniAppGradlePluginIntegration` 复核通过 |
 | I | BOB-77 | Done（2026-09-18） | README 消费者快速开始、发布状态诚实边界与 `verifyMiniAppConsumerDocs` 防漂移检查均验收通过 |
-| Release Gate | BOB-85 | Ready（A–I 已完成） | 完整 Consumer Integration 验收通过并可解除 BOB-51 阻塞 |
+| Release Gate | BOB-85 | Done（2026-09-18） | 18 项验收标准逐条有证据；完整 Consumer Integration 验收通过，BOB-51 的发布阻塞可解除 |
 
 ## 3. 原微信能力落地顺序
 
