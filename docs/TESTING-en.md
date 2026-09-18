@@ -125,6 +125,13 @@ path. The fourth is not automated, and Node output is never reported as a host r
 One entry point runs the plugin's contract and TestKit suites, the architecture boundary that keeps a
 renderer out of the SDK, and the consumer fixture from clean. It is the command CI should call.
 
+The READMEs are the consumer's entry point, so `verifyMiniAppConsumerDocs` guards them: it fails
+when the two languages document a different number of sections or a different sequence of code blocks,
+when a `fixtures/miniapp-consumer/...` path it refers to no longer exists, or when one of the two
+commands a consumer runs — `./gradlew miniappTest` and `./gradlew assembleMiniAppBundle` — stops being
+documented. It reads structure and paths rather than prose, and it is cheap and offline, so `check`
+depends on it.
+
 It is deliberately **not** wired into `check`. The fixture drives a nested Gradle build that compiles
 Kotlin/JS and installs npm dependencies, so `check` depending on it would put several minutes and a
 network dependency in front of every ordinary build and would make `check` re-enter Gradle. The

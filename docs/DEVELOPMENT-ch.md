@@ -210,7 +210,7 @@ cd fixtures/miniapp-consumer
 | bundle 满足其契约 | `verifyConsumerContract` 任务 |
 | DSL 真实生效 | 同一任务断言配置的目录，宿主运行则传入 `-PminiappBundleDirectory=host/miniprogram/libs` |
 
-消费者的 build script 中没有 source set 声明、没有 `dependsOn`、没有 `useCommonJs()`、没有 `generateTypeScriptDefinitions()`、没有 runtime artifact 坐标、也没有复制步骤。除两个插件外它只声明了一件事：`commonTest` 的 `kotlin-test`，这是每个 Kotlin Multiplatform 项目都会做的。
+消费者的 build script 中没有 source set 声明、没有 `dependsOn`、没有 `useCommonJs()`、没有 `generateTypeScriptDefinitions()`、没有 runtime artifact 坐标、也没有复制步骤。 新用户的入口是 README，其快速开始取自本 fixture；当两种语言发生漂移、README 引用的路径消失、或被记录的消费者命令缺失时，`verifyMiniAppConsumerDocs` 会失败。除两个插件外它只声明了一件事：`commonTest` 的 `kotlin-test`，这是每个 Kotlin Multiplatform 项目都会做的。
 
 ### 从仓库运行
 

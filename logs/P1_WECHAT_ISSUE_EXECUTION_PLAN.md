@@ -171,6 +171,22 @@ TestKit 由 19 个测试扩展到 **25 个**：DSL 配置实际改变 bundle 写
 
 在工作流被真实证明后，同步更新 README、PROJECT_FACTS、ARCHITECTURE 与 DEVELOPMENT 的中英文配对。新用户必须能只依靠 README 建立 `miniappMain` Hello World；文档要说明当前 Host 是 WeChat，同时保持 Mini App 平台边界，并移除已经被插件隐藏的 `jsMain`、CommonJS 接线和手工复制指导。
 
+**本轮进展（2026-09-18）**：README 由「仓库内部说明」改写为消费者工作流文档：21 个章节、12 个代码块，结构与顺序在中英文之间完全一致。快速开始逐步给出前置条件、`settings.gradle.kts`、`build.gradle.kts`、`commonMain` 共享行为、`miniappMain` 宿主导出、`commonTest`/`miniappTest` 测试、`./gradlew miniappTest`、`./gradlew assembleMiniAppBundle`、微信宿主接入与预期输出。所有片段取自 `fixtures/miniapp-consumer` 的真实源码，未引入任何未验证 API。
+
+**发布状态诚实处理**：新增「发布之前：今天你需要做什么」一节，明确插件与 SDK 均未发布到 Gradle Plugin Portal / Maven Central / npm，今天需要本仓库源码；并给出对照表说明发布后只有两个坐标的解析来源改变（插件按 id、runtime 按公共坐标），`build.gradle.kts`、源码与宿主不受影响。文档不提供任何尚不存在的已发布版本。
+
+**职责边界**：新增「各自负责什么」表，区分 Gradle 插件、Runtime SDK、微信宿主（Host UI）与 **尚未实现** 的 Presentation Runtime；`UiState` / `Action` / `Store` / `Effect` 明确标注未实现且不展示任何 API。微信明确为当前 Host，Mini App 为平台抽象。
+
+**移出消费者主流程**：README 不再以 `jsMain`、CommonJS、Kotlin/JS 或 SDK `build/`、`dist/` 内部路径作为消费者步骤；`buildMiniAppSdk` 与 `examples/wechat-miniprogram` 被标注为仓库内部/历史路径，不是消费者工作流。README 中不再要求消费者理解 `useCommonJs()`、手工复制产物或手工创建 source set。
+
+**新增防漂移检查**：根任务 `verifyMiniAppConsumerDocs`（已接入 `check`）断言两份 README 的章节数一致、代码块语言序列一致、引用的每个 `fixtures/miniapp-consumer/...` 路径存在，且两条消费者命令仍被记录。它读取结构与路径而非正文，开销极低且无需网络。变异探针三例均已执行：从 README-ch 删除一个章节 → 失败（`README-en.md has 21, README-ch.md has 20`）；把 README-en 的路径改成不存在 → 失败（`refers to 'fixtures/miniapp-consumer/host-typo', which does not exist`）；改掉 README-ch 的 `assembleMiniAppBundle` 命令 → 失败。
+
+**已执行验证**：README 中列出的每条命令都实际运行 —— 根构建 `projects`、`clean check`、`:kmp-miniapp-sdk:jsNodeTest`、`:kmp-miniapp-sdk:check`、`:miniapp-gradle-plugin:test`、`verifyMiniAppGradlePluginIntegration`；fixture 侧 `clean miniappTest`、`assembleMiniAppBundle`（默认目录 14 个文件）、`clean assembleMiniAppBundle -PminiappBundleDirectory=host/miniprogram/libs`（宿主目录 14 个文件）、`node scripts/host-smoke.cjs`（`fixture.result=PASS`）。全部 BUILD SUCCESSFUL。
+
+**验收收尾（2026-09-18）**：Codex 复核确认 `verifyMiniAppConsumerDocs` 实际位于根 `check` 的任务图，并纠正三处过强或失真的 README 表述：代码片段允许明确删减而不声称逐字复制、Kotlin Gradle Plugin 仅声明已验证的 2.4.20 而不承诺其他版本兼容、隐私/订阅/网络能力分别保留其真实验收前置条件。用户随后执行 `./gradlew --no-daemon --console=plain verifyMiniAppConsumerDocs`，得到 2 份 README、21 个章节、12 个代码块、`consumerDocs.verified=true` 与 `BUILD SUCCESSFUL`。中英文标题结构和 `git diff --check` 均通过，BOB-77 验收完成。
+
+**边界**：本轮不新增任何 API、发布配置或 P2 内容；未修改已验收的消费者 API 或插件行为。BOB-85 Release Gate 是下一步。
+
 ### 紧急 Release Gate：BOB-85 `[P1][URGENT][Release Gate] Accept KMP Mini App platform integration`
 
 对 A–I 进行总验收。必须同时具备：普通 KMP fixture clean build、`miniappTest` 实际执行、source-set 与 dependsOn 自动断言、SDK 依赖自动解析、稳定产物组装、IDEA 识别证据、微信开发者工具 Consumer Bridge 验证、插件集成测试、真实 consumer fixture，以及同步的中英文文档。任何缺项都不能用“实现完成”替代。通过后才解除 BOB-51 的 Consumer Integration 发布阻塞；不得自动进入 P2 Presentation Runtime。
@@ -189,8 +205,8 @@ TestKit 由 19 个测试扩展到 **25 个**：DSL 配置实际改变 bundle 写
 | F | BOB-84 | Done（2026-09-17） | 最小 DSL 通过架构审查且不承载业务配置；外部 Demo 自定义目录构建通过 |
 | G | BOB-80 | Done（2026-09-17） | clean build、5 个测试、runtime 自动解析、两个 bundle 目录、Node smoke 与微信开发者工具 3.17.3 验收均通过 |
 | H | BOB-79 | Done（2026-09-18） | 29 个自动化测试覆盖插件关键路径；统一入口 `verifyMiniAppGradlePluginIntegration` 复核通过 |
-| I | BOB-77 | Ready（G、H 已完成） | 中英文文档只描述已验证消费者工作流 |
-| Release Gate | BOB-85 | Blocked by A–I | 完整 Consumer Integration 验收通过并可解除 BOB-51 阻塞 |
+| I | BOB-77 | Done（2026-09-18） | README 消费者快速开始、发布状态诚实边界与 `verifyMiniAppConsumerDocs` 防漂移检查均验收通过 |
+| Release Gate | BOB-85 | Ready（A–I 已完成） | 完整 Consumer Integration 验收通过并可解除 BOB-51 阻塞 |
 
 ## 3. 原微信能力落地顺序
 

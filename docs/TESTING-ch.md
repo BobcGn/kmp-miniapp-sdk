@@ -113,6 +113,8 @@ fixture 经本仓库的 composite build 解析 runtime SDK，因为目前尚未�
 
 一个入口即可运行插件的 contract 与 TestKit 套件、保护 SDK 不引入 renderer 的架构边界检查，以及从 clean 状态运行的消费者 fixture。这是 CI 应当调用的命令。
 
+README 是消费者的入口，因此由 `verifyMiniAppConsumerDocs` 守护：当两种语言记录的章节数或代码块序列不一致、当它引用的某个 `fixtures/miniapp-consumer/...` 路径已不存在、或当消费者要执行的两条命令 —— `./gradlew miniappTest` 与 `./gradlew assembleMiniAppBundle` —— 之一不再被记录时，它会失败。它读取结构与路径而非正文，且开销极低、无需网络，因此 `check` 依赖它。
+
 它**刻意不接入 `check`**：该 fixture 会驱动一个编译 Kotlin/JS 并安装 npm 依赖的嵌套 Gradle 构建，因此让 `check` 依赖它会给每一次普通构建增加数分钟与一个网络依赖，并让 `check` 重新进入 Gradle。插件自身的套件已经通过该工程的 `check` 任务属于 `check`；这个入口增加的是 fixture 与 `check` 不会运行的 SDK 架构检查。
 
 ## 3. 真实宿主层

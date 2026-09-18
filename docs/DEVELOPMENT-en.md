@@ -214,7 +214,7 @@ What it proves by running:
 | the bundle satisfies its contract | the `verifyConsumerContract` task |
 | the DSL takes effect | the same task asserts the configured directory, and the host run passes `-PminiappBundleDirectory=host/miniprogram/libs` |
 
-The consumer's build script contains no source-set declaration, no `dependsOn`, no `useCommonJs()`, no `generateTypeScriptDefinitions()`, no runtime artifact coordinate and no copy step. Besides the two plugins it declares exactly one thing: `kotlin-test` for `commonTest`, which every Kotlin Multiplatform project does.
+The consumer's build script contains no source-set declaration, no `dependsOn`, no `useCommonJs()`, no `generateTypeScriptDefinitions()`, no runtime artifact coordinate and no copy step. A new user's entry point is the README, whose Quick Start is taken from this fixture; `verifyMiniAppConsumerDocs` fails when the two languages drift apart, when a path the READMEs cite disappears, or when a documented consumer command is gone. Besides the two plugins it declares exactly one thing: `kotlin-test` for `commonTest`, which every Kotlin Multiplatform project does.
 
 ### Running it from the repository
 

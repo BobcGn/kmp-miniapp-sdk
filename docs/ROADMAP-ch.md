@@ -58,6 +58,8 @@ runtime 的公共坐标是 `io.github.bobcgn:kmp-miniapp-sdk`。第 D 步正式�
 
 第 H 步的实现已就位：插件集成套件分层为 contract 测试、Gradle TestKit fixture 与持久消费者 fixture，并以 `verifyMiniAppGradlePluginIntegration` 作为 CI 调用的唯一入口。它刻意不接入 `check`，因为该 fixture 会驱动一个编译 Kotlin/JS 并安装 npm 依赖的嵌套 Gradle 构建。套件还会拒绝未能解析的 Mini App runtime classpath，因此 renderer 检查不会对一张它从未看过的依赖图作出报告。
 
+第 I 步的文档已就位：README 是以已验收 fixture 为依据的消费者快速开始 —— 按 id 应用插件、编写 `commonMain`、在 `miniappMain` 导出、运行 `miniappTest`、组装 bundle、在微信宿主中加载 —— 其后明确说明插件与 runtime SDK 均未发布，并给出发布后发生变化的对照表。仓库维护者命令与旧的 `examples/wechat-miniprogram` 路径已移出消费者主流程。
+
 ### P1 完成证据
 
 BOB-85 必须同时具备以下证据，缺一项都不得用“实现完成”代替验收：

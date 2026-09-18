@@ -123,3 +123,81 @@ tasks.named("verifyMiniAppConsumerHostBundle") {
 tasks.named("verifyMiniAppConsumer") {
     mustRunAfter(":miniapp-gradle-plugin:test", ":kmp-miniapp-sdk:checkArchitectureBoundaries")
 }
+
+// The READMEs are the consumer's entry point and the first place to go stale: a renamed fixture
+// path, a code block added to one language only, or a documented command that stops existing. This
+// checks structure and paths, not prose, and it does not read the snippets' contents — the fixture
+// stays the code authority, and `verifyMiniAppConsumerFixture` runs the commands the READMEs
+// document. It is cheap and offline, so `check` depends on it.
+val consumerReadmes = listOf("README-en.md", "README-ch.md").map { layout.projectDirectory.file(it) }
+
+tasks.register("verifyMiniAppConsumerDocs") {
+    group = "verification"
+    description = "Checks that both READMEs stay parallel and reference paths that exist."
+
+    val readmes = consumerReadmes
+    val projectDirectory = layout.projectDirectory.asFile
+    val documentedCommands = listOf("./gradlew miniappTest", "./gradlew assembleMiniAppBundle")
+
+    inputs.files(readmes).withPropertyName("readmes")
+    inputs.property("documentedCommands", documentedCommands)
+
+    doLast {
+        // file, headings, code-block languages — the text is re-read from the file when needed.
+        val profiles: List<Triple<File, List<String>, List<String>>> = readmes.map { readme ->
+            val file = readme.asFile
+            check(file.isFile) { "the README $file does not exist" }
+            val lines = file.readLines()
+            // Fences come in pairs, so the opening ones are the even indexes.
+            val fences = lines.filter { it.trimStart().startsWith("```") }.map { it.trim() }
+            check(fences.size % 2 == 0) { "$file has an unclosed code fence" }
+            Triple(
+                file,
+                lines.filter { it.startsWith("#") },
+                fences.filterIndexed { index, _ -> index % 2 == 0 }.map { it.drop(3).ifBlank { "(none)" } },
+            )
+        }
+
+        profiles.forEach { (file, _, _) ->
+            val text = file.readText()
+            documentedCommands.forEach { command ->
+                check(text.contains(command)) {
+                    "${file.name} must document '$command'; it is the command a consumer runs."
+                }
+            }
+
+            Regex("fixtures/miniapp-consumer[^\\s`)\\]\\[|]*")
+                .findAll(text)
+                .map { it.value.trimEnd('.', ',', ':', ';') }
+                .distinct()
+                .sorted()
+                .forEach { path ->
+                    check(File(projectDirectory, path).exists()) {
+                        "${file.name} refers to '$path', which does not exist."
+                    }
+                }
+        }
+
+        val (english, chinese) = profiles
+        check(english.second.size == chinese.second.size) {
+            "the READMEs document a different number of sections: " +
+                "${english.first.name} has ${english.second.size}, ${chinese.first.name} has ${chinese.second.size}."
+        }
+        check(english.third == chinese.third) {
+            "the READMEs document a different sequence of code blocks:\n" +
+                "  ${english.first.name}: ${english.third}\n" +
+                "  ${chinese.first.name}: ${chinese.third}"
+        }
+
+        logger.lifecycle(
+            "consumerDocs.readmes=${profiles.size} " +
+                "consumerDocs.sections=${english.second.size} " +
+                "consumerDocs.codeBlocks=${english.third.size} " +
+                "consumerDocs.verified=true",
+        )
+    }
+}
+
+tasks.matching { it.name == "check" }.configureEach {
+    dependsOn("verifyMiniAppConsumerDocs")
+}
