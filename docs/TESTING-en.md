@@ -82,7 +82,7 @@ That last check runs on Node and establishes module wiring only. **It is not WeC
 
 ### Gradle plugin suite
 
-`:miniapp-gradle-plugin:test` drives the plugin through Gradle TestKit fixtures in temporary consumer projects. It covers plugin application, the missing-Kotlin-Multiplatform failure, source-set provisioning and compilation ownership, test execution, runtime dependency wiring, the `assembleMiniAppBundle` contract, the renderer rejection that guards that contract, repeat-run incrementality and configuration-cache compatibility. It also covers the `miniapp { }` extension: that the canonical `miniapp { wechat { ... } }` block compiles and executes, that a configured bundle directory is where the bundle is actually written, that a directory outside the project is rejected with an actionable message, that applying the plugin twice creates no second extension, and that WeChat is a host configuration rather than the platform extension itself.
+`:miniapp-gradle-plugin:test` drives the plugin through Gradle TestKit fixtures in temporary consumer projects. It covers plugin application, the missing-Kotlin-Multiplatform failure, source-set provisioning and compilation ownership, creation of the conventional Mini App Kotlin directories without replacing existing sources, test execution, runtime dependency wiring, the `assembleMiniAppBundle` contract, the renderer rejection that guards that contract, repeat-run incrementality and configuration-cache compatibility. It also covers the `miniapp { }` extension: that the canonical `miniapp { wechat { ... } }` block compiles and executes, that a configured bundle directory is where the bundle is actually written, that a directory outside the project is rejected with an actionable message, that applying the plugin twice creates no second extension, and that WeChat is a host configuration rather than the platform extension itself.
 
 The error paths are asserted on the failure's own words, not on the build merely failing: a
 project without the Kotlin Multiplatform plugin, a target that already uses `miniapp` for another
@@ -91,7 +91,7 @@ replacement), a shared Kotlin Multiplatform dependency that offers no Mini App v
 coordinate that cannot be resolved, a bundle directory outside the project, and a runtime classpath
 carrying Compose. Each names what the consumer has to change.
 
-The fixtures resolve the runtime SDK through a composite build of this repository, because nothing is published yet. They assert on real output — the executed test report, and the files a bundle actually contains — rather than on task names alone: a task existing is not evidence that it produced anything. The bundle tests keep two conclusions apart: that the plugin generates no host markup, and that the distribution carries no renderer. The first is a statement about generated files; the second is a statement about the dependency graph and is asserted by the host-boundary check.
+The fixtures resolve the runtime SDK through a composite build of this repository, so that they test the current source rather than a previously released binary; that is a deliberate choice now that 0.1.0 is published, not a workaround for an unpublished coordinate. They assert on real output — the executed test report, and the files a bundle actually contains — rather than on task names alone: a task existing is not evidence that it produced anything. The bundle tests keep two conclusions apart: that the plugin generates no host markup, and that the distribution carries no renderer. The first is a statement about generated files; the second is a statement about the dependency graph and is asserted by the host-boundary check.
 
 These tests establish that a distribution is produced and what it contains. They do not establish that any host can load it; that needs a real host run.
 
@@ -212,7 +212,7 @@ The following procedure is the DeveloperTools checklist for currently implemente
 
 | Check | On the page | In the console |
 | --- | --- | --- |
-| Version | `0.1.0-SNAPSHOT` | `[kmp-miniapp-sdk] sdkVersion: 0.1.0-SNAPSHOT` |
+| Version | `0.1.0` | `[kmp-miniapp-sdk] sdkVersion: 0.1.0` |
 | Runtime lifecycle | The `Runtime Lifecycle` card shows `FOREGROUND` and a page route | No dedicated line; the card is the evidence |
 | Runtime detection | The `Runtime Detection and Version Gate` card shows `PASS`, the base-library version, and support states | `[kmp-miniapp-sdk] runtime detection: PASS baseLibrary=…, platform=…, runtime-detection=…, storage=Supported, ungated=Unsupported` |
 | Permission | The `Permission Lifecycle` card shows the permission name and its state after the steps below | `[kmp-miniapp-sdk] permission query: PASS permission=microphone, state=…` |
@@ -229,6 +229,10 @@ The following procedure is the DeveloperTools checklist for currently implemente
 | Storage | `Storage verification: PASS` | `[kmp-miniapp-sdk] storage: PASS first=first, overwritten=second, missing=null` |
 | Client login code | `Client login code: PASS` | `[kmp-miniapp-sdk] auth bootstrap: PASS codeReceived=true, length=<positive integer>` |
 | Network | `Network verification: PASS` | `[kmp-miniapp-sdk] network: PASS status=200, bytes=<positive integer>` |
+
+The version row is what this tree prints now. The dated runs behind the other rows were made while the
+version catalog held `0.1.0-SNAPSHOT`, and those records keep the value they observed; only the
+version string moves with the release.
 
 6. Verify the page-stack bridge by tapping through it. Navigation cannot be checked from one page, because every action changes which page is on screen.
 

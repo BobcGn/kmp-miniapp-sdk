@@ -328,7 +328,7 @@ Kotlin/JS compilation
 
 插件隐藏构建接线，而不隐藏语义。它不手工搭建 compilation 或 source set，不通过不受支持的 API 把 source set 挂到 compilation 上，也不把产物组装任务呈现为消费者契约。把本仓库自身 SDK 分发到微信示例的 `buildMiniAppSdk`，是组装环节的基础证据，而不是消费者工作流。
 
-`:miniapp-gradle-plugin` module 就是该插件本身。它注册 `miniapp` target 与该 target 的 Node.js test run，把 runtime SDK 接入 `miniappMain`，并对未应用 Kotlin Multiplatform 插件的项目报错。这些注册就是它全部的提供内容：`miniappMain`、`miniappTest`、拥有它们的 compilation，以及它们与 `commonMain` / `commonTest` 的边，全部来自 Kotlin Gradle Plugin；插件从不手工搭建 source set 或层级边，因为手工搭建的正是 [ADR 0010](decisions/0010-miniapp-gradle-plugin-source-set-model-ch.md) 否决的「未使用 source set」模型。
+`:miniapp-gradle-plugin` module 就是该插件本身。它注册 `miniapp` target 与该 target 的 Node.js test run，把 runtime SDK 接入 `miniappMain`，并对未应用 Kotlin Multiplatform 插件的项目报错。这些注册就是它全部的模型提供内容：`miniappMain`、`miniappTest`、拥有它们的 compilation，以及它们与 `commonMain` / `commonTest` 的边，全部来自 Kotlin Gradle Plugin；插件从不手工搭建 source set 或层级边，因为手工搭建的正是 [ADR 0010](decisions/0010-miniapp-gradle-plugin-source-set-model-ch.md) 否决的「未使用 source set」模型。另外，它会在插件应用期间实体化标准的 `src/miniappMain/kotlin` 与 `src/miniappTest/kotlin` 目录，使 IDE 导入在任何项目向导生成结果上都能显示这两个空 source set。这项文件系统便利是幂等的，会保留现有源码，且不改变 source-set 模型的归属。
 
 runtime 以**公共 module 坐标**（`io.github.bobcgn:kmp-miniapp-sdk`）到达消费者，而不是 project path。消费者构建无法访问本仓库结构，因此插件不能、也不得写出 `project(":kmp-miniapp-sdk")`；同一个坐标今天经 composite build 解析，发布后由仓库解析。它只被加入 `miniappMain`，因此同时面向 Android、iOS 或 JVM 的项目不会在这些平台上获得 Mini App runtime；`miniappTest` 通过 source-set hierarchy 继承，而不是再次声明。
 

@@ -1,6 +1,43 @@
 type Nullable<T> = T | null | undefined
 declare function KtSingleton<T>(): T & (abstract new() => any);
 export declare namespace io.github.bobcgn.miniapp.export {
+    class JsBleDevice {
+        private constructor();
+        get deviceId(): string;
+        get name(): Nullable<string>;
+        get rssi(): Nullable<number>;
+    }
+    namespace JsBleDevice {
+        /** @deprecated $metadata$ is used for internal purposes, please don't use it in your code, because it can be removed at any moment */
+        namespace $metadata$ {
+            const constructor: abstract new () => JsBleDevice;
+        }
+    }
+    class JsBleAdapterState {
+        private constructor();
+        get available(): boolean;
+        get discovering(): Nullable<boolean>;
+        get powered(): Nullable<boolean>;
+    }
+    namespace JsBleAdapterState {
+        /** @deprecated $metadata$ is used for internal purposes, please don't use it in your code, because it can be removed at any moment */
+        namespace $metadata$ {
+            const constructor: abstract new () => JsBleAdapterState;
+        }
+    }
+    class JsBleConnectionState {
+        private constructor();
+        get deviceId(): string;
+        get connected(): boolean;
+    }
+    namespace JsBleConnectionState {
+        /** @deprecated $metadata$ is used for internal purposes, please don't use it in your code, because it can be removed at any moment */
+        namespace $metadata$ {
+            const constructor: abstract new () => JsBleConnectionState;
+        }
+    }
+}
+export declare namespace io.github.bobcgn.miniapp.export {
     class JsCapabilitySupport {
         private constructor();
         get state(): string;
@@ -223,6 +260,18 @@ export declare namespace io.github.bobcgn.miniapp.export {
                 wechatRedirectTo(url: string): Promise<void>;
                 wechatNavigateBack(delta: Nullable<number>): Promise<void>;
                 wechatSwitchTab(url: string): Promise<void>;
+                wechatBleAdapterState(): Promise<io.github.bobcgn.miniapp.export.JsBleAdapterState>;
+                wechatBleOpenAdapter(): Promise<void>;
+                wechatBleCloseAdapter(): Promise<void>;
+                wechatBleStartDiscovery(): Promise<void>;
+                wechatBleStopDiscovery(): Promise<void>;
+                wechatBleDevices(): Array<io.github.bobcgn.miniapp.export.JsBleDevice>;
+                wechatBleDiscoveryFailure(): Nullable<string>;
+                wechatBleConnect(deviceId: string): Promise<void>;
+                wechatBleDisconnect(deviceId: string): Promise<void>;
+                wechatBleConnectionStates(): Array<io.github.bobcgn.miniapp.export.JsBleConnectionState>;
+                wechatBleConnectionFailure(): Nullable<string>;
+                wechatBleListenerCount(): number;
                 capabilitySupport(capability: string): io.github.bobcgn.miniapp.export.JsCapabilitySupport;
                 requireCapability(capability: string): void;
                 wechatRuntimeInfo(): io.github.bobcgn.miniapp.export.JsRuntimeInfo;

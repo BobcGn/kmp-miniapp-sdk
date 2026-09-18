@@ -58,7 +58,7 @@ runtime 的公共坐标是 `io.github.bobcgn:kmp-miniapp-sdk`。第 D 步正式�
 
 第 H 步的实现已就位：插件集成套件分层为 contract 测试、Gradle TestKit fixture 与持久消费者 fixture，并以 `verifyMiniAppGradlePluginIntegration` 作为 CI 调用的唯一入口。它刻意不接入 `check`，因为该 fixture 会驱动一个编译 Kotlin/JS 并安装 npm 依赖的嵌套 Gradle 构建。套件还会拒绝未能解析的 Mini App runtime classpath，因此 renderer 检查不会对一张它从未看过的依赖图作出报告。
 
-第 I 步的文档已就位：README 是以已验收 fixture 为依据的消费者快速开始 —— 按 id 应用插件、编写 `commonMain`、在 `miniappMain` 导出、运行 `miniappTest`、组装 bundle、在微信宿主中加载 —— 其后明确说明插件与 runtime SDK 均未发布，并给出发布后发生变化的对照表。仓库维护者命令与旧的 `examples/wechat-miniprogram` 路径已移出消费者主流程。
+第 I 步的文档已就位：README 是以已验收 fixture 为依据的消费者快速开始 —— 按 id 应用插件、编写 `commonMain`、在 `miniappMain` 导出、运行 `miniappTest`、组装 bundle、在微信宿主中加载。0.1.0 从 Gradle Plugin Portal 解析插件、从 Maven Central 解析 runtime；仓库 fixture 仅为测试当前工作树而保留 composite build。仓库维护者命令与旧的 `examples/wechat-miniprogram` 路径仍位于消费者主流程之外。
 
 ### P1 完成证据
 
@@ -77,7 +77,7 @@ BOB-85 必须同时具备以下证据，缺一项都不得用“实现完成”�
 
 - Gradle Plugin 只负责平台/构建集成与开发者体验；Runtime SDK 继续负责 API 与 Host capability。
 - Mini App Platform 是抽象，WeChat 是当前 Host；插件不得把 `MiniApp == WeChat` 固化为总体架构。
-- 本阶段不实现 Alipay、Telegram、多 Host source-set hierarchy、npm/Maven Central 发布或多个 Mini App targets。
+- 本阶段不实现 Alipay、Telegram、多 Host source-set hierarchy、npm 发布或多个 Mini App targets。Maven Central runtime 发布与 Gradle Plugin Portal 发布是 0.1.0 的正式 release 路径。
 - 本阶段不进入 P2 Presentation Runtime，不引入 Compose、renderer、Virtual DOM 或 WXML generation。
 - BOB-53 的 `buildMiniAppSdk` 是基础证据，不是 BOB-75/85 所要求的消费者工作流。
 

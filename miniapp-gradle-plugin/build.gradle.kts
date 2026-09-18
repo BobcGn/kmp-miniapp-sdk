@@ -1,7 +1,7 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
-    `java-gradle-plugin`
+    alias(libs.plugins.plugin.publish)
     // Version comes from the root build's `libs.plugins.kotlin.multiplatform` alias, which already
     // puts the whole Kotlin Gradle Plugin distribution on this build's classpath.
     id("org.jetbrains.kotlin.jvm")
@@ -33,12 +33,16 @@ dependencies {
 }
 
 gradlePlugin {
+    website = "https://github.com/BobcGn/kmp-miniapp-sdk"
+    vcsUrl = "https://github.com/BobcGn/kmp-miniapp-sdk.git"
+
     plugins {
         create("miniapp") {
             id = "io.github.bobcgn.miniapp"
             implementationClass = "io.github.bobcgn.miniapp.gradle.MiniAppGradlePlugin"
             displayName = "Mini App Gradle plugin"
             description = "Adds Mini App platform build integration to a Kotlin Multiplatform project."
+            tags = listOf("kotlin", "kotlin-multiplatform", "mini-app", "wechat")
         }
     }
 }
@@ -74,5 +78,11 @@ sourceSets.named("main") {
 }
 
 tasks.named("processResources") {
+    dependsOn(generateMiniAppMetadata)
+}
+
+// Plugin Portal publication adds a sources JAR. The generated metadata directory is part of the
+// main source set, so Gradle 9 requires the archive task to declare its producer explicitly.
+tasks.matching { it.name == "sourcesJar" }.configureEach {
     dependsOn(generateMiniAppMetadata)
 }

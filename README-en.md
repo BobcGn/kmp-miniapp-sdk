@@ -28,8 +28,8 @@ environment, so it stays `Partial`. The
 [WeChat capability matrix](docs/platforms/wechat/WECHAT_CAPABILITIES-en.md) has the exact status of
 every capability, and a `Planned` entry there is not an implementation fact.
 
-**The plugin and the runtime SDK are not published yet.** See
-[Before publication](#before-publication-what-you-do-today) for what that means in practice.
+Version **0.1.0** is the first public, experimental release. See the dedicated
+[consumer setup guide](docs/CONSUMER_SETUP-en.md) for the online-resolution path.
 
 ## What this project is
 
@@ -59,15 +59,13 @@ every capability, and a `Planned` entry there is not an implementation fact.
 The following produces a working Mini App from an ordinary Kotlin Multiplatform project. It is the
 flow [`fixtures/miniapp-consumer`](fixtures/miniapp-consumer) runs on every verification pass.
 
-These are the fixture's own files, with two adaptations this page has to make: the fixture lives inside
-this repository, so its `includeBuild` path is `../..` and its project name is `miniapp-consumer`, and
-it selects the host bundle directory through a Gradle property so the same build can target both the
-default and the host location. The API calls, the source, and the script shape are the fixture's.
+These are the fixture's own APIs and script shape, adapted to resolve the public 0.1.0 release rather
+than the fixture's repository-development composite build.
 
 ### 0. What you need
 
 - A JDK the Kotlin Gradle Plugin supports (the plugin is built and tested on JDK 17)
-- This repository checked out next to your project, until the plugin and the SDK are published
+- Access to the Gradle Plugin Portal and Maven Central
 - The Gradle Wrapper in your own project — a consumer never needs the wrapper from this repository
 
 ### 1. `settings.gradle.kts`
@@ -79,8 +77,6 @@ pluginManagement {
         mavenCentral()
     }
 
-    // Until publication, the plugin comes from a composite build of this repository.
-    includeBuild("../kmp-miniapp-sdk")
 }
 
 dependencyResolutionManagement {
@@ -88,10 +84,6 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
-
-// A plugin-management composite resolves plugins only. Dependency substitution — the runtime SDK
-// arriving as `io.github.bobcgn:kmp-miniapp-sdk` — needs the build included at settings level too.
-includeBuild("../kmp-miniapp-sdk")
 
 rootProject.name = "my-miniapp"
 ```
@@ -101,7 +93,7 @@ rootProject.name = "my-miniapp"
 ```kotlin
 plugins {
     kotlin("multiplatform") version "2.4.20"
-    id("io.github.bobcgn.miniapp")
+    id("io.github.bobcgn.miniapp") version "0.1.0"
 }
 
 kotlin {
@@ -120,8 +112,10 @@ miniapp {
 ```
 
 That is the whole build script. There is no Kotlin/JS target to declare, no source set to create, no
-`dependsOn` to wire, no runtime artifact to name, and no output to copy. `miniappMain`, `miniappTest`,
-their edges to `commonMain` / `commonTest`, the runtime dependency and the bundle task all come from
+`dependsOn` to wire, no runtime artifact to name, and no output to copy. On the first Gradle import,
+the plugin creates `src/miniappMain/kotlin` and `src/miniappTest/kotlin` beside the existing common
+source directories. `miniappMain`, `miniappTest`, their edges to `commonMain` / `commonTest`, the
+runtime dependency and the bundle task all come from
 the plugin. Kotlin 2.4.20 is the version this plugin is built and tested against; compatibility with
 other Kotlin Gradle Plugin versions has not been established yet.
 
@@ -294,7 +288,9 @@ fixture.result=PASS
 ```
 
 That output is real-host evidence: the fixture bundle was loaded in WeChat Developer Tools at base
-library **3.17.3** and produced exactly these lines. It is the acceptance for *this bundle shape on
+library **3.17.3** and produced exactly these lines. The version line is the historical one —
+`0.1.0-SNAPSHOT` was the version catalog value at that run, and a build from this tree prints
+`0.1.0` instead; the other three lines are unchanged. It is the acceptance for *this bundle shape on
 this host*, not a statement about your mini program, other base libraries, other WeChat capabilities,
 or other hosts.
 
@@ -302,28 +298,21 @@ or other hosts.
 without Developer Tools. That is a wiring check, not host acceptance, and the two are recorded
 separately.
 
-## Before publication: what you do today
+## Online resolution
 
-Neither the plugin nor the runtime SDK has been published to the Gradle Plugin Portal, Maven Central
-or npm, so today a consumer needs this repository's source. The only thing that changes is where
-Gradle resolves two coordinates from:
-
-| | Today (source checkout) | After publication |
-| --- | --- | --- |
-| Plugin `io.github.bobcgn.miniapp` | resolved by id from `includeBuild("../kmp-miniapp-sdk")` in `pluginManagement` | resolved by id from the plugin repository, with a version |
-| Runtime `io.github.bobcgn:kmp-miniapp-sdk` | substituted by the settings-level `includeBuild` | resolved from the repository, with a version |
-
-Your `build.gradle.kts`, your sources and your host are unaffected: the build script already applies
-the plugin by id and never names the runtime artifact, and nothing in it points at a module path, a
-`build/` directory or a generated file. This document does not give you a published version to use,
-because none exists.
+Gradle resolves plugin `io.github.bobcgn.miniapp:0.1.0` from the Gradle Plugin Portal. The plugin then
+adds runtime `io.github.bobcgn:kmp-miniapp-sdk:0.1.0`, which Gradle resolves from Maven Central. A
+consumer does not need this repository's source, `includeBuild`, an internal module path, or a copied
+artifact. See [CONSUMER_SETUP-en.md](docs/CONSUMER_SETUP-en.md) for the complete standalone-project
+instructions.
 
 ## What the plugin deliberately does not do
 
 - It does not render, and it rejects a build whose runtime classpath carries Compose, Skiko or a
   browser UI runtime, because such a bundle would build successfully and still be unusable in a host.
 - It does not generate WXML or WXSS.
-- It does not publish anything, to any repository.
+- It does not publish a consumer project or its host artifacts; repository release automation is a
+  maintainer concern, not plugin behaviour.
 - It does not put business configuration — AppIDs, secrets, merchant material, template identifiers —
   into Gradle. That belongs to your backend and your host console, not to a build script.
 - It does not give you a Presentation Runtime. `UiState`, `Action`, `Store` and `Effect` do not exist

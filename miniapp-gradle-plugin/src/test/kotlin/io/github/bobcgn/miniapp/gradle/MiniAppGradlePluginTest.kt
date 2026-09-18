@@ -38,9 +38,12 @@ class MiniAppGradlePluginTest {
     )
 
     @Test
-    fun `the plugin provisions miniappMain and miniappTest as compilation-owned source sets`() {
+    fun `the plugin provisions source sets and creates their conventional directories`() {
         val projectDir = newFixture("kmp-provisioning")
         writeConsumerBuildScript(projectDir)
+
+        assertTrue(!projectDir.resolve(MiniAppPluginDiagnostics.MINIAPP_MAIN_KOTLIN_DIRECTORY).exists())
+        assertTrue(!projectDir.resolve(MiniAppPluginDiagnostics.MINIAPP_TEST_KOTLIN_DIRECTORY).exists())
 
         val result = runner(projectDir, "miniAppModelReport").build()
         val report = MiniAppModelReport(result)
@@ -65,6 +68,33 @@ class MiniAppGradlePluginTest {
         // The stable task surface of the chosen model.
         assertContains(report.testTasks, MiniAppPluginDiagnostics.MINIAPP_TEST_TASK_NAME)
         assertContains(report.testTasks, MiniAppPluginDiagnostics.MINIAPP_NODE_TEST_TASK_NAME)
+
+        assertTrue(
+            projectDir.resolve(MiniAppPluginDiagnostics.MINIAPP_MAIN_KOTLIN_DIRECTORY).isDirectory,
+            "the plugin must create src/miniappMain/kotlin beside the common source sets",
+        )
+        assertTrue(
+            projectDir.resolve(MiniAppPluginDiagnostics.MINIAPP_TEST_KOTLIN_DIRECTORY).isDirectory,
+            "the plugin must create src/miniappTest/kotlin beside the common source sets",
+        )
+    }
+
+    @Test
+    fun `the plugin creates Mini App directories inside the module that applies it`() {
+        val rootDir = newFixture("kmp-nested-module")
+        rootDir.resolve("settings.gradle.kts").appendText("\ninclude(\":composeApp\")\n")
+        val moduleDir = rootDir.resolve("composeApp").apply { mkdirs() }
+        moduleDir.resolve("src/commonMain/kotlin").mkdirs()
+        writeConsumerBuildScript(moduleDir)
+
+        runner(rootDir, ":composeApp:miniAppModelReport").build()
+
+        assertTrue(moduleDir.resolve(MiniAppPluginDiagnostics.MINIAPP_MAIN_KOTLIN_DIRECTORY).isDirectory)
+        assertTrue(moduleDir.resolve(MiniAppPluginDiagnostics.MINIAPP_TEST_KOTLIN_DIRECTORY).isDirectory)
+        assertTrue(
+            !rootDir.resolve(MiniAppPluginDiagnostics.MINIAPP_MAIN_KOTLIN_DIRECTORY).exists(),
+            "the directories belong beside the applying module's commonMain, not at the build root",
+        )
     }
 
     @Test
@@ -164,6 +194,12 @@ class MiniAppGradlePluginTest {
     @Test
     fun `the plugin does not duplicate the target when it is applied twice or the consumer declared it`() {
         val projectDir = newFixture("kmp-existing-target")
+        val existingSource = projectDir
+            .resolve("${MiniAppPluginDiagnostics.MINIAPP_MAIN_KOTLIN_DIRECTORY}/sample/Existing.kt")
+            .apply {
+                parentFile.mkdirs()
+                writeText("package sample\n")
+            }
         writeConsumerBuildScript(
             projectDir,
             consumerPreamble = """
@@ -191,6 +227,8 @@ class MiniAppGradlePluginTest {
         // test run the consumer's `miniappTest` would exist and never execute.
         assertContains(report.testTasks, MiniAppPluginDiagnostics.MINIAPP_TEST_TASK_NAME)
         assertContains(report.testTasks, MiniAppPluginDiagnostics.MINIAPP_NODE_TEST_TASK_NAME)
+        assertEquals("package sample\n", existingSource.readText())
+        assertTrue(projectDir.resolve(MiniAppPluginDiagnostics.MINIAPP_TEST_KOTLIN_DIRECTORY).isDirectory)
     }
 
     @Test

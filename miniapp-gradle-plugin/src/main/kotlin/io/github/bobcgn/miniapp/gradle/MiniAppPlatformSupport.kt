@@ -1,5 +1,7 @@
 package io.github.bobcgn.miniapp.gradle
 
+import java.io.IOException
+import java.nio.file.Files
 import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
@@ -15,9 +17,11 @@ import org.jetbrains.kotlin.gradle.targets.js.dsl.KotlinJsTargetDsl
  * ADR 0010 chose a Kotlin/JS target named after the platform: the Kotlin Gradle Plugin then derives
  * the real `miniappMain` and `miniappTest` source sets, the compilations that own them, and the
  * `commonMain` / `commonTest` edges, from that name. The plugin creates the target, the host output
- * shape, the test run, the runtime dependency and the bundle task; it never creates a source set or
+ * shape, the test run, the runtime dependency and the bundle task. It also materializes the two
+ * conventional Kotlin source directories so an IDE import exposes writable `miniappMain` and
+ * `miniappTest` folders even in an otherwise empty project. It never creates a source-set model or
  * a `dependsOn` edge, because hand-built ones are exactly the "unused source set" model ADR 0010
- * rejected.
+ * rejected; the Kotlin Gradle Plugin still owns that model.
  *
  * `js(name, configure)` creates the target when it is absent and reconfigures it when an existing
  * target was produced from the same preset. That is what makes applying this plugin twice harmless:
@@ -39,9 +43,37 @@ internal object MiniAppPlatformSupport {
         kotlin.js(MiniAppPluginDiagnostics.MINIAPP_TARGET_NAME) {
             configureMiniAppHostOutput()
         }
+        createMiniAppSourceDirectories(project)
         addMiniAppRuntimeDependency(project)
         registerMiniAppHostBoundaryCheck(project)
         registerMiniAppBundleTask(project)
+    }
+
+    /**
+     * Creates the conventional source directories beside `commonMain` and `commonTest`.
+     *
+     * Kotlin Gradle Plugin provisions the source-set model but intentionally does not create empty
+     * directories on disk. Creating the default `kotlin` directories during plugin application
+     * makes the source sets visible and immediately usable after an IDE Gradle import, regardless
+     * of which project wizard produced the consumer. [Files.createDirectories] is idempotent and
+     * preserves existing sources, so repeated imports and repeated plugin application are safe.
+     */
+    private fun createMiniAppSourceDirectories(project: Project) {
+        listOf(
+            MiniAppPluginDiagnostics.MINIAPP_MAIN_KOTLIN_DIRECTORY,
+            MiniAppPluginDiagnostics.MINIAPP_TEST_KOTLIN_DIRECTORY,
+        ).forEach { relativePath ->
+            val directory = project.layout.projectDirectory.dir(relativePath).asFile.toPath()
+            try {
+                Files.createDirectories(directory)
+            } catch (exception: IOException) {
+                throw GradleException(
+                    "Unable to create the Mini App source directory '$relativePath' " +
+                        "in project '${project.path}'.",
+                    exception,
+                )
+            }
+        }
     }
 
     /**

@@ -35,6 +35,8 @@ When running WeChat host acceptance, use the [WeChat real-host verification matr
 
 These commands are valid and were verified on 2026-09-15, except `:miniapp-gradle-plugin:test`, which was verified on 2026-09-17.
 
+The release procedure — the single version source, the tag rule, the GitHub Repository Secrets it reads, and how a half-finished publication is recovered — is in [RELEASING-en.md](RELEASING-en.md). It is a maintainer concern and never part of a consumer build.
+
 The `:kmp-miniapp-sdk:jsTest` suite includes host-boundary, error-model, callback adaptation, cancellation, double-completion, optional abort, WeChat error-mapping, HTTP transport adaptation including host abort on cancellation, lifecycle state transitions, navigation adaptation including the tabBar-only `switchTab` and its blank-route refusal, capability-support states and version gating, permission lifecycle behaviour including concurrent request merging, privacy authorization including the refusal classification, WeChat session checking including the expiry classification, the WeChat clipboard and vibration adapters including their per-capability gating, the WeChat file-system adapter including its sandbox and text boundaries, the WeChat location adapter including its coordinate validation and privacy precondition, the WeChat scan adapter including indeterminate-interruption classification and result validation, the WeChat media adapter including its request boundaries, result validation, and interruption classification, the WeChat subscription adapter including its template validation and per-template result policy, the network status adapter including its per-collector listener pairing, the WeChat upload and download adapters including their abort, progress, and timeout behaviour, the WeChat payment adapter including its parameter forwarding, blank-parameter refusal, exact interruption classification, and single-terminal-state behaviour, and interop object-construction coverage. These tests use fake callbacks and do not claim access to a real `wx` runtime.
 
 ## Architecture boundaries
@@ -53,9 +55,10 @@ What the check does not do: it cannot detect a renderer that imports no UI frame
 
 ## Mini App Gradle plugin
 
-`:miniapp-gradle-plugin` publishes the `io.github.bobcgn.miniapp` plugin from the implementation class `io.github.bobcgn.miniapp.gradle.MiniAppGradlePlugin`. Applying it to a Kotlin Multiplatform project does three things:
+`:miniapp-gradle-plugin` publishes the `io.github.bobcgn.miniapp` plugin from the implementation class `io.github.bobcgn.miniapp.gradle.MiniAppGradlePlugin`. Applying it to a Kotlin Multiplatform project does four things:
 
 - registers one Kotlin/JS target named `miniapp`, which is what makes `miniappMain` and `miniappTest` real, compilation-owned source sets with `commonMain` and `commonTest` as their parents;
+- creates `src/miniappMain/kotlin` and `src/miniappTest/kotlin` beside the common source directories so a Gradle import exposes writable folders even when the project wizard omitted them;
 - registers that target's Node.js test run, which is what gives `miniappTest` a task that actually executes;
 - adds the runtime SDK to `miniappMain`'s api configuration, which is what lets consumer code compile against the public API without declaring an artifact.
 
@@ -146,9 +149,9 @@ A consumer that already had a Kotlin/JS target before applying the plugin may ne
 
 `gradle/libs.versions.toml` holds the one version the runtime SDK and this plugin share. The plugin's build generates `miniapp-plugin-metadata.properties` from it, and the plugin reads the coordinate from that resource at runtime, so neither the plugin's source nor its tests contain the version as a literal.
 
-The SDK is not published yet, so the coordinate resolves through a composite build today and from a repository after publication, with the same group, name and version either way. A consumer that cannot resolve it fails with Gradle's dependency-resolution error naming the coordinate; the plugin deliberately does not fall back to another version, another artifact, or a project path.
+The public 0.1.0 consumer path resolves the plugin from the Gradle Plugin Portal and the runtime coordinate from Maven Central. Repository fixtures intentionally retain composite substitution so they exercise the current working tree. A consumer that cannot resolve the runtime fails with Gradle's dependency-resolution error naming the coordinate; the plugin deliberately does not fall back to another version, another artifact, or a project path.
 
-The plugin creates no source set and no `dependsOn` edge of its own: hand-built ones are the unused-source-set model [ADR 0010](decisions/0010-miniapp-gradle-plugin-source-set-model-en.md) rejected. Applying it to a project that does not apply the Kotlin Multiplatform plugin fails with a message naming the missing plugin.
+The plugin creates no source-set model and no `dependsOn` edge of its own: hand-built ones are the unused-source-set model [ADR 0010](decisions/0010-miniapp-gradle-plugin-source-set-model-en.md) rejected. It only creates the two conventional Kotlin directories on disk; repeated application preserves existing files. Applying it to a project that does not apply the Kotlin Multiplatform plugin fails with a message naming the missing plugin.
 
 ```shell
 ./gradlew :miniapp-gradle-plugin:test
@@ -165,7 +168,7 @@ point that runs all of it is [described in TESTING](TESTING-en.md#gradle-plugin-
 
 A consumer whose `commonMain` depends on another Kotlin Multiplatform project must apply this plugin to that project as well. The dependency resolves through a Mini App variant, so a project that offers none fails variant resolution; the plugin provides no fallback, and moving the dependency out of `commonMain` is not a supported workaround.
 
-The tests are Gradle TestKit fixtures plus a contract test. The fixtures put the Kotlin Gradle Plugin and the plugin under test on one buildscript classpath deliberately: `withPluginClasspath()` injects the plugin under test into the plugin-resolution classpath only, so a fixture that resolves a second plugin separately cannot reproduce the classpath a real consumer build gives the plugin. One fixture carries `commonMain`, `miniappMain`, `commonTest` and `miniappTest` sources and asserts the executed test report, so the source-set wiring and the test execution are both proved by running tests rather than by reading the model. The fixtures consume the runtime through a composite build (`includeBuild` of this repository), which is how the unpublished coordinate resolves; the plugin itself never sees that path.
+The tests are Gradle TestKit fixtures plus a contract test. The fixtures put the Kotlin Gradle Plugin and the plugin under test on one buildscript classpath deliberately: `withPluginClasspath()` injects the plugin under test into the plugin-resolution classpath only, so a fixture that resolves a second plugin separately cannot reproduce the classpath a real consumer build gives the plugin. One fixture carries `commonMain`, `miniappMain`, `commonTest` and `miniappTest` sources and asserts the executed test report, so the source-set wiring and the test execution are both proved by running tests rather than by reading the model. The fixtures consume the runtime through a composite build (`includeBuild` of this repository) so they test the current source rather than a previously released binary; the plugin itself never sees that path.
 
 The extension carries one setting — where the host's bundle is written. Business and host configuration stays outside Gradle by design, and the reasons are in the [mini app extension section](#the-miniapp--extension) above.
 

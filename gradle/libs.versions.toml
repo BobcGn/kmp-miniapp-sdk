@@ -4,7 +4,9 @@ coroutines = "1.11.0"
 # Single source for the version shared by the runtime SDK and the Gradle plugin that wires it in.
 # The plugin ships this as a generated resource, so neither its source nor its tests carry the
 # version as a literal.
-miniapp = "0.1.0-SNAPSHOT"
+miniapp = "0.1.0"
+maven-publish = "0.37.0"
+plugin-publish = "2.2.1"
 
 [libraries]
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
@@ -15,3 +17,5 @@ kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", v
 
 [plugins]
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+maven-publish = { id = "com.vanniktech.maven.publish", version.ref = "maven-publish" }
+plugin-publish = { id = "com.gradle.plugin-publish", version.ref = "plugin-publish" }

@@ -1,16 +1,16 @@
 (function (_, kotlin_kotlin) {
   'use strict';
   //region block: imports
-  var protoOf = kotlin_kotlin.$_$.n4;
-  var defineProp = kotlin_kotlin.$_$.w3;
-  var initMetadataForClass = kotlin_kotlin.$_$.d4;
-  var initMetadataForObject = kotlin_kotlin.$_$.i4;
+  var protoOf = kotlin_kotlin.$_$.o4;
+  var defineProp = kotlin_kotlin.$_$.x3;
+  var initMetadataForClass = kotlin_kotlin.$_$.e4;
+  var initMetadataForObject = kotlin_kotlin.$_$.j4;
   var VOID = kotlin_kotlin.$_$.a;
-  var toString = kotlin_kotlin.$_$.s5;
-  var equalsLong = kotlin_kotlin.$_$.g3;
-  var get_ONE = kotlin_kotlin.$_$.a3;
-  var add = kotlin_kotlin.$_$.b3;
-  var subtract = kotlin_kotlin.$_$.n3;
+  var toString = kotlin_kotlin.$_$.t5;
+  var equalsLong = kotlin_kotlin.$_$.h3;
+  var get_ONE = kotlin_kotlin.$_$.b3;
+  var add = kotlin_kotlin.$_$.c3;
+  var subtract = kotlin_kotlin.$_$.o3;
   //endregion
   //region block: pre-declaration
   initMetadataForClass(atomicfu$AtomicRefArray$ref, 'AtomicArray');

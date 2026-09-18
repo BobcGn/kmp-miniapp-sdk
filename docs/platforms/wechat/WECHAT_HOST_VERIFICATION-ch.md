@@ -43,7 +43,7 @@
 
 | Capability | Required Environment | Preconditions | Reproducible Steps | Expected Result | Current Evidence | Regression Frequency |
 | --- | --- | --- | --- | --- | --- | --- |
-| Consumer Bridge | Node + DeveloperTools | 已运行 `buildMiniAppSdk` | 运行 smoke/typecheck；导入示例并打开 index | Node 输出版本；页面与 Console 均显示 `0.1.0-SNAPSHOT` | `WDT-2026-09-14-A`，见 PROJECT_FACTS | 每次 export、Gradle 或 distribution 变更 |
+| Consumer Bridge | Node + DeveloperTools | 已运行 `buildMiniAppSdk` | 运行 smoke/typecheck；导入示例并打开 index | Node 输出版本；页面与 Console 显示该构建实际携带的 SDK 版本 —— 当前为 `0.1.0`，而 `WDT-2026-09-14-A` 那次运行记录的是当时的 `0.1.0-SNAPSHOT` | `WDT-2026-09-14-A`，见 PROJECT_FACTS | 每次 export、Gradle 或 distribution 变更 |
 | Storage | Unit + Contract + Node + DeveloperTools | 使用示例专用 key | 运行测试；打开 index 等待 Storage 卡片 | `PASS`；详情为 `first=first, overwritten=second, missing=null`；测试 key 最终删除 | `WDT-2026-09-14-A` | 每次 Storage contract、adapter 或 export 变更 |
 | HTTP Request | Unit + Contract + Node + DeveloperTools | 合法 HTTPS request domain，或明确关闭本地域名校验 | 运行测试；打开 index 等待 Network 卡片 | 请求成功；页面显示 PASS；Console 含 status 和正数 bytes | `WDT-2026-09-14-C` | 每次 transport、error、timeout、abort 或 wrapper 变更 |
 | Authentication Bootstrap | Unit + Node + DeveloperTools | 可调用 `wx.login` 的测试 AppID | 打开 index 等待 Login 卡片 | `codeReceived=true` 且 length 为正数；不得显示或记录 code | `WDT-2026-09-14-B` | 每次 auth interop、adapter、error 或 export 变更 |

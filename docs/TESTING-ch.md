@@ -82,11 +82,11 @@ cd examples/wechat-miniprogram && npm run smoke && npm run typecheck
 
 ### Gradle 插件套件
 
-`:miniapp-gradle-plugin:test` 通过 Gradle TestKit 在临时消费者工程中驱动插件。它覆盖插件应用、缺少 Kotlin Multiplatform 时的失败、source set 提供与 compilation 归属、测试执行、runtime 依赖接线、`assembleMiniAppBundle` 契约、为该契约把关的 renderer 拒绝、重复执行的增量行为，以及 configuration cache 兼容性。它还覆盖 `miniapp { }` extension：规范的 `miniapp { wechat { ... } }` 块能编译并执行；配置的 bundle 目录确实是 bundle 的写入位置；项目之外的目录会被拒绝并给出可操作的错误信息；重复应用插件不会创建第二个 extension；以及微信是宿主配置而不是平台 extension 本身。
+`:miniapp-gradle-plugin:test` 通过 Gradle TestKit 在临时消费者工程中驱动插件。它覆盖插件应用、缺少 Kotlin Multiplatform 时的失败、source set 提供与 compilation 归属、不替换现有源码的标准 Mini App Kotlin 目录创建、测试执行、runtime 依赖接线、`assembleMiniAppBundle` 契约、为该契约把关的 renderer 拒绝、重复执行的增量行为，以及 configuration cache 兼容性。它还覆盖 `miniapp { }` extension：规范的 `miniapp { wechat { ... } }` 块能编译并执行；配置的 bundle 目录确实是 bundle 的写入位置；项目之外的目录会被拒绝并给出可操作的错误信息；重复应用插件不会创建第二个 extension；以及微信是宿主配置而不是平台 extension 本身。
 
 错误路径断言的是失败信息本身，而不是「构建失败了」：未应用 Kotlin Multiplatform 的项目；已把 `miniapp` 用于其他平台的同名 target（在插件应用阶段抛出 Kotlin 自身的诊断，而不是被静默替换）；未提供 Mini App variant 的共享 Kotlin Multiplatform 依赖；无法解析的 runtime 坐标；项目之外的 bundle 目录；以及携带 Compose 的 runtime classpath。每一条都指明消费者必须修改什么。
 
-fixture 经本仓库的 composite build 解析 runtime SDK，因为目前尚未发布。它们断言真实输出 —— 实际执行出的测试报告，以及 bundle 中真实存在的文件 —— 而不是只断言任务名：任务存在不能证明它产出了任何东西。bundle 测试刻意把两个结论分开：插件不生成宿主 markup；以及 distribution 不携带 renderer。前者是关于生成文件的陈述，后者是关于依赖图的陈述，由 host-boundary 检查断言。
+fixture 经本仓库的 composite build 解析 runtime SDK，以便测试当前源码而不是已经发布的旧 binary；在 0.1.0 已经发布的现在，这是有意选择，而不是对未发布坐标的变通。它们断言真实输出 —— 实际执行出的测试报告，以及 bundle 中真实存在的文件 —— 而不是只断言任务名：任务存在不能证明它产出了任何东西。bundle 测试刻意把两个结论分开：插件不生成宿主 markup；以及 distribution 不携带 renderer。前者是关于生成文件的陈述，后者是关于依赖图的陈述，由 host-boundary 检查断言。
 
 这些测试证明的是「产出了 distribution 以及它包含什么」，不证明任何宿主能够加载它；那需要真实宿主运行。
 
@@ -168,7 +168,7 @@ BLE 是本 SDK 第一个建立在真实 `on`/`off` 事件源之上的能力，�
 
 | 检查项 | 页面 | Console |
 | --- | --- | --- |
-| 版本 | `0.1.0-SNAPSHOT` | `[kmp-miniapp-sdk] sdkVersion: 0.1.0-SNAPSHOT` |
+| 版本 | `0.1.0` | `[kmp-miniapp-sdk] sdkVersion: 0.1.0` |
 | Runtime lifecycle | `Runtime Lifecycle` 卡片显示 `FOREGROUND` 与页面 route | 无专门 console 行；卡片本身即证据 |
 | Runtime detection | `Runtime Detection and Version Gate` 卡片显示 `PASS`、基础库版本与各支持状态 | `[kmp-miniapp-sdk] runtime detection: PASS baseLibrary=…, platform=…, runtime-detection=…, storage=Supported, ungated=Unsupported` |
 | Permission | `Permission Lifecycle` 卡片在下述步骤后显示权限名与状态 | `[kmp-miniapp-sdk] permission query: PASS permission=microphone, state=…` |
@@ -185,6 +185,9 @@ BLE 是本 SDK 第一个建立在真实 `on`/`off` 事件源之上的能力，�
 | Storage | `Storage verification: PASS` | `[kmp-miniapp-sdk] storage: PASS first=first, overwritten=second, missing=null` |
 | Client login code | `Client login code: PASS` | `[kmp-miniapp-sdk] auth bootstrap: PASS codeReceived=true, length=<正整数>` |
 | Network | `Network verification: PASS` | `[kmp-miniapp-sdk] network: PASS status=200, bytes=<正整数>` |
+
+版本行是当前工作树会打印的值。其余各行背后的历史运行发生在版本目录仍为 `0.1.0-SNAPSHOT` 的时期，那些记录保留
+其当时观察到的值；随发布变化的只有版本字符串本身。
 
 6. 通过点击验证页面栈桥接。导航无法只在单个页面上验证，因为每次操作都会改变屏幕上停留的页面。
 

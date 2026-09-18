@@ -2,109 +2,113 @@
   'use strict';
   //region block: imports
   var imul = Math.imul;
-  var protoOf = kotlin_kotlin.$_$.n4;
-  var initMetadataForInterface = kotlin_kotlin.$_$.g4;
-  var Unit_instance = kotlin_kotlin.$_$.j;
-  var Companion_instance = kotlin_kotlin.$_$.i;
+  var protoOf = kotlin_kotlin.$_$.o4;
+  var initMetadataForInterface = kotlin_kotlin.$_$.h4;
+  var Unit_instance = kotlin_kotlin.$_$.k;
+  var Companion_instance = kotlin_kotlin.$_$.j;
   var _Result___init__impl__xyqfz8 = kotlin_kotlin.$_$.c;
-  var createFailure = kotlin_kotlin.$_$.k5;
-  var CoroutineImpl = kotlin_kotlin.$_$.w2;
-  var intercepted = kotlin_kotlin.$_$.i2;
-  var CancellableContinuationImpl = kotlin_org_jetbrains_kotlinx_kotlinx_coroutines_core.$_$.j;
-  var returnIfSuspended = kotlin_kotlin.$_$.l;
-  var get_COROUTINE_SUSPENDED = kotlin_kotlin.$_$.g2;
-  var initMetadataForCoroutine = kotlin_kotlin.$_$.f4;
-  var getStringHashCode = kotlin_kotlin.$_$.b4;
-  var initMetadataForClass = kotlin_kotlin.$_$.d4;
-  var initMetadataForObject = kotlin_kotlin.$_$.i4;
-  var toString = kotlin_kotlin.$_$.s5;
-  var equals = kotlin_kotlin.$_$.x3;
-  var Enum = kotlin_kotlin.$_$.z4;
+  var createFailure = kotlin_kotlin.$_$.l5;
+  var CoroutineImpl = kotlin_kotlin.$_$.x2;
+  var intercepted = kotlin_kotlin.$_$.j2;
+  var CancellableContinuationImpl = kotlin_org_jetbrains_kotlinx_kotlinx_coroutines_core.$_$.l;
+  var returnIfSuspended = kotlin_kotlin.$_$.m;
+  var get_COROUTINE_SUSPENDED = kotlin_kotlin.$_$.h2;
+  var initMetadataForCoroutine = kotlin_kotlin.$_$.g4;
+  var getStringHashCode = kotlin_kotlin.$_$.c4;
+  var initMetadataForClass = kotlin_kotlin.$_$.e4;
+  var initMetadataForObject = kotlin_kotlin.$_$.j4;
+  var toString = kotlin_kotlin.$_$.t5;
+  var equals = kotlin_kotlin.$_$.y3;
+  var Enum = kotlin_kotlin.$_$.a5;
   var VOID = kotlin_kotlin.$_$.a;
-  var initMetadataForCompanion = kotlin_kotlin.$_$.e4;
-  var enumEntries = kotlin_kotlin.$_$.y2;
-  var emptyMap = kotlin_kotlin.$_$.r1;
-  var captureStack = kotlin_kotlin.$_$.r3;
-  var Exception = kotlin_kotlin.$_$.b5;
-  var Exception_init_$Init$ = kotlin_kotlin.$_$.x;
-  var THROW_CCE = kotlin_kotlin.$_$.g5;
-  var isCharSequence = kotlin_kotlin.$_$.j4;
-  var trim = kotlin_kotlin.$_$.y4;
-  var toString_0 = kotlin_kotlin.$_$.o4;
+  var initMetadataForCompanion = kotlin_kotlin.$_$.f4;
+  var enumEntries = kotlin_kotlin.$_$.z2;
+  var emptyMap = kotlin_kotlin.$_$.s1;
+  var captureStack = kotlin_kotlin.$_$.s3;
+  var Exception = kotlin_kotlin.$_$.c5;
+  var Exception_init_$Init$ = kotlin_kotlin.$_$.y;
+  var THROW_CCE = kotlin_kotlin.$_$.h5;
+  var isCharSequence = kotlin_kotlin.$_$.k4;
+  var trim = kotlin_kotlin.$_$.z4;
+  var toString_0 = kotlin_kotlin.$_$.p4;
   var _Char___init__impl__6a9atx = kotlin_kotlin.$_$.b;
-  var charArrayOf = kotlin_kotlin.$_$.s3;
-  var split = kotlin_kotlin.$_$.v4;
-  var ArrayList_init_$Create$ = kotlin_kotlin.$_$.n;
-  var toIntOrNull = kotlin_kotlin.$_$.w4;
-  var last = kotlin_kotlin.$_$.u1;
-  var get_lastIndex = kotlin_kotlin.$_$.t1;
-  var compareTo = kotlin_kotlin.$_$.u3;
-  var hashCode = kotlin_kotlin.$_$.c4;
-  var await_0 = kotlin_kotlin.$_$.k;
-  var promisify = kotlin_kotlin.$_$.j2;
-  var defineProp = kotlin_kotlin.$_$.w3;
-  var toNumber = kotlin_kotlin.$_$.o3;
-  var noWhenBranchMatchedException = kotlin_kotlin.$_$.q5;
-  var ArrayList_init_$Create$_0 = kotlin_kotlin.$_$.o;
-  var listOf = kotlin_kotlin.$_$.w1;
-  var addAll = kotlin_kotlin.$_$.l1;
-  var copyToArray = kotlin_kotlin.$_$.o1;
-  var IllegalArgumentException_init_$Create$ = kotlin_kotlin.$_$.y;
-  var collectionSizeOrDefault = kotlin_kotlin.$_$.m1;
+  var charArrayOf = kotlin_kotlin.$_$.t3;
+  var split = kotlin_kotlin.$_$.w4;
+  var ArrayList_init_$Create$ = kotlin_kotlin.$_$.o;
+  var toIntOrNull = kotlin_kotlin.$_$.x4;
+  var last = kotlin_kotlin.$_$.v1;
+  var get_lastIndex = kotlin_kotlin.$_$.u1;
+  var compareTo = kotlin_kotlin.$_$.v3;
+  var hashCode = kotlin_kotlin.$_$.d4;
+  var initMetadataForLambda = kotlin_kotlin.$_$.i4;
+  var constructCallableReference = kotlin_kotlin.$_$.w3;
+  var CompletableDeferred = kotlin_org_jetbrains_kotlinx_kotlinx_coroutines_core.$_$.m;
+  var launch = kotlin_org_jetbrains_kotlinx_kotlinx_coroutines_core.$_$.r;
+  var FunctionAdapter = kotlin_kotlin.$_$.q3;
+  var isInterface = kotlin_kotlin.$_$.l4;
+  var FlowCollector = kotlin_org_jetbrains_kotlinx_kotlinx_coroutines_core.$_$.g;
+  var CoroutineScope = kotlin_org_jetbrains_kotlinx_kotlinx_coroutines_core.$_$.o;
+  var getKClassFromExpression = kotlin_kotlin.$_$.q4;
+  var CancellationException = kotlin_kotlin.$_$.g2;
+  var cancelAndJoin = kotlin_org_jetbrains_kotlinx_kotlinx_coroutines_core.$_$.d;
+  var SupervisorJob = kotlin_org_jetbrains_kotlinx_kotlinx_coroutines_core.$_$.p;
+  var Dispatchers_getInstance = kotlin_org_jetbrains_kotlinx_kotlinx_coroutines_core.$_$.b;
+  var CoroutineScope_0 = kotlin_org_jetbrains_kotlinx_kotlinx_coroutines_core.$_$.n;
+  var ArrayList_init_$Create$_0 = kotlin_kotlin.$_$.p;
   var toList = kotlin_kotlin.$_$.d2;
-  var LinkedHashMap_init_$Create$ = kotlin_kotlin.$_$.q;
-  var initMetadataForLambda = kotlin_kotlin.$_$.h4;
-  var constructCallableReference = kotlin_kotlin.$_$.v3;
-  var FunctionAdapter = kotlin_kotlin.$_$.p3;
-  var isInterface = kotlin_kotlin.$_$.k4;
-  var FlowCollector = kotlin_org_jetbrains_kotlinx_kotlinx_coroutines_core.$_$.f;
-  var CoroutineScope = kotlin_org_jetbrains_kotlinx_kotlinx_coroutines_core.$_$.m;
-  var getKClassFromExpression = kotlin_kotlin.$_$.p4;
-  var CancellationException = kotlin_kotlin.$_$.f2;
-  var cancelAndJoin = kotlin_org_jetbrains_kotlinx_kotlinx_coroutines_core.$_$.c;
-  var toList_0 = kotlin_kotlin.$_$.c2;
-  var SupervisorJob = kotlin_org_jetbrains_kotlinx_kotlinx_coroutines_core.$_$.n;
-  var Dispatchers_getInstance = kotlin_org_jetbrains_kotlinx_kotlinx_coroutines_core.$_$.a;
-  var CoroutineScope_0 = kotlin_org_jetbrains_kotlinx_kotlinx_coroutines_core.$_$.l;
-  var launch = kotlin_org_jetbrains_kotlinx_kotlinx_coroutines_core.$_$.p;
-  var Companion_instance_0 = kotlin_kotlin.$_$.h;
-  var emptyList = kotlin_kotlin.$_$.q1;
-  var distinct = kotlin_kotlin.$_$.p1;
-  var isBlank = kotlin_kotlin.$_$.t4;
-  var Collection = kotlin_kotlin.$_$.j1;
-  var to = kotlin_kotlin.$_$.t5;
-  var mapOf = kotlin_kotlin.$_$.x1;
-  var contains = kotlin_kotlin.$_$.s4;
-  var setOf = kotlin_kotlin.$_$.b2;
-  var ChannelResult = kotlin_org_jetbrains_kotlinx_kotlinx_coroutines_core.$_$.d;
-  var ProducerScope = kotlin_org_jetbrains_kotlinx_kotlinx_coroutines_core.$_$.e;
-  var awaitClose = kotlin_org_jetbrains_kotlinx_kotlinx_coroutines_core.$_$.b;
-  var callbackFlow = kotlin_org_jetbrains_kotlinx_kotlinx_coroutines_core.$_$.h;
-  var conflate = kotlin_org_jetbrains_kotlinx_kotlinx_coroutines_core.$_$.i;
-  var mapOf_0 = kotlin_kotlin.$_$.y1;
-  var async = kotlin_org_jetbrains_kotlinx_kotlinx_coroutines_core.$_$.o;
-  var toSet = kotlin_kotlin.$_$.e2;
-  var IllegalStateException_init_$Create$ = kotlin_kotlin.$_$.a1;
-  var CompletableDeferred = kotlin_org_jetbrains_kotlinx_kotlinx_coroutines_core.$_$.k;
-  var CancellationException_init_$Create$ = kotlin_kotlin.$_$.s;
-  var getNumberHashCode = kotlin_kotlin.$_$.z3;
-  var equalsLong = kotlin_kotlin.$_$.g3;
-  var charSequenceLength = kotlin_kotlin.$_$.t3;
-  var numberToDouble = kotlin_kotlin.$_$.m4;
-  var isFinite = kotlin_kotlin.$_$.m5;
-  var isNumber = kotlin_kotlin.$_$.l4;
-  var numberToLong = kotlin_kotlin.$_$.k3;
-  var isNaN_0 = kotlin_kotlin.$_$.o5;
-  var isInfinite = kotlin_kotlin.$_$.n5;
-  var getBooleanHashCode = kotlin_kotlin.$_$.y3;
-  var Long = kotlin_kotlin.$_$.d5;
-  var compare = kotlin_kotlin.$_$.d3;
-  var convertToInt = kotlin_kotlin.$_$.e3;
-  var MutableStateFlow = kotlin_org_jetbrains_kotlinx_kotlinx_coroutines_core.$_$.g;
-  var listOf_0 = kotlin_kotlin.$_$.v1;
-  var KProperty1 = kotlin_kotlin.$_$.r4;
-  var getPropertyCallableRef = kotlin_kotlin.$_$.a4;
-  var lazy = kotlin_kotlin.$_$.p5;
+  var await_0 = kotlin_kotlin.$_$.l;
+  var promisify = kotlin_kotlin.$_$.k2;
+  var defineProp = kotlin_kotlin.$_$.x3;
+  var toNumber = kotlin_kotlin.$_$.p3;
+  var KProperty1 = kotlin_kotlin.$_$.s4;
+  var getPropertyCallableRef = kotlin_kotlin.$_$.b4;
+  var noWhenBranchMatchedException = kotlin_kotlin.$_$.r5;
+  var listOf = kotlin_kotlin.$_$.x1;
+  var addAll = kotlin_kotlin.$_$.m1;
+  var copyToArray = kotlin_kotlin.$_$.p1;
+  var IllegalArgumentException_init_$Create$ = kotlin_kotlin.$_$.z;
+  var collectionSizeOrDefault = kotlin_kotlin.$_$.n1;
+  var toList_0 = kotlin_kotlin.$_$.e2;
+  var lazy = kotlin_kotlin.$_$.q5;
+  var LinkedHashMap_init_$Create$ = kotlin_kotlin.$_$.r;
+  var getBooleanHashCode = kotlin_kotlin.$_$.z3;
+  var Companion_instance_0 = kotlin_kotlin.$_$.i;
+  var emptyList = kotlin_kotlin.$_$.r1;
+  var distinct = kotlin_kotlin.$_$.q1;
+  var isBlank = kotlin_kotlin.$_$.u4;
+  var Collection = kotlin_kotlin.$_$.k1;
+  var ChannelResult = kotlin_org_jetbrains_kotlinx_kotlinx_coroutines_core.$_$.e;
+  var _Result___get_isSuccess__impl__sndoy8 = kotlin_kotlin.$_$.e;
+  var ProducerScope = kotlin_org_jetbrains_kotlinx_kotlinx_coroutines_core.$_$.f;
+  var LinkedHashSet_init_$Create$ = kotlin_kotlin.$_$.s;
+  var awaitClose = kotlin_org_jetbrains_kotlinx_kotlinx_coroutines_core.$_$.c;
+  var callbackFlow = kotlin_org_jetbrains_kotlinx_kotlinx_coroutines_core.$_$.j;
+  var BufferOverflow_DROP_OLDEST_getInstance = kotlin_org_jetbrains_kotlinx_kotlinx_coroutines_core.$_$.a;
+  var buffer = kotlin_org_jetbrains_kotlinx_kotlinx_coroutines_core.$_$.i;
+  var to = kotlin_kotlin.$_$.u5;
+  var mapOf = kotlin_kotlin.$_$.y1;
+  var contains = kotlin_kotlin.$_$.t4;
+  var setOf = kotlin_kotlin.$_$.c2;
+  var conflate = kotlin_org_jetbrains_kotlinx_kotlinx_coroutines_core.$_$.k;
+  var mapOf_0 = kotlin_kotlin.$_$.z1;
+  var async = kotlin_org_jetbrains_kotlinx_kotlinx_coroutines_core.$_$.q;
+  var toSet = kotlin_kotlin.$_$.f2;
+  var IllegalStateException_init_$Create$ = kotlin_kotlin.$_$.b1;
+  var CancellationException_init_$Create$ = kotlin_kotlin.$_$.t;
+  var getNumberHashCode = kotlin_kotlin.$_$.a4;
+  var equalsLong = kotlin_kotlin.$_$.h3;
+  var charSequenceLength = kotlin_kotlin.$_$.u3;
+  var numberToDouble = kotlin_kotlin.$_$.n4;
+  var isFinite = kotlin_kotlin.$_$.n5;
+  var isNumber = kotlin_kotlin.$_$.m4;
+  var numberToLong = kotlin_kotlin.$_$.l3;
+  var isNaN_0 = kotlin_kotlin.$_$.p5;
+  var isInfinite = kotlin_kotlin.$_$.o5;
+  var Long = kotlin_kotlin.$_$.e5;
+  var compare = kotlin_kotlin.$_$.e3;
+  var convertToInt = kotlin_kotlin.$_$.f3;
+  var MutableStateFlow = kotlin_org_jetbrains_kotlinx_kotlinx_coroutines_core.$_$.h;
+  var listOf_0 = kotlin_kotlin.$_$.w1;
   //endregion
   //region block: pre-declaration
   initMetadataForInterface(HostOperationAborter, 'HostOperationAborter');
@@ -146,6 +150,23 @@
   initMetadataForClass(InternalFailure, 'InternalFailure', VOID, MiniAppException);
   initMetadataForCompanion(Companion_6);
   initMetadataForClass(HostVersion, 'HostVersion');
+  initMetadataForLambda(BleObservationSession$startDeviceObservation$slambda$slambda, CoroutineImpl, VOID, [1]);
+  initMetadataForLambda(BleObservationSession$startConnectionObservation$slambda$slambda, CoroutineImpl, VOID, [1]);
+  initMetadataForCompanion(Companion_7);
+  initMetadataForClass(sam$kotlinx_coroutines_flow_FlowCollector$0, 'sam$kotlinx_coroutines_flow_FlowCollector$0', VOID, VOID, [FlowCollector, FunctionAdapter], [1]);
+  initMetadataForClass(sam$kotlinx_coroutines_flow_FlowCollector$0_0, 'sam$kotlinx_coroutines_flow_FlowCollector$0', VOID, VOID, [FlowCollector, FunctionAdapter], [1]);
+  initMetadataForLambda(BleObservationSession$startDeviceObservation$slambda, CoroutineImpl, VOID, [1]);
+  initMetadataForLambda(BleObservationSession$startConnectionObservation$slambda, CoroutineImpl, VOID, [1]);
+  initMetadataForCoroutine($openAdapterCOROUTINE$, CoroutineImpl);
+  initMetadataForCoroutine($closeAdapterCOROUTINE$, CoroutineImpl);
+  initMetadataForCoroutine($startDiscoveryCOROUTINE$, CoroutineImpl);
+  initMetadataForCoroutine($stopDiscoveryCOROUTINE$, CoroutineImpl);
+  initMetadataForCoroutine($stopDeviceObservationCOROUTINE$, CoroutineImpl);
+  initMetadataForCoroutine($stopConnectionObservationCOROUTINE$, CoroutineImpl);
+  initMetadataForClass(BleObservationSession, 'BleObservationSession', VOID, VOID, VOID, [0, 1]);
+  initMetadataForClass(JsBleDevice, 'JsBleDevice');
+  initMetadataForClass(JsBleAdapterState, 'JsBleAdapterState');
+  initMetadataForClass(JsBleConnectionState, 'JsBleConnectionState');
   initMetadataForClass(JsCapabilitySupport, 'JsCapabilitySupport');
   initMetadataForClass(JsGeoPosition, 'JsGeoPosition');
   initMetadataForClass(JsMediaFile, 'JsMediaFile');
@@ -176,6 +197,14 @@
   initMetadataForCoroutine($wechatRedirectTo$suspendBridgeCOROUTINE$, CoroutineImpl);
   initMetadataForCoroutine($wechatNavigateBack$suspendBridgeCOROUTINE$, CoroutineImpl);
   initMetadataForCoroutine($wechatSwitchTab$suspendBridgeCOROUTINE$, CoroutineImpl);
+  initMetadataForCoroutine($wechatBleAdapterStateCOROUTINE$, CoroutineImpl);
+  initMetadataForCoroutine($wechatBleAdapterState$suspendBridgeCOROUTINE$, CoroutineImpl);
+  initMetadataForCoroutine($wechatBleOpenAdapter$suspendBridgeCOROUTINE$, CoroutineImpl);
+  initMetadataForCoroutine($wechatBleCloseAdapter$suspendBridgeCOROUTINE$, CoroutineImpl);
+  initMetadataForCoroutine($wechatBleStartDiscovery$suspendBridgeCOROUTINE$, CoroutineImpl);
+  initMetadataForCoroutine($wechatBleStopDiscovery$suspendBridgeCOROUTINE$, CoroutineImpl);
+  initMetadataForCoroutine($wechatBleConnect$suspendBridgeCOROUTINE$, CoroutineImpl);
+  initMetadataForCoroutine($wechatBleDisconnect$suspendBridgeCOROUTINE$, CoroutineImpl);
   initMetadataForCoroutine($permissionStateCOROUTINE$, CoroutineImpl);
   initMetadataForCoroutine($permissionState$suspendBridgeCOROUTINE$, CoroutineImpl);
   initMetadataForCoroutine($requestPermissionCOROUTINE$, CoroutineImpl);
@@ -212,12 +241,15 @@
   initMetadataForObject(MiniAppExports, 'MiniAppExports', VOID, VOID, VOID, [1, 2, 0, 5, 6]);
   initMetadataForClass(MiniAppHttpResult, 'MiniAppHttpResult');
   initMetadataForLambda(NetworkStatusObservation$start$slambda$slambda, CoroutineImpl, VOID, [1]);
-  initMetadataForCompanion(Companion_7);
-  initMetadataForClass(sam$kotlinx_coroutines_flow_FlowCollector$0, 'sam$kotlinx_coroutines_flow_FlowCollector$0', VOID, VOID, [FlowCollector, FunctionAdapter], [1]);
+  initMetadataForCompanion(Companion_8);
+  initMetadataForClass(sam$kotlinx_coroutines_flow_FlowCollector$0_1, 'sam$kotlinx_coroutines_flow_FlowCollector$0', VOID, VOID, [FlowCollector, FunctionAdapter], [1]);
   initMetadataForLambda(NetworkStatusObservation$start$slambda, CoroutineImpl, VOID, [1]);
   initMetadataForCoroutine($stopCOROUTINE$, CoroutineImpl);
   initMetadataForClass(NetworkStatusObservation, 'NetworkStatusObservation', VOID, VOID, VOID, [0]);
   initMetadataForClass(NetworkStatusObservationResult, 'NetworkStatusObservationResult');
+  initMetadataForClass(WeChatBleDevice, 'WeChatBleDevice');
+  initMetadataForClass(WeChatBleAdapterState, 'WeChatBleAdapterState');
+  initMetadataForClass(WeChatBleConnectionState, 'WeChatBleConnectionState');
   initMetadataForObject(WeChatDeviceCapabilities, 'WeChatDeviceCapabilities');
   initMetadataForClass(WeChatCoordinateSystem, 'WeChatCoordinateSystem', VOID, Enum);
   initMetadataForClass(WeChatGeoPosition, 'WeChatGeoPosition');
@@ -226,9 +258,9 @@
   initMetadataForClass(WeChatMediaSource, 'WeChatMediaSource', VOID, Enum);
   initMetadataForClass(WeChatMediaSizeType, 'WeChatMediaSizeType', VOID, Enum);
   initMetadataForClass(WeChatCameraPosition, 'WeChatCameraPosition', VOID, Enum);
-  initMetadataForCompanion(Companion_8);
-  initMetadataForClass(WeChatMediaFileType, 'WeChatMediaFileType', VOID, Enum);
   initMetadataForCompanion(Companion_9);
+  initMetadataForClass(WeChatMediaFileType, 'WeChatMediaFileType', VOID, Enum);
+  initMetadataForCompanion(Companion_10);
   initMetadataForClass(WeChatMediaRequest, 'WeChatMediaRequest');
   initMetadataForClass(WeChatMediaFile, 'WeChatMediaFile');
   initMetadataForClass(WeChatUploadRequest, 'WeChatUploadRequest');
@@ -239,13 +271,13 @@
   initMetadataForClass(WeChatPaymentSignType, 'WeChatPaymentSignType', VOID, Enum);
   initMetadataForClass(WeChatPaymentRequest, 'WeChatPaymentRequest');
   initMetadataForClass(WeChatScanCategory, 'WeChatScanCategory', VOID, Enum);
-  initMetadataForCompanion(Companion_10);
+  initMetadataForCompanion(Companion_11);
   initMetadataForClass(WeChatScanFormat, 'WeChatScanFormat', VOID, Enum);
   initMetadataForClass(WeChatScanRequest, 'WeChatScanRequest', WeChatScanRequest);
   initMetadataForClass(WeChatScanResult, 'WeChatScanResult');
-  initMetadataForCompanion(Companion_11);
-  initMetadataForClass(WeChatSessionState, 'WeChatSessionState', VOID, Enum);
   initMetadataForCompanion(Companion_12);
+  initMetadataForClass(WeChatSessionState, 'WeChatSessionState', VOID, Enum);
+  initMetadataForCompanion(Companion_13);
   initMetadataForClass(WeChatSubscriptionStatus, 'WeChatSubscriptionStatus', VOID, Enum);
   initMetadataForClass(WeChatSubscriptionRequest, 'WeChatSubscriptionRequest');
   initMetadataForClass(WeChatSubscriptionResult, 'WeChatSubscriptionResult');
@@ -253,6 +285,17 @@
   initMetadataForClass(WechatHost, 'WechatHost', WechatHost);
   initMetadataForClass(WechatAuth, 'WechatAuth', WechatAuth, VOID, VOID, [0]);
   initMetadataForObject(WxAuthHost, 'WxAuthHost');
+  initMetadataForCompanion(Companion_14);
+  initMetadataForLambda(WechatBluetooth$discoveredDevices$slambda, CoroutineImpl, VOID, [1]);
+  initMetadataForLambda(WechatBluetooth$adapterStates$slambda, CoroutineImpl, VOID, [1]);
+  initMetadataForLambda(WechatBluetooth$connectionStates$slambda, CoroutineImpl, VOID, [1]);
+  initMetadataForCoroutine($openAdapterCOROUTINE$_0, CoroutineImpl);
+  initMetadataForCoroutine($closeAdapterCOROUTINE$_0, CoroutineImpl);
+  initMetadataForCoroutine($adapterStateCOROUTINE$, CoroutineImpl);
+  initMetadataForCoroutine($startDiscoveryCOROUTINE$_0, CoroutineImpl);
+  initMetadataForCoroutine($stopDiscoveryCOROUTINE$_0, CoroutineImpl);
+  initMetadataForClass(WechatBluetooth, 'WechatBluetooth', WechatBluetooth, VOID, VOID, [0, 1]);
+  initMetadataForObject(WxBluetoothHost, 'WxBluetoothHost');
   initMetadataForCoroutine($chooseCOROUTINE$, CoroutineImpl);
   initMetadataForClass(WechatChooseMedia, 'WechatChooseMedia', WechatChooseMedia, VOID, VOID, [1]);
   initMetadataForObject(WxChooseMediaHost, 'WxChooseMediaHost');
@@ -305,7 +348,7 @@
   initMetadataForCoroutine($scanCOROUTINE$, CoroutineImpl);
   initMetadataForClass(WechatScanCode, 'WechatScanCode', WechatScanCode, VOID, VOID, [1]);
   initMetadataForObject(WxScanCodeHost, 'WxScanCodeHost');
-  initMetadataForCompanion(Companion_13);
+  initMetadataForCompanion(Companion_15);
   initMetadataForClass(WechatStorage, 'WechatStorage', WechatStorage, VOID, VOID, [1, 2]);
   initMetadataForObject(WxStorageHost, 'WxStorageHost');
   initMetadataForClass(WxTransferTaskAdapter, 'WxTransferTaskAdapter');
@@ -313,44 +356,49 @@
   initMetadataForClass(WechatTransfer, 'WechatTransfer', WechatTransfer, VOID, VOID, [0]);
   initMetadataForClass(WechatUploadFile, 'WechatUploadFile', WechatUploadFile);
   initMetadataForObject(WxUploadFileHost, 'WxUploadFileHost');
+  initMetadataForClass(WxBluetoothDevice, 'WxBluetoothDevice');
   initMetadataForClass(Present, 'Present');
   initMetadataForObject(Unreadable, 'Unreadable');
+  initMetadataForClass(WxBluetoothAdapterState, 'WxBluetoothAdapterState');
+  initMetadataForClass(WxBluetoothConnectionState, 'WxBluetoothConnectionState');
   initMetadataForClass(Present_0, 'Present');
   initMetadataForObject(Unreadable_0, 'Unreadable');
-  initMetadataForClass(MediaFields, 'MediaFields', MediaFields);
   initMetadataForClass(Present_1, 'Present');
   initMetadataForObject(Unreadable_1, 'Unreadable');
+  initMetadataForClass(MediaFields, 'MediaFields', MediaFields);
   initMetadataForClass(Present_2, 'Present');
   initMetadataForObject(Unreadable_2, 'Unreadable');
   initMetadataForClass(Present_3, 'Present');
   initMetadataForObject(Unreadable_3, 'Unreadable');
   initMetadataForClass(Present_4, 'Present');
   initMetadataForObject(Unreadable_4, 'Unreadable');
-  initMetadataForObject(Completed, 'Completed');
+  initMetadataForClass(Present_5, 'Present');
   initMetadataForObject(Unreadable_5, 'Unreadable');
+  initMetadataForObject(Completed, 'Completed');
+  initMetadataForObject(Unreadable_6, 'Unreadable');
   initMetadataForObject(Absent, 'Absent');
   initMetadataForClass(Decided, 'Decided');
-  initMetadataForObject(Unreadable_6, 'Unreadable');
+  initMetadataForObject(Unreadable_7, 'Unreadable');
   initMetadataForClass(Required, 'Required');
   initMetadataForClass(NotRequired, 'NotRequired');
-  initMetadataForObject(Unreadable_7, 'Unreadable');
-  initMetadataForClass(Present_5, 'Present');
   initMetadataForObject(Unreadable_8, 'Unreadable');
-  initMetadataForClass(Text, 'Text');
-  initMetadataForObject(NotText, 'NotText');
   initMetadataForClass(Present_6, 'Present');
   initMetadataForObject(Unreadable_9, 'Unreadable');
+  initMetadataForClass(Text, 'Text');
+  initMetadataForObject(NotText, 'NotText');
   initMetadataForClass(Present_7, 'Present');
+  initMetadataForObject(Unreadable_10, 'Unreadable');
+  initMetadataForClass(Present_8, 'Present');
   initMetadataForObject(Absent_0, 'Absent');
   initMetadataForObject(WrongType, 'WrongType');
-  initMetadataForClass(Present_8, 'Present');
-  initMetadataForObject(Unreadable_10, 'Unreadable');
+  initMetadataForClass(Present_9, 'Present');
+  initMetadataForObject(Unreadable_11, 'Unreadable');
   initMetadataForClass(WechatAppLifecycle, 'WechatAppLifecycle', WechatAppLifecycle);
   initMetadataForClass(WechatCapabilityRequirement, 'WechatCapabilityRequirement', WechatCapabilityRequirement);
   initMetadataForObject(WechatCapabilityCatalog, 'WechatCapabilityCatalog');
   initMetadataForClass(WechatCapabilityGate, 'WechatCapabilityGate');
   initMetadataForClass(WechatPageLifecycle, 'WechatPageLifecycle', WechatPageLifecycle);
-  initMetadataForCompanion(Companion_14);
+  initMetadataForCompanion(Companion_16);
   initMetadataForClass(WechatRuntimeInfo, 'WechatRuntimeInfo');
   //endregion
   function HostOperationAborter() {
@@ -1081,6 +1129,798 @@
       throw new UnsupportedCapability(capability);
     }
   }
+  function BleObservationSession$startDeviceObservation$slambda$lambda($registered) {
+    return function () {
+      $registered.complete_ixf84q_k$(Unit_instance);
+      return Unit_instance;
+    };
+  }
+  function BleObservationSession$startDeviceObservation$slambda$slambda(this$0, resultContinuation) {
+    this.this$0__1 = this$0;
+    CoroutineImpl.call(this, resultContinuation);
+  }
+  protoOf(BleObservationSession$startDeviceObservation$slambda$slambda).invoke_zekrso_k$ = function (device, $completion) {
+    var tmp = this.create_4xef98_k$(device, $completion);
+    tmp.result_1 = Unit_instance;
+    tmp.exception_1 = null;
+    return tmp.doResume_5yljmg_k$();
+  };
+  protoOf(BleObservationSession$startDeviceObservation$slambda$slambda).invoke_qns8j1_k$ = function (p1, $completion) {
+    return this.invoke_zekrso_k$(p1 instanceof WeChatBleDevice ? p1 : THROW_CCE(), $completion);
+  };
+  protoOf(BleObservationSession$startDeviceObservation$slambda$slambda).doResume_5yljmg_k$ = function () {
+    var suspendResult = this.result_1;
+    $sm: do
+      try {
+        var tmp = this.state_1;
+        if (tmp === 0) {
+          this.exceptionState_1 = 1;
+          var tmp0 = this.this$0__1.observedDevices_1;
+          var element = this.device_1;
+          tmp0.add_utx5q5_k$(element);
+          if (this.this$0__1.observedDevices_1.get_size_woubt6_k$() > 32) {
+            this.this$0__1.observedDevices_1.removeAt_6niowx_k$(0);
+          }
+          return Unit_instance;
+        } else if (tmp === 1) {
+          throw this.exception_1;
+        }
+      } catch ($p) {
+        var e = $p;
+        throw e;
+      }
+     while (true);
+  };
+  protoOf(BleObservationSession$startDeviceObservation$slambda$slambda).create_4xef98_k$ = function (device, completion) {
+    var i = new BleObservationSession$startDeviceObservation$slambda$slambda(this.this$0__1, completion);
+    i.device_1 = device;
+    return i;
+  };
+  function BleObservationSession$startDeviceObservation$slambda$slambda_0(this$0, resultContinuation) {
+    var i = new BleObservationSession$startDeviceObservation$slambda$slambda(this$0, resultContinuation);
+    return constructCallableReference(function (device, $completion) {
+      return i.invoke_zekrso_k$(device, $completion);
+    }, 1);
+  }
+  function BleObservationSession$startConnectionObservation$slambda$lambda($registered) {
+    return function () {
+      $registered.complete_ixf84q_k$(Unit_instance);
+      return Unit_instance;
+    };
+  }
+  function BleObservationSession$startConnectionObservation$slambda$slambda(this$0, resultContinuation) {
+    this.this$0__1 = this$0;
+    CoroutineImpl.call(this, resultContinuation);
+  }
+  protoOf(BleObservationSession$startConnectionObservation$slambda$slambda).invoke_iamcsp_k$ = function (state, $completion) {
+    var tmp = this.create_qwipol_k$(state, $completion);
+    tmp.result_1 = Unit_instance;
+    tmp.exception_1 = null;
+    return tmp.doResume_5yljmg_k$();
+  };
+  protoOf(BleObservationSession$startConnectionObservation$slambda$slambda).invoke_qns8j1_k$ = function (p1, $completion) {
+    return this.invoke_iamcsp_k$(p1 instanceof WeChatBleConnectionState ? p1 : THROW_CCE(), $completion);
+  };
+  protoOf(BleObservationSession$startConnectionObservation$slambda$slambda).doResume_5yljmg_k$ = function () {
+    var suspendResult = this.result_1;
+    $sm: do
+      try {
+        var tmp = this.state_1;
+        if (tmp === 0) {
+          this.exceptionState_1 = 1;
+          var tmp0 = this.this$0__1.observedConnections_1;
+          var element = this.state_2;
+          tmp0.add_utx5q5_k$(element);
+          if (this.this$0__1.observedConnections_1.get_size_woubt6_k$() > 32) {
+            this.this$0__1.observedConnections_1.removeAt_6niowx_k$(0);
+          }
+          return Unit_instance;
+        } else if (tmp === 1) {
+          throw this.exception_1;
+        }
+      } catch ($p) {
+        var e = $p;
+        throw e;
+      }
+     while (true);
+  };
+  protoOf(BleObservationSession$startConnectionObservation$slambda$slambda).create_qwipol_k$ = function (state, completion) {
+    var i = new BleObservationSession$startConnectionObservation$slambda$slambda(this.this$0__1, completion);
+    i.state_2 = state;
+    return i;
+  };
+  function BleObservationSession$startConnectionObservation$slambda$slambda_0(this$0, resultContinuation) {
+    var i = new BleObservationSession$startConnectionObservation$slambda$slambda(this$0, resultContinuation);
+    return constructCallableReference(function (state, $completion) {
+      return i.invoke_iamcsp_k$(state, $completion);
+    }, 1);
+  }
+  function startDeviceObservation($this, $completion) {
+    if ($this.get_isObservingDevices_m7e55j_k$())
+      return Unit_instance;
+    $this.observedDevices_1.clear_j9egeb_k$();
+    $this.discoveryFailureName_1 = null;
+    var registered = CompletableDeferred();
+    var started = launch($this.scope_1, VOID, VOID, BleObservationSession$startDeviceObservation$slambda_0($this, registered, null));
+    started.invokeOnCompletion_n6cffu_k$(BleObservationSession$startDeviceObservation$lambda(registered));
+    $this.deviceCollector_1 = started;
+    return awaitRegistration($this, registered, $completion);
+  }
+  function stopDeviceObservation($this, $completion) {
+    var tmp = new $stopDeviceObservationCOROUTINE$($this, $completion);
+    tmp.result_1 = Unit_instance;
+    tmp.exception_1 = null;
+    return tmp.doResume_5yljmg_k$();
+  }
+  function startConnectionObservation($this, $completion) {
+    if ($this.get_isObservingConnections_nbrf1t_k$())
+      return Unit_instance;
+    $this.observedConnections_1.clear_j9egeb_k$();
+    $this.connectionFailureName_1 = null;
+    var registered = CompletableDeferred();
+    var started = launch($this.scope_1, VOID, VOID, BleObservationSession$startConnectionObservation$slambda_0($this, registered, null));
+    started.invokeOnCompletion_n6cffu_k$(BleObservationSession$startConnectionObservation$lambda(registered));
+    $this.connectionCollector_1 = started;
+    return awaitRegistration($this, registered, $completion);
+  }
+  function awaitRegistration($this, registered, $completion) {
+    return registered.await_4rdzbx_k$($completion);
+  }
+  function stopConnectionObservation($this, $completion) {
+    var tmp = new $stopConnectionObservationCOROUTINE$($this, $completion);
+    tmp.result_1 = Unit_instance;
+    tmp.exception_1 = null;
+    return tmp.doResume_5yljmg_k$();
+  }
+  function Companion_7() {
+    this.MAX_OBSERVED_1 = 32;
+  }
+  var Companion_instance_9;
+  function Companion_getInstance_7() {
+    return Companion_instance_9;
+  }
+  function sam$kotlinx_coroutines_flow_FlowCollector$0(function_0) {
+    this.function_1 = function_0;
+  }
+  protoOf(sam$kotlinx_coroutines_flow_FlowCollector$0).emit_t92u1f_k$ = function (value, $completion) {
+    return this.function_1(value, $completion);
+  };
+  protoOf(sam$kotlinx_coroutines_flow_FlowCollector$0).getFunctionDelegate_jtodtf_k$ = function () {
+    return this.function_1;
+  };
+  protoOf(sam$kotlinx_coroutines_flow_FlowCollector$0).equals = function (other) {
+    var tmp;
+    if (!(other == null) ? isInterface(other, FlowCollector) : false) {
+      var tmp_0;
+      if (!(other == null) ? isInterface(other, FunctionAdapter) : false) {
+        tmp_0 = equals(this.getFunctionDelegate_jtodtf_k$(), other.getFunctionDelegate_jtodtf_k$());
+      } else {
+        tmp_0 = false;
+      }
+      tmp = tmp_0;
+    } else {
+      tmp = false;
+    }
+    return tmp;
+  };
+  protoOf(sam$kotlinx_coroutines_flow_FlowCollector$0).hashCode = function () {
+    return hashCode(this.getFunctionDelegate_jtodtf_k$());
+  };
+  function sam$kotlinx_coroutines_flow_FlowCollector$0_0(function_0) {
+    this.function_1 = function_0;
+  }
+  protoOf(sam$kotlinx_coroutines_flow_FlowCollector$0_0).emit_t92u1f_k$ = function (value, $completion) {
+    return this.function_1(value, $completion);
+  };
+  protoOf(sam$kotlinx_coroutines_flow_FlowCollector$0_0).getFunctionDelegate_jtodtf_k$ = function () {
+    return this.function_1;
+  };
+  protoOf(sam$kotlinx_coroutines_flow_FlowCollector$0_0).equals = function (other) {
+    var tmp;
+    if (!(other == null) ? isInterface(other, FlowCollector) : false) {
+      var tmp_0;
+      if (!(other == null) ? isInterface(other, FunctionAdapter) : false) {
+        tmp_0 = equals(this.getFunctionDelegate_jtodtf_k$(), other.getFunctionDelegate_jtodtf_k$());
+      } else {
+        tmp_0 = false;
+      }
+      tmp = tmp_0;
+    } else {
+      tmp = false;
+    }
+    return tmp;
+  };
+  protoOf(sam$kotlinx_coroutines_flow_FlowCollector$0_0).hashCode = function () {
+    return hashCode(this.getFunctionDelegate_jtodtf_k$());
+  };
+  function BleObservationSession$startDeviceObservation$slambda(this$0, $registered, resultContinuation) {
+    this.this$0__1 = this$0;
+    this.$registered_1 = $registered;
+    CoroutineImpl.call(this, resultContinuation);
+  }
+  protoOf(BleObservationSession$startDeviceObservation$slambda).invoke_d9fzmj_k$ = function ($this$launch, $completion) {
+    var tmp = this.create_rcuf4x_k$($this$launch, $completion);
+    tmp.result_1 = Unit_instance;
+    tmp.exception_1 = null;
+    return tmp.doResume_5yljmg_k$();
+  };
+  protoOf(BleObservationSession$startDeviceObservation$slambda).invoke_qns8j1_k$ = function (p1, $completion) {
+    return this.invoke_d9fzmj_k$((!(p1 == null) ? isInterface(p1, CoroutineScope) : false) ? p1 : THROW_CCE(), $completion);
+  };
+  protoOf(BleObservationSession$startDeviceObservation$slambda).doResume_5yljmg_k$ = function () {
+    var suspendResult = this.result_1;
+    $sm: do
+      try {
+        var tmp = this.state_1;
+        switch (tmp) {
+          case 0:
+            this.exceptionState_1 = 3;
+            this.exceptionState_1 = 2;
+            this.state_1 = 1;
+            var tmp_0 = this.this$0__1.bluetooth_1.discoveredDevices_a0x500_k$(BleObservationSession$startDeviceObservation$slambda$lambda(this.$registered_1));
+            var tmp_1 = BleObservationSession$startDeviceObservation$slambda$slambda_0(this.this$0__1, null);
+            suspendResult = tmp_0.collect_aksokr_k$(new sam$kotlinx_coroutines_flow_FlowCollector$0(tmp_1), this);
+            if (suspendResult === get_COROUTINE_SUSPENDED()) {
+              return suspendResult;
+            }
+
+            continue $sm;
+          case 1:
+            this.exceptionState_1 = 3;
+            this.state_1 = 4;
+            continue $sm;
+          case 2:
+            this.exceptionState_1 = 3;
+            var tmp_2 = this.exception_1;
+            if (tmp_2 instanceof CancellationException) {
+              var cancellation = this.exception_1;
+              throw cancellation;
+            } else {
+              var tmp_3 = this.exception_1;
+              if (tmp_3 instanceof Error) {
+                var error = this.exception_1;
+                var tmp_4 = this.this$0__1;
+                var tmp0_elvis_lhs = getKClassFromExpression(error).get_simpleName_r6f8py_k$();
+                tmp_4.discoveryFailureName_1 = tmp0_elvis_lhs == null ? 'Error' : tmp0_elvis_lhs;
+                this.state_1 = 4;
+                continue $sm;
+              } else {
+                throw this.exception_1;
+              }
+            }
+
+          case 3:
+            throw this.exception_1;
+          case 4:
+            this.exceptionState_1 = 3;
+            return Unit_instance;
+        }
+      } catch ($p) {
+        var e = $p;
+        if (this.exceptionState_1 === 3) {
+          throw e;
+        } else {
+          this.state_1 = this.exceptionState_1;
+          this.exception_1 = e;
+        }
+      }
+     while (true);
+  };
+  protoOf(BleObservationSession$startDeviceObservation$slambda).create_rcuf4x_k$ = function ($this$launch, completion) {
+    var i = new BleObservationSession$startDeviceObservation$slambda(this.this$0__1, this.$registered_1, completion);
+    i.$this$launch_1 = $this$launch;
+    return i;
+  };
+  function BleObservationSession$startDeviceObservation$slambda_0(this$0, $registered, resultContinuation) {
+    var i = new BleObservationSession$startDeviceObservation$slambda(this$0, $registered, resultContinuation);
+    return constructCallableReference(function ($this$launch, $completion) {
+      return i.invoke_d9fzmj_k$($this$launch, $completion);
+    }, 1);
+  }
+  function BleObservationSession$startDeviceObservation$lambda($registered) {
+    return function (it) {
+      $registered.complete_ixf84q_k$(Unit_instance);
+      return Unit_instance;
+    };
+  }
+  function BleObservationSession$startConnectionObservation$slambda(this$0, $registered, resultContinuation) {
+    this.this$0__1 = this$0;
+    this.$registered_1 = $registered;
+    CoroutineImpl.call(this, resultContinuation);
+  }
+  protoOf(BleObservationSession$startConnectionObservation$slambda).invoke_d9fzmj_k$ = function ($this$launch, $completion) {
+    var tmp = this.create_rcuf4x_k$($this$launch, $completion);
+    tmp.result_1 = Unit_instance;
+    tmp.exception_1 = null;
+    return tmp.doResume_5yljmg_k$();
+  };
+  protoOf(BleObservationSession$startConnectionObservation$slambda).invoke_qns8j1_k$ = function (p1, $completion) {
+    return this.invoke_d9fzmj_k$((!(p1 == null) ? isInterface(p1, CoroutineScope) : false) ? p1 : THROW_CCE(), $completion);
+  };
+  protoOf(BleObservationSession$startConnectionObservation$slambda).doResume_5yljmg_k$ = function () {
+    var suspendResult = this.result_1;
+    $sm: do
+      try {
+        var tmp = this.state_1;
+        switch (tmp) {
+          case 0:
+            this.exceptionState_1 = 3;
+            this.exceptionState_1 = 2;
+            this.state_1 = 1;
+            var tmp_0 = this.this$0__1.bluetooth_1.connectionStates_vbpam3_k$(BleObservationSession$startConnectionObservation$slambda$lambda(this.$registered_1));
+            var tmp_1 = BleObservationSession$startConnectionObservation$slambda$slambda_0(this.this$0__1, null);
+            suspendResult = tmp_0.collect_aksokr_k$(new sam$kotlinx_coroutines_flow_FlowCollector$0_0(tmp_1), this);
+            if (suspendResult === get_COROUTINE_SUSPENDED()) {
+              return suspendResult;
+            }
+
+            continue $sm;
+          case 1:
+            this.exceptionState_1 = 3;
+            this.state_1 = 4;
+            continue $sm;
+          case 2:
+            this.exceptionState_1 = 3;
+            var tmp_2 = this.exception_1;
+            if (tmp_2 instanceof CancellationException) {
+              var cancellation = this.exception_1;
+              throw cancellation;
+            } else {
+              var tmp_3 = this.exception_1;
+              if (tmp_3 instanceof Error) {
+                var error = this.exception_1;
+                var tmp_4 = this.this$0__1;
+                var tmp0_elvis_lhs = getKClassFromExpression(error).get_simpleName_r6f8py_k$();
+                tmp_4.connectionFailureName_1 = tmp0_elvis_lhs == null ? 'Error' : tmp0_elvis_lhs;
+                this.state_1 = 4;
+                continue $sm;
+              } else {
+                throw this.exception_1;
+              }
+            }
+
+          case 3:
+            throw this.exception_1;
+          case 4:
+            this.exceptionState_1 = 3;
+            return Unit_instance;
+        }
+      } catch ($p) {
+        var e = $p;
+        if (this.exceptionState_1 === 3) {
+          throw e;
+        } else {
+          this.state_1 = this.exceptionState_1;
+          this.exception_1 = e;
+        }
+      }
+     while (true);
+  };
+  protoOf(BleObservationSession$startConnectionObservation$slambda).create_rcuf4x_k$ = function ($this$launch, completion) {
+    var i = new BleObservationSession$startConnectionObservation$slambda(this.this$0__1, this.$registered_1, completion);
+    i.$this$launch_1 = $this$launch;
+    return i;
+  };
+  function BleObservationSession$startConnectionObservation$slambda_0(this$0, $registered, resultContinuation) {
+    var i = new BleObservationSession$startConnectionObservation$slambda(this$0, $registered, resultContinuation);
+    return constructCallableReference(function ($this$launch, $completion) {
+      return i.invoke_d9fzmj_k$($this$launch, $completion);
+    }, 1);
+  }
+  function BleObservationSession$startConnectionObservation$lambda($registered) {
+    return function (it) {
+      $registered.complete_ixf84q_k$(Unit_instance);
+      return Unit_instance;
+    };
+  }
+  function $openAdapterCOROUTINE$(_this__u8e3s4, resultContinuation) {
+    CoroutineImpl.call(this, resultContinuation);
+    this._this__u8e3s4__1 = _this__u8e3s4;
+  }
+  protoOf($openAdapterCOROUTINE$).doResume_5yljmg_k$ = function () {
+    var suspendResult = this.result_1;
+    $sm: do
+      try {
+        var tmp = this.state_1;
+        switch (tmp) {
+          case 0:
+            this.exceptionState_1 = 3;
+            this.state_1 = 1;
+            suspendResult = this._this__u8e3s4__1.bluetooth_1.openAdapter_uzvay6_k$(this);
+            if (suspendResult === get_COROUTINE_SUSPENDED()) {
+              return suspendResult;
+            }
+
+            continue $sm;
+          case 1:
+            this.state_1 = 2;
+            suspendResult = startConnectionObservation(this._this__u8e3s4__1, this);
+            if (suspendResult === get_COROUTINE_SUSPENDED()) {
+              return suspendResult;
+            }
+
+            continue $sm;
+          case 2:
+            return Unit_instance;
+          case 3:
+            throw this.exception_1;
+        }
+      } catch ($p) {
+        var e = $p;
+        if (this.exceptionState_1 === 3) {
+          throw e;
+        } else {
+          this.state_1 = this.exceptionState_1;
+          this.exception_1 = e;
+        }
+      }
+     while (true);
+  };
+  function $closeAdapterCOROUTINE$(_this__u8e3s4, resultContinuation) {
+    CoroutineImpl.call(this, resultContinuation);
+    this._this__u8e3s4__1 = _this__u8e3s4;
+  }
+  protoOf($closeAdapterCOROUTINE$).doResume_5yljmg_k$ = function () {
+    var suspendResult = this.result_1;
+    $sm: do
+      try {
+        var tmp = this.state_1;
+        switch (tmp) {
+          case 0:
+            this.exceptionState_1 = 4;
+            this.state_1 = 1;
+            suspendResult = stopDeviceObservation(this._this__u8e3s4__1, this);
+            if (suspendResult === get_COROUTINE_SUSPENDED()) {
+              return suspendResult;
+            }
+
+            continue $sm;
+          case 1:
+            this.state_1 = 2;
+            suspendResult = stopConnectionObservation(this._this__u8e3s4__1, this);
+            if (suspendResult === get_COROUTINE_SUSPENDED()) {
+              return suspendResult;
+            }
+
+            continue $sm;
+          case 2:
+            this.state_1 = 3;
+            suspendResult = this._this__u8e3s4__1.bluetooth_1.closeAdapter_opnim8_k$(this);
+            if (suspendResult === get_COROUTINE_SUSPENDED()) {
+              return suspendResult;
+            }
+
+            continue $sm;
+          case 3:
+            return Unit_instance;
+          case 4:
+            throw this.exception_1;
+        }
+      } catch ($p) {
+        var e = $p;
+        if (this.exceptionState_1 === 4) {
+          throw e;
+        } else {
+          this.state_1 = this.exceptionState_1;
+          this.exception_1 = e;
+        }
+      }
+     while (true);
+  };
+  function $startDiscoveryCOROUTINE$(_this__u8e3s4, resultContinuation) {
+    CoroutineImpl.call(this, resultContinuation);
+    this._this__u8e3s4__1 = _this__u8e3s4;
+  }
+  protoOf($startDiscoveryCOROUTINE$).doResume_5yljmg_k$ = function () {
+    var suspendResult = this.result_1;
+    $sm: do
+      try {
+        var tmp = this.state_1;
+        switch (tmp) {
+          case 0:
+            this.exceptionState_1 = 6;
+            this.state_1 = 1;
+            suspendResult = startDeviceObservation(this._this__u8e3s4__1, this);
+            if (suspendResult === get_COROUTINE_SUSPENDED()) {
+              return suspendResult;
+            }
+
+            continue $sm;
+          case 1:
+            this.exceptionState_1 = 4;
+            this.state_1 = 2;
+            suspendResult = this._this__u8e3s4__1.bluetooth_1.startDiscovery$default_8kqzwl_k$(VOID, this);
+            if (suspendResult === get_COROUTINE_SUSPENDED()) {
+              return suspendResult;
+            }
+
+            continue $sm;
+          case 2:
+            this.exceptionState_1 = 6;
+            this.state_1 = 3;
+            continue $sm;
+          case 3:
+            this.exceptionState_1 = 6;
+            return Unit_instance;
+          case 4:
+            this.exceptionState_1 = 6;
+            var tmp_0 = this.exception_1;
+            if (tmp_0 instanceof Error) {
+              this.error0__1 = this.exception_1;
+              this.state_1 = 5;
+              suspendResult = stopDeviceObservation(this._this__u8e3s4__1, this);
+              if (suspendResult === get_COROUTINE_SUSPENDED()) {
+                return suspendResult;
+              }
+              continue $sm;
+            } else {
+              throw this.exception_1;
+            }
+
+          case 5:
+            throw this.error0__1;
+          case 6:
+            throw this.exception_1;
+        }
+      } catch ($p) {
+        var e = $p;
+        if (this.exceptionState_1 === 6) {
+          throw e;
+        } else {
+          this.state_1 = this.exceptionState_1;
+          this.exception_1 = e;
+        }
+      }
+     while (true);
+  };
+  function $stopDiscoveryCOROUTINE$(_this__u8e3s4, resultContinuation) {
+    CoroutineImpl.call(this, resultContinuation);
+    this._this__u8e3s4__1 = _this__u8e3s4;
+  }
+  protoOf($stopDiscoveryCOROUTINE$).doResume_5yljmg_k$ = function () {
+    var suspendResult = this.result_1;
+    $sm: do
+      try {
+        var tmp = this.state_1;
+        switch (tmp) {
+          case 0:
+            this.exceptionState_1 = 3;
+            this.state_1 = 1;
+            suspendResult = this._this__u8e3s4__1.bluetooth_1.stopDiscovery_g9b3r_k$(this);
+            if (suspendResult === get_COROUTINE_SUSPENDED()) {
+              return suspendResult;
+            }
+
+            continue $sm;
+          case 1:
+            this.state_1 = 2;
+            suspendResult = stopDeviceObservation(this._this__u8e3s4__1, this);
+            if (suspendResult === get_COROUTINE_SUSPENDED()) {
+              return suspendResult;
+            }
+
+            continue $sm;
+          case 2:
+            return Unit_instance;
+          case 3:
+            throw this.exception_1;
+        }
+      } catch ($p) {
+        var e = $p;
+        if (this.exceptionState_1 === 3) {
+          throw e;
+        } else {
+          this.state_1 = this.exceptionState_1;
+          this.exception_1 = e;
+        }
+      }
+     while (true);
+  };
+  function $stopDeviceObservationCOROUTINE$(_this__u8e3s4, resultContinuation) {
+    CoroutineImpl.call(this, resultContinuation);
+    this._this__u8e3s4__1 = _this__u8e3s4;
+  }
+  protoOf($stopDeviceObservationCOROUTINE$).doResume_5yljmg_k$ = function () {
+    var suspendResult = this.result_1;
+    $sm: do
+      try {
+        var tmp = this.state_1;
+        switch (tmp) {
+          case 0:
+            this.exceptionState_1 = 3;
+            var tmp0_safe_receiver = this._this__u8e3s4__1.deviceCollector_1;
+            if (tmp0_safe_receiver == null) {
+              this.WHEN_RESULT0__1 = null;
+              this.state_1 = 2;
+              continue $sm;
+            } else {
+              this.state_1 = 1;
+              suspendResult = cancelAndJoin(tmp0_safe_receiver, this);
+              if (suspendResult === get_COROUTINE_SUSPENDED()) {
+                return suspendResult;
+              }
+              continue $sm;
+            }
+
+          case 1:
+            var tmp_0 = this;
+            tmp_0.WHEN_RESULT0__1 = Unit_instance;
+            this.state_1 = 2;
+            continue $sm;
+          case 2:
+            this._this__u8e3s4__1.deviceCollector_1 = null;
+            return Unit_instance;
+          case 3:
+            throw this.exception_1;
+        }
+      } catch ($p) {
+        var e = $p;
+        if (this.exceptionState_1 === 3) {
+          throw e;
+        } else {
+          this.state_1 = this.exceptionState_1;
+          this.exception_1 = e;
+        }
+      }
+     while (true);
+  };
+  function $stopConnectionObservationCOROUTINE$(_this__u8e3s4, resultContinuation) {
+    CoroutineImpl.call(this, resultContinuation);
+    this._this__u8e3s4__1 = _this__u8e3s4;
+  }
+  protoOf($stopConnectionObservationCOROUTINE$).doResume_5yljmg_k$ = function () {
+    var suspendResult = this.result_1;
+    $sm: do
+      try {
+        var tmp = this.state_1;
+        switch (tmp) {
+          case 0:
+            this.exceptionState_1 = 3;
+            var tmp0_safe_receiver = this._this__u8e3s4__1.connectionCollector_1;
+            if (tmp0_safe_receiver == null) {
+              this.WHEN_RESULT0__1 = null;
+              this.state_1 = 2;
+              continue $sm;
+            } else {
+              this.state_1 = 1;
+              suspendResult = cancelAndJoin(tmp0_safe_receiver, this);
+              if (suspendResult === get_COROUTINE_SUSPENDED()) {
+                return suspendResult;
+              }
+              continue $sm;
+            }
+
+          case 1:
+            var tmp_0 = this;
+            tmp_0.WHEN_RESULT0__1 = Unit_instance;
+            this.state_1 = 2;
+            continue $sm;
+          case 2:
+            this._this__u8e3s4__1.connectionCollector_1 = null;
+            return Unit_instance;
+          case 3:
+            throw this.exception_1;
+        }
+      } catch ($p) {
+        var e = $p;
+        if (this.exceptionState_1 === 3) {
+          throw e;
+        } else {
+          this.state_1 = this.exceptionState_1;
+          this.exception_1 = e;
+        }
+      }
+     while (true);
+  };
+  function BleObservationSession(bluetooth, scope) {
+    scope = scope === VOID ? CoroutineScope_0(SupervisorJob().plus_s13ygv_k$(Dispatchers_getInstance().Default_1)) : scope;
+    this.bluetooth_1 = bluetooth;
+    this.scope_1 = scope;
+    this.deviceCollector_1 = null;
+    this.connectionCollector_1 = null;
+    var tmp = this;
+    // Inline function 'kotlin.collections.mutableListOf' call
+    tmp.observedDevices_1 = ArrayList_init_$Create$_0();
+    var tmp_0 = this;
+    // Inline function 'kotlin.collections.mutableListOf' call
+    tmp_0.observedConnections_1 = ArrayList_init_$Create$_0();
+    this.discoveryFailureName_1 = null;
+    this.connectionFailureName_1 = null;
+  }
+  protoOf(BleObservationSession).get_isObservingDevices_m7e55j_k$ = function () {
+    var tmp0_safe_receiver = this.deviceCollector_1;
+    return (tmp0_safe_receiver == null ? null : tmp0_safe_receiver.get_isActive_quafmh_k$()) === true;
+  };
+  protoOf(BleObservationSession).get_isObservingConnections_nbrf1t_k$ = function () {
+    var tmp0_safe_receiver = this.connectionCollector_1;
+    return (tmp0_safe_receiver == null ? null : tmp0_safe_receiver.get_isActive_quafmh_k$()) === true;
+  };
+  protoOf(BleObservationSession).openAdapter_uzvay6_k$ = function ($completion) {
+    var tmp = new $openAdapterCOROUTINE$(this, $completion);
+    tmp.result_1 = Unit_instance;
+    tmp.exception_1 = null;
+    return tmp.doResume_5yljmg_k$();
+  };
+  protoOf(BleObservationSession).closeAdapter_opnim8_k$ = function ($completion) {
+    var tmp = new $closeAdapterCOROUTINE$(this, $completion);
+    tmp.result_1 = Unit_instance;
+    tmp.exception_1 = null;
+    return tmp.doResume_5yljmg_k$();
+  };
+  protoOf(BleObservationSession).startDiscovery_b9tz3d_k$ = function ($completion) {
+    var tmp = new $startDiscoveryCOROUTINE$(this, $completion);
+    tmp.result_1 = Unit_instance;
+    tmp.exception_1 = null;
+    return tmp.doResume_5yljmg_k$();
+  };
+  protoOf(BleObservationSession).stopDiscovery_g9b3r_k$ = function ($completion) {
+    var tmp = new $stopDiscoveryCOROUTINE$(this, $completion);
+    tmp.result_1 = Unit_instance;
+    tmp.exception_1 = null;
+    return tmp.doResume_5yljmg_k$();
+  };
+  protoOf(BleObservationSession).devices_psny71_k$ = function () {
+    return toList(this.observedDevices_1);
+  };
+  protoOf(BleObservationSession).discoveryFailure_jfqj0a_k$ = function () {
+    return this.discoveryFailureName_1;
+  };
+  protoOf(BleObservationSession).connectionStates_ed8dc0_k$ = function () {
+    return toList(this.observedConnections_1);
+  };
+  protoOf(BleObservationSession).connectionFailure_wm4dsc_k$ = function () {
+    return this.connectionFailureName_1;
+  };
+  protoOf(BleObservationSession).listenerCount_9h9scb_k$ = function () {
+    return this.bluetooth_1.get_activeListenerCount_w9igh8_k$();
+  };
+  function JsBleDevice(deviceId, name, rssi) {
+    this.deviceId = deviceId;
+    this.name = name;
+    this.rssi = rssi;
+  }
+  protoOf(JsBleDevice).get_deviceId_dgjx9i_k$ = function () {
+    return this.deviceId;
+  };
+  protoOf(JsBleDevice).get_name_woqyms_k$ = function () {
+    return this.name;
+  };
+  protoOf(JsBleDevice).get_rssi_wotw2o_k$ = function () {
+    return this.rssi;
+  };
+  function JsBleAdapterState(available, discovering, powered) {
+    this.available = available;
+    this.discovering = discovering;
+    this.powered = powered;
+  }
+  protoOf(JsBleAdapterState).get_available_3mf9b4_k$ = function () {
+    return this.available;
+  };
+  protoOf(JsBleAdapterState).get_discovering_5cvncg_k$ = function () {
+    return this.discovering;
+  };
+  protoOf(JsBleAdapterState).get_powered_55f3b9_k$ = function () {
+    return this.powered;
+  };
+  function JsBleConnectionState(deviceId, connected) {
+    this.deviceId = deviceId;
+    this.connected = connected;
+  }
+  protoOf(JsBleConnectionState).get_deviceId_dgjx9i_k$ = function () {
+    return this.deviceId;
+  };
+  protoOf(JsBleConnectionState).get_connected_12bogw_k$ = function () {
+    return this.connected;
+  };
+  function toJs(_this__u8e3s4) {
+    return new JsBleDevice(_this__u8e3s4.deviceId_1, _this__u8e3s4.name_1, _this__u8e3s4.rssi_1);
+  }
+  function toJs_0(_this__u8e3s4) {
+    return new JsBleAdapterState(_this__u8e3s4.available_1, _this__u8e3s4.discovering_1, _this__u8e3s4.powered_1);
+  }
+  function toJs_1(_this__u8e3s4) {
+    return new JsBleConnectionState(_this__u8e3s4.deviceId_1, _this__u8e3s4.connected_1);
+  }
   function JsCapabilitySupport(state, requiredVersion, currentVersion, permission) {
     this.state = state;
     this.requiredVersion = requiredVersion;
@@ -1517,6 +2357,21 @@
   protoOf(JsSubscriptionResult).get_hostStatus_wlfk1v_k$ = function () {
     return this.hostStatus;
   };
+  function _get_bleSession__wdozlc($this) {
+    var tmp0 = $this.bleSession$delegate_1;
+    var tmp = KProperty1;
+    // Inline function 'kotlin.getValue' call
+    getPropertyCallableRef('bleSession', 1, tmp, MiniAppExports$_get_bleSession_$ref_cmd9q(), null);
+    return tmp0.get_value_j01efc_k$();
+  }
+  function MiniAppExports$bleSession$delegate$lambda() {
+    return new BleObservationSession(MiniAppExports_getInstance().host_1.platform_1.bluetooth_1);
+  }
+  function MiniAppExports$_get_bleSession_$ref_cmd9q() {
+    return constructCallableReference(function (p0) {
+      return _get_bleSession__wdozlc(p0);
+    }, 1, 0, 4);
+  }
   function $storageGet$suspendBridgeCOROUTINE$(_this__u8e3s4, key, resultContinuation) {
     CoroutineImpl.call(this, resultContinuation);
     this._this__u8e3s4__1 = _this__u8e3s4;
@@ -2138,6 +2993,396 @@
       }
      while (true);
   };
+  function $wechatBleAdapterStateCOROUTINE$(_this__u8e3s4, resultContinuation) {
+    CoroutineImpl.call(this, resultContinuation);
+    this._this__u8e3s4__1 = _this__u8e3s4;
+  }
+  protoOf($wechatBleAdapterStateCOROUTINE$).doResume_5yljmg_k$ = function () {
+    var suspendResult = this.result_1;
+    $sm: do
+      try {
+        var tmp = this.state_1;
+        switch (tmp) {
+          case 0:
+            this.exceptionState_1 = 2;
+            this.state_1 = 1;
+            suspendResult = this._this__u8e3s4__1.host_1.platform_1.bluetooth_1.adapterState_mz4npc_k$(this);
+            if (suspendResult === get_COROUTINE_SUSPENDED()) {
+              return suspendResult;
+            }
+
+            continue $sm;
+          case 1:
+            var ARGUMENT = suspendResult;
+            return toJs_0(ARGUMENT);
+          case 2:
+            throw this.exception_1;
+        }
+      } catch ($p) {
+        var e = $p;
+        if (this.exceptionState_1 === 2) {
+          throw e;
+        } else {
+          this.state_1 = this.exceptionState_1;
+          this.exception_1 = e;
+        }
+      }
+     while (true);
+  };
+  function $wechatBleAdapterState$suspendBridgeCOROUTINE$(_this__u8e3s4, resultContinuation) {
+    CoroutineImpl.call(this, resultContinuation);
+    this._this__u8e3s4__1 = _this__u8e3s4;
+  }
+  protoOf($wechatBleAdapterState$suspendBridgeCOROUTINE$).doResume_5yljmg_k$ = function () {
+    var suspendResult = this.result_1;
+    $sm: do
+      try {
+        var tmp = this.state_1;
+        switch (tmp) {
+          case 0:
+            this.exceptionState_1 = 4;
+            if (this._this__u8e3s4__1.wechatBleAdapterState === protoOf(MiniAppExports).wechatBleAdapterState) {
+              this.state_1 = 2;
+              suspendResult = this._this__u8e3s4__1.wechatBleAdapterState_fn1ccj_k$(this);
+              if (suspendResult === get_COROUTINE_SUSPENDED()) {
+                return suspendResult;
+              }
+              continue $sm;
+            } else {
+              this.state_1 = 1;
+              suspendResult = await_0(this._this__u8e3s4__1.wechatBleAdapterState(), this);
+              if (suspendResult === get_COROUTINE_SUSPENDED()) {
+                return suspendResult;
+              }
+              continue $sm;
+            }
+
+          case 1:
+            this.WHEN_RESULT0__1 = suspendResult;
+            this.state_1 = 3;
+            continue $sm;
+          case 2:
+            this.WHEN_RESULT0__1 = suspendResult;
+            this.state_1 = 3;
+            continue $sm;
+          case 3:
+            return this.WHEN_RESULT0__1;
+          case 4:
+            throw this.exception_1;
+        }
+      } catch ($p) {
+        var e = $p;
+        if (this.exceptionState_1 === 4) {
+          throw e;
+        } else {
+          this.state_1 = this.exceptionState_1;
+          this.exception_1 = e;
+        }
+      }
+     while (true);
+  };
+  function $wechatBleOpenAdapter$suspendBridgeCOROUTINE$(_this__u8e3s4, resultContinuation) {
+    CoroutineImpl.call(this, resultContinuation);
+    this._this__u8e3s4__1 = _this__u8e3s4;
+  }
+  protoOf($wechatBleOpenAdapter$suspendBridgeCOROUTINE$).doResume_5yljmg_k$ = function () {
+    var suspendResult = this.result_1;
+    $sm: do
+      try {
+        var tmp = this.state_1;
+        switch (tmp) {
+          case 0:
+            this.exceptionState_1 = 4;
+            if (this._this__u8e3s4__1.wechatBleOpenAdapter === protoOf(MiniAppExports).wechatBleOpenAdapter) {
+              this.state_1 = 2;
+              suspendResult = this._this__u8e3s4__1.wechatBleOpenAdapter_t31czr_k$(this);
+              if (suspendResult === get_COROUTINE_SUSPENDED()) {
+                return suspendResult;
+              }
+              continue $sm;
+            } else {
+              this.state_1 = 1;
+              suspendResult = await_0(this._this__u8e3s4__1.wechatBleOpenAdapter(), this);
+              if (suspendResult === get_COROUTINE_SUSPENDED()) {
+                return suspendResult;
+              }
+              continue $sm;
+            }
+
+          case 1:
+            this.state_1 = 3;
+            continue $sm;
+          case 2:
+            this.state_1 = 3;
+            continue $sm;
+          case 3:
+            return Unit_instance;
+          case 4:
+            throw this.exception_1;
+        }
+      } catch ($p) {
+        var e = $p;
+        if (this.exceptionState_1 === 4) {
+          throw e;
+        } else {
+          this.state_1 = this.exceptionState_1;
+          this.exception_1 = e;
+        }
+      }
+     while (true);
+  };
+  function $wechatBleCloseAdapter$suspendBridgeCOROUTINE$(_this__u8e3s4, resultContinuation) {
+    CoroutineImpl.call(this, resultContinuation);
+    this._this__u8e3s4__1 = _this__u8e3s4;
+  }
+  protoOf($wechatBleCloseAdapter$suspendBridgeCOROUTINE$).doResume_5yljmg_k$ = function () {
+    var suspendResult = this.result_1;
+    $sm: do
+      try {
+        var tmp = this.state_1;
+        switch (tmp) {
+          case 0:
+            this.exceptionState_1 = 4;
+            if (this._this__u8e3s4__1.wechatBleCloseAdapter === protoOf(MiniAppExports).wechatBleCloseAdapter) {
+              this.state_1 = 2;
+              suspendResult = this._this__u8e3s4__1.wechatBleCloseAdapter_um9cid_k$(this);
+              if (suspendResult === get_COROUTINE_SUSPENDED()) {
+                return suspendResult;
+              }
+              continue $sm;
+            } else {
+              this.state_1 = 1;
+              suspendResult = await_0(this._this__u8e3s4__1.wechatBleCloseAdapter(), this);
+              if (suspendResult === get_COROUTINE_SUSPENDED()) {
+                return suspendResult;
+              }
+              continue $sm;
+            }
+
+          case 1:
+            this.state_1 = 3;
+            continue $sm;
+          case 2:
+            this.state_1 = 3;
+            continue $sm;
+          case 3:
+            return Unit_instance;
+          case 4:
+            throw this.exception_1;
+        }
+      } catch ($p) {
+        var e = $p;
+        if (this.exceptionState_1 === 4) {
+          throw e;
+        } else {
+          this.state_1 = this.exceptionState_1;
+          this.exception_1 = e;
+        }
+      }
+     while (true);
+  };
+  function $wechatBleStartDiscovery$suspendBridgeCOROUTINE$(_this__u8e3s4, resultContinuation) {
+    CoroutineImpl.call(this, resultContinuation);
+    this._this__u8e3s4__1 = _this__u8e3s4;
+  }
+  protoOf($wechatBleStartDiscovery$suspendBridgeCOROUTINE$).doResume_5yljmg_k$ = function () {
+    var suspendResult = this.result_1;
+    $sm: do
+      try {
+        var tmp = this.state_1;
+        switch (tmp) {
+          case 0:
+            this.exceptionState_1 = 4;
+            if (this._this__u8e3s4__1.wechatBleStartDiscovery === protoOf(MiniAppExports).wechatBleStartDiscovery) {
+              this.state_1 = 2;
+              suspendResult = this._this__u8e3s4__1.wechatBleStartDiscovery_um7wq4_k$(this);
+              if (suspendResult === get_COROUTINE_SUSPENDED()) {
+                return suspendResult;
+              }
+              continue $sm;
+            } else {
+              this.state_1 = 1;
+              suspendResult = await_0(this._this__u8e3s4__1.wechatBleStartDiscovery(), this);
+              if (suspendResult === get_COROUTINE_SUSPENDED()) {
+                return suspendResult;
+              }
+              continue $sm;
+            }
+
+          case 1:
+            this.state_1 = 3;
+            continue $sm;
+          case 2:
+            this.state_1 = 3;
+            continue $sm;
+          case 3:
+            return Unit_instance;
+          case 4:
+            throw this.exception_1;
+        }
+      } catch ($p) {
+        var e = $p;
+        if (this.exceptionState_1 === 4) {
+          throw e;
+        } else {
+          this.state_1 = this.exceptionState_1;
+          this.exception_1 = e;
+        }
+      }
+     while (true);
+  };
+  function $wechatBleStopDiscovery$suspendBridgeCOROUTINE$(_this__u8e3s4, resultContinuation) {
+    CoroutineImpl.call(this, resultContinuation);
+    this._this__u8e3s4__1 = _this__u8e3s4;
+  }
+  protoOf($wechatBleStopDiscovery$suspendBridgeCOROUTINE$).doResume_5yljmg_k$ = function () {
+    var suspendResult = this.result_1;
+    $sm: do
+      try {
+        var tmp = this.state_1;
+        switch (tmp) {
+          case 0:
+            this.exceptionState_1 = 4;
+            if (this._this__u8e3s4__1.wechatBleStopDiscovery === protoOf(MiniAppExports).wechatBleStopDiscovery) {
+              this.state_1 = 2;
+              suspendResult = this._this__u8e3s4__1.wechatBleStopDiscovery_ayusn6_k$(this);
+              if (suspendResult === get_COROUTINE_SUSPENDED()) {
+                return suspendResult;
+              }
+              continue $sm;
+            } else {
+              this.state_1 = 1;
+              suspendResult = await_0(this._this__u8e3s4__1.wechatBleStopDiscovery(), this);
+              if (suspendResult === get_COROUTINE_SUSPENDED()) {
+                return suspendResult;
+              }
+              continue $sm;
+            }
+
+          case 1:
+            this.state_1 = 3;
+            continue $sm;
+          case 2:
+            this.state_1 = 3;
+            continue $sm;
+          case 3:
+            return Unit_instance;
+          case 4:
+            throw this.exception_1;
+        }
+      } catch ($p) {
+        var e = $p;
+        if (this.exceptionState_1 === 4) {
+          throw e;
+        } else {
+          this.state_1 = this.exceptionState_1;
+          this.exception_1 = e;
+        }
+      }
+     while (true);
+  };
+  function $wechatBleConnect$suspendBridgeCOROUTINE$(_this__u8e3s4, deviceId, resultContinuation) {
+    CoroutineImpl.call(this, resultContinuation);
+    this._this__u8e3s4__1 = _this__u8e3s4;
+    this.deviceId_1 = deviceId;
+  }
+  protoOf($wechatBleConnect$suspendBridgeCOROUTINE$).doResume_5yljmg_k$ = function () {
+    var suspendResult = this.result_1;
+    $sm: do
+      try {
+        var tmp = this.state_1;
+        switch (tmp) {
+          case 0:
+            this.exceptionState_1 = 4;
+            if (this._this__u8e3s4__1.wechatBleConnect === protoOf(MiniAppExports).wechatBleConnect) {
+              this.state_1 = 2;
+              suspendResult = this._this__u8e3s4__1.wechatBleConnect_iychzi_k$(this.deviceId_1, this);
+              if (suspendResult === get_COROUTINE_SUSPENDED()) {
+                return suspendResult;
+              }
+              continue $sm;
+            } else {
+              this.state_1 = 1;
+              suspendResult = await_0(this._this__u8e3s4__1.wechatBleConnect(this.deviceId_1), this);
+              if (suspendResult === get_COROUTINE_SUSPENDED()) {
+                return suspendResult;
+              }
+              continue $sm;
+            }
+
+          case 1:
+            this.state_1 = 3;
+            continue $sm;
+          case 2:
+            this.state_1 = 3;
+            continue $sm;
+          case 3:
+            return Unit_instance;
+          case 4:
+            throw this.exception_1;
+        }
+      } catch ($p) {
+        var e = $p;
+        if (this.exceptionState_1 === 4) {
+          throw e;
+        } else {
+          this.state_1 = this.exceptionState_1;
+          this.exception_1 = e;
+        }
+      }
+     while (true);
+  };
+  function $wechatBleDisconnect$suspendBridgeCOROUTINE$(_this__u8e3s4, deviceId, resultContinuation) {
+    CoroutineImpl.call(this, resultContinuation);
+    this._this__u8e3s4__1 = _this__u8e3s4;
+    this.deviceId_1 = deviceId;
+  }
+  protoOf($wechatBleDisconnect$suspendBridgeCOROUTINE$).doResume_5yljmg_k$ = function () {
+    var suspendResult = this.result_1;
+    $sm: do
+      try {
+        var tmp = this.state_1;
+        switch (tmp) {
+          case 0:
+            this.exceptionState_1 = 4;
+            if (this._this__u8e3s4__1.wechatBleDisconnect === protoOf(MiniAppExports).wechatBleDisconnect) {
+              this.state_1 = 2;
+              suspendResult = this._this__u8e3s4__1.wechatBleDisconnect_ht39pq_k$(this.deviceId_1, this);
+              if (suspendResult === get_COROUTINE_SUSPENDED()) {
+                return suspendResult;
+              }
+              continue $sm;
+            } else {
+              this.state_1 = 1;
+              suspendResult = await_0(this._this__u8e3s4__1.wechatBleDisconnect(this.deviceId_1), this);
+              if (suspendResult === get_COROUTINE_SUSPENDED()) {
+                return suspendResult;
+              }
+              continue $sm;
+            }
+
+          case 1:
+            this.state_1 = 3;
+            continue $sm;
+          case 2:
+            this.state_1 = 3;
+            continue $sm;
+          case 3:
+            return Unit_instance;
+          case 4:
+            throw this.exception_1;
+        }
+      } catch ($p) {
+        var e = $p;
+        if (this.exceptionState_1 === 4) {
+          throw e;
+        } else {
+          this.state_1 = this.exceptionState_1;
+          this.exception_1 = e;
+        }
+      }
+     while (true);
+  };
   function $permissionStateCOROUTINE$(_this__u8e3s4, permission, resultContinuation) {
     CoroutineImpl.call(this, resultContinuation);
     this._this__u8e3s4__1 = _this__u8e3s4;
@@ -2429,7 +3674,7 @@
             continue $sm;
           case 1:
             var ARGUMENT = suspendResult;
-            return toJs_2(ARGUMENT);
+            return toJs_5(ARGUMENT);
           case 2:
             throw this.exception_1;
         }
@@ -3375,7 +4620,7 @@
         switch (tmp) {
           case 0:
             this.exceptionState_1 = 2;
-            var request = new WeChatSubscriptionRequest(toList(this.templateIds_1));
+            var request = new WeChatSubscriptionRequest(toList_0(this.templateIds_1));
             this.state_1 = 1;
             suspendResult = this._this__u8e3s4__1.host_1.platform_1.requestSubscribeMessage_1.request_199zc0_k$(request, this);
             if (suspendResult === get_COROUTINE_SUSPENDED()) {
@@ -3482,7 +4727,7 @@
             continue $sm;
           case 1:
             var ARGUMENT = suspendResult;
-            return toJs(ARGUMENT);
+            return toJs_2(ARGUMENT);
           case 2:
             throw this.exception_1;
         }
@@ -3576,7 +4821,7 @@
             var _iterator__ex2g4s = this_0.iterator_jk1svi_k$();
             while (_iterator__ex2g4s.hasNext_bitz1p_k$()) {
               var item = _iterator__ex2g4s.next_20eer_k$();
-              destination.add_utx5q5_k$(toJs(item));
+              destination.add_utx5q5_k$(toJs_2(item));
             }
 
             return copyToArray(destination);
@@ -3803,10 +5048,12 @@
     this.privacy_1 = this.host_1.privacy_1;
     this.networkStatus_1 = this.host_1.networkStatus_1;
     this.networkObservation_1 = new NetworkStatusObservation(this.networkStatus_1.get_changes_dhi2my_k$());
+    var tmp = this;
+    tmp.bleSession$delegate_1 = lazy(MiniAppExports$bleSession$delegate$lambda);
     this.lastObservation_1 = null;
   }
   protoOf(MiniAppExports).sdkVersion = function () {
-    return '0.1.0-SNAPSHOT';
+    return '0.1.0';
   };
   protoOf(MiniAppExports).storageGet_o5km91_k$ = function (key, $completion) {
     return this.storage_1.get_3l5a7q_k$(key, $completion);
@@ -3988,14 +5235,159 @@
     tmp.exception_1 = null;
     return tmp.doResume_5yljmg_k$();
   };
+  protoOf(MiniAppExports).wechatBleAdapterState_fn1ccj_k$ = function ($completion) {
+    var tmp = new $wechatBleAdapterStateCOROUTINE$(this, $completion);
+    tmp.result_1 = Unit_instance;
+    tmp.exception_1 = null;
+    return tmp.doResume_5yljmg_k$();
+  };
+  protoOf(MiniAppExports).wechatBleAdapterState = function () {
+    var tmp = this;
+    return promisify(function ($completion) {
+      return tmp.wechatBleAdapterState_fn1ccj_k$($completion);
+    });
+  };
+  protoOf(MiniAppExports).wechatBleAdapterState$suspendBridge_dlkq5e_k$ = function ($completion) {
+    var tmp = new $wechatBleAdapterState$suspendBridgeCOROUTINE$(this, $completion);
+    tmp.result_1 = Unit_instance;
+    tmp.exception_1 = null;
+    return tmp.doResume_5yljmg_k$();
+  };
+  protoOf(MiniAppExports).wechatBleOpenAdapter_t31czr_k$ = function ($completion) {
+    return _get_bleSession__wdozlc(this).openAdapter_uzvay6_k$($completion);
+  };
+  protoOf(MiniAppExports).wechatBleOpenAdapter = function () {
+    var tmp = this;
+    return promisify(function ($completion) {
+      return tmp.wechatBleOpenAdapter_t31czr_k$($completion);
+    });
+  };
+  protoOf(MiniAppExports).wechatBleOpenAdapter$suspendBridge_wbayca_k$ = function ($completion) {
+    var tmp = new $wechatBleOpenAdapter$suspendBridgeCOROUTINE$(this, $completion);
+    tmp.result_1 = Unit_instance;
+    tmp.exception_1 = null;
+    return tmp.doResume_5yljmg_k$();
+  };
+  protoOf(MiniAppExports).wechatBleCloseAdapter_um9cid_k$ = function ($completion) {
+    return _get_bleSession__wdozlc(this).closeAdapter_opnim8_k$($completion);
+  };
+  protoOf(MiniAppExports).wechatBleCloseAdapter = function () {
+    var tmp = this;
+    return promisify(function ($completion) {
+      return tmp.wechatBleCloseAdapter_um9cid_k$($completion);
+    });
+  };
+  protoOf(MiniAppExports).wechatBleCloseAdapter$suspendBridge_5qy6tm_k$ = function ($completion) {
+    var tmp = new $wechatBleCloseAdapter$suspendBridgeCOROUTINE$(this, $completion);
+    tmp.result_1 = Unit_instance;
+    tmp.exception_1 = null;
+    return tmp.doResume_5yljmg_k$();
+  };
+  protoOf(MiniAppExports).wechatBleStartDiscovery_um7wq4_k$ = function ($completion) {
+    return _get_bleSession__wdozlc(this).startDiscovery_b9tz3d_k$($completion);
+  };
+  protoOf(MiniAppExports).wechatBleStartDiscovery = function () {
+    var tmp = this;
+    return promisify(function ($completion) {
+      return tmp.wechatBleStartDiscovery_um7wq4_k$($completion);
+    });
+  };
+  protoOf(MiniAppExports).wechatBleStartDiscovery$suspendBridge_23y35f_k$ = function ($completion) {
+    var tmp = new $wechatBleStartDiscovery$suspendBridgeCOROUTINE$(this, $completion);
+    tmp.result_1 = Unit_instance;
+    tmp.exception_1 = null;
+    return tmp.doResume_5yljmg_k$();
+  };
+  protoOf(MiniAppExports).wechatBleStopDiscovery_ayusn6_k$ = function ($completion) {
+    return _get_bleSession__wdozlc(this).stopDiscovery_g9b3r_k$($completion);
+  };
+  protoOf(MiniAppExports).wechatBleStopDiscovery = function () {
+    var tmp = this;
+    return promisify(function ($completion) {
+      return tmp.wechatBleStopDiscovery_ayusn6_k$($completion);
+    });
+  };
+  protoOf(MiniAppExports).wechatBleStopDiscovery$suspendBridge_c8f3tv_k$ = function ($completion) {
+    var tmp = new $wechatBleStopDiscovery$suspendBridgeCOROUTINE$(this, $completion);
+    tmp.result_1 = Unit_instance;
+    tmp.exception_1 = null;
+    return tmp.doResume_5yljmg_k$();
+  };
+  protoOf(MiniAppExports).wechatBleDevices = function () {
+    // Inline function 'kotlin.collections.map' call
+    var this_0 = _get_bleSession__wdozlc(this).devices_psny71_k$();
+    // Inline function 'kotlin.collections.mapTo' call
+    var destination = ArrayList_init_$Create$(collectionSizeOrDefault(this_0, 10));
+    var _iterator__ex2g4s = this_0.iterator_jk1svi_k$();
+    while (_iterator__ex2g4s.hasNext_bitz1p_k$()) {
+      var item = _iterator__ex2g4s.next_20eer_k$();
+      var tmp$ret$2 = toJs(item);
+      destination.add_utx5q5_k$(tmp$ret$2);
+    }
+    // Inline function 'kotlin.collections.toTypedArray' call
+    return copyToArray(destination);
+  };
+  protoOf(MiniAppExports).wechatBleDiscoveryFailure = function () {
+    return _get_bleSession__wdozlc(this).discoveryFailure_jfqj0a_k$();
+  };
+  protoOf(MiniAppExports).wechatBleConnect_iychzi_k$ = function (deviceId, $completion) {
+    return this.host_1.platform_1.bluetooth_1.connect_iztqdj_k$(deviceId, $completion);
+  };
+  protoOf(MiniAppExports).wechatBleConnect = function (deviceId) {
+    var tmp = this;
+    return promisify(function ($completion) {
+      return tmp.wechatBleConnect_iychzi_k$(deviceId, $completion);
+    });
+  };
+  protoOf(MiniAppExports).wechatBleConnect$suspendBridge_3i9pv7_k$ = function (deviceId, $completion) {
+    var tmp = new $wechatBleConnect$suspendBridgeCOROUTINE$(this, deviceId, $completion);
+    tmp.result_1 = Unit_instance;
+    tmp.exception_1 = null;
+    return tmp.doResume_5yljmg_k$();
+  };
+  protoOf(MiniAppExports).wechatBleDisconnect_ht39pq_k$ = function (deviceId, $completion) {
+    return this.host_1.platform_1.bluetooth_1.disconnect_yxcefb_k$(deviceId, $completion);
+  };
+  protoOf(MiniAppExports).wechatBleDisconnect = function (deviceId) {
+    var tmp = this;
+    return promisify(function ($completion) {
+      return tmp.wechatBleDisconnect_ht39pq_k$(deviceId, $completion);
+    });
+  };
+  protoOf(MiniAppExports).wechatBleDisconnect$suspendBridge_smec41_k$ = function (deviceId, $completion) {
+    var tmp = new $wechatBleDisconnect$suspendBridgeCOROUTINE$(this, deviceId, $completion);
+    tmp.result_1 = Unit_instance;
+    tmp.exception_1 = null;
+    return tmp.doResume_5yljmg_k$();
+  };
+  protoOf(MiniAppExports).wechatBleConnectionStates = function () {
+    // Inline function 'kotlin.collections.map' call
+    var this_0 = _get_bleSession__wdozlc(this).connectionStates_ed8dc0_k$();
+    // Inline function 'kotlin.collections.mapTo' call
+    var destination = ArrayList_init_$Create$(collectionSizeOrDefault(this_0, 10));
+    var _iterator__ex2g4s = this_0.iterator_jk1svi_k$();
+    while (_iterator__ex2g4s.hasNext_bitz1p_k$()) {
+      var item = _iterator__ex2g4s.next_20eer_k$();
+      var tmp$ret$2 = toJs_1(item);
+      destination.add_utx5q5_k$(tmp$ret$2);
+    }
+    // Inline function 'kotlin.collections.toTypedArray' call
+    return copyToArray(destination);
+  };
+  protoOf(MiniAppExports).wechatBleConnectionFailure = function () {
+    return _get_bleSession__wdozlc(this).connectionFailure_wm4dsc_k$();
+  };
+  protoOf(MiniAppExports).wechatBleListenerCount = function () {
+    return _get_bleSession__wdozlc(this).listenerCount_9h9scb_k$();
+  };
   protoOf(MiniAppExports).capabilitySupport = function (capability) {
-    return toJs_0(this.host_1.capabilitySupport_p8flwh_k$(new CapabilityKey(capability)));
+    return toJs_3(this.host_1.capabilitySupport_p8flwh_k$(new CapabilityKey(capability)));
   };
   protoOf(MiniAppExports).requireCapability = function (capability) {
     return requireSupported(this.host_1, new CapabilityKey(capability));
   };
   protoOf(MiniAppExports).wechatRuntimeInfo = function () {
-    return toJs_1(this.host_1.platform_1.runtimeInfo_1);
+    return toJs_4(this.host_1.platform_1.runtimeInfo_1);
   };
   protoOf(MiniAppExports).wechatCanIUse = function (schema) {
     return this.host_1.platform_1.runtimeInfo_1.canIUse_xcpuhg_k$(schema);
@@ -4375,11 +5767,11 @@
       new MiniAppExports();
     return MiniAppExports_instance;
   }
-  function toJs(_this__u8e3s4) {
+  function toJs_2(_this__u8e3s4) {
     var tmp0_safe_receiver = _this__u8e3s4.networkType_1;
     return new JsNetworkState(_this__u8e3s4.isConnected_1, tmp0_safe_receiver == null ? null : tmp0_safe_receiver.name_1, _this__u8e3s4.hostNetworkType_1);
   }
-  function toJs_0(_this__u8e3s4) {
+  function toJs_3(_this__u8e3s4) {
     var tmp;
     if (_this__u8e3s4 instanceof Supported) {
       tmp = new JsCapabilitySupport('Supported', null, null, null);
@@ -4402,11 +5794,11 @@
     }
     return tmp;
   }
-  function toJs_1(_this__u8e3s4) {
+  function toJs_4(_this__u8e3s4) {
     var tmp0_safe_receiver = _this__u8e3s4.get_baseLibraryVersion_i4tt1z_k$();
     return new JsRuntimeInfo(tmp0_safe_receiver == null ? null : tmp0_safe_receiver.toString(), _this__u8e3s4.get_platform_ssr7o_k$(), _this__u8e3s4.get_isDeveloperTools_3vcog4_k$());
   }
-  function toJs_2(_this__u8e3s4) {
+  function toJs_5(_this__u8e3s4) {
     var tmp;
     switch (_this__u8e3s4.requirement_1.ordinal_1) {
       case 0:
@@ -4688,23 +6080,23 @@
       return i.invoke_ruaxy6_k$(state, $completion);
     }, 1);
   }
-  function Companion_7() {
+  function Companion_8() {
     this.MAX_OBSERVED_1 = 32;
   }
-  var Companion_instance_9;
-  function Companion_getInstance_7() {
-    return Companion_instance_9;
+  var Companion_instance_10;
+  function Companion_getInstance_8() {
+    return Companion_instance_10;
   }
-  function sam$kotlinx_coroutines_flow_FlowCollector$0(function_0) {
+  function sam$kotlinx_coroutines_flow_FlowCollector$0_1(function_0) {
     this.function_1 = function_0;
   }
-  protoOf(sam$kotlinx_coroutines_flow_FlowCollector$0).emit_t92u1f_k$ = function (value, $completion) {
+  protoOf(sam$kotlinx_coroutines_flow_FlowCollector$0_1).emit_t92u1f_k$ = function (value, $completion) {
     return this.function_1(value, $completion);
   };
-  protoOf(sam$kotlinx_coroutines_flow_FlowCollector$0).getFunctionDelegate_jtodtf_k$ = function () {
+  protoOf(sam$kotlinx_coroutines_flow_FlowCollector$0_1).getFunctionDelegate_jtodtf_k$ = function () {
     return this.function_1;
   };
-  protoOf(sam$kotlinx_coroutines_flow_FlowCollector$0).equals = function (other) {
+  protoOf(sam$kotlinx_coroutines_flow_FlowCollector$0_1).equals = function (other) {
     var tmp;
     if (!(other == null) ? isInterface(other, FlowCollector) : false) {
       var tmp_0;
@@ -4719,7 +6111,7 @@
     }
     return tmp;
   };
-  protoOf(sam$kotlinx_coroutines_flow_FlowCollector$0).hashCode = function () {
+  protoOf(sam$kotlinx_coroutines_flow_FlowCollector$0_1).hashCode = function () {
     return hashCode(this.getFunctionDelegate_jtodtf_k$());
   };
   function NetworkStatusObservation$start$slambda(this$0, resultContinuation) {
@@ -4746,7 +6138,7 @@
             this.exceptionState_1 = 2;
             this.state_1 = 1;
             var tmp_0 = NetworkStatusObservation$start$slambda$slambda_0(this.this$0__1, null);
-            suspendResult = this.this$0__1.changes_1.collect_aksokr_k$(new sam$kotlinx_coroutines_flow_FlowCollector$0(tmp_0), this);
+            suspendResult = this.this$0__1.changes_1.collect_aksokr_k$(new sam$kotlinx_coroutines_flow_FlowCollector$0_1(tmp_0), this);
             if (suspendResult === get_COROUTINE_SUSPENDED()) {
               return suspendResult;
             }
@@ -4837,7 +6229,7 @@
             continue $sm;
           case 2:
             this._this__u8e3s4__1.collector_1 = null;
-            var result = new NetworkStatusObservationResult(toList_0(this._this__u8e3s4__1.observed_1), this._this__u8e3s4__1.failureName_1);
+            var result = new NetworkStatusObservationResult(toList(this._this__u8e3s4__1.observed_1), this._this__u8e3s4__1.failureName_1);
             this._this__u8e3s4__1.observed_1.clear_j9egeb_k$();
             this._this__u8e3s4__1.failureName_1 = null;
             return result;
@@ -4887,6 +6279,83 @@
     this.events_1 = events;
     this.failureName_1 = failureName;
   }
+  function WeChatBleDevice(deviceId, name, rssi) {
+    this.deviceId_1 = deviceId;
+    this.name_1 = name;
+    this.rssi_1 = rssi;
+  }
+  protoOf(WeChatBleDevice).toString = function () {
+    return 'WeChatBleDevice(deviceId=' + this.deviceId_1 + ', name=' + this.name_1 + ', rssi=' + this.rssi_1 + ')';
+  };
+  protoOf(WeChatBleDevice).hashCode = function () {
+    var result = getStringHashCode(this.deviceId_1);
+    result = imul(result, 31) + (this.name_1 == null ? 0 : getStringHashCode(this.name_1)) | 0;
+    result = imul(result, 31) + (this.rssi_1 == null ? 0 : this.rssi_1) | 0;
+    return result;
+  };
+  protoOf(WeChatBleDevice).equals = function (other) {
+    if (this === other)
+      return true;
+    if (!(other instanceof WeChatBleDevice))
+      return false;
+    if (!(this.deviceId_1 === other.deviceId_1))
+      return false;
+    if (!(this.name_1 == other.name_1))
+      return false;
+    if (!(this.rssi_1 == other.rssi_1))
+      return false;
+    return true;
+  };
+  function WeChatBleAdapterState(available, discovering, powered) {
+    this.available_1 = available;
+    this.discovering_1 = discovering;
+    this.powered_1 = powered;
+  }
+  protoOf(WeChatBleAdapterState).toString = function () {
+    return 'WeChatBleAdapterState(available=' + this.available_1 + ', discovering=' + this.discovering_1 + ', powered=' + this.powered_1 + ')';
+  };
+  protoOf(WeChatBleAdapterState).hashCode = function () {
+    var result = getBooleanHashCode(this.available_1);
+    result = imul(result, 31) + (this.discovering_1 == null ? 0 : getBooleanHashCode(this.discovering_1)) | 0;
+    result = imul(result, 31) + (this.powered_1 == null ? 0 : getBooleanHashCode(this.powered_1)) | 0;
+    return result;
+  };
+  protoOf(WeChatBleAdapterState).equals = function (other) {
+    if (this === other)
+      return true;
+    if (!(other instanceof WeChatBleAdapterState))
+      return false;
+    if (!(this.available_1 === other.available_1))
+      return false;
+    if (!(this.discovering_1 == other.discovering_1))
+      return false;
+    if (!(this.powered_1 == other.powered_1))
+      return false;
+    return true;
+  };
+  function WeChatBleConnectionState(deviceId, connected) {
+    this.deviceId_1 = deviceId;
+    this.connected_1 = connected;
+  }
+  protoOf(WeChatBleConnectionState).toString = function () {
+    return 'WeChatBleConnectionState(deviceId=' + this.deviceId_1 + ', connected=' + this.connected_1 + ')';
+  };
+  protoOf(WeChatBleConnectionState).hashCode = function () {
+    var result = getStringHashCode(this.deviceId_1);
+    result = imul(result, 31) + getBooleanHashCode(this.connected_1) | 0;
+    return result;
+  };
+  protoOf(WeChatBleConnectionState).equals = function (other) {
+    if (this === other)
+      return true;
+    if (!(other instanceof WeChatBleConnectionState))
+      return false;
+    if (!(this.deviceId_1 === other.deviceId_1))
+      return false;
+    if (!(this.connected_1 === other.connected_1))
+      return false;
+    return true;
+  };
   function WeChatDeviceCapabilities() {
     WeChatDeviceCapabilities_instance = this;
     this.ClipboardRead_1 = new CapabilityKey('wechat.clipboard-read');
@@ -4905,6 +6374,9 @@
     this.UploadFile_1 = new CapabilityKey('wechat.upload-file');
     this.DownloadFile_1 = new CapabilityKey('wechat.download-file');
     this.RequestPayment_1 = new CapabilityKey('wechat.request-payment');
+    this.BluetoothAdapter_1 = new CapabilityKey('wechat.bluetooth-adapter');
+    this.BluetoothDiscovery_1 = new CapabilityKey('wechat.bluetooth-discovery');
+    this.BluetoothConnection_1 = new CapabilityKey('wechat.bluetooth-connection');
   }
   var WeChatDeviceCapabilities_instance;
   function WeChatDeviceCapabilities_getInstance() {
@@ -5055,16 +6527,16 @@
     static_init_called_8 = true;
     WeChatMediaFileType_IMAGE_instance = new WeChatMediaFileType('IMAGE', 0, 'image');
     WeChatMediaFileType_VIDEO_instance = new WeChatMediaFileType('VIDEO', 1, 'video');
-    if (Companion_instance_10 == null) {
+    if (Companion_instance_11 == null) {
       Companion_instance_0;
-      new Companion_8();
+      new Companion_9();
     }
   }
   var WeChatMediaFileType_IMAGE_instance;
   var WeChatMediaFileType_VIDEO_instance;
-  function Companion_8() {
+  function Companion_9() {
   }
-  protoOf(Companion_8).fromHostValue_7yihi0_k$ = function (hostValue) {
+  protoOf(Companion_9).fromHostValue_7yihi0_k$ = function (hostValue) {
     var tmp0 = get_entries_4();
     var tmp$ret$0;
     $l$block: {
@@ -5081,9 +6553,9 @@
     }
     return tmp$ret$0;
   };
-  var Companion_instance_10;
-  function Companion_getInstance_8() {
-    return Companion_instance_10;
+  var Companion_instance_11;
+  function Companion_getInstance_9() {
+    return Companion_instance_11;
   }
   function values_4() {
     static_init_8();
@@ -5100,13 +6572,13 @@
     Enum.call(this, name, ordinal);
     this.hostValue_1 = hostValue;
   }
-  function Companion_9() {
+  function Companion_10() {
     this.MIN_MAX_DURATION_SECONDS_1 = 3;
     this.MAX_MAX_DURATION_SECONDS_1 = 60;
   }
-  var Companion_instance_11;
-  function Companion_getInstance_9() {
-    return Companion_instance_11;
+  var Companion_instance_12;
+  function Companion_getInstance_10() {
+    return Companion_instance_12;
   }
   function WeChatMediaRequest(mediaType, count, sourceType, maxDurationSeconds, sizeType, camera) {
     count = count === VOID ? 1 : count;
@@ -5400,9 +6872,9 @@
     WeChatScanFormat_UPC_EAN_EXTENSION_instance = new WeChatScanFormat('UPC_EAN_EXTENSION', 16, 'UPC_EAN_EXTENSION');
     WeChatScanFormat_WX_CODE_instance = new WeChatScanFormat('WX_CODE', 17, 'WX_CODE');
     WeChatScanFormat_CODE_25_instance = new WeChatScanFormat('CODE_25', 18, 'CODE_25');
-    if (Companion_instance_12 == null) {
+    if (Companion_instance_13 == null) {
       Companion_instance_0;
-      new Companion_10();
+      new Companion_11();
     }
   }
   var WeChatScanFormat_QR_CODE_instance;
@@ -5424,9 +6896,9 @@
   var WeChatScanFormat_UPC_EAN_EXTENSION_instance;
   var WeChatScanFormat_WX_CODE_instance;
   var WeChatScanFormat_CODE_25_instance;
-  function Companion_10() {
+  function Companion_11() {
   }
-  protoOf(Companion_10).fromHostValue_7yihi0_k$ = function (hostValue) {
+  protoOf(Companion_11).fromHostValue_7yihi0_k$ = function (hostValue) {
     var tmp0 = get_entries_7();
     var tmp$ret$0;
     $l$block: {
@@ -5443,9 +6915,9 @@
     }
     return tmp$ret$0;
   };
-  var Companion_instance_12;
-  function Companion_getInstance_10() {
-    return Companion_instance_12;
+  var Companion_instance_13;
+  function Companion_getInstance_11() {
+    return Companion_instance_13;
   }
   function values_7() {
     static_init_11();
@@ -5575,21 +7047,21 @@
     static_init_called_12 = true;
     WeChatSessionState_VALID_instance = new WeChatSessionState('VALID', 0);
     WeChatSessionState_INVALID_instance = new WeChatSessionState('INVALID', 1);
-    if (Companion_instance_13 == null) {
+    if (Companion_instance_14 == null) {
       Companion_instance_0;
-      new Companion_11();
+      new Companion_12();
     }
   }
   var WeChatSessionState_VALID_instance;
   var WeChatSessionState_INVALID_instance;
-  function Companion_11() {
-    Companion_instance_13 = this;
+  function Companion_12() {
+    Companion_instance_14 = this;
     this.Key_1 = new CapabilityKey('wechat.check-session');
   }
-  var Companion_instance_13;
-  function Companion_getInstance_11() {
+  var Companion_instance_14;
+  function Companion_getInstance_12() {
     static_init_12();
-    return Companion_instance_13;
+    return Companion_instance_14;
   }
   function WeChatSessionState(name, ordinal) {
     Enum.call(this, name, ordinal);
@@ -5608,15 +7080,15 @@
       return Unit_instance;
     static_init_called_13 = true;
     WeChatSubscriptionStatus_ACCEPT_instance = new WeChatSubscriptionStatus('ACCEPT', 0, 'accept');
-    if (Companion_instance_14 == null) {
+    if (Companion_instance_15 == null) {
       Companion_instance_0;
-      new Companion_12();
+      new Companion_13();
     }
   }
   var WeChatSubscriptionStatus_ACCEPT_instance;
-  function Companion_12() {
+  function Companion_13() {
   }
-  protoOf(Companion_12).fromHostValue_7yihi0_k$ = function (hostValue) {
+  protoOf(Companion_13).fromHostValue_7yihi0_k$ = function (hostValue) {
     var tmp0 = get_entries_8();
     var tmp$ret$0;
     $l$block: {
@@ -5633,9 +7105,9 @@
     }
     return tmp$ret$0;
   };
-  var Companion_instance_14;
-  function Companion_getInstance_12() {
-    return Companion_instance_14;
+  var Companion_instance_15;
+  function Companion_getInstance_13() {
+    return Companion_instance_15;
   }
   function values_8() {
     static_init_13();
@@ -5699,7 +7171,7 @@
     static_init_13();
     return WeChatSubscriptionStatus_ACCEPT_instance;
   }
-  function WechatPlatformApi(auth, navigation, appLifecycle, pageLifecycle, runtimeInfo, clipboard, haptics, fileSystem, location, scanCode, chooseMedia, requestSubscribeMessage, uploadFile, downloadFile, payment) {
+  function WechatPlatformApi(auth, navigation, appLifecycle, pageLifecycle, runtimeInfo, clipboard, haptics, fileSystem, location, scanCode, chooseMedia, requestSubscribeMessage, uploadFile, downloadFile, payment, bluetooth) {
     this.auth_1 = auth;
     this.navigation_1 = navigation;
     this.appLifecycle_1 = appLifecycle;
@@ -5715,8 +7187,9 @@
     this.uploadFile_1 = uploadFile;
     this.downloadFile_1 = downloadFile;
     this.payment_1 = payment;
+    this.bluetooth_1 = bluetooth;
   }
-  function WechatHost(storageHost, authHost, networkHost, navigationHost, runtimeInfoHost, permissionHost, privacyHost, clipboardHost, hapticsHost, fileSystemHost, locationHost, scanCodeHost, chooseMediaHost, requestSubscribeMessageHost, networkStatusHost, uploadFileHost, downloadFileHost, paymentHost) {
+  function WechatHost(storageHost, authHost, networkHost, navigationHost, runtimeInfoHost, permissionHost, privacyHost, clipboardHost, hapticsHost, fileSystemHost, locationHost, scanCodeHost, chooseMediaHost, requestSubscribeMessageHost, networkStatusHost, uploadFileHost, downloadFileHost, paymentHost, bluetoothHost) {
     storageHost = storageHost === VOID ? WxStorageHost_instance : storageHost;
     authHost = authHost === VOID ? WxAuthHost_instance : authHost;
     networkHost = networkHost === VOID ? WxNetworkHost_instance : networkHost;
@@ -5735,12 +7208,13 @@
     uploadFileHost = uploadFileHost === VOID ? WxUploadFileHost_instance : uploadFileHost;
     downloadFileHost = downloadFileHost === VOID ? WxDownloadFileHost_instance : downloadFileHost;
     paymentHost = paymentHost === VOID ? WxRequestPaymentHost_instance : paymentHost;
+    bluetoothHost = bluetoothHost === VOID ? WxBluetoothHost_instance : bluetoothHost;
     this.appLifecycle_1 = new WechatAppLifecycle();
     this.runtimeInfo_1 = new WechatRuntimeInfo(runtimeInfoHost);
     this.capabilityGate_1 = new WechatCapabilityGate(this.runtimeInfo_1, runtimeInfoHost);
     this.privacyAdapter_1 = new WechatPrivacy(privacyHost);
     this.permissionsAdapter_1 = new WechatPermissions(permissionHost);
-    this.platform_1 = new WechatPlatformApi(new WechatAuth(authHost), new WechatNavigation(navigationHost), this.appLifecycle_1, new WechatPageLifecycle(), this.runtimeInfo_1, new WechatClipboard(clipboardHost), new WechatHaptics(hapticsHost), new WechatFileSystem(fileSystemHost), new WechatLocation(locationHost, this.privacyAdapter_1, this.permissionsAdapter_1), new WechatScanCode(scanCodeHost), new WechatChooseMedia(chooseMediaHost), new WechatRequestSubscribeMessage(requestSubscribeMessageHost), new WechatUploadFile(uploadFileHost), new WechatDownloadFile(downloadFileHost), new WechatPayment(paymentHost));
+    this.platform_1 = new WechatPlatformApi(new WechatAuth(authHost), new WechatNavigation(navigationHost), this.appLifecycle_1, new WechatPageLifecycle(), this.runtimeInfo_1, new WechatClipboard(clipboardHost), new WechatHaptics(hapticsHost), new WechatFileSystem(fileSystemHost), new WechatLocation(locationHost, this.privacyAdapter_1, this.permissionsAdapter_1), new WechatScanCode(scanCodeHost), new WechatChooseMedia(chooseMediaHost), new WechatRequestSubscribeMessage(requestSubscribeMessageHost), new WechatUploadFile(uploadFileHost), new WechatDownloadFile(downloadFileHost), new WechatPayment(paymentHost), new WechatBluetooth(bluetoothHost));
     this.storage_1 = new WechatStorage(storageHost);
     this.network_1 = new WechatNetwork(networkHost);
     this.networkStatus_1 = new WechatNetworkStatus(networkStatusHost);
@@ -5804,7 +7278,7 @@
   };
   protoOf(WechatAuth).checkSession_drbyba_k$ = function ($completion) {
     if (!this.host_1.isSessionCheckSupported_ka7vpq_k$()) {
-      throw new UnsupportedCapability(Companion_getInstance_11().Key_1);
+      throw new UnsupportedCapability(Companion_getInstance_12().Key_1);
     }
     return awaitHostCallback(WechatAuth$checkSession$lambda(this), $completion);
   };
@@ -5834,6 +7308,867 @@
   var WxAuthHost_instance;
   function WxAuthHost_getInstance() {
     return WxAuthHost_instance;
+  }
+  function WechatBluetooth$discoveredDevices$slambda$lambda(this$0, $seen, $this_callbackFlow) {
+    return function (result) {
+      var batch = wxReadDeviceBatch(result);
+      if (batch instanceof Present) {
+        this$0.unreadableDeviceEntriesSeen_1 = this$0.unreadableDeviceEntriesSeen_1 + batch.unreadableEntries_1 | 0;
+        // Inline function 'kotlin.collections.forEach' call
+        var _iterator__ex2g4s = batch.devices_1.iterator_jk1svi_k$();
+        while (_iterator__ex2g4s.hasNext_bitz1p_k$()) {
+          var element = _iterator__ex2g4s.next_20eer_k$();
+          if ($seen.add_utx5q5_k$(element.deviceId_1)) {
+            $this_callbackFlow.trySend_62dpg8_k$(new WeChatBleDevice(element.deviceId_1, element.name_1, element.rssi_1));
+          }
+        }
+      } else {
+        if (equals(batch, Unreadable_instance))
+          $this_callbackFlow.close_ukldxa_k$(new InvalidResponse('The WeChat host reported a discovery event the SDK cannot read'));
+        else {
+          noWhenBranchMatchedException();
+        }
+      }
+      return Unit_instance;
+    };
+  }
+  function WechatBluetooth$discoveredDevices$slambda$lambda$lambda(this$0, $listener) {
+    return function () {
+      this$0.host_1.removeDeviceFoundListener_dnx32e_k$($listener);
+      return Unit_instance;
+    };
+  }
+  function WechatBluetooth$discoveredDevices$slambda$lambda_0(this$0, $listener) {
+    return function () {
+      removeListener(this$0, WechatBluetooth$discoveredDevices$slambda$lambda$lambda(this$0, $listener));
+      return Unit_instance;
+    };
+  }
+  function WechatBluetooth$adapterStates$slambda$lambda($this_callbackFlow, this$0) {
+    return function (result) {
+      var state = wxReadAdapterStateChange(result);
+      if (state == null) {
+        $this_callbackFlow.close_ukldxa_k$(new InvalidResponse('The WeChat host reported an adapter state the SDK cannot read'));
+      } else {
+        if (!(state.discovering_1 == null))
+          this$0.isScanning_1 = state.discovering_1;
+        new ChannelResult($this_callbackFlow.trySend_62dpg8_k$(new WeChatBleAdapterState(state.available_1, state.discovering_1, state.powered_1)));
+      }
+      return Unit_instance;
+    };
+  }
+  function WechatBluetooth$adapterStates$slambda$lambda$lambda(this$0, $listener) {
+    return function () {
+      this$0.host_1.removeAdapterStateListener_8syxqy_k$($listener);
+      return Unit_instance;
+    };
+  }
+  function WechatBluetooth$adapterStates$slambda$lambda_0(this$0, $listener) {
+    return function () {
+      removeListener(this$0, WechatBluetooth$adapterStates$slambda$lambda$lambda(this$0, $listener));
+      return Unit_instance;
+    };
+  }
+  function WechatBluetooth$connectionStates$slambda$lambda($this_callbackFlow) {
+    return function (result) {
+      var state = wxReadConnectionState(result);
+      if (state == null) {
+        $this_callbackFlow.close_ukldxa_k$(new InvalidResponse('The WeChat host reported a connection state the SDK cannot read'));
+      } else {
+        new ChannelResult($this_callbackFlow.trySend_62dpg8_k$(new WeChatBleConnectionState(state.deviceId_1, state.connected_1)));
+      }
+      return Unit_instance;
+    };
+  }
+  function WechatBluetooth$connectionStates$slambda$lambda$lambda(this$0, $listener) {
+    return function () {
+      this$0.host_1.removeConnectionStateListener_ve4xb7_k$($listener);
+      return Unit_instance;
+    };
+  }
+  function WechatBluetooth$connectionStates$slambda$lambda_0(this$0, $listener) {
+    return function () {
+      removeListener(this$0, WechatBluetooth$connectionStates$slambda$lambda$lambda(this$0, $listener));
+      return Unit_instance;
+    };
+  }
+  function removeListener($this, remove) {
+    // Inline function 'kotlin.runCatching' call
+    var tmp;
+    try {
+      remove();
+      // Inline function 'kotlin.Companion.success' call
+      tmp = _Result___init__impl__xyqfz8(Unit_instance);
+    } catch ($p) {
+      var tmp_0;
+      if ($p instanceof Error) {
+        var e = $p;
+        // Inline function 'kotlin.Companion.failure' call
+        tmp_0 = _Result___init__impl__xyqfz8(createFailure(e));
+      } else {
+        throw $p;
+      }
+      tmp = tmp_0;
+    }
+    var tmp$ret$0 = tmp;
+    var removed = _Result___get_isSuccess__impl__sndoy8(tmp$ret$0);
+    if (removed) {
+      $this.registeredListeners_1 = $this.registeredListeners_1 - 1 | 0;
+    } else {
+      $this.removalFailures_1 = $this.removalFailures_1 + 1 | 0;
+    }
+  }
+  function Companion_14() {
+    this.DISCOVERY_BUFFER_CAPACITY_1 = 64;
+    this.STATE_BUFFER_CAPACITY_1 = 8;
+  }
+  var Companion_instance_16;
+  function Companion_getInstance_14() {
+    return Companion_instance_16;
+  }
+  function WechatBluetooth$openAdapter$lambda$lambda($success) {
+    return function () {
+      $success(Unit_instance);
+      return Unit_instance;
+    };
+  }
+  function WechatBluetooth$openAdapter$lambda$lambda_0($failure) {
+    return function (result) {
+      $failure(mapWechatHostFailure('openBluetoothAdapter', result));
+      return Unit_instance;
+    };
+  }
+  function WechatBluetooth$openAdapter$lambda(this$0) {
+    return function (success, failure) {
+      var tmp = WechatBluetooth$openAdapter$lambda$lambda(success);
+      this$0.host_1.openAdapter_6v5g28_k$(tmp, WechatBluetooth$openAdapter$lambda$lambda_0(failure));
+      return null;
+    };
+  }
+  function WechatBluetooth$closeAdapter$lambda$lambda($success) {
+    return function () {
+      $success(Unit_instance);
+      return Unit_instance;
+    };
+  }
+  function WechatBluetooth$closeAdapter$lambda$lambda_0($failure) {
+    return function (result) {
+      $failure(mapWechatHostFailure('closeBluetoothAdapter', result));
+      return Unit_instance;
+    };
+  }
+  function WechatBluetooth$closeAdapter$lambda(this$0) {
+    return function (success, failure) {
+      var tmp = WechatBluetooth$closeAdapter$lambda$lambda(success);
+      this$0.host_1.closeAdapter_38fvz2_k$(tmp, WechatBluetooth$closeAdapter$lambda$lambda_0(failure));
+      return null;
+    };
+  }
+  function WechatBluetooth$adapterState$lambda$lambda($success) {
+    return function (result) {
+      $success(result);
+      return Unit_instance;
+    };
+  }
+  function WechatBluetooth$adapterState$lambda$lambda_0($failure) {
+    return function (result) {
+      $failure(mapWechatHostFailure('getBluetoothAdapterState', result));
+      return Unit_instance;
+    };
+  }
+  function WechatBluetooth$adapterState$lambda(this$0) {
+    return function (success, failure) {
+      var tmp = WechatBluetooth$adapterState$lambda$lambda(success);
+      this$0.host_1.adapterState_8vkx7z_k$(tmp, WechatBluetooth$adapterState$lambda$lambda_0(failure));
+      return null;
+    };
+  }
+  function WechatBluetooth$startDiscovery$lambda$lambda($success) {
+    return function () {
+      $success(Unit_instance);
+      return Unit_instance;
+    };
+  }
+  function WechatBluetooth$startDiscovery$lambda$lambda_0($failure) {
+    return function (result) {
+      $failure(mapWechatHostFailure('startBluetoothDevicesDiscovery', result));
+      return Unit_instance;
+    };
+  }
+  function WechatBluetooth$startDiscovery$lambda(this$0, $allowDuplicates) {
+    return function (success, failure) {
+      var tmp = WechatBluetooth$startDiscovery$lambda$lambda(success);
+      this$0.host_1.startDiscovery_bno8ny_k$($allowDuplicates, tmp, WechatBluetooth$startDiscovery$lambda$lambda_0(failure));
+      return null;
+    };
+  }
+  function WechatBluetooth$stopDiscovery$lambda$lambda($success) {
+    return function () {
+      $success(Unit_instance);
+      return Unit_instance;
+    };
+  }
+  function WechatBluetooth$stopDiscovery$lambda$lambda_0($failure) {
+    return function (result) {
+      $failure(mapWechatHostFailure('stopBluetoothDevicesDiscovery', result));
+      return Unit_instance;
+    };
+  }
+  function WechatBluetooth$stopDiscovery$lambda(this$0) {
+    return function (success, failure) {
+      var tmp = WechatBluetooth$stopDiscovery$lambda$lambda(success);
+      this$0.host_1.stopDiscovery_e1vpk7_k$(tmp, WechatBluetooth$stopDiscovery$lambda$lambda_0(failure));
+      return null;
+    };
+  }
+  function WechatBluetooth$connect$lambda$lambda($success) {
+    return function () {
+      $success(Unit_instance);
+      return Unit_instance;
+    };
+  }
+  function WechatBluetooth$connect$lambda$lambda_0($failure) {
+    return function (result) {
+      $failure(mapWechatHostFailure('createBLEConnection', result));
+      return Unit_instance;
+    };
+  }
+  function WechatBluetooth$connect$lambda(this$0, $deviceId) {
+    return function (success, failure) {
+      var tmp = WechatBluetooth$connect$lambda$lambda(success);
+      this$0.host_1.connect_nh1s9x_k$($deviceId, tmp, WechatBluetooth$connect$lambda$lambda_0(failure));
+      return null;
+    };
+  }
+  function WechatBluetooth$disconnect$lambda$lambda($success) {
+    return function () {
+      $success(Unit_instance);
+      return Unit_instance;
+    };
+  }
+  function WechatBluetooth$disconnect$lambda$lambda_0($failure) {
+    return function (result) {
+      $failure(mapWechatHostFailure('closeBLEConnection', result));
+      return Unit_instance;
+    };
+  }
+  function WechatBluetooth$disconnect$lambda(this$0, $deviceId) {
+    return function (success, failure) {
+      var tmp = WechatBluetooth$disconnect$lambda$lambda(success);
+      this$0.host_1.disconnect_i8p6zb_k$($deviceId, tmp, WechatBluetooth$disconnect$lambda$lambda_0(failure));
+      return null;
+    };
+  }
+  function WechatBluetooth$discoveredDevices$slambda(this$0, $onListenerRegistered, resultContinuation) {
+    this.this$0__1 = this$0;
+    this.$onListenerRegistered_1 = $onListenerRegistered;
+    CoroutineImpl.call(this, resultContinuation);
+  }
+  protoOf(WechatBluetooth$discoveredDevices$slambda).invoke_kpmlbr_k$ = function ($this$callbackFlow, $completion) {
+    var tmp = this.create_naeh1p_k$($this$callbackFlow, $completion);
+    tmp.result_1 = Unit_instance;
+    tmp.exception_1 = null;
+    return tmp.doResume_5yljmg_k$();
+  };
+  protoOf(WechatBluetooth$discoveredDevices$slambda).invoke_qns8j1_k$ = function (p1, $completion) {
+    return this.invoke_kpmlbr_k$((!(p1 == null) ? isInterface(p1, ProducerScope) : false) ? p1 : THROW_CCE(), $completion);
+  };
+  protoOf(WechatBluetooth$discoveredDevices$slambda).doResume_5yljmg_k$ = function () {
+    var suspendResult = this.result_1;
+    $sm: do
+      try {
+        var tmp = this.state_1;
+        switch (tmp) {
+          case 0:
+            this.exceptionState_1 = 2;
+            if (!this.this$0__1.host_1.isDiscoverySupported_6bw2mw_k$()) {
+              this.$this$callbackFlow_1.close_ukldxa_k$(new UnsupportedCapability(WeChatDeviceCapabilities_getInstance().BluetoothDiscovery_1));
+              return Unit_instance;
+            }
+
+            var seen = LinkedHashSet_init_$Create$();
+            var listener = WechatBluetooth$discoveredDevices$slambda$lambda(this.this$0__1, seen, this.$this$callbackFlow_1);
+            this.this$0__1.host_1.addDeviceFoundListener_qvrwyf_k$(listener);
+            this.this$0__1.registeredListeners_1 = this.this$0__1.registeredListeners_1 + 1 | 0;
+            this.$onListenerRegistered_1();
+            this.state_1 = 1;
+            suspendResult = awaitClose(this.$this$callbackFlow_1, WechatBluetooth$discoveredDevices$slambda$lambda_0(this.this$0__1, listener), this);
+            if (suspendResult === get_COROUTINE_SUSPENDED()) {
+              return suspendResult;
+            }
+
+            continue $sm;
+          case 1:
+            return Unit_instance;
+          case 2:
+            throw this.exception_1;
+        }
+      } catch ($p) {
+        var e = $p;
+        if (this.exceptionState_1 === 2) {
+          throw e;
+        } else {
+          this.state_1 = this.exceptionState_1;
+          this.exception_1 = e;
+        }
+      }
+     while (true);
+  };
+  protoOf(WechatBluetooth$discoveredDevices$slambda).create_naeh1p_k$ = function ($this$callbackFlow, completion) {
+    var i = new WechatBluetooth$discoveredDevices$slambda(this.this$0__1, this.$onListenerRegistered_1, completion);
+    i.$this$callbackFlow_1 = $this$callbackFlow;
+    return i;
+  };
+  function WechatBluetooth$discoveredDevices$slambda_0(this$0, $onListenerRegistered, resultContinuation) {
+    var i = new WechatBluetooth$discoveredDevices$slambda(this$0, $onListenerRegistered, resultContinuation);
+    return constructCallableReference(function ($this$callbackFlow, $completion) {
+      return i.invoke_kpmlbr_k$($this$callbackFlow, $completion);
+    }, 1);
+  }
+  function WechatBluetooth$adapterStates$slambda(this$0, resultContinuation) {
+    this.this$0__1 = this$0;
+    CoroutineImpl.call(this, resultContinuation);
+  }
+  protoOf(WechatBluetooth$adapterStates$slambda).invoke_9ztc6t_k$ = function ($this$callbackFlow, $completion) {
+    var tmp = this.create_53wo93_k$($this$callbackFlow, $completion);
+    tmp.result_1 = Unit_instance;
+    tmp.exception_1 = null;
+    return tmp.doResume_5yljmg_k$();
+  };
+  protoOf(WechatBluetooth$adapterStates$slambda).invoke_qns8j1_k$ = function (p1, $completion) {
+    return this.invoke_9ztc6t_k$((!(p1 == null) ? isInterface(p1, ProducerScope) : false) ? p1 : THROW_CCE(), $completion);
+  };
+  protoOf(WechatBluetooth$adapterStates$slambda).doResume_5yljmg_k$ = function () {
+    var suspendResult = this.result_1;
+    $sm: do
+      try {
+        var tmp = this.state_1;
+        switch (tmp) {
+          case 0:
+            this.exceptionState_1 = 2;
+            if (!this.this$0__1.host_1.isAdapterStateChangeSupported_4cwf3m_k$()) {
+              this.$this$callbackFlow_1.close_ukldxa_k$(new UnsupportedCapability(WeChatDeviceCapabilities_getInstance().BluetoothAdapter_1));
+              return Unit_instance;
+            }
+
+            var listener = WechatBluetooth$adapterStates$slambda$lambda(this.$this$callbackFlow_1, this.this$0__1);
+            this.this$0__1.host_1.addAdapterStateListener_lnxefd_k$(listener);
+            this.this$0__1.registeredListeners_1 = this.this$0__1.registeredListeners_1 + 1 | 0;
+            this.state_1 = 1;
+            suspendResult = awaitClose(this.$this$callbackFlow_1, WechatBluetooth$adapterStates$slambda$lambda_0(this.this$0__1, listener), this);
+            if (suspendResult === get_COROUTINE_SUSPENDED()) {
+              return suspendResult;
+            }
+
+            continue $sm;
+          case 1:
+            return Unit_instance;
+          case 2:
+            throw this.exception_1;
+        }
+      } catch ($p) {
+        var e = $p;
+        if (this.exceptionState_1 === 2) {
+          throw e;
+        } else {
+          this.state_1 = this.exceptionState_1;
+          this.exception_1 = e;
+        }
+      }
+     while (true);
+  };
+  protoOf(WechatBluetooth$adapterStates$slambda).create_53wo93_k$ = function ($this$callbackFlow, completion) {
+    var i = new WechatBluetooth$adapterStates$slambda(this.this$0__1, completion);
+    i.$this$callbackFlow_1 = $this$callbackFlow;
+    return i;
+  };
+  function WechatBluetooth$adapterStates$slambda_0(this$0, resultContinuation) {
+    var i = new WechatBluetooth$adapterStates$slambda(this$0, resultContinuation);
+    return constructCallableReference(function ($this$callbackFlow, $completion) {
+      return i.invoke_9ztc6t_k$($this$callbackFlow, $completion);
+    }, 1);
+  }
+  function WechatBluetooth$connectionStates$slambda(this$0, $onListenerRegistered, resultContinuation) {
+    this.this$0__1 = this$0;
+    this.$onListenerRegistered_1 = $onListenerRegistered;
+    CoroutineImpl.call(this, resultContinuation);
+  }
+  protoOf(WechatBluetooth$connectionStates$slambda).invoke_ml348g_k$ = function ($this$callbackFlow, $completion) {
+    var tmp = this.create_amkuak_k$($this$callbackFlow, $completion);
+    tmp.result_1 = Unit_instance;
+    tmp.exception_1 = null;
+    return tmp.doResume_5yljmg_k$();
+  };
+  protoOf(WechatBluetooth$connectionStates$slambda).invoke_qns8j1_k$ = function (p1, $completion) {
+    return this.invoke_ml348g_k$((!(p1 == null) ? isInterface(p1, ProducerScope) : false) ? p1 : THROW_CCE(), $completion);
+  };
+  protoOf(WechatBluetooth$connectionStates$slambda).doResume_5yljmg_k$ = function () {
+    var suspendResult = this.result_1;
+    $sm: do
+      try {
+        var tmp = this.state_1;
+        switch (tmp) {
+          case 0:
+            this.exceptionState_1 = 2;
+            if (!this.this$0__1.host_1.isConnectionSupported_8gm3a2_k$()) {
+              this.$this$callbackFlow_1.close_ukldxa_k$(new UnsupportedCapability(WeChatDeviceCapabilities_getInstance().BluetoothConnection_1));
+              return Unit_instance;
+            }
+
+            var listener = WechatBluetooth$connectionStates$slambda$lambda(this.$this$callbackFlow_1);
+            this.this$0__1.host_1.addConnectionStateListener_962shm_k$(listener);
+            this.this$0__1.registeredListeners_1 = this.this$0__1.registeredListeners_1 + 1 | 0;
+            this.$onListenerRegistered_1();
+            this.state_1 = 1;
+            suspendResult = awaitClose(this.$this$callbackFlow_1, WechatBluetooth$connectionStates$slambda$lambda_0(this.this$0__1, listener), this);
+            if (suspendResult === get_COROUTINE_SUSPENDED()) {
+              return suspendResult;
+            }
+
+            continue $sm;
+          case 1:
+            return Unit_instance;
+          case 2:
+            throw this.exception_1;
+        }
+      } catch ($p) {
+        var e = $p;
+        if (this.exceptionState_1 === 2) {
+          throw e;
+        } else {
+          this.state_1 = this.exceptionState_1;
+          this.exception_1 = e;
+        }
+      }
+     while (true);
+  };
+  protoOf(WechatBluetooth$connectionStates$slambda).create_amkuak_k$ = function ($this$callbackFlow, completion) {
+    var i = new WechatBluetooth$connectionStates$slambda(this.this$0__1, this.$onListenerRegistered_1, completion);
+    i.$this$callbackFlow_1 = $this$callbackFlow;
+    return i;
+  };
+  function WechatBluetooth$connectionStates$slambda_0(this$0, $onListenerRegistered, resultContinuation) {
+    var i = new WechatBluetooth$connectionStates$slambda(this$0, $onListenerRegistered, resultContinuation);
+    return constructCallableReference(function ($this$callbackFlow, $completion) {
+      return i.invoke_ml348g_k$($this$callbackFlow, $completion);
+    }, 1);
+  }
+  function $openAdapterCOROUTINE$_0(_this__u8e3s4, resultContinuation) {
+    CoroutineImpl.call(this, resultContinuation);
+    this._this__u8e3s4__1 = _this__u8e3s4;
+  }
+  protoOf($openAdapterCOROUTINE$_0).doResume_5yljmg_k$ = function () {
+    var suspendResult = this.result_1;
+    $sm: do
+      try {
+        var tmp = this.state_1;
+        switch (tmp) {
+          case 0:
+            this.exceptionState_1 = 2;
+            if (this._this__u8e3s4__1.isAdapterOpen_1)
+              return Unit_instance;
+            if (!this._this__u8e3s4__1.host_1.isAdapterSupported_pjj8gn_k$()) {
+              throw new UnsupportedCapability(WeChatDeviceCapabilities_getInstance().BluetoothAdapter_1);
+            }
+
+            this.state_1 = 1;
+            suspendResult = awaitHostCallback(WechatBluetooth$openAdapter$lambda(this._this__u8e3s4__1), this);
+            if (suspendResult === get_COROUTINE_SUSPENDED()) {
+              return suspendResult;
+            }
+
+            continue $sm;
+          case 1:
+            this._this__u8e3s4__1.isAdapterOpen_1 = true;
+            return Unit_instance;
+          case 2:
+            throw this.exception_1;
+        }
+      } catch ($p) {
+        var e = $p;
+        if (this.exceptionState_1 === 2) {
+          throw e;
+        } else {
+          this.state_1 = this.exceptionState_1;
+          this.exception_1 = e;
+        }
+      }
+     while (true);
+  };
+  function $closeAdapterCOROUTINE$_0(_this__u8e3s4, resultContinuation) {
+    CoroutineImpl.call(this, resultContinuation);
+    this._this__u8e3s4__1 = _this__u8e3s4;
+  }
+  protoOf($closeAdapterCOROUTINE$_0).doResume_5yljmg_k$ = function () {
+    var suspendResult = this.result_1;
+    $sm: do
+      try {
+        var tmp = this.state_1;
+        switch (tmp) {
+          case 0:
+            this.exceptionState_1 = 2;
+            if (!this._this__u8e3s4__1.isAdapterOpen_1)
+              return Unit_instance;
+            if (!this._this__u8e3s4__1.host_1.isAdapterSupported_pjj8gn_k$()) {
+              throw new UnsupportedCapability(WeChatDeviceCapabilities_getInstance().BluetoothAdapter_1);
+            }
+
+            this.state_1 = 1;
+            suspendResult = awaitHostCallback(WechatBluetooth$closeAdapter$lambda(this._this__u8e3s4__1), this);
+            if (suspendResult === get_COROUTINE_SUSPENDED()) {
+              return suspendResult;
+            }
+
+            continue $sm;
+          case 1:
+            this._this__u8e3s4__1.isAdapterOpen_1 = false;
+            this._this__u8e3s4__1.isScanning_1 = false;
+            return Unit_instance;
+          case 2:
+            throw this.exception_1;
+        }
+      } catch ($p) {
+        var e = $p;
+        if (this.exceptionState_1 === 2) {
+          throw e;
+        } else {
+          this.state_1 = this.exceptionState_1;
+          this.exception_1 = e;
+        }
+      }
+     while (true);
+  };
+  function $adapterStateCOROUTINE$(_this__u8e3s4, resultContinuation) {
+    CoroutineImpl.call(this, resultContinuation);
+    this._this__u8e3s4__1 = _this__u8e3s4;
+  }
+  protoOf($adapterStateCOROUTINE$).doResume_5yljmg_k$ = function () {
+    var suspendResult = this.result_1;
+    $sm: do
+      try {
+        var tmp = this.state_1;
+        switch (tmp) {
+          case 0:
+            this.exceptionState_1 = 2;
+            if (!this._this__u8e3s4__1.host_1.isAdapterStateQuerySupported_pramr6_k$()) {
+              throw new UnsupportedCapability(WeChatDeviceCapabilities_getInstance().BluetoothAdapter_1);
+            }
+
+            this.state_1 = 1;
+            suspendResult = awaitHostCallback(WechatBluetooth$adapterState$lambda(this._this__u8e3s4__1), this);
+            if (suspendResult === get_COROUTINE_SUSPENDED()) {
+              return suspendResult;
+            }
+
+            continue $sm;
+          case 1:
+            var raw = suspendResult;
+            var tmp0_elvis_lhs = wxReadAdapterState(raw);
+            var tmp_0;
+            if (tmp0_elvis_lhs == null) {
+              throw new InvalidResponse('The WeChat host answered getBluetoothAdapterState with a state the SDK cannot read');
+            } else {
+              tmp_0 = tmp0_elvis_lhs;
+            }
+
+            var state = tmp_0;
+            var tmp_1 = this._this__u8e3s4__1;
+            var tmp1_elvis_lhs = state.discovering_1;
+            tmp_1.isScanning_1 = tmp1_elvis_lhs == null ? this._this__u8e3s4__1.isScanning_1 : tmp1_elvis_lhs;
+            return new WeChatBleAdapterState(state.available_1, state.discovering_1, state.powered_1);
+          case 2:
+            throw this.exception_1;
+        }
+      } catch ($p) {
+        var e = $p;
+        if (this.exceptionState_1 === 2) {
+          throw e;
+        } else {
+          this.state_1 = this.exceptionState_1;
+          this.exception_1 = e;
+        }
+      }
+     while (true);
+  };
+  function $startDiscoveryCOROUTINE$_0(_this__u8e3s4, allowDuplicates, resultContinuation) {
+    CoroutineImpl.call(this, resultContinuation);
+    this._this__u8e3s4__1 = _this__u8e3s4;
+    this.allowDuplicates_1 = allowDuplicates;
+  }
+  protoOf($startDiscoveryCOROUTINE$_0).doResume_5yljmg_k$ = function () {
+    var suspendResult = this.result_1;
+    $sm: do
+      try {
+        var tmp = this.state_1;
+        switch (tmp) {
+          case 0:
+            this.exceptionState_1 = 2;
+            if (this._this__u8e3s4__1.isScanning_1)
+              return Unit_instance;
+            if (!this._this__u8e3s4__1.host_1.isDiscoverySupported_6bw2mw_k$()) {
+              throw new UnsupportedCapability(WeChatDeviceCapabilities_getInstance().BluetoothDiscovery_1);
+            }
+
+            this.state_1 = 1;
+            suspendResult = awaitHostCallback(WechatBluetooth$startDiscovery$lambda(this._this__u8e3s4__1, this.allowDuplicates_1), this);
+            if (suspendResult === get_COROUTINE_SUSPENDED()) {
+              return suspendResult;
+            }
+
+            continue $sm;
+          case 1:
+            this._this__u8e3s4__1.isScanning_1 = true;
+            return Unit_instance;
+          case 2:
+            throw this.exception_1;
+        }
+      } catch ($p) {
+        var e = $p;
+        if (this.exceptionState_1 === 2) {
+          throw e;
+        } else {
+          this.state_1 = this.exceptionState_1;
+          this.exception_1 = e;
+        }
+      }
+     while (true);
+  };
+  function $stopDiscoveryCOROUTINE$_0(_this__u8e3s4, resultContinuation) {
+    CoroutineImpl.call(this, resultContinuation);
+    this._this__u8e3s4__1 = _this__u8e3s4;
+  }
+  protoOf($stopDiscoveryCOROUTINE$_0).doResume_5yljmg_k$ = function () {
+    var suspendResult = this.result_1;
+    $sm: do
+      try {
+        var tmp = this.state_1;
+        switch (tmp) {
+          case 0:
+            this.exceptionState_1 = 2;
+            if (!this._this__u8e3s4__1.isScanning_1)
+              return Unit_instance;
+            if (!this._this__u8e3s4__1.host_1.isDiscoverySupported_6bw2mw_k$()) {
+              throw new UnsupportedCapability(WeChatDeviceCapabilities_getInstance().BluetoothDiscovery_1);
+            }
+
+            this.state_1 = 1;
+            suspendResult = awaitHostCallback(WechatBluetooth$stopDiscovery$lambda(this._this__u8e3s4__1), this);
+            if (suspendResult === get_COROUTINE_SUSPENDED()) {
+              return suspendResult;
+            }
+
+            continue $sm;
+          case 1:
+            this._this__u8e3s4__1.isScanning_1 = false;
+            return Unit_instance;
+          case 2:
+            throw this.exception_1;
+        }
+      } catch ($p) {
+        var e = $p;
+        if (this.exceptionState_1 === 2) {
+          throw e;
+        } else {
+          this.state_1 = this.exceptionState_1;
+          this.exception_1 = e;
+        }
+      }
+     while (true);
+  };
+  function WechatBluetooth(host) {
+    host = host === VOID ? WxBluetoothHost_instance : host;
+    this.host_1 = host;
+    this.isAdapterOpen_1 = false;
+    this.isScanning_1 = false;
+    this.registeredListeners_1 = 0;
+    this.removalFailures_1 = 0;
+    this.unreadableDeviceEntriesSeen_1 = 0;
+    var tmp = this;
+    tmp.adapterStates_1 = buffer(callbackFlow(WechatBluetooth$adapterStates$slambda_0(this, null)), 8, BufferOverflow_DROP_OLDEST_getInstance());
+  }
+  protoOf(WechatBluetooth).get_activeListenerCount_w9igh8_k$ = function () {
+    return this.registeredListeners_1;
+  };
+  protoOf(WechatBluetooth).openAdapter_uzvay6_k$ = function ($completion) {
+    var tmp = new $openAdapterCOROUTINE$_0(this, $completion);
+    tmp.result_1 = Unit_instance;
+    tmp.exception_1 = null;
+    return tmp.doResume_5yljmg_k$();
+  };
+  protoOf(WechatBluetooth).closeAdapter_opnim8_k$ = function ($completion) {
+    var tmp = new $closeAdapterCOROUTINE$_0(this, $completion);
+    tmp.result_1 = Unit_instance;
+    tmp.exception_1 = null;
+    return tmp.doResume_5yljmg_k$();
+  };
+  protoOf(WechatBluetooth).adapterState_mz4npc_k$ = function ($completion) {
+    var tmp = new $adapterStateCOROUTINE$(this, $completion);
+    tmp.result_1 = Unit_instance;
+    tmp.exception_1 = null;
+    return tmp.doResume_5yljmg_k$();
+  };
+  protoOf(WechatBluetooth).startDiscovery_hys6yo_k$ = function (allowDuplicates, $completion) {
+    var tmp = new $startDiscoveryCOROUTINE$_0(this, allowDuplicates, $completion);
+    tmp.result_1 = Unit_instance;
+    tmp.exception_1 = null;
+    return tmp.doResume_5yljmg_k$();
+  };
+  protoOf(WechatBluetooth).startDiscovery$default_8kqzwl_k$ = function (allowDuplicates, $completion, $super) {
+    allowDuplicates = allowDuplicates === VOID ? false : allowDuplicates;
+    return $super === VOID ? this.startDiscovery_hys6yo_k$(allowDuplicates, $completion) : $super.startDiscovery_hys6yo_k$.call(this, allowDuplicates, $completion);
+  };
+  protoOf(WechatBluetooth).stopDiscovery_g9b3r_k$ = function ($completion) {
+    var tmp = new $stopDiscoveryCOROUTINE$_0(this, $completion);
+    tmp.result_1 = Unit_instance;
+    tmp.exception_1 = null;
+    return tmp.doResume_5yljmg_k$();
+  };
+  protoOf(WechatBluetooth).connect_iztqdj_k$ = function (deviceId, $completion) {
+    // Inline function 'kotlin.text.isNotBlank' call
+    // Inline function 'kotlin.require' call
+    if (!!isBlank(deviceId)) {
+      var message = "connect requires a device identifier, and '" + deviceId + "' is blank.";
+      throw IllegalArgumentException_init_$Create$(toString_0(message));
+    }
+    if (!this.host_1.isConnectionSupported_8gm3a2_k$()) {
+      throw new UnsupportedCapability(WeChatDeviceCapabilities_getInstance().BluetoothConnection_1);
+    }
+    return awaitHostCallback(WechatBluetooth$connect$lambda(this, deviceId), $completion);
+  };
+  protoOf(WechatBluetooth).disconnect_yxcefb_k$ = function (deviceId, $completion) {
+    // Inline function 'kotlin.text.isNotBlank' call
+    // Inline function 'kotlin.require' call
+    if (!!isBlank(deviceId)) {
+      var message = "disconnect requires a device identifier, and '" + deviceId + "' is blank.";
+      throw IllegalArgumentException_init_$Create$(toString_0(message));
+    }
+    if (!this.host_1.isConnectionSupported_8gm3a2_k$()) {
+      throw new UnsupportedCapability(WeChatDeviceCapabilities_getInstance().BluetoothConnection_1);
+    }
+    return awaitHostCallback(WechatBluetooth$disconnect$lambda(this, deviceId), $completion);
+  };
+  protoOf(WechatBluetooth).discoveredDevices_a0x500_k$ = function (onListenerRegistered) {
+    return buffer(callbackFlow(WechatBluetooth$discoveredDevices$slambda_0(this, onListenerRegistered, null)), 64, BufferOverflow_DROP_OLDEST_getInstance());
+  };
+  protoOf(WechatBluetooth).connectionStates_vbpam3_k$ = function (onListenerRegistered) {
+    return buffer(callbackFlow(WechatBluetooth$connectionStates$slambda_0(this, onListenerRegistered, null)), 64, BufferOverflow_DROP_OLDEST_getInstance());
+  };
+  function WxBluetoothHost$openAdapter$lambda($success) {
+    return function (it) {
+      $success();
+      return Unit_instance;
+    };
+  }
+  function WxBluetoothHost$closeAdapter$lambda($success) {
+    return function (it) {
+      $success();
+      return Unit_instance;
+    };
+  }
+  function WxBluetoothHost$startDiscovery$lambda($success) {
+    return function (it) {
+      $success();
+      return Unit_instance;
+    };
+  }
+  function WxBluetoothHost$stopDiscovery$lambda($success) {
+    return function (it) {
+      $success();
+      return Unit_instance;
+    };
+  }
+  function WxBluetoothHost$connect$lambda($success) {
+    return function (it) {
+      $success();
+      return Unit_instance;
+    };
+  }
+  function WxBluetoothHost$disconnect$lambda($success) {
+    return function (it) {
+      $success();
+      return Unit_instance;
+    };
+  }
+  function WxBluetoothHost() {
+  }
+  protoOf(WxBluetoothHost).isAdapterSupported_pjj8gn_k$ = function () {
+    return hasWxBluetoothAdapter();
+  };
+  protoOf(WxBluetoothHost).isAdapterStateQuerySupported_pramr6_k$ = function () {
+    return hasWxGetBluetoothAdapterState();
+  };
+  protoOf(WxBluetoothHost).isDiscoverySupported_6bw2mw_k$ = function () {
+    return hasWxBluetoothDiscovery();
+  };
+  protoOf(WxBluetoothHost).isConnectionSupported_8gm3a2_k$ = function () {
+    return hasWxBleConnection();
+  };
+  protoOf(WxBluetoothHost).isAdapterStateChangeSupported_4cwf3m_k$ = function () {
+    return hasWxBluetoothAdapterStateChange();
+  };
+  protoOf(WxBluetoothHost).openAdapter_6v5g28_k$ = function (success, failure) {
+    var options = wxOpenBluetoothAdapterOptions();
+    options.success = WxBluetoothHost$openAdapter$lambda(success);
+    options.fail = failure;
+    wx.openBluetoothAdapter(options);
+  };
+  protoOf(WxBluetoothHost).closeAdapter_38fvz2_k$ = function (success, failure) {
+    var options = wxCloseBluetoothAdapterOptions();
+    options.success = WxBluetoothHost$closeAdapter$lambda(success);
+    options.fail = failure;
+    wx.closeBluetoothAdapter(options);
+  };
+  protoOf(WxBluetoothHost).adapterState_8vkx7z_k$ = function (success, failure) {
+    var options = wxGetBluetoothAdapterStateOptions();
+    options.success = success;
+    options.fail = failure;
+    wx.getBluetoothAdapterState(options);
+  };
+  protoOf(WxBluetoothHost).startDiscovery_bno8ny_k$ = function (allowDuplicates, success, failure) {
+    var options = wxStartBluetoothDevicesDiscoveryOptions(allowDuplicates);
+    options.success = WxBluetoothHost$startDiscovery$lambda(success);
+    options.fail = failure;
+    wx.startBluetoothDevicesDiscovery(options);
+  };
+  protoOf(WxBluetoothHost).stopDiscovery_e1vpk7_k$ = function (success, failure) {
+    var options = wxStopBluetoothDevicesDiscoveryOptions();
+    options.success = WxBluetoothHost$stopDiscovery$lambda(success);
+    options.fail = failure;
+    wx.stopBluetoothDevicesDiscovery(options);
+  };
+  protoOf(WxBluetoothHost).addDeviceFoundListener_qvrwyf_k$ = function (listener) {
+    return wx.onBluetoothDeviceFound(listener);
+  };
+  protoOf(WxBluetoothHost).removeDeviceFoundListener_dnx32e_k$ = function (listener) {
+    return wx.offBluetoothDeviceFound(listener);
+  };
+  protoOf(WxBluetoothHost).addAdapterStateListener_lnxefd_k$ = function (listener) {
+    return wx.onBluetoothAdapterStateChange(listener);
+  };
+  protoOf(WxBluetoothHost).removeAdapterStateListener_8syxqy_k$ = function (listener) {
+    return wx.offBluetoothAdapterStateChange(listener);
+  };
+  protoOf(WxBluetoothHost).connect_nh1s9x_k$ = function (deviceId, success, failure) {
+    var options = wxCreateBleConnectionOptions(deviceId);
+    options.success = WxBluetoothHost$connect$lambda(success);
+    options.fail = failure;
+    wx.createBLEConnection(options);
+  };
+  protoOf(WxBluetoothHost).disconnect_i8p6zb_k$ = function (deviceId, success, failure) {
+    var options = wxCloseBleConnectionOptions(deviceId);
+    options.success = WxBluetoothHost$disconnect$lambda(success);
+    options.fail = failure;
+    wx.closeBLEConnection(options);
+  };
+  protoOf(WxBluetoothHost).addConnectionStateListener_962shm_k$ = function (listener) {
+    return wx.onBLEConnectionStateChange(listener);
+  };
+  protoOf(WxBluetoothHost).removeConnectionStateListener_ve4xb7_k$ = function (listener) {
+    return wx.offBLEConnectionStateChange(listener);
+  };
+  var WxBluetoothHost_instance;
+  function WxBluetoothHost_getInstance() {
+    return WxBluetoothHost_instance;
   }
   function WechatChooseMedia$choose$lambda$lambda($success) {
     return function (result) {
@@ -5881,7 +8216,7 @@
           case 1:
             var selection = suspendResult;
             var tmp_0;
-            if (selection instanceof Present) {
+            if (selection instanceof Present_0) {
               if (selection.files_1.isEmpty_y1axqb_k$()) {
                 throw new InvalidResponse('The WeChat host answered chooseMedia successfully without a selected file');
               }
@@ -5894,7 +8229,7 @@
               }
               tmp_0 = destination;
             } else {
-              if (equals(selection, Unreadable_instance)) {
+              if (equals(selection, Unreadable_instance_0)) {
                 throw new InvalidResponse('The WeChat host answered chooseMedia with a selection the SDK cannot read');
               } else {
                 noWhenBranchMatchedException();
@@ -5927,7 +8262,7 @@
     return tmp.doResume_5yljmg_k$();
   };
   function toMediaFile(_this__u8e3s4) {
-    return new WeChatMediaFile(_this__u8e3s4.tempFilePath_1, _this__u8e3s4.sizeBytes_1, Companion_instance_10.fromHostValue_7yihi0_k$(_this__u8e3s4.fileType_1), _this__u8e3s4.fileType_1, _this__u8e3s4.durationSeconds_1, _this__u8e3s4.width_1, _this__u8e3s4.height_1, _this__u8e3s4.thumbTempFilePath_1);
+    return new WeChatMediaFile(_this__u8e3s4.tempFilePath_1, _this__u8e3s4.sizeBytes_1, Companion_instance_11.fromHostValue_7yihi0_k$(_this__u8e3s4.fileType_1), _this__u8e3s4.fileType_1, _this__u8e3s4.durationSeconds_1, _this__u8e3s4.width_1, _this__u8e3s4.height_1, _this__u8e3s4.thumbTempFilePath_1);
   }
   function WxChooseMediaHost() {
   }
@@ -6049,10 +8384,10 @@
           case 1:
             var text = suspendResult;
             var tmp_0;
-            if (text instanceof Present_1) {
+            if (text instanceof Present_2) {
               tmp_0 = text.text_1;
             } else {
-              if (equals(text, Unreadable_instance_1)) {
+              if (equals(text, Unreadable_instance_2)) {
                 throw new InvalidResponse('The WeChat host answered getClipboardData with a value the SDK cannot read');
               } else {
                 noWhenBranchMatchedException();
@@ -6496,10 +8831,10 @@
           case 1:
             var text = suspendResult;
             var tmp_1;
-            if (text instanceof Present_2) {
+            if (text instanceof Present_3) {
               tmp_1 = text.text_1;
             } else {
-              if (equals(text, Unreadable_instance_2)) {
+              if (equals(text, Unreadable_instance_3)) {
                 throw new InvalidResponse('The WeChat host answered readFile with a value the SDK cannot read as text');
               } else {
                 noWhenBranchMatchedException();
@@ -6682,22 +9017,22 @@
   function WechatFileSystemHost$isReadSupported$ref(p0) {
     return constructCallableReference(function () {
       return p0.isReadSupported_3yqram_k$();
-    }, 0, 0, 4, 'isReadSupported', [p0]);
+    }, 0, 0, 5, 'isReadSupported', [p0]);
   }
   function WechatFileSystemHost$isWriteSupported$ref(p0) {
     return constructCallableReference(function () {
       return p0.isWriteSupported_mpjazd_k$();
-    }, 0, 0, 5, 'isWriteSupported', [p0]);
+    }, 0, 0, 6, 'isWriteSupported', [p0]);
   }
   function WechatFileSystemHost$isAccessSupported$ref(p0) {
     return constructCallableReference(function () {
       return p0.isAccessSupported_4lja3k_k$();
-    }, 0, 0, 6, 'isAccessSupported', [p0]);
+    }, 0, 0, 7, 'isAccessSupported', [p0]);
   }
   function WechatFileSystemHost$isRemoveSupported$ref(p0) {
     return constructCallableReference(function () {
       return p0.isRemoveSupported_ngivwg_k$();
-    }, 0, 0, 7, 'isRemoveSupported', [p0]);
+    }, 0, 0, 8, 'isRemoveSupported', [p0]);
   }
   function requireShortSupported($this) {
     if (!$this.host_1.isShortSupported_dw0eck_k$()) {
@@ -6867,10 +9202,10 @@
           case 3:
             var sample = suspendResult;
             var tmp_0;
-            if (sample instanceof Present_3) {
+            if (sample instanceof Present_4) {
               tmp_0 = new WeChatGeoPosition(sample.latitude_1, sample.longitude_1, sample.accuracyMeters_1, this.coordinateSystem_1);
             } else {
-              if (equals(sample, Unreadable_instance_3)) {
+              if (equals(sample, Unreadable_instance_4)) {
                 throw new InvalidResponse('The WeChat host answered getLocation with coordinates the SDK cannot read');
               } else {
                 noWhenBranchMatchedException();
@@ -7162,10 +9497,10 @@
   function WechatNetworkStatus$changes$slambda$lambda($this_callbackFlow) {
     return function (result) {
       var state = wxEventNetworkState(result.isConnected, result.networkType);
-      if (state instanceof Present_4)
+      if (state instanceof Present_5)
         new ChannelResult($this_callbackFlow.trySend_62dpg8_k$(toNetworkState(state)));
       else {
-        if (equals(state, Unreadable_instance_4))
+        if (equals(state, Unreadable_instance_5))
           $this_callbackFlow.close_ukldxa_k$(new InvalidResponse('The WeChat host reported a network status the SDK cannot read'));
         else {
           noWhenBranchMatchedException();
@@ -7287,10 +9622,10 @@
           case 1:
             var state = suspendResult;
             var tmp_0;
-            if (state instanceof Present_4) {
+            if (state instanceof Present_5) {
               tmp_0 = toNetworkState(state);
             } else {
-              if (equals(state, Unreadable_instance_4)) {
+              if (equals(state, Unreadable_instance_5)) {
                 throw new InvalidResponse('The WeChat host answered getNetworkType with a state the SDK cannot read');
               } else {
                 noWhenBranchMatchedException();
@@ -7420,7 +9755,7 @@
           case 1:
             var answer = suspendResult;
             if (!equals(answer, Completed_instance))
-              if (equals(answer, Unreadable_instance_5))
+              if (equals(answer, Unreadable_instance_6))
                 throw new InvalidResponse('The WeChat host answered requestPayment with a payload the SDK cannot read');
               else {
                 noWhenBranchMatchedException();
@@ -7519,7 +9854,7 @@
   function WechatPermissionScopes$scopeFor$ref(p0) {
     return constructCallableReference(function (p0_0) {
       return p0.scopeFor_g1473i_k$(p0_0);
-    }, 1, 0, 8, 'scopeFor', [p0]);
+    }, 1, 0, 9, 'scopeFor', [p0]);
   }
   function performRequest($this, permission, scope, $completion) {
     var tmp = new $performRequestCOROUTINE$($this, permission, scope, $completion);
@@ -7538,7 +9873,7 @@
     if (equals(entry, Absent_instance)) {
       tmp = NotRequested_instance;
     } else {
-      if (equals(entry, Unreadable_instance_6)) {
+      if (equals(entry, Unreadable_instance_7)) {
         tmp = null;
       } else {
         if (entry instanceof Decided) {
@@ -8020,7 +10355,7 @@
               if (requirement instanceof NotRequired) {
                 tmp_0 = new PrivacyStatus(PrivacyAuthorizationRequirement_NOT_REQUIRED_getInstance(), requirement.contractName_1);
               } else {
-                if (equals(requirement, Unreadable_instance_7)) {
+                if (equals(requirement, Unreadable_instance_8)) {
                   throw new InvalidResponse('The WeChat host answered getPrivacySetting with a value the SDK cannot read');
                 } else {
                   noWhenBranchMatchedException();
@@ -8191,7 +10526,7 @@
           case 1:
             var answer = suspendResult;
             var tmp_0;
-            if (answer instanceof Present_5) {
+            if (answer instanceof Present_6) {
               var requestedIds = toSet(this.request_1.templateIds_1);
               if (!equals(answer.entries_1.get_keys_wop4xp_k$(), requestedIds)) {
                 throw new InvalidResponse('The WeChat host answered requestSubscribeMessage with template keys that do not match the request');
@@ -8211,7 +10546,7 @@
                     if (isBlank(entry.value_1)) {
                       throw new InvalidResponse('The WeChat host answered requestSubscribeMessage with a blank status');
                     }
-                    tmp_1 = new WeChatSubscriptionResult(item, Companion_instance_14.fromHostValue_7yihi0_k$(entry.value_1), entry.value_1);
+                    tmp_1 = new WeChatSubscriptionResult(item, Companion_instance_15.fromHostValue_7yihi0_k$(entry.value_1), entry.value_1);
                   } else {
                     if (equals(entry, NotText_instance)) {
                       throw new InvalidResponse('The WeChat host answered requestSubscribeMessage with a status the SDK cannot read');
@@ -8224,7 +10559,7 @@
               }
               tmp_0 = destination;
             } else {
-              if (equals(answer, Unreadable_instance_8)) {
+              if (equals(answer, Unreadable_instance_9)) {
                 throw new InvalidResponse('The WeChat host answered requestSubscribeMessage with a result the SDK cannot read');
               } else {
                 noWhenBranchMatchedException();
@@ -8312,6 +10647,15 @@
   protoOf(WxRuntimeInfoHost).hasUserDataPath_z1qkq4_k$ = function () {
     return hasWxUserDataPath();
   };
+  protoOf(WxRuntimeInfoHost).hasBluetoothAdapter_9c9jln_k$ = function () {
+    return hasWxBluetoothAdapter() && hasWxGetBluetoothAdapterState();
+  };
+  protoOf(WxRuntimeInfoHost).hasBluetoothDiscovery_g82xb8_k$ = function () {
+    return hasWxBluetoothDiscovery();
+  };
+  protoOf(WxRuntimeInfoHost).hasBluetoothConnection_rgkixa_k$ = function () {
+    return hasWxBleConnection();
+  };
   var WxRuntimeInfoHost_instance;
   function WxRuntimeInfoHost_getInstance() {
     return WxRuntimeInfoHost_instance;
@@ -8373,17 +10717,17 @@
           case 1:
             var sample = suspendResult;
             var tmp_0;
-            if (sample instanceof Present_6) {
+            if (sample instanceof Present_7) {
               var tmp1_safe_receiver = sample.scanType_1;
               var tmp_1;
               if (tmp1_safe_receiver == null) {
                 tmp_1 = null;
               } else {
-                tmp_1 = Companion_instance_12.fromHostValue_7yihi0_k$(tmp1_safe_receiver);
+                tmp_1 = Companion_instance_13.fromHostValue_7yihi0_k$(tmp1_safe_receiver);
               }
               tmp_0 = new WeChatScanResult(sample.text_1, tmp_1, sample.scanType_1, sample.charSet_1, sample.rawData_1, sample.path_1);
             } else {
-              if (equals(sample, Unreadable_instance_9)) {
+              if (equals(sample, Unreadable_instance_10)) {
                 throw new InvalidResponse('The WeChat host answered scanCode with a result the SDK cannot read');
               } else {
                 noWhenBranchMatchedException();
@@ -8430,12 +10774,12 @@
   function WxScanCodeHost_getInstance() {
     return WxScanCodeHost_instance;
   }
-  function Companion_13() {
+  function Companion_15() {
     this.MISSING_KEY_ERROR_1 = 'getStorage:fail data not found';
   }
-  var Companion_instance_15;
-  function Companion_getInstance_13() {
-    return Companion_instance_15;
+  var Companion_instance_17;
+  function Companion_getInstance_15() {
+    return Companion_instance_17;
   }
   function WechatStorage$get$lambda$lambda($success, $failure, $key) {
     return function (value) {
@@ -8610,7 +10954,7 @@
     return function (raw) {
       var parsed = wxTransferProgress(raw);
       var tmp;
-      if (parsed instanceof Present_8) {
+      if (parsed instanceof Present_9) {
         this$0.latestProgress_1 = new WeChatTransferProgress(parsed.percent_1, parsed.bytesTransferred_1, parsed.bytesExpected_1);
         tmp = Unit_instance;
       }
@@ -8789,28 +11133,58 @@
   function WxUploadFileHost_getInstance() {
     return WxUploadFileHost_instance;
   }
-  function hasWxCheckSession() {
-    return typeof wx !== 'undefined' && typeof wx.checkSession === 'function';
+  function get_isJavaScriptArray() {
+    _init_properties_WxBluetooth_kt__4silb9();
+    return isJavaScriptArray;
   }
-  function wxCheckSessionOptions() {
-    var options = {};
-    return options;
+  var isJavaScriptArray;
+  function WxBluetoothDevice(deviceId, name, rssi) {
+    this.deviceId_1 = deviceId;
+    this.name_1 = name;
+    this.rssi_1 = rssi;
   }
-  function Present(files) {
-    this.files_1 = files;
+  protoOf(WxBluetoothDevice).toString = function () {
+    return 'WxBluetoothDevice(deviceId=' + this.deviceId_1 + ', name=' + this.name_1 + ', rssi=' + this.rssi_1 + ')';
+  };
+  protoOf(WxBluetoothDevice).hashCode = function () {
+    var result = getStringHashCode(this.deviceId_1);
+    result = imul(result, 31) + (this.name_1 == null ? 0 : getStringHashCode(this.name_1)) | 0;
+    result = imul(result, 31) + (this.rssi_1 == null ? 0 : this.rssi_1) | 0;
+    return result;
+  };
+  protoOf(WxBluetoothDevice).equals = function (other) {
+    if (this === other)
+      return true;
+    if (!(other instanceof WxBluetoothDevice))
+      return false;
+    if (!(this.deviceId_1 === other.deviceId_1))
+      return false;
+    if (!(this.name_1 == other.name_1))
+      return false;
+    if (!(this.rssi_1 == other.rssi_1))
+      return false;
+    return true;
+  };
+  function Present(devices, unreadableEntries) {
+    this.devices_1 = devices;
+    this.unreadableEntries_1 = unreadableEntries;
   }
   protoOf(Present).toString = function () {
-    return 'Present(files=' + toString_0(this.files_1) + ')';
+    return 'Present(devices=' + toString_0(this.devices_1) + ', unreadableEntries=' + this.unreadableEntries_1 + ')';
   };
   protoOf(Present).hashCode = function () {
-    return hashCode(this.files_1);
+    var result = hashCode(this.devices_1);
+    result = imul(result, 31) + this.unreadableEntries_1 | 0;
+    return result;
   };
   protoOf(Present).equals = function (other) {
     if (this === other)
       return true;
     if (!(other instanceof Present))
       return false;
-    if (!equals(this.files_1, other.files_1))
+    if (!equals(this.devices_1, other.devices_1))
+      return false;
+    if (!(this.unreadableEntries_1 === other.unreadableEntries_1))
       return false;
     return true;
   };
@@ -8820,7 +11194,7 @@
     return 'Unreadable';
   };
   protoOf(Unreadable).hashCode = function () {
-    return -529128255;
+    return -1298208479;
   };
   protoOf(Unreadable).equals = function (other) {
     if (this === other)
@@ -8833,7 +11207,297 @@
   function Unreadable_getInstance() {
     return Unreadable_instance;
   }
-  function Present_0(tempFilePath, sizeBytes, fileType, durationSeconds, width, height, thumbTempFilePath) {
+  function WxBluetoothAdapterState(available, discovering, powered) {
+    this.available_1 = available;
+    this.discovering_1 = discovering;
+    this.powered_1 = powered;
+  }
+  protoOf(WxBluetoothAdapterState).toString = function () {
+    return 'WxBluetoothAdapterState(available=' + this.available_1 + ', discovering=' + this.discovering_1 + ', powered=' + this.powered_1 + ')';
+  };
+  protoOf(WxBluetoothAdapterState).hashCode = function () {
+    var result = getBooleanHashCode(this.available_1);
+    result = imul(result, 31) + (this.discovering_1 == null ? 0 : getBooleanHashCode(this.discovering_1)) | 0;
+    result = imul(result, 31) + (this.powered_1 == null ? 0 : getBooleanHashCode(this.powered_1)) | 0;
+    return result;
+  };
+  protoOf(WxBluetoothAdapterState).equals = function (other) {
+    if (this === other)
+      return true;
+    if (!(other instanceof WxBluetoothAdapterState))
+      return false;
+    if (!(this.available_1 === other.available_1))
+      return false;
+    if (!(this.discovering_1 == other.discovering_1))
+      return false;
+    if (!(this.powered_1 == other.powered_1))
+      return false;
+    return true;
+  };
+  function WxBluetoothConnectionState(deviceId, connected) {
+    this.deviceId_1 = deviceId;
+    this.connected_1 = connected;
+  }
+  protoOf(WxBluetoothConnectionState).toString = function () {
+    return 'WxBluetoothConnectionState(deviceId=' + this.deviceId_1 + ', connected=' + this.connected_1 + ')';
+  };
+  protoOf(WxBluetoothConnectionState).hashCode = function () {
+    var result = getStringHashCode(this.deviceId_1);
+    result = imul(result, 31) + getBooleanHashCode(this.connected_1) | 0;
+    return result;
+  };
+  protoOf(WxBluetoothConnectionState).equals = function (other) {
+    if (this === other)
+      return true;
+    if (!(other instanceof WxBluetoothConnectionState))
+      return false;
+    if (!(this.deviceId_1 === other.deviceId_1))
+      return false;
+    if (!(this.connected_1 === other.connected_1))
+      return false;
+    return true;
+  };
+  function wxReadAdapterState(result) {
+    _init_properties_WxBluetooth_kt__4silb9();
+    var tmp0_elvis_lhs = asBoolean(result.available);
+    var tmp;
+    if (tmp0_elvis_lhs == null) {
+      return null;
+    } else {
+      tmp = tmp0_elvis_lhs;
+    }
+    var available = tmp;
+    return new WxBluetoothAdapterState(available, asBoolean(result.discovering), asBoolean(result.powered));
+  }
+  function wxReadAdapterStateChange(result) {
+    _init_properties_WxBluetooth_kt__4silb9();
+    var tmp0_elvis_lhs = asBoolean(result.available);
+    var tmp;
+    if (tmp0_elvis_lhs == null) {
+      return null;
+    } else {
+      tmp = tmp0_elvis_lhs;
+    }
+    var available = tmp;
+    return new WxBluetoothAdapterState(available, asBoolean(result.discovering), null);
+  }
+  function wxReadDeviceBatch(result) {
+    _init_properties_WxBluetooth_kt__4silb9();
+    var raw = result.devices;
+    if (raw == null || typeof raw === 'undefined' || !(typeof raw === 'object')) {
+      return Unreadable_instance;
+    }
+    if (!get_isJavaScriptArray()(raw))
+      return Unreadable_instance;
+    // Inline function 'kotlin.collections.mutableListOf' call
+    var devices = ArrayList_init_$Create$_0();
+    var unreadable = 0;
+    // Inline function 'kotlin.js.unsafeCast' call
+    // Inline function 'kotlin.js.asDynamic' call
+    var inductionVariable = 0;
+    var last = raw.length;
+    while (inductionVariable < last) {
+      var entry = raw[inductionVariable];
+      inductionVariable = inductionVariable + 1 | 0;
+      var tmp;
+      if (entry == null) {
+        tmp = null;
+      } else {
+        // Inline function 'kotlin.let' call
+        tmp = wxReadDevice(entry);
+      }
+      var device = tmp;
+      if (device == null)
+        unreadable = unreadable + 1 | 0;
+      else {
+        // Inline function 'kotlin.collections.plusAssign' call
+        devices.add_utx5q5_k$(device);
+      }
+    }
+    return new Present(devices, unreadable);
+  }
+  function wxReadDevice(record) {
+    _init_properties_WxBluetooth_kt__4silb9();
+    var tmp0_elvis_lhs = asNonBlankString(record.deviceId);
+    var tmp;
+    if (tmp0_elvis_lhs == null) {
+      return null;
+    } else {
+      tmp = tmp0_elvis_lhs;
+    }
+    var deviceId = tmp;
+    var rssi = asInt(record.RSSI);
+    return new WxBluetoothDevice(deviceId, asNonBlankString(record.name), rssi);
+  }
+  function wxReadConnectionState(result) {
+    _init_properties_WxBluetooth_kt__4silb9();
+    var tmp0_elvis_lhs = asNonBlankString(result.deviceId);
+    var tmp;
+    if (tmp0_elvis_lhs == null) {
+      return null;
+    } else {
+      tmp = tmp0_elvis_lhs;
+    }
+    var deviceId = tmp;
+    var tmp1_elvis_lhs = asBoolean(result.connected);
+    var tmp_0;
+    if (tmp1_elvis_lhs == null) {
+      return null;
+    } else {
+      tmp_0 = tmp1_elvis_lhs;
+    }
+    var connected = tmp_0;
+    return new WxBluetoothConnectionState(deviceId, connected);
+  }
+  function asBoolean(_this__u8e3s4) {
+    _init_properties_WxBluetooth_kt__4silb9();
+    var tmp;
+    if (!(_this__u8e3s4 == null) ? typeof _this__u8e3s4 === 'boolean' : false) {
+      tmp = _this__u8e3s4;
+    } else {
+      tmp = null;
+    }
+    return tmp;
+  }
+  function asInt(_this__u8e3s4) {
+    _init_properties_WxBluetooth_kt__4silb9();
+    var tmp;
+    if (!(_this__u8e3s4 == null) ? typeof _this__u8e3s4 === 'number' : false) {
+      tmp = _this__u8e3s4;
+    } else {
+      tmp = null;
+    }
+    return tmp;
+  }
+  function asNonBlankString(_this__u8e3s4) {
+    _init_properties_WxBluetooth_kt__4silb9();
+    var tmp0_elvis_lhs = (!(_this__u8e3s4 == null) ? typeof _this__u8e3s4 === 'string' : false) ? _this__u8e3s4 : null;
+    var tmp;
+    if (tmp0_elvis_lhs == null) {
+      return null;
+    } else {
+      tmp = tmp0_elvis_lhs;
+    }
+    var text = tmp;
+    // Inline function 'kotlin.text.ifBlank' call
+    var tmp_0;
+    if (isBlank(text)) {
+      tmp_0 = null;
+    } else {
+      tmp_0 = text;
+    }
+    return tmp_0;
+  }
+  function hasWxBluetoothAdapter() {
+    _init_properties_WxBluetooth_kt__4silb9();
+    return typeof wx !== 'undefined' && typeof wx.openBluetoothAdapter === 'function' && typeof wx.closeBluetoothAdapter === 'function';
+  }
+  function hasWxGetBluetoothAdapterState() {
+    _init_properties_WxBluetooth_kt__4silb9();
+    return typeof wx !== 'undefined' && typeof wx.getBluetoothAdapterState === 'function';
+  }
+  function hasWxBluetoothDiscovery() {
+    _init_properties_WxBluetooth_kt__4silb9();
+    return typeof wx !== 'undefined' && typeof wx.startBluetoothDevicesDiscovery === 'function' && typeof wx.stopBluetoothDevicesDiscovery === 'function' && typeof wx.onBluetoothDeviceFound === 'function' && typeof wx.offBluetoothDeviceFound === 'function';
+  }
+  function hasWxBleConnection() {
+    _init_properties_WxBluetooth_kt__4silb9();
+    return typeof wx !== 'undefined' && typeof wx.createBLEConnection === 'function' && typeof wx.closeBLEConnection === 'function' && typeof wx.onBLEConnectionStateChange === 'function' && typeof wx.offBLEConnectionStateChange === 'function';
+  }
+  function hasWxBluetoothAdapterStateChange() {
+    _init_properties_WxBluetooth_kt__4silb9();
+    return typeof wx !== 'undefined' && typeof wx.onBluetoothAdapterStateChange === 'function' && typeof wx.offBluetoothAdapterStateChange === 'function';
+  }
+  function wxOpenBluetoothAdapterOptions() {
+    _init_properties_WxBluetooth_kt__4silb9();
+    var options = {};
+    return options;
+  }
+  function wxCloseBluetoothAdapterOptions() {
+    _init_properties_WxBluetooth_kt__4silb9();
+    var options = {};
+    return options;
+  }
+  function wxGetBluetoothAdapterStateOptions() {
+    _init_properties_WxBluetooth_kt__4silb9();
+    var options = {};
+    return options;
+  }
+  function wxStartBluetoothDevicesDiscoveryOptions(allowDuplicates) {
+    _init_properties_WxBluetooth_kt__4silb9();
+    var options = {};
+    options.allowDuplicatesKey = allowDuplicates;
+    return options;
+  }
+  function wxStopBluetoothDevicesDiscoveryOptions() {
+    _init_properties_WxBluetooth_kt__4silb9();
+    var options = {};
+    return options;
+  }
+  function wxCreateBleConnectionOptions(deviceId) {
+    _init_properties_WxBluetooth_kt__4silb9();
+    var options = {};
+    options.deviceId = deviceId;
+    return options;
+  }
+  function wxCloseBleConnectionOptions(deviceId) {
+    _init_properties_WxBluetooth_kt__4silb9();
+    var options = {};
+    options.deviceId = deviceId;
+    return options;
+  }
+  var properties_initialized_WxBluetooth_kt_5cvk83;
+  function _init_properties_WxBluetooth_kt__4silb9() {
+    if (!properties_initialized_WxBluetooth_kt_5cvk83) {
+      properties_initialized_WxBluetooth_kt_5cvk83 = true;
+      isJavaScriptArray = Array.isArray;
+    }
+  }
+  function hasWxCheckSession() {
+    return typeof wx !== 'undefined' && typeof wx.checkSession === 'function';
+  }
+  function wxCheckSessionOptions() {
+    var options = {};
+    return options;
+  }
+  function Present_0(files) {
+    this.files_1 = files;
+  }
+  protoOf(Present_0).toString = function () {
+    return 'Present(files=' + toString_0(this.files_1) + ')';
+  };
+  protoOf(Present_0).hashCode = function () {
+    return hashCode(this.files_1);
+  };
+  protoOf(Present_0).equals = function (other) {
+    if (this === other)
+      return true;
+    if (!(other instanceof Present_0))
+      return false;
+    if (!equals(this.files_1, other.files_1))
+      return false;
+    return true;
+  };
+  function Unreadable_0() {
+  }
+  protoOf(Unreadable_0).toString = function () {
+    return 'Unreadable';
+  };
+  protoOf(Unreadable_0).hashCode = function () {
+    return -529128255;
+  };
+  protoOf(Unreadable_0).equals = function (other) {
+    if (this === other)
+      return true;
+    if (!(other instanceof Unreadable_0))
+      return false;
+    return true;
+  };
+  var Unreadable_instance_0;
+  function Unreadable_getInstance_0() {
+    return Unreadable_instance_0;
+  }
+  function Present_1(tempFilePath, sizeBytes, fileType, durationSeconds, width, height, thumbTempFilePath) {
     this.tempFilePath_1 = tempFilePath;
     this.sizeBytes_1 = sizeBytes;
     this.fileType_1 = fileType;
@@ -8842,10 +11506,10 @@
     this.height_1 = height;
     this.thumbTempFilePath_1 = thumbTempFilePath;
   }
-  protoOf(Present_0).toString = function () {
+  protoOf(Present_1).toString = function () {
     return 'Present(tempFilePath=' + this.tempFilePath_1 + ', sizeBytes=' + this.sizeBytes_1.toString() + ', fileType=' + this.fileType_1 + ', durationSeconds=' + this.durationSeconds_1 + ', width=' + this.width_1 + ', height=' + this.height_1 + ', thumbTempFilePath=' + this.thumbTempFilePath_1 + ')';
   };
-  protoOf(Present_0).hashCode = function () {
+  protoOf(Present_1).hashCode = function () {
     var result = getStringHashCode(this.tempFilePath_1);
     result = imul(result, 31) + this.sizeBytes_1.hashCode() | 0;
     result = imul(result, 31) + getStringHashCode(this.fileType_1) | 0;
@@ -8855,10 +11519,10 @@
     result = imul(result, 31) + (this.thumbTempFilePath_1 == null ? 0 : getStringHashCode(this.thumbTempFilePath_1)) | 0;
     return result;
   };
-  protoOf(Present_0).equals = function (other) {
+  protoOf(Present_1).equals = function (other) {
     if (this === other)
       return true;
-    if (!(other instanceof Present_0))
+    if (!(other instanceof Present_1))
       return false;
     if (!(this.tempFilePath_1 === other.tempFilePath_1))
       return false;
@@ -8876,29 +11540,29 @@
       return false;
     return true;
   };
-  function Unreadable_0() {
+  function Unreadable_1() {
   }
-  protoOf(Unreadable_0).toString = function () {
+  protoOf(Unreadable_1).toString = function () {
     return 'Unreadable';
   };
-  protoOf(Unreadable_0).hashCode = function () {
+  protoOf(Unreadable_1).hashCode = function () {
     return -757737947;
   };
-  protoOf(Unreadable_0).equals = function (other) {
+  protoOf(Unreadable_1).equals = function (other) {
     if (this === other)
       return true;
-    if (!(other instanceof Unreadable_0))
+    if (!(other instanceof Unreadable_1))
       return false;
     return true;
   };
-  var Unreadable_instance_0;
-  function Unreadable_getInstance_0() {
-    return Unreadable_instance_0;
+  var Unreadable_instance_1;
+  function Unreadable_getInstance_1() {
+    return Unreadable_instance_1;
   }
   function wxMediaSelection(result) {
     var tempFiles = result.tempFiles;
     if (!isJsArray(tempFiles))
-      return Unreadable_instance;
+      return Unreadable_instance_0;
     var length = tempFiles.length;
     // Inline function 'kotlin.collections.mutableListOf' call
     var files = ArrayList_init_$Create$_0();
@@ -8909,23 +11573,23 @@
         inductionVariable = inductionVariable + 1 | 0;
         var entry = tempFiles[index];
         var file = wxMediaFile(entry);
-        if (file instanceof Present_0) {
+        if (file instanceof Present_1) {
           // Inline function 'kotlin.collections.plusAssign' call
           files.add_utx5q5_k$(file);
         } else {
-          if (equals(file, Unreadable_instance_0))
-            return Unreadable_instance;
+          if (equals(file, Unreadable_instance_1))
+            return Unreadable_instance_0;
           else {
             noWhenBranchMatchedException();
           }
         }
       }
        while (inductionVariable < length);
-    return new Present(files);
+    return new Present_0(files);
   }
   function wxMediaFile(entry) {
     if (entry == null || !(typeof entry === 'object'))
-      return Unreadable_instance_0;
+      return Unreadable_instance_1;
     var path = entry.tempFilePath;
     var tmp;
     if (!(!(path == null) ? typeof path === 'string' : false)) {
@@ -8935,12 +11599,12 @@
       tmp = charSequenceLength(path) === 0;
     }
     if (tmp)
-      return Unreadable_instance_0;
+      return Unreadable_instance_1;
     var size = entry.size;
     var tmp0_elvis_lhs = wholeNumberOrNull(size);
     var tmp_0;
     if (tmp0_elvis_lhs == null) {
-      return Unreadable_instance_0;
+      return Unreadable_instance_1;
     } else {
       tmp_0 = tmp0_elvis_lhs;
     }
@@ -8954,15 +11618,15 @@
       tmp_1 = charSequenceLength(fileType) === 0;
     }
     if (tmp_1)
-      return Unreadable_instance_0;
+      return Unreadable_instance_1;
     var fields = new MediaFields();
     var duration = fields.number_vsh1rq_k$(entry.duration);
     var width = fields.number_vsh1rq_k$(entry.width);
     var height = fields.number_vsh1rq_k$(entry.height);
     var thumbPath = fields.text_51a7ce_k$(entry.thumbTempFilePath);
     if (fields.brokenContract_1)
-      return Unreadable_instance_0;
-    return new Present_0(path, sizeBytes, fileType, duration, width, height, thumbPath);
+      return Unreadable_instance_1;
+    return new Present_1(path, sizeBytes, fileType, duration, width, height, thumbPath);
   }
   function fail($this) {
     $this.brokenContract_1 = true;
@@ -9064,72 +11728,6 @@
     }
     return options;
   }
-  function Present_1(text) {
-    this.text_1 = text;
-  }
-  protoOf(Present_1).toString = function () {
-    return 'Present(text=' + this.text_1 + ')';
-  };
-  protoOf(Present_1).hashCode = function () {
-    return getStringHashCode(this.text_1);
-  };
-  protoOf(Present_1).equals = function (other) {
-    if (this === other)
-      return true;
-    if (!(other instanceof Present_1))
-      return false;
-    if (!(this.text_1 === other.text_1))
-      return false;
-    return true;
-  };
-  function Unreadable_1() {
-  }
-  protoOf(Unreadable_1).toString = function () {
-    return 'Unreadable';
-  };
-  protoOf(Unreadable_1).hashCode = function () {
-    return -1461035294;
-  };
-  protoOf(Unreadable_1).equals = function (other) {
-    if (this === other)
-      return true;
-    if (!(other instanceof Unreadable_1))
-      return false;
-    return true;
-  };
-  var Unreadable_instance_1;
-  function Unreadable_getInstance_1() {
-    return Unreadable_instance_1;
-  }
-  function wxClipboardText(result) {
-    var data = result.data;
-    var tmp;
-    if (data == null || typeof data === 'undefined') {
-      tmp = Unreadable_instance_1;
-    } else {
-      if (typeof data === 'string') {
-        tmp = new Present_1(data);
-      } else {
-        tmp = Unreadable_instance_1;
-      }
-    }
-    return tmp;
-  }
-  function hasWxGetClipboardData() {
-    return typeof wx !== 'undefined' && typeof wx.getClipboardData === 'function';
-  }
-  function hasWxSetClipboardData() {
-    return typeof wx !== 'undefined' && typeof wx.setClipboardData === 'function';
-  }
-  function wxGetClipboardDataOptions() {
-    var options = {};
-    return options;
-  }
-  function wxSetClipboardDataOptions(data) {
-    var options = {};
-    options.data = data;
-    return options;
-  }
   function Present_2(text) {
     this.text_1 = text;
   }
@@ -9154,7 +11752,7 @@
     return 'Unreadable';
   };
   protoOf(Unreadable_2).hashCode = function () {
-    return -994688800;
+    return -1461035294;
   };
   protoOf(Unreadable_2).equals = function (other) {
     if (this === other)
@@ -9167,7 +11765,7 @@
   function Unreadable_getInstance_2() {
     return Unreadable_instance_2;
   }
-  function wxFileText(result) {
+  function wxClipboardText(result) {
     var data = result.data;
     var tmp;
     if (data == null || typeof data === 'undefined') {
@@ -9177,6 +11775,72 @@
         tmp = new Present_2(data);
       } else {
         tmp = Unreadable_instance_2;
+      }
+    }
+    return tmp;
+  }
+  function hasWxGetClipboardData() {
+    return typeof wx !== 'undefined' && typeof wx.getClipboardData === 'function';
+  }
+  function hasWxSetClipboardData() {
+    return typeof wx !== 'undefined' && typeof wx.setClipboardData === 'function';
+  }
+  function wxGetClipboardDataOptions() {
+    var options = {};
+    return options;
+  }
+  function wxSetClipboardDataOptions(data) {
+    var options = {};
+    options.data = data;
+    return options;
+  }
+  function Present_3(text) {
+    this.text_1 = text;
+  }
+  protoOf(Present_3).toString = function () {
+    return 'Present(text=' + this.text_1 + ')';
+  };
+  protoOf(Present_3).hashCode = function () {
+    return getStringHashCode(this.text_1);
+  };
+  protoOf(Present_3).equals = function (other) {
+    if (this === other)
+      return true;
+    if (!(other instanceof Present_3))
+      return false;
+    if (!(this.text_1 === other.text_1))
+      return false;
+    return true;
+  };
+  function Unreadable_3() {
+  }
+  protoOf(Unreadable_3).toString = function () {
+    return 'Unreadable';
+  };
+  protoOf(Unreadable_3).hashCode = function () {
+    return -994688800;
+  };
+  protoOf(Unreadable_3).equals = function (other) {
+    if (this === other)
+      return true;
+    if (!(other instanceof Unreadable_3))
+      return false;
+    return true;
+  };
+  var Unreadable_instance_3;
+  function Unreadable_getInstance_3() {
+    return Unreadable_instance_3;
+  }
+  function wxFileText(result) {
+    var data = result.data;
+    var tmp;
+    if (data == null || typeof data === 'undefined') {
+      tmp = Unreadable_instance_3;
+    } else {
+      if (typeof data === 'string') {
+        tmp = new Present_3(data);
+      } else {
+        tmp = Unreadable_instance_3;
       }
     }
     return tmp;
@@ -9257,24 +11921,24 @@
     }
     return headers;
   }
-  function Present_3(latitude, longitude, accuracyMeters) {
+  function Present_4(latitude, longitude, accuracyMeters) {
     this.latitude_1 = latitude;
     this.longitude_1 = longitude;
     this.accuracyMeters_1 = accuracyMeters;
   }
-  protoOf(Present_3).toString = function () {
+  protoOf(Present_4).toString = function () {
     return 'Present(latitude=' + this.latitude_1 + ', longitude=' + this.longitude_1 + ', accuracyMeters=' + this.accuracyMeters_1 + ')';
   };
-  protoOf(Present_3).hashCode = function () {
+  protoOf(Present_4).hashCode = function () {
     var result = getNumberHashCode(this.latitude_1);
     result = imul(result, 31) + getNumberHashCode(this.longitude_1) | 0;
     result = imul(result, 31) + getNumberHashCode(this.accuracyMeters_1) | 0;
     return result;
   };
-  protoOf(Present_3).equals = function (other) {
+  protoOf(Present_4).equals = function (other) {
     if (this === other)
       return true;
-    if (!(other instanceof Present_3))
+    if (!(other instanceof Present_4))
       return false;
     if (!equals(this.latitude_1, other.latitude_1))
       return false;
@@ -9284,24 +11948,24 @@
       return false;
     return true;
   };
-  function Unreadable_3() {
+  function Unreadable_4() {
   }
-  protoOf(Unreadable_3).toString = function () {
+  protoOf(Unreadable_4).toString = function () {
     return 'Unreadable';
   };
-  protoOf(Unreadable_3).hashCode = function () {
+  protoOf(Unreadable_4).hashCode = function () {
     return 1463261354;
   };
-  protoOf(Unreadable_3).equals = function (other) {
+  protoOf(Unreadable_4).equals = function (other) {
     if (this === other)
       return true;
-    if (!(other instanceof Unreadable_3))
+    if (!(other instanceof Unreadable_4))
       return false;
     return true;
   };
-  var Unreadable_instance_3;
-  function Unreadable_getInstance_3() {
-    return Unreadable_instance_3;
+  var Unreadable_instance_4;
+  function Unreadable_getInstance_4() {
+    return Unreadable_instance_4;
   }
   function hasWxGetLocation() {
     return typeof wx !== 'undefined' && typeof wx.getLocation === 'function';
@@ -9310,7 +11974,7 @@
     var tmp0_elvis_lhs = finiteDoubleOrNull(result.latitude);
     var tmp;
     if (tmp0_elvis_lhs == null) {
-      return Unreadable_instance_3;
+      return Unreadable_instance_4;
     } else {
       tmp = tmp0_elvis_lhs;
     }
@@ -9318,7 +11982,7 @@
     var tmp1_elvis_lhs = finiteDoubleOrNull(result.longitude);
     var tmp_0;
     if (tmp1_elvis_lhs == null) {
-      return Unreadable_instance_3;
+      return Unreadable_instance_4;
     } else {
       tmp_0 = tmp1_elvis_lhs;
     }
@@ -9326,18 +11990,18 @@
     var tmp2_elvis_lhs = finiteDoubleOrNull(result.accuracy);
     var tmp_1;
     if (tmp2_elvis_lhs == null) {
-      return Unreadable_instance_3;
+      return Unreadable_instance_4;
     } else {
       tmp_1 = tmp2_elvis_lhs;
     }
     var accuracy = tmp_1;
     if (!(-90.0 <= latitude ? latitude <= 90.0 : false))
-      return Unreadable_instance_3;
+      return Unreadable_instance_4;
     if (!(-180.0 <= longitude ? longitude <= 180.0 : false))
-      return Unreadable_instance_3;
+      return Unreadable_instance_4;
     if (accuracy < 0.0)
-      return Unreadable_instance_3;
-    return new Present_3(latitude, longitude, accuracy);
+      return Unreadable_instance_4;
+    return new Present_4(latitude, longitude, accuracy);
   }
   function finiteDoubleOrNull(value) {
     if (value == null || typeof value === 'undefined')
@@ -9385,22 +12049,22 @@
     options.url = url;
     return options;
   }
-  function Present_4(isConnected, networkType) {
+  function Present_5(isConnected, networkType) {
     this.isConnected_1 = isConnected;
     this.networkType_1 = networkType;
   }
-  protoOf(Present_4).toString = function () {
+  protoOf(Present_5).toString = function () {
     return 'Present(isConnected=' + this.isConnected_1 + ', networkType=' + this.networkType_1 + ')';
   };
-  protoOf(Present_4).hashCode = function () {
+  protoOf(Present_5).hashCode = function () {
     var result = getBooleanHashCode(this.isConnected_1);
     result = imul(result, 31) + getStringHashCode(this.networkType_1) | 0;
     return result;
   };
-  protoOf(Present_4).equals = function (other) {
+  protoOf(Present_5).equals = function (other) {
     if (this === other)
       return true;
-    if (!(other instanceof Present_4))
+    if (!(other instanceof Present_5))
       return false;
     if (!(this.isConnected_1 === other.isConnected_1))
       return false;
@@ -9408,51 +12072,51 @@
       return false;
     return true;
   };
-  function Unreadable_4() {
+  function Unreadable_5() {
   }
-  protoOf(Unreadable_4).toString = function () {
+  protoOf(Unreadable_5).toString = function () {
     return 'Unreadable';
   };
-  protoOf(Unreadable_4).hashCode = function () {
+  protoOf(Unreadable_5).hashCode = function () {
     return -1727587994;
   };
-  protoOf(Unreadable_4).equals = function (other) {
+  protoOf(Unreadable_5).equals = function (other) {
     if (this === other)
       return true;
-    if (!(other instanceof Unreadable_4))
+    if (!(other instanceof Unreadable_5))
       return false;
     return true;
   };
-  var Unreadable_instance_4;
-  function Unreadable_getInstance_4() {
-    return Unreadable_instance_4;
+  var Unreadable_instance_5;
+  function Unreadable_getInstance_5() {
+    return Unreadable_instance_5;
   }
   function wxQueryNetworkState(networkType) {
     var tmp0_elvis_lhs = usableNetworkType(networkType);
     var tmp;
     if (tmp0_elvis_lhs == null) {
-      return Unreadable_instance_4;
+      return Unreadable_instance_5;
     } else {
       tmp = tmp0_elvis_lhs;
     }
     var hostType = tmp;
-    return new Present_4(!(hostType === 'none'), hostType);
+    return new Present_5(!(hostType === 'none'), hostType);
   }
   function wxEventNetworkState(isConnected, networkType) {
     if (isConnected == null || typeof isConnected === 'undefined') {
-      return Unreadable_instance_4;
+      return Unreadable_instance_5;
     }
     if (!(typeof isConnected === 'boolean'))
-      return Unreadable_instance_4;
+      return Unreadable_instance_5;
     var tmp0_elvis_lhs = usableNetworkType(networkType);
     var tmp;
     if (tmp0_elvis_lhs == null) {
-      return Unreadable_instance_4;
+      return Unreadable_instance_5;
     } else {
       tmp = tmp0_elvis_lhs;
     }
     var hostType = tmp;
-    return new Present_4(isConnected, hostType);
+    return new Present_5(isConnected, hostType);
   }
   function usableNetworkType(raw) {
     var tmp;
@@ -9502,28 +12166,28 @@
   function Completed_getInstance() {
     return Completed_instance;
   }
-  function Unreadable_5() {
+  function Unreadable_6() {
   }
-  protoOf(Unreadable_5).toString = function () {
+  protoOf(Unreadable_6).toString = function () {
     return 'Unreadable';
   };
-  protoOf(Unreadable_5).hashCode = function () {
+  protoOf(Unreadable_6).hashCode = function () {
     return 1723412161;
   };
-  protoOf(Unreadable_5).equals = function (other) {
+  protoOf(Unreadable_6).equals = function (other) {
     if (this === other)
       return true;
-    if (!(other instanceof Unreadable_5))
+    if (!(other instanceof Unreadable_6))
       return false;
     return true;
   };
-  var Unreadable_instance_5;
-  function Unreadable_getInstance_5() {
-    return Unreadable_instance_5;
+  var Unreadable_instance_6;
+  function Unreadable_getInstance_6() {
+    return Unreadable_instance_6;
   }
   function wxPaymentAnswer(result) {
     if (result == null || !(typeof result === 'object'))
-      return Unreadable_instance_5;
+      return Unreadable_instance_6;
     return Completed_instance;
   }
   function hasWxRequestPayment() {
@@ -9575,30 +12239,30 @@
       return false;
     return true;
   };
-  function Unreadable_6() {
+  function Unreadable_7() {
   }
-  protoOf(Unreadable_6).toString = function () {
+  protoOf(Unreadable_7).toString = function () {
     return 'Unreadable';
   };
-  protoOf(Unreadable_6).hashCode = function () {
+  protoOf(Unreadable_7).hashCode = function () {
     return 59014027;
   };
-  protoOf(Unreadable_6).equals = function (other) {
+  protoOf(Unreadable_7).equals = function (other) {
     if (this === other)
       return true;
-    if (!(other instanceof Unreadable_6))
+    if (!(other instanceof Unreadable_7))
       return false;
     return true;
   };
-  var Unreadable_instance_6;
-  function Unreadable_getInstance_6() {
-    return Unreadable_instance_6;
+  var Unreadable_instance_7;
+  function Unreadable_getInstance_7() {
+    return Unreadable_instance_7;
   }
   function wxScopeEntry(authSetting, scope) {
     if (authSetting == null)
-      return Unreadable_instance_6;
+      return Unreadable_instance_7;
     if (!(typeof authSetting === 'object'))
-      return Unreadable_instance_6;
+      return Unreadable_instance_7;
     var present = Object.prototype.hasOwnProperty.call(authSetting, scope);
     if (!present)
       return Absent_instance;
@@ -9607,7 +12271,7 @@
     if (!(value == null) ? typeof value === 'boolean' : false) {
       tmp = new Decided(value);
     } else {
-      tmp = Unreadable_instance_6;
+      tmp = Unreadable_instance_7;
     }
     return tmp;
   }
@@ -9660,29 +12324,29 @@
       return false;
     return true;
   };
-  function Unreadable_7() {
+  function Unreadable_8() {
   }
-  protoOf(Unreadable_7).toString = function () {
+  protoOf(Unreadable_8).toString = function () {
     return 'Unreadable';
   };
-  protoOf(Unreadable_7).hashCode = function () {
+  protoOf(Unreadable_8).hashCode = function () {
     return 497866830;
   };
-  protoOf(Unreadable_7).equals = function (other) {
+  protoOf(Unreadable_8).equals = function (other) {
     if (this === other)
       return true;
-    if (!(other instanceof Unreadable_7))
+    if (!(other instanceof Unreadable_8))
       return false;
     return true;
   };
-  var Unreadable_instance_7;
-  function Unreadable_getInstance_7() {
-    return Unreadable_instance_7;
+  var Unreadable_instance_8;
+  function Unreadable_getInstance_8() {
+    return Unreadable_instance_8;
   }
   function wxPrivacyRequirement(result) {
     var needAuthorization = result.needAuthorization;
     if (!(!(needAuthorization == null) ? typeof needAuthorization === 'boolean' : false))
-      return Unreadable_instance_7;
+      return Unreadable_instance_8;
     var rawName = result.privacyContractName;
     var tmp;
     if (rawName == null) {
@@ -9691,7 +12355,7 @@
       if (typeof rawName === 'string') {
         tmp = rawName;
       } else {
-        return Unreadable_instance_7;
+        return Unreadable_instance_8;
       }
     }
     var contractName = tmp;
@@ -9732,42 +12396,42 @@
     }
     return options;
   }
-  function Present_5(entries) {
+  function Present_6(entries) {
     this.entries_1 = entries;
   }
-  protoOf(Present_5).toString = function () {
+  protoOf(Present_6).toString = function () {
     return 'Present(entries=' + toString_0(this.entries_1) + ')';
   };
-  protoOf(Present_5).hashCode = function () {
+  protoOf(Present_6).hashCode = function () {
     return hashCode(this.entries_1);
   };
-  protoOf(Present_5).equals = function (other) {
+  protoOf(Present_6).equals = function (other) {
     if (this === other)
       return true;
-    if (!(other instanceof Present_5))
+    if (!(other instanceof Present_6))
       return false;
     if (!equals(this.entries_1, other.entries_1))
       return false;
     return true;
   };
-  function Unreadable_8() {
+  function Unreadable_9() {
   }
-  protoOf(Unreadable_8).toString = function () {
+  protoOf(Unreadable_9).toString = function () {
     return 'Unreadable';
   };
-  protoOf(Unreadable_8).hashCode = function () {
+  protoOf(Unreadable_9).hashCode = function () {
     return 1333048494;
   };
-  protoOf(Unreadable_8).equals = function (other) {
+  protoOf(Unreadable_9).equals = function (other) {
     if (this === other)
       return true;
-    if (!(other instanceof Unreadable_8))
+    if (!(other instanceof Unreadable_9))
       return false;
     return true;
   };
-  var Unreadable_instance_8;
-  function Unreadable_getInstance_8() {
-    return Unreadable_instance_8;
+  var Unreadable_instance_9;
+  function Unreadable_getInstance_9() {
+    return Unreadable_instance_9;
   }
   function Text(value) {
     this.value_1 = value;
@@ -9815,7 +12479,7 @@
       tmp = !(typeof result === 'object');
     }
     if (tmp) {
-      return Unreadable_instance_8;
+      return Unreadable_instance_9;
     }
     var keys = Object.keys(result);
     // Inline function 'kotlin.collections.mutableMapOf' call
@@ -9838,7 +12502,7 @@
       var value_0 = tmp_0;
       entries.put_4fpzoq_k$(key, value_0);
     }
-    return new Present_5(entries);
+    return new Present_6(entries);
   }
   function hasWxRequestSubscribeMessage() {
     return typeof wx !== 'undefined' && typeof wx.requestSubscribeMessage === 'function';
@@ -9862,17 +12526,17 @@
   function hasWxGetDeviceInfo() {
     return typeof wx !== 'undefined' && typeof wx.getDeviceInfo === 'function';
   }
-  function Present_6(text, scanType, charSet, rawData, path) {
+  function Present_7(text, scanType, charSet, rawData, path) {
     this.text_1 = text;
     this.scanType_1 = scanType;
     this.charSet_1 = charSet;
     this.rawData_1 = rawData;
     this.path_1 = path;
   }
-  protoOf(Present_6).toString = function () {
+  protoOf(Present_7).toString = function () {
     return 'Present(text=' + this.text_1 + ', scanType=' + this.scanType_1 + ', charSet=' + this.charSet_1 + ', rawData=' + this.rawData_1 + ', path=' + this.path_1 + ')';
   };
-  protoOf(Present_6).hashCode = function () {
+  protoOf(Present_7).hashCode = function () {
     var result = getStringHashCode(this.text_1);
     result = imul(result, 31) + (this.scanType_1 == null ? 0 : getStringHashCode(this.scanType_1)) | 0;
     result = imul(result, 31) + (this.charSet_1 == null ? 0 : getStringHashCode(this.charSet_1)) | 0;
@@ -9880,10 +12544,10 @@
     result = imul(result, 31) + (this.path_1 == null ? 0 : getStringHashCode(this.path_1)) | 0;
     return result;
   };
-  protoOf(Present_6).equals = function (other) {
+  protoOf(Present_7).equals = function (other) {
     if (this === other)
       return true;
-    if (!(other instanceof Present_6))
+    if (!(other instanceof Present_7))
       return false;
     if (!(this.text_1 === other.text_1))
       return false;
@@ -9897,51 +12561,51 @@
       return false;
     return true;
   };
-  function Unreadable_9() {
+  function Unreadable_10() {
   }
-  protoOf(Unreadable_9).toString = function () {
+  protoOf(Unreadable_10).toString = function () {
     return 'Unreadable';
   };
-  protoOf(Unreadable_9).hashCode = function () {
+  protoOf(Unreadable_10).hashCode = function () {
     return 684483554;
   };
-  protoOf(Unreadable_9).equals = function (other) {
+  protoOf(Unreadable_10).equals = function (other) {
     if (this === other)
       return true;
-    if (!(other instanceof Unreadable_9))
+    if (!(other instanceof Unreadable_10))
       return false;
     return true;
   };
-  var Unreadable_instance_9;
-  function Unreadable_getInstance_9() {
-    return Unreadable_instance_9;
+  var Unreadable_instance_10;
+  function Unreadable_getInstance_10() {
+    return Unreadable_instance_10;
   }
   function wxScanSample(result) {
     var text = result.result;
     if (!(!(text == null) ? typeof text === 'string' : false))
-      return Unreadable_instance_9;
+      return Unreadable_instance_10;
     var scanType = optionalText(result.scanType);
     var charSet = optionalText(result.charSet);
     var rawData = optionalText(result.rawData);
     var path = optionalText(result.path);
     if (get_isWrongType(scanType) || get_isWrongType(charSet) || get_isWrongType(rawData) || get_isWrongType(path)) {
-      return Unreadable_instance_9;
+      return Unreadable_instance_10;
     }
-    return new Present_6(text, get_textOrNull(scanType), get_textOrNull(charSet), get_textOrNull(rawData), get_textOrNull(path));
+    return new Present_7(text, get_textOrNull(scanType), get_textOrNull(charSet), get_textOrNull(rawData), get_textOrNull(path));
   }
-  function Present_7(text) {
+  function Present_8(text) {
     this.text_1 = text;
   }
-  protoOf(Present_7).toString = function () {
+  protoOf(Present_8).toString = function () {
     return 'Present(text=' + this.text_1 + ')';
   };
-  protoOf(Present_7).hashCode = function () {
+  protoOf(Present_8).hashCode = function () {
     return getStringHashCode(this.text_1);
   };
-  protoOf(Present_7).equals = function (other) {
+  protoOf(Present_8).equals = function (other) {
     if (this === other)
       return true;
-    if (!(other instanceof Present_7))
+    if (!(other instanceof Present_8))
       return false;
     if (!(this.text_1 === other.text_1))
       return false;
@@ -9991,7 +12655,7 @@
       tmp = Absent_instance_0;
     } else {
       if (typeof value === 'string') {
-        tmp = new Present_7(value);
+        tmp = new Present_8(value);
       } else {
         tmp = WrongType_instance;
       }
@@ -10002,7 +12666,7 @@
     return _this__u8e3s4 instanceof WrongType;
   }
   function get_textOrNull(_this__u8e3s4) {
-    var tmp0_safe_receiver = _this__u8e3s4 instanceof Present_7 ? _this__u8e3s4 : null;
+    var tmp0_safe_receiver = _this__u8e3s4 instanceof Present_8 ? _this__u8e3s4 : null;
     return tmp0_safe_receiver == null ? null : tmp0_safe_receiver.text_1;
   }
   function hasWxScanCode() {
@@ -10035,24 +12699,24 @@
     options.key = key;
     return options;
   }
-  function Present_8(percent, bytesTransferred, bytesExpected) {
+  function Present_9(percent, bytesTransferred, bytesExpected) {
     this.percent_1 = percent;
     this.bytesTransferred_1 = bytesTransferred;
     this.bytesExpected_1 = bytesExpected;
   }
-  protoOf(Present_8).toString = function () {
+  protoOf(Present_9).toString = function () {
     return 'Present(percent=' + this.percent_1 + ', bytesTransferred=' + toString(this.bytesTransferred_1) + ', bytesExpected=' + toString(this.bytesExpected_1) + ')';
   };
-  protoOf(Present_8).hashCode = function () {
+  protoOf(Present_9).hashCode = function () {
     var result = this.percent_1;
     result = imul(result, 31) + (this.bytesTransferred_1 == null ? 0 : this.bytesTransferred_1.hashCode()) | 0;
     result = imul(result, 31) + (this.bytesExpected_1 == null ? 0 : this.bytesExpected_1.hashCode()) | 0;
     return result;
   };
-  protoOf(Present_8).equals = function (other) {
+  protoOf(Present_9).equals = function (other) {
     if (this === other)
       return true;
-    if (!(other instanceof Present_8))
+    if (!(other instanceof Present_9))
       return false;
     if (!(this.percent_1 === other.percent_1))
       return false;
@@ -10062,30 +12726,30 @@
       return false;
     return true;
   };
-  function Unreadable_10() {
+  function Unreadable_11() {
   }
-  protoOf(Unreadable_10).toString = function () {
+  protoOf(Unreadable_11).toString = function () {
     return 'Unreadable';
   };
-  protoOf(Unreadable_10).hashCode = function () {
+  protoOf(Unreadable_11).hashCode = function () {
     return 1296855313;
   };
-  protoOf(Unreadable_10).equals = function (other) {
+  protoOf(Unreadable_11).equals = function (other) {
     if (this === other)
       return true;
-    if (!(other instanceof Unreadable_10))
+    if (!(other instanceof Unreadable_11))
       return false;
     return true;
   };
-  var Unreadable_instance_10;
-  function Unreadable_getInstance_10() {
-    return Unreadable_instance_10;
+  var Unreadable_instance_11;
+  function Unreadable_getInstance_11() {
+    return Unreadable_instance_11;
   }
   function wxTransferProgress(result) {
     var tmp0_elvis_lhs = wholePercentOrNull(result.progress);
     var tmp;
     if (tmp0_elvis_lhs == null) {
-      return Unreadable_instance_10;
+      return Unreadable_instance_11;
     } else {
       tmp = tmp0_elvis_lhs;
     }
@@ -10096,7 +12760,7 @@
     var expectedToWrite = wholeCountOrNull(result.totalBytesExpectedToWrite);
     var transferred = sent == null ? written : sent;
     var expected = expectedToSend == null ? expectedToWrite : expectedToSend;
-    return new Present_8(percent, transferred, expected);
+    return new Present_9(percent, transferred, expected);
   }
   function wholePercentOrNull(raw) {
     var tmp0_elvis_lhs = wholeNumberOrNull_0(raw);
@@ -10237,6 +12901,15 @@
     return host.hasFileSystemMethod_e0uzkc_k$('unlink');
   }
   function WechatCapabilityCatalog$requirements$lambda_3(host) {
+    return host.hasBluetoothAdapter_9c9jln_k$();
+  }
+  function WechatCapabilityCatalog$requirements$lambda_4(host) {
+    return host.hasBluetoothDiscovery_g82xb8_k$();
+  }
+  function WechatCapabilityCatalog$requirements$lambda_5(host) {
+    return host.hasBluetoothConnection_rgkixa_k$();
+  }
+  function WechatCapabilityCatalog$requirements$lambda_6(host) {
     return host.hasUserDataPath_z1qkq4_k$();
   }
   function WechatCapabilityCatalog() {
@@ -10261,7 +12934,7 @@
     var tmp_2 = to(Companion_getInstance_0().Key_1, new WechatCapabilityRequirement(listOf_0('request')));
     var tmp_3 = to(Companion_getInstance().Key_1, new WechatCapabilityRequirement());
     var tmp_4 = to(Companion_getInstance_2().Key_1, new WechatCapabilityRequirement(listOf(['getSetting', 'authorize', 'openSetting'])));
-    var tmp_5 = to(Companion_getInstance_11().Key_1, new WechatCapabilityRequirement(listOf_0('checkSession')));
+    var tmp_5 = to(Companion_getInstance_12().Key_1, new WechatCapabilityRequirement(listOf_0('checkSession')));
     var tmp_6 = WeChatDeviceCapabilities_getInstance().FileSystemRead_1;
     var tmp_7 = to(tmp_6, new WechatCapabilityRequirement(VOID, this.FILESYSTEM_MINIMUM_1, WechatCapabilityCatalog$requirements$lambda));
     var tmp_8 = WeChatDeviceCapabilities_getInstance().FileSystemWrite_1;
@@ -10270,19 +12943,25 @@
     var tmp_11 = to(tmp_10, new WechatCapabilityRequirement(VOID, this.FILESYSTEM_MINIMUM_1, WechatCapabilityCatalog$requirements$lambda_1));
     var tmp_12 = WeChatDeviceCapabilities_getInstance().FileSystemRemove_1;
     var tmp_13 = to(tmp_12, new WechatCapabilityRequirement(VOID, this.FILESYSTEM_MINIMUM_1, WechatCapabilityCatalog$requirements$lambda_2));
-    var tmp_14 = WeChatDeviceCapabilities_getInstance().FileSystemSandboxPath_1;
-    var tmp_15 = to(tmp_14, new WechatCapabilityRequirement(VOID, this.FILESYSTEM_MINIMUM_1, WechatCapabilityCatalog$requirements$lambda_3));
-    var tmp_16 = to(WeChatDeviceCapabilities_getInstance().Location_1, new WechatCapabilityRequirement(listOf_0('getLocation')));
-    var tmp_17 = to(WeChatDeviceCapabilities_getInstance().ScanCode_1, new WechatCapabilityRequirement(listOf_0('scanCode')));
-    var tmp_18 = to(WeChatDeviceCapabilities_getInstance().ChooseMedia_1, new WechatCapabilityRequirement(listOf_0('chooseMedia')));
-    var tmp_19 = to(WeChatDeviceCapabilities_getInstance().RequestSubscribeMessage_1, new WechatCapabilityRequirement(listOf_0('requestSubscribeMessage')));
-    var tmp_20 = to(Companion_getInstance_1().QueryKey_1, new WechatCapabilityRequirement(listOf_0('getNetworkType')));
-    var tmp_21 = to(Companion_getInstance_1().ListenerKey_1, new WechatCapabilityRequirement(listOf(['onNetworkStatusChange', 'offNetworkStatusChange'])));
-    var tmp_22 = to(WeChatDeviceCapabilities_getInstance().UploadFile_1, new WechatCapabilityRequirement(listOf_0('uploadFile')));
-    var tmp_23 = to(WeChatDeviceCapabilities_getInstance().DownloadFile_1, new WechatCapabilityRequirement(listOf_0('downloadFile')));
-    var tmp_24 = to(WeChatDeviceCapabilities_getInstance().RequestPayment_1, new WechatCapabilityRequirement(listOf_0('requestPayment')));
-    var tmp_25 = WeChatDeviceCapabilities_getInstance().ClipboardRead_1;
-    var tmp_26 = listOf_0('getClipboardData');
+    var tmp_14 = WeChatDeviceCapabilities_getInstance().BluetoothAdapter_1;
+    var tmp_15 = to(tmp_14, new WechatCapabilityRequirement(VOID, VOID, WechatCapabilityCatalog$requirements$lambda_3));
+    var tmp_16 = WeChatDeviceCapabilities_getInstance().BluetoothDiscovery_1;
+    var tmp_17 = to(tmp_16, new WechatCapabilityRequirement(VOID, VOID, WechatCapabilityCatalog$requirements$lambda_4));
+    var tmp_18 = WeChatDeviceCapabilities_getInstance().BluetoothConnection_1;
+    var tmp_19 = to(tmp_18, new WechatCapabilityRequirement(VOID, VOID, WechatCapabilityCatalog$requirements$lambda_5));
+    var tmp_20 = WeChatDeviceCapabilities_getInstance().FileSystemSandboxPath_1;
+    var tmp_21 = to(tmp_20, new WechatCapabilityRequirement(VOID, this.FILESYSTEM_MINIMUM_1, WechatCapabilityCatalog$requirements$lambda_6));
+    var tmp_22 = to(WeChatDeviceCapabilities_getInstance().Location_1, new WechatCapabilityRequirement(listOf_0('getLocation')));
+    var tmp_23 = to(WeChatDeviceCapabilities_getInstance().ScanCode_1, new WechatCapabilityRequirement(listOf_0('scanCode')));
+    var tmp_24 = to(WeChatDeviceCapabilities_getInstance().ChooseMedia_1, new WechatCapabilityRequirement(listOf_0('chooseMedia')));
+    var tmp_25 = to(WeChatDeviceCapabilities_getInstance().RequestSubscribeMessage_1, new WechatCapabilityRequirement(listOf_0('requestSubscribeMessage')));
+    var tmp_26 = to(Companion_getInstance_1().QueryKey_1, new WechatCapabilityRequirement(listOf_0('getNetworkType')));
+    var tmp_27 = to(Companion_getInstance_1().ListenerKey_1, new WechatCapabilityRequirement(listOf(['onNetworkStatusChange', 'offNetworkStatusChange'])));
+    var tmp_28 = to(WeChatDeviceCapabilities_getInstance().UploadFile_1, new WechatCapabilityRequirement(listOf_0('uploadFile')));
+    var tmp_29 = to(WeChatDeviceCapabilities_getInstance().DownloadFile_1, new WechatCapabilityRequirement(listOf_0('downloadFile')));
+    var tmp_30 = to(WeChatDeviceCapabilities_getInstance().RequestPayment_1, new WechatCapabilityRequirement(listOf_0('requestPayment')));
+    var tmp_31 = WeChatDeviceCapabilities_getInstance().ClipboardRead_1;
+    var tmp_32 = listOf_0('getClipboardData');
     var tmp0_0 = Companion_instance_8.parse_pc1q8p_k$('1.1.0');
     var tmp$ret$2;
     $l$block_0: {
@@ -10295,9 +12974,9 @@
         break $l$block_0;
       }
     }
-    var tmp_27 = to(tmp_25, new WechatCapabilityRequirement(tmp_26, tmp$ret$2));
-    var tmp_28 = WeChatDeviceCapabilities_getInstance().ClipboardWrite_1;
-    var tmp_29 = listOf_0('setClipboardData');
+    var tmp_33 = to(tmp_31, new WechatCapabilityRequirement(tmp_32, tmp$ret$2));
+    var tmp_34 = WeChatDeviceCapabilities_getInstance().ClipboardWrite_1;
+    var tmp_35 = listOf_0('setClipboardData');
     var tmp0_1 = Companion_instance_8.parse_pc1q8p_k$('1.1.0');
     var tmp$ret$4;
     $l$block_1: {
@@ -10310,9 +12989,9 @@
         break $l$block_1;
       }
     }
-    var tmp_30 = to(tmp_28, new WechatCapabilityRequirement(tmp_29, tmp$ret$4));
-    var tmp_31 = WeChatDeviceCapabilities_getInstance().VibrateShort_1;
-    var tmp_32 = listOf_0('vibrateShort');
+    var tmp_36 = to(tmp_34, new WechatCapabilityRequirement(tmp_35, tmp$ret$4));
+    var tmp_37 = WeChatDeviceCapabilities_getInstance().VibrateShort_1;
+    var tmp_38 = listOf_0('vibrateShort');
     var tmp0_2 = Companion_instance_8.parse_pc1q8p_k$('1.2.0');
     var tmp$ret$6;
     $l$block_2: {
@@ -10325,9 +13004,9 @@
         break $l$block_2;
       }
     }
-    var tmp_33 = to(tmp_31, new WechatCapabilityRequirement(tmp_32, tmp$ret$6));
-    var tmp_34 = WeChatDeviceCapabilities_getInstance().VibrateLong_1;
-    var tmp_35 = listOf_0('vibrateLong');
+    var tmp_39 = to(tmp_37, new WechatCapabilityRequirement(tmp_38, tmp$ret$6));
+    var tmp_40 = WeChatDeviceCapabilities_getInstance().VibrateLong_1;
+    var tmp_41 = listOf_0('vibrateLong');
     var tmp0_3 = Companion_instance_8.parse_pc1q8p_k$('1.2.0');
     var tmp$ret$8;
     $l$block_3: {
@@ -10340,9 +13019,9 @@
         break $l$block_3;
       }
     }
-    var tmp_36 = to(tmp_34, new WechatCapabilityRequirement(tmp_35, tmp$ret$8));
-    var tmp_37 = Companion_getInstance_4().Key_1;
-    var tmp_38 = listOf(['getPrivacySetting', 'requirePrivacyAuthorize']);
+    var tmp_42 = to(tmp_40, new WechatCapabilityRequirement(tmp_41, tmp$ret$8));
+    var tmp_43 = Companion_getInstance_4().Key_1;
+    var tmp_44 = listOf(['getPrivacySetting', 'requirePrivacyAuthorize']);
     var tmp0_4 = Companion_instance_8.parse_pc1q8p_k$('2.32.3');
     var tmp$ret$10;
     $l$block_4: {
@@ -10355,8 +13034,8 @@
         break $l$block_4;
       }
     }
-    var tmp_39 = to(tmp_37, new WechatCapabilityRequirement(tmp_38, tmp$ret$10));
-    var tmp_40 = listOf_0('getAppBaseInfo');
+    var tmp_45 = to(tmp_43, new WechatCapabilityRequirement(tmp_44, tmp$ret$10));
+    var tmp_46 = listOf_0('getAppBaseInfo');
     var tmp0_5 = Companion_instance_8.parse_pc1q8p_k$('2.20.1');
     var tmp$ret$12;
     $l$block_5: {
@@ -10369,7 +13048,7 @@
         break $l$block_5;
       }
     }
-    tmp_0.requirements_1 = mapOf_0([tmp_1, tmp_2, tmp_3, tmp_4, tmp_5, tmp_7, tmp_9, tmp_11, tmp_13, tmp_15, tmp_16, tmp_17, tmp_18, tmp_19, tmp_20, tmp_21, tmp_22, tmp_23, tmp_24, tmp_27, tmp_30, tmp_33, tmp_36, tmp_39, to(this.RuntimeDetectionKey_1, new WechatCapabilityRequirement(tmp_40, tmp$ret$12))]);
+    tmp_0.requirements_1 = mapOf_0([tmp_1, tmp_2, tmp_3, tmp_4, tmp_5, tmp_7, tmp_9, tmp_11, tmp_13, tmp_15, tmp_17, tmp_19, tmp_21, tmp_22, tmp_23, tmp_24, tmp_25, tmp_26, tmp_27, tmp_28, tmp_29, tmp_30, tmp_33, tmp_36, tmp_39, tmp_42, tmp_45, to(this.RuntimeDetectionKey_1, new WechatCapabilityRequirement(tmp_46, tmp$ret$12))]);
   }
   protoOf(WechatCapabilityCatalog).requirementFor_k8c79s_k$ = function (key) {
     return this.requirements_1.get_wei43m_k$(key);
@@ -10466,12 +13145,12 @@
     getPropertyCallableRef('reportedPlatform', 1, tmp, WechatRuntimeInfo$_get_reportedPlatform_$ref_mmka14(), null);
     return tmp0.get_value_j01efc_k$();
   }
-  function Companion_14() {
+  function Companion_16() {
     this.DEVELOPER_TOOLS_PLATFORM_1 = 'devtools';
   }
-  var Companion_instance_16;
-  function Companion_getInstance_14() {
-    return Companion_instance_16;
+  var Companion_instance_18;
+  function Companion_getInstance_16() {
+    return Companion_instance_18;
   }
   function WechatRuntimeInfo$parsedBaseLibraryVersion$delegate$lambda(this$0) {
     return function () {
@@ -10489,7 +13168,7 @@
   function WechatRuntimeInfo$_get_parsedBaseLibraryVersion_$ref_xmes1t() {
     return constructCallableReference(function (p0) {
       return _get_parsedBaseLibraryVersion__44h3pw(p0);
-    }, 1, 0, 9);
+    }, 1, 0, 10);
   }
   function WechatRuntimeInfo$reportedPlatform$delegate$lambda(this$0) {
     return function () {
@@ -10499,7 +13178,7 @@
   function WechatRuntimeInfo$_get_reportedPlatform_$ref_mmka14() {
     return constructCallableReference(function (p0) {
       return _get_reportedPlatform__hgio63(p0);
-    }, 1, 0, 10);
+    }, 1, 0, 11);
   }
   function WechatRuntimeInfo(host) {
     this.host_1 = host;
@@ -10537,8 +13216,11 @@
   Companion_instance_10 = new Companion_8();
   Companion_instance_11 = new Companion_9();
   Companion_instance_12 = new Companion_10();
-  Companion_instance_14 = new Companion_12();
+  Companion_instance_13 = new Companion_11();
+  Companion_instance_15 = new Companion_13();
   WxAuthHost_instance = new WxAuthHost();
+  Companion_instance_16 = new Companion_14();
+  WxBluetoothHost_instance = new WxBluetoothHost();
   WxChooseMediaHost_instance = new WxChooseMediaHost();
   WxClipboardHost_instance = new WxClipboardHost();
   WxDownloadFileHost_instance = new WxDownloadFileHost();
@@ -10556,7 +13238,7 @@
   WxRequestSubscribeMessageHost_instance = new WxRequestSubscribeMessageHost();
   WxRuntimeInfoHost_instance = new WxRuntimeInfoHost();
   WxScanCodeHost_instance = new WxScanCodeHost();
-  Companion_instance_15 = new Companion_13();
+  Companion_instance_17 = new Companion_15();
   WxStorageHost_instance = new WxStorageHost();
   WxUploadFileHost_instance = new WxUploadFileHost();
   Unreadable_instance = new Unreadable();
@@ -10565,18 +13247,19 @@
   Unreadable_instance_2 = new Unreadable_2();
   Unreadable_instance_3 = new Unreadable_3();
   Unreadable_instance_4 = new Unreadable_4();
-  Completed_instance = new Completed();
   Unreadable_instance_5 = new Unreadable_5();
-  Absent_instance = new Absent();
+  Completed_instance = new Completed();
   Unreadable_instance_6 = new Unreadable_6();
+  Absent_instance = new Absent();
   Unreadable_instance_7 = new Unreadable_7();
   Unreadable_instance_8 = new Unreadable_8();
-  NotText_instance = new NotText();
   Unreadable_instance_9 = new Unreadable_9();
+  NotText_instance = new NotText();
+  Unreadable_instance_10 = new Unreadable_10();
   Absent_instance_0 = new Absent_0();
   WrongType_instance = new WrongType();
-  Unreadable_instance_10 = new Unreadable_10();
-  Companion_instance_16 = new Companion_14();
+  Unreadable_instance_11 = new Unreadable_11();
+  Companion_instance_18 = new Companion_16();
   //endregion
   //region block: exports
   function $jsExportAll$(_) {
@@ -10585,82 +13268,90 @@
     var bobcgn = github.bobcgn || (github.bobcgn = {});
     var miniapp = bobcgn.miniapp || (bobcgn.miniapp = {});
     var export_0 = miniapp.export || (miniapp.export = {});
-    export_0.JsCapabilitySupport = JsCapabilitySupport;
+    export_0.JsBleDevice = JsBleDevice;
+    export_0.JsBleAdapterState = JsBleAdapterState;
+    export_0.JsBleConnectionState = JsBleConnectionState;
     var io_0 = _.io || (_.io = {});
     var github_0 = io_0.github || (io_0.github = {});
     var bobcgn_0 = github_0.bobcgn || (github_0.bobcgn = {});
     var miniapp_0 = bobcgn_0.miniapp || (bobcgn_0.miniapp = {});
     var export_1 = miniapp_0.export || (miniapp_0.export = {});
-    export_1.JsGeoPosition = JsGeoPosition;
+    export_1.JsCapabilitySupport = JsCapabilitySupport;
     var io_1 = _.io || (_.io = {});
     var github_1 = io_1.github || (io_1.github = {});
     var bobcgn_1 = github_1.bobcgn || (github_1.bobcgn = {});
     var miniapp_1 = bobcgn_1.miniapp || (bobcgn_1.miniapp = {});
     var export_2 = miniapp_1.export || (miniapp_1.export = {});
-    export_2.JsMediaFile = JsMediaFile;
+    export_2.JsGeoPosition = JsGeoPosition;
     var io_2 = _.io || (_.io = {});
     var github_2 = io_2.github || (io_2.github = {});
     var bobcgn_2 = github_2.bobcgn || (github_2.bobcgn = {});
     var miniapp_2 = bobcgn_2.miniapp || (bobcgn_2.miniapp = {});
     var export_3 = miniapp_2.export || (miniapp_2.export = {});
-    export_3.JsNetworkState = JsNetworkState;
+    export_3.JsMediaFile = JsMediaFile;
     var io_3 = _.io || (_.io = {});
     var github_3 = io_3.github || (io_3.github = {});
     var bobcgn_3 = github_3.bobcgn || (github_3.bobcgn = {});
     var miniapp_3 = bobcgn_3.miniapp || (bobcgn_3.miniapp = {});
     var export_4 = miniapp_3.export || (miniapp_3.export = {});
-    export_4.JsTransferProgress = JsTransferProgress;
-    export_4.JsUploadResult = JsUploadResult;
-    export_4.JsDownloadResult = JsDownloadResult;
-    export_4.JsUploadTransfer = JsUploadTransfer;
-    export_4.JsDownloadTransfer = JsDownloadTransfer;
+    export_4.JsNetworkState = JsNetworkState;
     var io_4 = _.io || (_.io = {});
     var github_4 = io_4.github || (io_4.github = {});
     var bobcgn_4 = github_4.bobcgn || (github_4.bobcgn = {});
     var miniapp_4 = bobcgn_4.miniapp || (bobcgn_4.miniapp = {});
     var export_5 = miniapp_4.export || (miniapp_4.export = {});
-    export_5.JsPaymentOutcome = JsPaymentOutcome;
+    export_5.JsTransferProgress = JsTransferProgress;
+    export_5.JsUploadResult = JsUploadResult;
+    export_5.JsDownloadResult = JsDownloadResult;
+    export_5.JsUploadTransfer = JsUploadTransfer;
+    export_5.JsDownloadTransfer = JsDownloadTransfer;
     var io_5 = _.io || (_.io = {});
     var github_5 = io_5.github || (io_5.github = {});
     var bobcgn_5 = github_5.bobcgn || (github_5.bobcgn = {});
     var miniapp_5 = bobcgn_5.miniapp || (bobcgn_5.miniapp = {});
     var export_6 = miniapp_5.export || (miniapp_5.export = {});
-    export_6.JsPrivacyStatus = JsPrivacyStatus;
+    export_6.JsPaymentOutcome = JsPaymentOutcome;
     var io_6 = _.io || (_.io = {});
     var github_6 = io_6.github || (io_6.github = {});
     var bobcgn_6 = github_6.bobcgn || (github_6.bobcgn = {});
     var miniapp_6 = bobcgn_6.miniapp || (bobcgn_6.miniapp = {});
     var export_7 = miniapp_6.export || (miniapp_6.export = {});
-    export_7.JsRuntimeInfo = JsRuntimeInfo;
+    export_7.JsPrivacyStatus = JsPrivacyStatus;
     var io_7 = _.io || (_.io = {});
     var github_7 = io_7.github || (io_7.github = {});
     var bobcgn_7 = github_7.bobcgn || (github_7.bobcgn = {});
     var miniapp_7 = bobcgn_7.miniapp || (bobcgn_7.miniapp = {});
     var export_8 = miniapp_7.export || (miniapp_7.export = {});
-    export_8.JsScanResult = JsScanResult;
+    export_8.JsRuntimeInfo = JsRuntimeInfo;
     var io_8 = _.io || (_.io = {});
     var github_8 = io_8.github || (io_8.github = {});
     var bobcgn_8 = github_8.bobcgn || (github_8.bobcgn = {});
     var miniapp_8 = bobcgn_8.miniapp || (bobcgn_8.miniapp = {});
     var export_9 = miniapp_8.export || (miniapp_8.export = {});
-    export_9.JsSubscriptionResult = JsSubscriptionResult;
+    export_9.JsScanResult = JsScanResult;
     var io_9 = _.io || (_.io = {});
     var github_9 = io_9.github || (io_9.github = {});
     var bobcgn_9 = github_9.bobcgn || (github_9.bobcgn = {});
     var miniapp_9 = bobcgn_9.miniapp || (bobcgn_9.miniapp = {});
     var export_10 = miniapp_9.export || (miniapp_9.export = {});
-    defineProp(export_10, 'MiniAppExports', MiniAppExports_getInstance, VOID, true);
+    export_10.JsSubscriptionResult = JsSubscriptionResult;
     var io_10 = _.io || (_.io = {});
     var github_10 = io_10.github || (io_10.github = {});
     var bobcgn_10 = github_10.bobcgn || (github_10.bobcgn = {});
     var miniapp_10 = bobcgn_10.miniapp || (bobcgn_10.miniapp = {});
     var export_11 = miniapp_10.export || (miniapp_10.export = {});
-    export_11.MiniAppHttpResult = MiniAppHttpResult;
+    defineProp(export_11, 'MiniAppExports', MiniAppExports_getInstance, VOID, true);
     var io_11 = _.io || (_.io = {});
     var github_11 = io_11.github || (io_11.github = {});
     var bobcgn_11 = github_11.bobcgn || (github_11.bobcgn = {});
     var miniapp_11 = bobcgn_11.miniapp || (bobcgn_11.miniapp = {});
-    var host = miniapp_11.host || (miniapp_11.host = {});
+    var export_12 = miniapp_11.export || (miniapp_11.export = {});
+    export_12.MiniAppHttpResult = MiniAppHttpResult;
+    var io_12 = _.io || (_.io = {});
+    var github_12 = io_12.github || (io_12.github = {});
+    var bobcgn_12 = github_12.bobcgn || (github_12.bobcgn = {});
+    var miniapp_12 = bobcgn_12.miniapp || (bobcgn_12.miniapp = {});
+    var host = miniapp_12.host || (miniapp_12.host = {});
     var wechat = host.wechat || (host.wechat = {});
     wechat.WeChatLoginResult = WeChatLoginResult;
   }

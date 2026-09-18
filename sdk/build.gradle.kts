@@ -1,9 +1,50 @@
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
+    alias(libs.plugins.maven.publish)
 }
 
 group = "io.github.bobcgn"
 version = libs.versions.miniapp.get()
+
+mavenPublishing {
+    publishToMavenCentral(automaticRelease = true)
+    // Maven Central always uses signed publications. The opt-out exists solely so a maintainer can
+    // publish to Maven Local and prove consumer resolution without copying a private key into the
+    // development process; release CI never sets it.
+    if (!providers.gradleProperty("miniappLocalPublicationWithoutSigning").isPresent) {
+        signAllPublications()
+    }
+
+    coordinates(group.toString(), project.name, version.toString())
+
+    pom {
+        name.set("KMP Mini App SDK")
+        description.set(
+            "Kotlin Multiplatform runtime and host-capability contracts for Mini App platforms.",
+        )
+        inceptionYear.set("2026")
+        url.set("https://github.com/BobcGn/kmp-miniapp-sdk")
+        licenses {
+            license {
+                name.set("The Apache License, Version 2.0")
+                url.set("https://www.apache.org/licenses/LICENSE-2.0.txt")
+                distribution.set("repo")
+            }
+        }
+        developers {
+            developer {
+                id.set("BobcGn")
+                name.set("BobcGn")
+                url.set("https://github.com/BobcGn")
+            }
+        }
+        scm {
+            url.set("https://github.com/BobcGn/kmp-miniapp-sdk")
+            connection.set("scm:git:git://github.com/BobcGn/kmp-miniapp-sdk.git")
+            developerConnection.set("scm:git:ssh://git@github.com/BobcGn/kmp-miniapp-sdk.git")
+        }
+    }
+}
 
 // The SDK's public version statement is generated from the version catalog rather than written in
 // MiniAppSdk.kt, so the constant a consumer reads cannot drift from the version this module is built

@@ -17,6 +17,10 @@ internal object MiniAppPluginDiagnostics {
     /** The platform target name. ADR 0010 makes it the source of `miniappMain` / `miniappTest`. */
     public const val MINIAPP_TARGET_NAME: String = "miniapp"
 
+    /** Conventional on-disk source locations created for IDE and CLI consumers. */
+    public const val MINIAPP_MAIN_KOTLIN_DIRECTORY: String = "src/miniappMain/kotlin"
+    public const val MINIAPP_TEST_KOTLIN_DIRECTORY: String = "src/miniappTest/kotlin"
+
     /** The lifecycle test task the Kotlin Gradle Plugin derives from the target name. */
     public const val MINIAPP_TEST_TASK_NAME: String = "miniappTest"
 

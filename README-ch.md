@@ -20,8 +20,8 @@ App lifecycle、微信页面栈导航、运行时能力检测、权限生命周�
 真机。微信标准支付是「后端参数的类型化转发器」，其验收需要合法商户环境，因此保持 `Partial`。每项能力的准确
 状态见[微信能力矩阵](docs/platforms/wechat/WECHAT_CAPABILITIES-ch.md)，其中的 `Planned` 条目不是实现事实。
 
-**插件与 runtime SDK 目前尚未发布。** 这在实践中意味着什么，见
-[发布之前：今天你需要做什么](#发布之前今天你需要做什么)。
+版本 **0.1.0** 是第一个公开的实验性版本。在线解析方式见专门的
+[消费者接入指南](docs/CONSUMER_SETUP-ch.md)。
 
 ## 本项目是什么
 
@@ -51,14 +51,12 @@ App lifecycle、微信页面栈导航、运行时能力检测、权限生命周�
 以下步骤从一个普通 Kotlin Multiplatform 项目得到可用的 Mini App。这正是
 [`fixtures/miniapp-consumer`](fixtures/miniapp-consumer) 每次验证所运行的流程。
 
-这些就是 fixture 自己的文件，只有两处本文档必须做的适配：fixture 位于本仓库内部，因此它的 `includeBuild`
-路径是 `../..`、项目名是 `miniapp-consumer`；并且它通过 Gradle 属性选择宿主 bundle 目录，使同一份构建既能
-指向默认位置也能指向宿主位置。API 调用、源码与脚本形态都来自 fixture。
+这些 API 与脚本形态来自 fixture，并适配为解析公开的 0.1.0，而不是 fixture 用于仓库开发的 composite build。
 
 ### 0. 前置条件
 
 - Kotlin Gradle Plugin 支持的 JDK（本插件在 JDK 17 上构建与测试）
-- 在插件与 SDK 发布之前，把本仓库检出到你的项目旁边
+- 能够访问 Gradle Plugin Portal 与 Maven Central
 - 你自己的项目里有 Gradle Wrapper —— 消费者永远不需要本仓库的 wrapper
 
 ### 1. `settings.gradle.kts`
@@ -70,8 +68,6 @@ pluginManagement {
         mavenCentral()
     }
 
-    // 发布之前，插件来自本仓库的 composite build。
-    includeBuild("../kmp-miniapp-sdk")
 }
 
 dependencyResolutionManagement {
@@ -79,10 +75,6 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
-
-// pluginManagement 的 composite 只解析插件。依赖替换 —— 让 runtime SDK 以
-// `io.github.bobcgn:kmp-miniapp-sdk` 到达 —— 还需要在 settings 级别 include 该构建。
-includeBuild("../kmp-miniapp-sdk")
 
 rootProject.name = "my-miniapp"
 ```
@@ -92,7 +84,7 @@ rootProject.name = "my-miniapp"
 ```kotlin
 plugins {
     kotlin("multiplatform") version "2.4.20"
-    id("io.github.bobcgn.miniapp")
+    id("io.github.bobcgn.miniapp") version "0.1.0"
 }
 
 kotlin {
@@ -111,8 +103,9 @@ miniapp {
 ```
 
 这就是完整的 build script。没有 Kotlin/JS target 要声明、没有 source set 要创建、没有 `dependsOn`
-要接线、没有 runtime artifact 要声明、也没有产物要复制。`miniappMain`、`miniappTest`、它们与
-`commonMain` / `commonTest` 的边、runtime 依赖与 bundle 任务全部来自插件。Kotlin 2.4.20 是插件构建与测试
+要接线、没有 runtime artifact 要声明、也没有产物要复制。首次 Gradle 导入时，插件会在现有 common
+source 目录同级创建 `src/miniappMain/kotlin` 与 `src/miniappTest/kotlin`。`miniappMain`、
+`miniappTest`、它们与 `commonMain` / `commonTest` 的边、runtime 依赖与 bundle 任务全部来自插件。Kotlin 2.4.20 是插件构建与测试
 所用的版本；其他 Kotlin Gradle Plugin 版本的兼容性尚未确立。
 
 ### 3. `commonMain` 中的共享行为
@@ -278,32 +271,26 @@ fixture.sdkVersion=0.1.0-SNAPSHOT
 fixture.result=PASS
 ```
 
-这是真实宿主证据：该 fixture bundle 已在微信开发者工具基础库 **3.17.3** 中加载，并输出上述内容。它是对
+这是真实宿主证据：该 fixture bundle 已在微信开发者工具基础库 **3.17.3** 中加载，并输出上述内容。版本行是当时的
+历史值 —— `0.1.0-SNAPSHOT` 是那次运行时的版本目录取值，从当前工作树构建会打印 `0.1.0`；其余三行不变。它是对
 *该 bundle 形态在该宿主上*的验收，不代表你的小程序、其他基础库、其他微信能力或其他宿主的结论。
 
 `host/scripts/host-smoke.cjs` 在 Node 上执行同样的 `require()`，因此不必打开开发者工具也能检查模块接线。
 那是接线检查，不是宿主验收，两者分开记录。
 
-## 发布之前：今天你需要做什么
+## 在线解析
 
-插件与 runtime SDK 都尚未发布到 Gradle Plugin Portal、Maven Central 或 npm，因此今天消费者需要本仓库源码。
-区别只在于 Gradle 从哪里解析两个坐标：
-
-| | 今天（源码检出） | 发布之后 |
-| --- | --- | --- |
-| 插件 `io.github.bobcgn.miniapp` | 由 `pluginManagement` 中的 `includeBuild("../kmp-miniapp-sdk")` 按 id 解析 | 由插件仓库按 id 与版本解析 |
-| Runtime `io.github.bobcgn:kmp-miniapp-sdk` | 由 settings 级 `includeBuild` 替换 | 由仓库与版本解析 |
-
-你的 `build.gradle.kts`、源码与宿主不受影响：build script 已经按 id 应用插件、从不声明 runtime artifact，
-其中没有任何 module 路径、`build/` 目录或生成文件的引用。本文档不提供任何「可用的已发布版本」，因为那样的
-版本并不存在。
+Gradle 从 Gradle Plugin Portal 解析插件 `io.github.bobcgn.miniapp:0.1.0`。插件随后添加 runtime
+`io.github.bobcgn:kmp-miniapp-sdk:0.1.0`，Gradle 从 Maven Central 解析它。消费者不需要本仓库源码、
+`includeBuild`、内部 module 路径或手工复制的 artifact。完整独立项目说明见
+[CONSUMER_SETUP-ch.md](docs/CONSUMER_SETUP-ch.md)。
 
 ## 插件刻意不做的事
 
 - 它不渲染，并拒绝 runtime classpath 携带 Compose、Skiko 或浏览器 UI runtime 的构建，因为那样的 bundle 会
   构建成功却仍无法在宿主中运行。
 - 它不生成 WXML 或 WXSS。
-- 它不向任何仓库发布任何东西。
+- 它不发布消费者项目或宿主产物；仓库 release automation 属于维护者职责，不是插件行为。
 - 它不把业务配置 —— AppID、密钥、商户材料、模板 id —— 放进 Gradle。那些属于你的后端与宿主后台，而不是
   build script。
 - 它不提供 Presentation Runtime。`UiState`、`Action`、`Store` 与 `Effect` 在本 SDK 中尚不存在；已有的以
