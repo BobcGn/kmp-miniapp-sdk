@@ -29,7 +29,8 @@ environment, so it stays `Partial`. The
 every capability, and a `Planned` entry there is not an implementation fact.
 
 Version **0.1.0** is the first public, experimental release. See the dedicated
-[consumer setup guide](docs/CONSUMER_SETUP-en.md) for the online-resolution path.
+[consumer setup guide](docs/CONSUMER_SETUP-en.md) for the online-resolution path, or the
+[runtime SDK README](sdk/README-en.md) for SDK-focused KMP integration and dependency guidance.
 
 ## What this project is
 

@@ -21,7 +21,8 @@ App lifecycle、微信页面栈导航、运行时能力检测、权限生命周�
 状态见[微信能力矩阵](docs/platforms/wechat/WECHAT_CAPABILITIES-ch.md)，其中的 `Planned` 条目不是实现事实。
 
 版本 **0.1.0** 是第一个公开的实验性版本。在线解析方式见专门的
-[消费者接入指南](docs/CONSUMER_SETUP-ch.md)。
+[消费者接入指南](docs/CONSUMER_SETUP-ch.md)；以 SDK 为中心的 KMP 接入与依赖说明见
+[runtime SDK README](sdk/README-ch.md)。
 
 ## 本项目是什么
 
