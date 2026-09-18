@@ -26,10 +26,22 @@ function expandHeaders(flat) {
 }
 
 
-// The network status and transfer exports hand back objects, and a JavaScript caller
-// should see the documented plain shape rather than a Kotlin instance. These helpers
-// convert representation only: they contain no SDK behavior, host access, or error
-// mapping.
+// The network status, transfer and BLE exports hand back objects, and a JavaScript
+// caller should see the documented plain shape rather than a Kotlin instance. These
+// helpers convert representation only: they contain no SDK behavior, host access, or
+// error mapping.
+function toBleDevice(device) {
+  return { deviceId: device.deviceId, name: device.name, rssi: device.rssi };
+}
+
+function toBleAdapterState(state) {
+  return { available: state.available, discovering: state.discovering, powered: state.powered };
+}
+
+function toBleConnectionState(state) {
+  return { deviceId: state.deviceId, connected: state.connected };
+}
+
 function toNetworkState(state) {
   return {
     isConnected: state.isConnected,
@@ -328,5 +340,41 @@ module.exports = {
   },
   requirePrivacySatisfied: function requirePrivacySatisfied() {
     return miniAppExports.requirePrivacySatisfied();
+  },
+  wechatBleAdapterState: function wechatBleAdapterState() {
+    return miniAppExports.wechatBleAdapterState().then(toBleAdapterState);
+  },
+  wechatBleOpenAdapter: function wechatBleOpenAdapter() {
+    return miniAppExports.wechatBleOpenAdapter();
+  },
+  wechatBleCloseAdapter: function wechatBleCloseAdapter() {
+    return miniAppExports.wechatBleCloseAdapter();
+  },
+  wechatBleStartDiscovery: function wechatBleStartDiscovery() {
+    return miniAppExports.wechatBleStartDiscovery();
+  },
+  wechatBleStopDiscovery: function wechatBleStopDiscovery() {
+    return miniAppExports.wechatBleStopDiscovery();
+  },
+  wechatBleDevices: function wechatBleDevices() {
+    return Array.from(miniAppExports.wechatBleDevices()).map(toBleDevice);
+  },
+  wechatBleDiscoveryFailure: function wechatBleDiscoveryFailure() {
+    return miniAppExports.wechatBleDiscoveryFailure();
+  },
+  wechatBleConnect: function wechatBleConnect(deviceId) {
+    return miniAppExports.wechatBleConnect(deviceId);
+  },
+  wechatBleDisconnect: function wechatBleDisconnect(deviceId) {
+    return miniAppExports.wechatBleDisconnect(deviceId);
+  },
+  wechatBleConnectionStates: function wechatBleConnectionStates() {
+    return Array.from(miniAppExports.wechatBleConnectionStates()).map(toBleConnectionState);
+  },
+  wechatBleConnectionFailure: function wechatBleConnectionFailure() {
+    return miniAppExports.wechatBleConnectionFailure();
+  },
+  wechatBleListenerCount: function wechatBleListenerCount() {
+    return miniAppExports.wechatBleListenerCount();
   },
 };

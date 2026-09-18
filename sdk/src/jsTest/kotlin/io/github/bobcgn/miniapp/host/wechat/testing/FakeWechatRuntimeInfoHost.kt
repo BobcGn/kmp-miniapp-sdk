@@ -59,6 +59,9 @@ internal class FakeWechatRuntimeInfoHost(
         "unlink",
     ),
     private val userDataPathAvailable: Boolean = true,
+    private val bluetoothAdapterAvailable: Boolean = true,
+    private val bluetoothDiscoveryAvailable: Boolean = true,
+    private val bluetoothConnectionAvailable: Boolean = true,
 ) : WechatRuntimeInfoHost {
     /** How many times the version was actually read, to prove it is read once. */
     var baseLibraryVersionReads: Int = 0
@@ -77,4 +80,10 @@ internal class FakeWechatRuntimeInfoHost(
         canIUseAvailable && method in availableFileSystemMethods
 
     override fun hasUserDataPath(): Boolean = canIUseAvailable && userDataPathAvailable
+
+    override fun hasBluetoothAdapter(): Boolean = bluetoothAdapterAvailable
+
+    override fun hasBluetoothDiscovery(): Boolean = bluetoothDiscoveryAvailable
+
+    override fun hasBluetoothConnection(): Boolean = bluetoothConnectionAvailable
 }

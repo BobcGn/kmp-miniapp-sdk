@@ -19,6 +19,7 @@ import io.github.bobcgn.miniapp.capability.privacy.PrivacyAuthorizationRequireme
 import io.github.bobcgn.miniapp.capability.privacy.PrivacyStatus
 import io.github.bobcgn.miniapp.capability.storage.MiniAppStorage
 import io.github.bobcgn.miniapp.host.requireSupported
+import io.github.bobcgn.miniapp.host.wechat.ExperimentalMiniAppBleApi
 import io.github.bobcgn.miniapp.host.wechat.WeChatCameraPosition
 import io.github.bobcgn.miniapp.host.wechat.WeChatCoordinateSystem
 import io.github.bobcgn.miniapp.host.wechat.WeChatLoginResult
@@ -46,6 +47,7 @@ import kotlin.js.JsExport
  * such as WeChat's `wx` object must not be accessed from this export boundary.
  */
 @JsExport
+@OptIn(ExperimentalMiniAppBleApi::class)
 public object MiniAppExports {
     private val host: WechatHost = WechatHost()
     private val storage: MiniAppStorage = host.storage
@@ -57,6 +59,14 @@ public object MiniAppExports {
     // One session, so one start is one host listener and one stop is one removal.
     private val networkObservation: NetworkStatusObservation =
         NetworkStatusObservation(networkStatus.changes)
+
+    /**
+     * The BLE proof-of-concept session.
+     *
+     * Created on first use rather than eagerly, because most consumers never touch
+     * Bluetooth and an unused session would hold nothing but two null jobs anyway.
+     */
+    private val bleSession: BleObservationSession by lazy { BleObservationSession(host.platform.bluetooth) }
     private var lastObservation: NetworkStatusObservationResult? = null
 
     /**
@@ -208,6 +218,82 @@ public object MiniAppExports {
      */
     public suspend fun wechatSwitchTab(url: String): Unit =
         host.platform.navigation.switchTab(url)
+
+    // --- Experimental: WeChat BLE proof of concept -------------------------------------------
+    //
+    // This surface exists to exercise the event-driven resource model against a real
+    // event source. It is not a Bluetooth API: only adapter open/close, discovery,
+    // and the connection state stream are here. See `WeChatBluetooth` for the list of
+    // what is deliberately absent.
+
+    /**
+     * Returns what the host reports about its Bluetooth adapter.
+     *
+     * @throws MiniAppException when the adapter cannot be queried, including when
+     *   this host has no Bluetooth adapter API at all
+     */
+    @ExperimentalMiniAppBleApi
+    public suspend fun wechatBleAdapterState(): JsBleAdapterState =
+        host.platform.bluetooth.adapterState().toJs()
+
+    /** Opens the adapter and begins collecting connection state changes. */
+    @ExperimentalMiniAppBleApi
+    public suspend fun wechatBleOpenAdapter(): Unit = bleSession.openAdapter()
+
+    /** Stops collecting, then closes the adapter. Closing a closed adapter does nothing. */
+    @ExperimentalMiniAppBleApi
+    public suspend fun wechatBleCloseAdapter(): Unit = bleSession.closeAdapter()
+
+    /** Starts a scan and begins collecting the devices it reports. */
+    @ExperimentalMiniAppBleApi
+    public suspend fun wechatBleStartDiscovery(): Unit = bleSession.startDiscovery()
+
+    /** Stops the scan and stops collecting. Stopping a scan that is not running does nothing. */
+    @ExperimentalMiniAppBleApi
+    public suspend fun wechatBleStopDiscovery(): Unit = bleSession.stopDiscovery()
+
+    /**
+     * The devices this session has seen, oldest first.
+     *
+     * One entry per device: a device the host reports again is not repeated. At most
+     * 32 are kept.
+     */
+    @ExperimentalMiniAppBleApi
+    public fun wechatBleDevices(): Array<JsBleDevice> =
+        bleSession.devices().map { it.toJs() }.toTypedArray()
+
+    /** How the discovery stream ended, or `null` when it has not failed. */
+    @ExperimentalMiniAppBleApi
+    public fun wechatBleDiscoveryFailure(): String? = bleSession.discoveryFailure()
+
+    /** Connects to [deviceId]. The identifier is a host value and must not be logged. */
+    @ExperimentalMiniAppBleApi
+    public suspend fun wechatBleConnect(deviceId: String): Unit =
+        host.platform.bluetooth.connect(deviceId)
+
+    /** Disconnects from [deviceId]. */
+    @ExperimentalMiniAppBleApi
+    public suspend fun wechatBleDisconnect(deviceId: String): Unit =
+        host.platform.bluetooth.disconnect(deviceId)
+
+    /** The connection state changes this session has seen, oldest first. At most 32 are kept. */
+    @ExperimentalMiniAppBleApi
+    public fun wechatBleConnectionStates(): Array<JsBleConnectionState> =
+        bleSession.connectionStates().map { it.toJs() }.toTypedArray()
+
+    /** How the connection-state stream ended, or `null` when it has not failed. */
+    @ExperimentalMiniAppBleApi
+    public fun wechatBleConnectionFailure(): String? = bleSession.connectionFailure()
+
+    /**
+     * How many host listeners the BLE adapter currently holds.
+     *
+     * This is the resource the proof of concept exists to account for: it reaches
+     * zero once every stream has ended, and a number that stays above zero after a
+     * stop is a listener the consumer is still paying for.
+     */
+    @ExperimentalMiniAppBleApi
+    public fun wechatBleListenerCount(): Int = bleSession.listenerCount()
 
     /**
      * Returns how the host currently supports the capability named by [capability].

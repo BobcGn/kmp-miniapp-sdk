@@ -6,6 +6,15 @@ const storage = new Map();
 const requests = [];
 const navigations = [];
 const switchTabs = [];
+// The BLE proof of concept is about registration and cleanup, so the fake host keeps
+// what was registered and what was removed, in order, to be compared by identity.
+const bleCalls = [];
+const bleRegisteredDeviceListeners = [];
+const bleRemovedDeviceListeners = [];
+const bleRegisteredConnectionListeners = [];
+const bleRemovedConnectionListeners = [];
+let bleDiscovering = false;
+let bleAllowDuplicates = null;
 
 // What this fake base library claims to provide. The runtime-inspection calls
 // below are the only ones the SDK asks before touching a capability.
@@ -295,6 +304,55 @@ global.wx = {
     switchTabs.push({ operation: 'switchTab', url: options.url, keys: Object.keys(options).sort() });
     options.success({ errMsg: 'switchTab:ok' });
   },
+  openBluetoothAdapter(options) {
+    bleCalls.push('openBluetoothAdapter');
+    options.success({ errMsg: 'openBluetoothAdapter:ok' });
+  },
+  closeBluetoothAdapter(options) {
+    bleCalls.push('closeBluetoothAdapter');
+    bleDiscovering = false;
+    options.success({ errMsg: 'closeBluetoothAdapter:ok' });
+  },
+  getBluetoothAdapterState(options) {
+    bleCalls.push('getBluetoothAdapterState');
+    options.success({
+      errMsg: 'getBluetoothAdapterState:ok',
+      available: true,
+      discovering: bleDiscovering,
+      powered: true,
+    });
+  },
+  startBluetoothDevicesDiscovery(options) {
+    bleCalls.push('startBluetoothDevicesDiscovery');
+    bleAllowDuplicates = options.allowDuplicatesKey;
+    bleDiscovering = true;
+    options.success({ errMsg: 'startBluetoothDevicesDiscovery:ok' });
+  },
+  stopBluetoothDevicesDiscovery(options) {
+    bleCalls.push('stopBluetoothDevicesDiscovery');
+    bleDiscovering = false;
+    options.success({ errMsg: 'stopBluetoothDevicesDiscovery:ok' });
+  },
+  onBluetoothDeviceFound(listener) {
+    bleRegisteredDeviceListeners.push(listener);
+  },
+  offBluetoothDeviceFound(listener) {
+    bleRemovedDeviceListeners.push(listener);
+  },
+  createBLEConnection(options) {
+    bleCalls.push('createBLEConnection:' + options.deviceId);
+    options.success({ errMsg: 'createBLEConnection:ok' });
+  },
+  closeBLEConnection(options) {
+    bleCalls.push('closeBLEConnection:' + options.deviceId);
+    options.success({ errMsg: 'closeBLEConnection:ok' });
+  },
+  onBLEConnectionStateChange(listener) {
+    bleRegisteredConnectionListeners.push(listener);
+  },
+  offBLEConnectionStateChange(listener) {
+    bleRemovedConnectionListeners.push(listener);
+  },
   canIUse(schema) {
     return supportedSchemas.has(schema);
   },
@@ -562,6 +620,18 @@ async function main() {
     'privacyStatus',
     'requestPrivacyAuthorization',
     'requirePrivacySatisfied',
+    'wechatBleAdapterState',
+    'wechatBleOpenAdapter',
+    'wechatBleCloseAdapter',
+    'wechatBleStartDiscovery',
+    'wechatBleStopDiscovery',
+    'wechatBleDevices',
+    'wechatBleDiscoveryFailure',
+    'wechatBleConnect',
+    'wechatBleDisconnect',
+    'wechatBleConnectionStates',
+    'wechatBleConnectionFailure',
+    'wechatBleListenerCount',
   ]);
   assert.equal(miniAppSdk.sdkVersion(), '0.1.0-SNAPSHOT');
 
@@ -669,6 +739,69 @@ async function main() {
     { operation: 'switchTab', url: '/pages/third/index', keys: ['fail', 'success', 'url'] },
   ]);
   global.wx.switchTab = switchTabImpl;
+
+  // The BLE proof of concept: registration, cleanup, the duplicate policy, and the
+  // identity the host removes a listener by.
+  assert.equal(miniAppSdk.capabilitySupport('wechat.bluetooth-adapter').state, 'Supported');
+  assert.equal(miniAppSdk.capabilitySupport('wechat.bluetooth-discovery').state, 'Supported');
+  assert.equal(miniAppSdk.capabilitySupport('wechat.bluetooth-connection').state, 'Supported');
+
+  assert.equal(miniAppSdk.wechatBleListenerCount(), 0);
+  await miniAppSdk.wechatBleOpenAdapter();
+  // Opening the adapter starts the connection-state watcher.
+  assert.equal(miniAppSdk.wechatBleListenerCount(), 1);
+  const adapterState = await miniAppSdk.wechatBleAdapterState();
+  assert.deepEqual(adapterState, { available: true, discovering: false, powered: true });
+
+  await miniAppSdk.wechatBleStartDiscovery();
+  assert.equal(miniAppSdk.wechatBleListenerCount(), 2);
+  // The SDK asks the host not to repeat devices, because its own stream deduplicates.
+  assert.equal(bleAllowDuplicates, false);
+
+  const bleDeviceEvent = { devices: [{ deviceId: 'aa:bb:cc:dd:ee:ff', name: 'Fake', RSSI: -42 }] };
+  bleRegisteredDeviceListeners.forEach((listener) => listener(bleDeviceEvent));
+  bleRegisteredDeviceListeners.forEach((listener) => listener(bleDeviceEvent));
+  // Event delivery is asynchronous, exactly as it is for the network observation: the
+  // host callback hands the event to the stream, and the session collects it on its
+  // own dispatch.
+  await settle();
+  assert.equal(miniAppSdk.wechatBleDevices().length, 1, 'a repeated device must be emitted once');
+  assert.equal(miniAppSdk.wechatBleDevices()[0].deviceId, 'aa:bb:cc:dd:ee:ff');
+  assert.equal(miniAppSdk.wechatBleDevices()[0].rssi, -42);
+
+  await miniAppSdk.wechatBleConnect('aa:bb:cc:dd:ee:ff');
+  await miniAppSdk.wechatBleDisconnect('aa:bb:cc:dd:ee:ff');
+  assert.ok(bleCalls.includes('createBLEConnection:aa:bb:cc:dd:ee:ff'));
+  assert.ok(bleCalls.includes('closeBLEConnection:aa:bb:cc:dd:ee:ff'));
+
+  bleRegisteredConnectionListeners.forEach((listener) => listener({ deviceId: 'aa:bb:cc:dd:ee:ff', connected: true }));
+  await settle();
+  assert.deepEqual(miniAppSdk.wechatBleConnectionStates(), [
+    { deviceId: 'aa:bb:cc:dd:ee:ff', connected: true },
+  ]);
+
+  await miniAppSdk.wechatBleStopDiscovery();
+  assert.equal(miniAppSdk.wechatBleListenerCount(), 1);
+  await miniAppSdk.wechatBleCloseAdapter();
+  assert.equal(miniAppSdk.wechatBleListenerCount(), 0, 'closing must leave no listener behind');
+  // Removal used the very function value that was registered: WeChat removes a
+  // listener by identity, so a different value would have left it registered.
+  assert.equal(bleRemovedDeviceListeners.length, 1);
+  assert.strictEqual(bleRemovedDeviceListeners[0], bleRegisteredDeviceListeners[0]);
+  assert.equal(bleRemovedConnectionListeners.length, 1);
+  assert.strictEqual(bleRemovedConnectionListeners[0], bleRegisteredConnectionListeners[0]);
+
+  // A host without the connection API reports the capability as unsupported rather
+  // than failing when it is called.
+  const createBleConnectionImpl = global.wx.createBLEConnection;
+  delete global.wx.createBLEConnection;
+  assert.equal(miniAppSdk.capabilitySupport('wechat.bluetooth-connection').state, 'Unsupported');
+  await assert.rejects(
+    miniAppSdk.wechatBleConnect('aa:bb:cc:dd:ee:ff'),
+    (error) => error.name === 'UnsupportedCapability',
+  );
+  global.wx.createBLEConnection = createBleConnectionImpl;
+  assert.equal(miniAppSdk.capabilitySupport('wechat.bluetooth-connection').state, 'Supported');
 
   // Runtime detection reads the host rather than a hardcoded list.
   const runtimeInfo = miniAppSdk.wechatRuntimeInfo();
@@ -1746,6 +1879,7 @@ async function main() {
   console.log('[node-smoke] lifecycle: PASS');
   console.log('[node-smoke] navigation: PASS');
   console.log('[node-smoke] switch tab: PASS');
+  console.log('[node-smoke] ble: PASS');
   console.log('[node-smoke] runtime detection: PASS');
   console.log('[node-smoke] permission: PASS');
   console.log('[node-smoke] privacy: PASS');

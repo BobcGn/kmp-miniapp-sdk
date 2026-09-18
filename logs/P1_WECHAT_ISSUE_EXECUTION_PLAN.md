@@ -355,6 +355,22 @@ Page load 仍按 **ADR-0006** 保持为有意的 `Unsupported` 公共入口，�
 
 只进行最小实验：打开适配器、开始发现、设备发现事件、停止发现、连接和断开。重点验证 Flow、取消、连接生命周期、背压、重复事件，以及 `onXXX/offXXX` 清理。完成后仍标记为 Experimental，不得宣传为完整或稳定 BLE SDK。
 
+**本轮进展（2026-09-18）**：最小 BLE 概念验证已实现并具备自动化覆盖，状态保持 `in_progress` 等待真实宿主验收。
+
+已实现（jsMain，全部标记 `@ExperimentalMiniAppBleApi`）：`WxBluetooth.kt` 原始契约与存在性探测；`WechatBluetoothHost`/`WxBluetoothHost` 端口与生产实现；`WechatBluetooth` 适配器（adapter open/close/state、discovery、connection 与三条事件流）；`WeChatBleDevice`/`WeChatBleAdapterState`/`WeChatBleConnectionState` 强类型模型；三个能力键 `wechat.bluetooth-adapter` / `-discovery` / `-connection` 与 catalog presence 门控；`BleObservationSession` 与 12 个 JS 导出、CommonJS wrapper、手写 `.d.ts`；示例页 Bluetooth 卡片与 smoke 覆盖。
+
+**事件模型（本 Issue 的核心验收对象）**：每条流只注册一个宿主 listener，并在**所有终止路径**（正常结束、异常、取消）上用**同一个值**移除；多 collector 各自持有注册、互不污染；移除由宿主拒绝时只计数不抛出，因而不会覆盖调用方自己的结果或取消；取消不会被映射为 `HostFailure`；迟到的宿主回调不恢复已取消的 collector。重复事件策略为**按 `deviceId` 逐 collector 去重（首次出现为准）**，同时以 `allowDuplicatesKey = false` 请求宿主过滤；背压策略为**有界缓冲、丢弃最旧事件**（discovery/connection 64、adapter 状态 8），宿主回调永不阻塞。`open`/`close`/`start`/`stop` 均幂等：对已开启的 adapter 再 open、对已关闭的再 close、停止未运行的扫描都不会调用宿主。
+
+**权限与隐私**：不建模任何前置条件。微信把「蓝牙未开启」报告为普通的 `openBluetoothAdapter` 失败，无法与「无适配器」「调用被拒绝」区分，因此保持为 `HostFailure` 而不猜测为权限或用户取消；adapter 的唯一端口是 Bluetooth host，结构上无法查询权限或隐私。**未修改 BOB-60 的阻塞结论**，BLE 的权限/隐私验收随其一同受限。
+
+**测试**：`WechatBluetoothTest` 24 个、`WxBluetoothTest` 12 个、`BleObservationSessionTest` 7 个、`WechatCapabilityGateTest` 新增 1 个（三个键独立门控）；SDK 套件合计 **648** 个测试 / 0 失败。变异探针四例（均已还原并复验）：删除 `awaitClose` 移除 → 6 个失败；用不同 listener 值移除 → 2 个失败；把取消吞成失败 → 1 个失败；删除去重策略 → 1 个失败。CommonJS smoke 新增 `[node-smoke] ble: PASS`，并在 fake host 上断言**注册与移除使用同一个函数值**。`npm run typecheck` 与 `npm run smoke` 通过。
+
+**宿主限制（已从已安装基础库确认）**：开发者工具在 macOS 上对 `createBLEConnection`/`closeBLEConnection` 返回 `API_NOT_SUPPORT`，因此模拟器只能验证 adapter 与 discovery，**连接必须由真机验收**。该限制记录为宿主限制而非 SDK 缺陷。
+
+**真机验收（2026-09-18）**：Android 真机已执行 adapter 与 discovery —— 三个能力键均为 `Supported`，adapter 开启与关闭均成功，discovery 正常启动与停止，共上报 32 个设备，session 的 listener 计数在 stop discovery 与 close adapter 之间由 2 → 1 → 0。**连接与断开未执行**：当时没有可连接的外设，因此二者仍未验证。
+
+**未完成 / 边界**：能力矩阵中 BLE 保持 `Experimental`（未实现 service/characteristic/notify/MTU/RSSI/配对/重连/后台扫描/getBluetoothDevices）；自动化与 smoke 均不构成真机证据，上述真机记录也只覆盖 adapter 与 discovery，不构成完整 BLE 验收。BOB-69 因此保持 blocked，但其代码作为 Experimental 能力进入 0.1.0，不阻断首次发布。
+
 ### 第 17 步：BOB-62 `[性能][P1] 建立 Kotlin/JS 包体积基线`
 
 在能力实现基本稳定后，记录 SDK 自身、Kotlin 标准库、Coroutines、AtomicFU 和包装层的原始及 gzip 尺寸，提供可重复命令、首次加载观察方法和回归告警阈值。单次机器测量不能被描述为绝对性能保证。
@@ -414,7 +430,7 @@ BOB-62 完成后，回到 BOB-67 和 BOB-71 补齐全部状态与证据。原 17
 | 13 | BOB-68 | 补齐网络上传、下载与网络状态能力 | 复杂异步 |
 | 14 | BOB-59 | 实现微信标准支付能力 | 支付安全 |
 | 15 | BOB-74 | 定义虚拟支付能力边界 | 支付设计 |
-| 16 | BOB-69 | 验证 BLE 事件驱动能力模型 | 实验性架构验证 |
+| 16 | BOB-69 | 验证 BLE 事件驱动能力模型 | In Progress（2026-09-18）：最小 PoC 与 44 个测试 + smoke 已就位，Experimental；待真机验收连接 |
 | 17 | BOB-62 | 建立 Kotlin/JS 包体积基线 | Done（2026-09-18）：尺寸任务、基线、分类与总量阈值、回归测试及开发者工具三次冷启动观察均完成 |
 
 ## 6. 全量范围核对

@@ -264,6 +264,14 @@ Kotlin/JS platform variants 及其传递依赖由 Gradle 在依赖解析期间�
 - Storage、transport 与 App lifecycle 契约各自只声明一次为共享检查，并分别跑在宿主无关参考实现与微信 adapter 上。
 - 没有任何自动化测试声称能够访问真实 `wx` runtime，也没有任何自动化检查可以替代真实宿主验证。
 
+- Bluetooth 是对 SDK **事件驱动资源模型**的概念验证，不是 Bluetooth API，且其全部内容均为 `Experimental`。已实现 adapter 的 open/close 与状态、discovery 及其设备流、connection 及其状态流；service、characteristic、notify、MTU、RSSI 查询、配对、自动重连、后台扫描与 `getBluetoothDevices` 均未实现。
+- 每条 BLE 流只注册一个宿主 listener，并在**所有终止路径**上移除**同一个值**，因此无论 collector 正常结束、失败还是被取消，都不会留下注册；adapter 自身的 listener 计数可由 `wechatBleListenerCount()` 读取，并会回到 0。
+- discovery 按 `deviceId` 逐 collector 去重 —— 每个设备只发一次事件，以首次出现为准 —— 同时 SDK 要求宿主不要重复上报设备（`allowDuplicatesKey = false`），因此流的形状不取决于宿主是否遵守该标志。
+- discovery 与 connection 流使用有界缓冲、丢弃最旧事件，而不是无界队列；adapter 也不接受来自宿主回调的背压。由于同时要求宿主不要重复上报，被丢弃的 discovery 事件可能不会再次出现，因此它是尽力而为的观察流，不是完整结果集。
+- BLE 不建模任何权限或隐私前置条件：微信把「蓝牙未开启」报告为普通的 `openBluetoothAdapter` 失败，且无法从宿主契约确认该能力的前置条件。adapter 唯一的端口就是 Bluetooth host，因此它无法查询二者。
+- 已安装的开发者工具基础库在 macOS 上拒绝 `createBLEConnection` 与 `closeBLEConnection`（`createBLEConnection:fail API_NOT_SUPPORT`），因此连接只能在真机上验收；这记录为宿主限制而非 SDK 缺陷。
+- adapter 与 discovery 已于 2026-09-18 在 Android 真机上执行：三个能力键均为 `Supported`，开启与关闭均成功，discovery 正常启动与停止，共上报 32 个设备，listener 计数由 2 → 1 → 0。连接与断开未执行，因为当时没有可连接的外设，因此这是不完整的真机记录而不是完整的 BLE 验收。adapter、interop 与 session 自动化测试通过，CommonJS smoke 也在 fake host 上驱动了完整表面，但两者都不替代宿主运行。
+
 ## 10. 明确尚不具备的能力
 
 项目当前没有：
@@ -273,7 +281,7 @@ Kotlin/JS platform variants 及其传递依赖由 Gradle 在依赖解析期间�
 - 地图 SDK、地图 UI、后台或持续定位、`startLocationUpdate`、`onLocationChange`、地理围栏、轨迹记录、逆地理编码、第三方地图服务、原生 `map` 组件、位置缓存、位置上传播，以及 `chooseLocation` 与 `openLocation`
 - 超出小程序沙箱内 UTF-8 文本的文件系统能力：没有目录、目录遍历、递归删除、stream、file descriptor、随机访问、文件监听、数据库、secure storage，也没有二进制或 base64 文件内容
 - Node `fs` 或任何 POSIX 文件抽象
-- 受隐私授权约束、但本 SDK 未实现的设备能力，例如 Media 与 Bluetooth
+- Bluetooth 的 service、characteristic 与 notify、MTU 协商、信号强度查询、设备配对、自动重连与后台扫描：BLE 概念验证只覆盖 adapter、discovery 与 connection
 - 相机原生组件、连续视觉识别、自建二维码或条码解析器、通用相机界面，以及扫码结果的业务解析、持久化或上传
 - 所选媒体的播放器、编辑器、压缩或转码器；图片识别；上传、下载或后端存储；对宿主临时文件的长期管理；微信媒体 API 的完整封装；以及宿主选择界面本身
 - 通用推送通知抽象；由后端发送订阅消息；模板管理；静默或页面加载时的订阅请求；以及任何「已同意订阅即表示消息已发送或将要送达」的说法

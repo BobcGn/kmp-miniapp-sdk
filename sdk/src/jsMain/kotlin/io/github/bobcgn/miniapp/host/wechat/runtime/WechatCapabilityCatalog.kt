@@ -107,6 +107,22 @@ internal object WechatCapabilityCatalog {
             minimumBaseLibraryVersion = FILESYSTEM_MINIMUM,
             presence = { host -> host.hasFileSystemMethod("unlink") },
         ),
+        // Bluetooth is the proof of concept for event-driven capabilities. Its three
+        // keys are gated separately, and each one names the whole group of members
+        // the capability needs: an adapter that could be opened but not closed, a
+        // scan that could be started but not stopped, or a connection that could be
+        // created but not observed would each be a leak rather than a capability.
+        // No minimum base library is recorded: the repository has not established
+        // one from a source it can cite, so the probes below are the authority.
+        WeChatDeviceCapabilities.BluetoothAdapter to WechatCapabilityRequirement(
+            presence = { host -> host.hasBluetoothAdapter() },
+        ),
+        WeChatDeviceCapabilities.BluetoothDiscovery to WechatCapabilityRequirement(
+            presence = { host -> host.hasBluetoothDiscovery() },
+        ),
+        WeChatDeviceCapabilities.BluetoothConnection to WechatCapabilityRequirement(
+            presence = { host -> host.hasBluetoothConnection() },
+        ),
         // The sandbox root is a separate host value from the manager, so it is
         // gated on its own rather than assumed to accompany the four operations.
         WeChatDeviceCapabilities.FileSystemSandboxPath to WechatCapabilityRequirement(

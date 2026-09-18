@@ -72,6 +72,14 @@ interface IndexPageData {
   navigationDetails: string;
   switchTabStatus: string;
   switchTabDetails: string;
+  bleCapabilityStatus: string;
+  bleCapabilityDetails: string;
+  bleStatus: string;
+  bleDetails: string;
+  bleDeviceCount: string;
+  bleFirstDevice: string;
+  bleDeviceId: string;
+  bleConnection: string;
   permissionName: string;
   permissionStatus: string;
   permissionDetails: string;
@@ -1508,6 +1516,181 @@ async function openSecondPage(this: IndexPage): Promise<void> {
   }
 }
 
+/**
+ * The three BLE capability keys this proof of concept gates.
+ *
+ * They are checked separately because the host offers them separately: the base
+ * library shipped with the installed Developer Tools opens an adapter and scans
+ * while refusing every connection call on macOS.
+ */
+const bleKeys: string[] = [
+  'wechat.bluetooth-adapter',
+  'wechat.bluetooth-discovery',
+  'wechat.bluetooth-connection',
+];
+
+/**
+ * A session-local, non-identifying label for a device identifier.
+ *
+ * WeChat reports a device id that is a MAC address on some platforms, so it is
+ * identifying data. No character from it enters the UI or Console: discovered
+ * devices receive an ordinal within the current session, and a manually supplied
+ * identifier uses one closed label.
+ */
+function deviceLabel(deviceId: string, devices: MiniAppSdk.BleDevice[]): string {
+  const index = devices.findIndex((device) => device.deviceId === deviceId);
+  return index >= 0 ? 'device#' + String(index + 1) : 'device#manual';
+}
+
+/** Reports what the host answers for each of the three BLE capabilities. */
+function checkBleCapability(this: IndexPage): void {
+  try {
+    const details = bleKeys
+      .map((key) => key + '=' + MiniAppSdk.capabilitySupport(key).state)
+      .join(', ');
+    console.log('[kmp-miniapp-sdk] ble capability: PASS ' + details);
+    this.setData({ bleCapabilityStatus: 'PASS', bleCapabilityDetails: details });
+  } catch (error) {
+    const category = classifyFailure(error);
+    console.error('[kmp-miniapp-sdk] ble capability: FAIL ' + category);
+    this.setData({ bleCapabilityStatus: 'FAIL', bleCapabilityDetails: category });
+  }
+}
+
+/**
+ * Shows what the session has seen so far.
+ *
+ * The count, the duplicate policy, and the listener count are the point of this
+ * proof of concept; a device identifier is never printed, only masked.
+ */
+function refreshBleState(this: IndexPage): void {
+  const devices = MiniAppSdk.wechatBleDevices();
+  const connections = MiniAppSdk.wechatBleConnectionStates();
+  const last = connections.length > 0 ? connections[connections.length - 1] : null;
+  const listeners = MiniAppSdk.wechatBleListenerCount();
+  const details =
+    'devices=' + String(devices.length) +
+    ', duplicatePolicy=deviceId-dedup' +
+    ', listeners=' + String(listeners);
+
+  console.log('[kmp-miniapp-sdk] ble device: EVENT count=' + String(devices.length) + ' duplicatePolicy=deviceId-dedup');
+  console.log('[kmp-miniapp-sdk] ble cleanup: PASS listeners=' + String(listeners));
+  this.setData({
+    bleStatus: 'READY',
+    bleDetails: details,
+    bleDeviceCount: String(devices.length),
+    bleFirstDevice: devices.length > 0 ? deviceLabel(devices[0].deviceId, devices) : '(none)',
+    bleConnection: last === null ? '(none)' : (last.connected ? 'connected' : 'disconnected'),
+  });
+}
+
+async function openBleAdapter(this: IndexPage): Promise<void> {
+  try {
+    await MiniAppSdk.wechatBleOpenAdapter();
+    const state = await MiniAppSdk.wechatBleAdapterState();
+    const details =
+      'opened=true, available=' + String(state.available) +
+      ', powered=' + String(state.powered) +
+      ', listeners=' + String(MiniAppSdk.wechatBleListenerCount());
+    console.log('[kmp-miniapp-sdk] ble adapter: PASS opened=true');
+    this.setData({ bleStatus: 'PASS', bleDetails: details });
+  } catch (error) {
+    const category = classifyFailure(error);
+    // A switched-off adapter, an absent adapter, and a refused call all arrive as a
+    // host failure here, so the SDK reports the category rather than guessing which.
+    console.error('[kmp-miniapp-sdk] ble adapter: FAIL ' + category);
+    this.setData({ bleStatus: 'FAIL', bleDetails: category });
+  }
+}
+
+async function startBleDiscovery(this: IndexPage): Promise<void> {
+  try {
+    await MiniAppSdk.wechatBleStartDiscovery();
+    console.log('[kmp-miniapp-sdk] ble discovery: STARTED');
+    this.setData({ bleStatus: 'STARTED', bleDetails: 'listeners=' + String(MiniAppSdk.wechatBleListenerCount()) });
+  } catch (error) {
+    const category = classifyFailure(error);
+    console.error('[kmp-miniapp-sdk] ble discovery: FAIL ' + category);
+    this.setData({ bleStatus: 'FAIL', bleDetails: category });
+  }
+}
+
+async function stopBleDiscovery(this: IndexPage): Promise<void> {
+  try {
+    await MiniAppSdk.wechatBleStopDiscovery();
+    console.log('[kmp-miniapp-sdk] ble discovery: STOPPED');
+    refreshBleState.call(this);
+    this.setData({ bleStatus: 'STOPPED' });
+  } catch (error) {
+    const category = classifyFailure(error);
+    console.error('[kmp-miniapp-sdk] ble discovery: STOP FAIL ' + category);
+    this.setData({ bleStatus: 'FAIL', bleDetails: category });
+  }
+}
+
+async function connectBleDevice(this: IndexPage): Promise<void> {
+  const typed = (this.data.bleDeviceId || '').trim();
+  const discovered = MiniAppSdk.wechatBleDevices();
+  const target = typed.length > 0 ? typed : (discovered.length > 0 ? discovered[0].deviceId : '');
+  if (target.length === 0) {
+    console.error('[kmp-miniapp-sdk] ble connection: FAIL no device identifier');
+    this.setData({ bleStatus: 'FAIL', bleDetails: 'type a device id or start discovery first' });
+    return;
+  }
+  try {
+    await MiniAppSdk.wechatBleConnect(target);
+    console.log('[kmp-miniapp-sdk] ble connection: PASS connected=true device=' + deviceLabel(target, discovered));
+    refreshBleState.call(this);
+    this.setData({ bleStatus: 'CONNECTED' });
+  } catch (error) {
+    const category = classifyFailure(error);
+    console.error('[kmp-miniapp-sdk] ble connection: FAIL ' + category + ' device=' + deviceLabel(target, discovered));
+    this.setData({ bleStatus: 'FAIL', bleDetails: category });
+  }
+}
+
+async function disconnectBleDevice(this: IndexPage): Promise<void> {
+  const discovered = MiniAppSdk.wechatBleDevices();
+  const typed = (this.data.bleDeviceId || '').trim();
+  const target = typed.length > 0 ? typed : (discovered.length > 0 ? discovered[0].deviceId : '');
+  if (target.length === 0) {
+    console.error('[kmp-miniapp-sdk] ble disconnection: FAIL no device identifier');
+    this.setData({ bleStatus: 'FAIL', bleDetails: 'type a device id or start discovery first' });
+    return;
+  }
+  try {
+    await MiniAppSdk.wechatBleDisconnect(target);
+    console.log('[kmp-miniapp-sdk] ble disconnection: PASS device=' + deviceLabel(target, discovered));
+    refreshBleState.call(this);
+    this.setData({ bleStatus: 'DISCONNECTED' });
+  } catch (error) {
+    const category = classifyFailure(error);
+    console.error('[kmp-miniapp-sdk] ble disconnection: FAIL ' + category);
+    this.setData({ bleStatus: 'FAIL', bleDetails: category });
+  }
+}
+
+async function closeBleAdapter(this: IndexPage): Promise<void> {
+  try {
+    await MiniAppSdk.wechatBleCloseAdapter();
+    const listeners = MiniAppSdk.wechatBleListenerCount();
+    console.log('[kmp-miniapp-sdk] ble adapter: PASS opened=false');
+    console.log('[kmp-miniapp-sdk] ble cleanup: PASS listeners=' + String(listeners));
+    this.setData({
+      bleStatus: listeners === 0 ? 'PASS' : 'FAIL',
+      bleDetails: 'opened=false, listeners=' + String(listeners),
+    });
+  } catch (error) {
+    const category = classifyFailure(error);
+    console.error('[kmp-miniapp-sdk] ble adapter: FAIL ' + category);
+    this.setData({ bleStatus: 'FAIL', bleDetails: category });
+  }
+}
+
+function onBleDeviceIdInput(this: IndexPage, event: { detail: { value: string } }): void {
+  this.setData({ bleDeviceId: event.detail.value });
+}
+
 Page<IndexPageData>({
   data: {
     sdkVersion,
@@ -1523,6 +1706,14 @@ Page<IndexPageData>({
     networkDetails: 'Requesting an HTTPS endpoint through wx.request…',
     navigationStatus: 'READY',
     navigationDetails: 'Tap the button to open the second page.',
+    bleCapabilityStatus: 'NOT RUN',
+    bleCapabilityDetails: 'Tap the button; nothing touches Bluetooth on load.',
+    bleStatus: 'NOT RUN',
+    bleDetails: 'Tap a button; nothing opens an adapter on load.',
+    bleDeviceCount: '0',
+    bleFirstDevice: '(none)',
+    bleDeviceId: '',
+    bleConnection: '(none)',
     switchTabStatus: 'READY',
     switchTabDetails: `Tap the button to switch to ${tabTargetRoute}; nothing navigates on load.`,
     permissionName,
@@ -1578,6 +1769,15 @@ Page<IndexPageData>({
   openSecondPage,
   switchToTabTarget,
   switchToNonTabPage,
+  checkBleCapability,
+  openBleAdapter,
+  startBleDiscovery,
+  stopBleDiscovery,
+  connectBleDevice,
+  disconnectBleDevice,
+  closeBleAdapter,
+  refreshBleState,
+  onBleDeviceIdInput,
   refreshPermission,
   requestPermission,
   openPermissionSettings,

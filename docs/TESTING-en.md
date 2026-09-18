@@ -138,6 +138,31 @@ network dependency in front of every ordinary build and would make `check` re-en
 plugin's own suite is already part of `check` through that project's `check` task; this entry adds
 the fixture and the SDK architecture check, which `check` does not run.
 
+### Bluetooth event model
+
+```shell
+./gradlew :kmp-miniapp-sdk:jsNodeTest --tests "*Bluetooth*" --tests "*Ble*"
+```
+
+BLE is the first capability in this SDK built on a real `on`/`off` event source, so its tests are
+about the resource model rather than about Bluetooth: **24** adapter tests, **12** interop tests and
+**7** session tests, plus a capability-gate check that the three keys are gated separately.
+
+What they assert, each with a mutation probe behind it: discovery and connection calls reach the host;
+an entry the SDK cannot read is skipped and counted while a payload that is not a device array ends
+the stream with `InvalidResponse`; a blank device identifier is refused before the host is called; a
+cancelled collector removes **the value it registered**; a collector that completes or fails removes
+it too; a removal the host refuses is counted and does not replace the result; two collectors do not
+share state; a repeated device is emitted once; a late host callback changes nothing; cancelling is
+not reported as a host failure; and the session's listener count reaches zero after a stop.
+
+Four mutations were applied and reverted to show the tests can fail: removing the `awaitClose`
+removal (6 tests fail), removing with a different listener value (2), swallowing the cancellation as
+a failure (1), and deleting the duplicate policy (1).
+
+**These tests need no WeChat runtime and are not host evidence.** They use a fake host that keeps
+every registered and removed listener, so the identity pairing is asserted rather than assumed.
+
 ### Bundle size report
 
 ```shell
@@ -224,7 +249,27 @@ The tab switch is checked from the index page, and it is the only navigation act
 
 Step 5 needs the Main tab to be the current one, so return with the tab bar first if step 4 ran. Its expected line names only a closed category: the raw host message is deliberately not read, so a screenshot of the Console carries nothing WeChat said about the failure. A blank route is refused before the host is called and is covered by the automated checks rather than by a button.
 
-7. Confirm the version-gate states. The Runtime Detection card reads its expected state from the host, so it shows them without a code change:
+7. Verify the Bluetooth event model. It is `Experimental`, and its acceptance is split because the
+host itself is: on macOS the installed Developer Tools base library answers
+`createBLEConnection:fail API_NOT_SUPPORT`, so the simulator can exercise the adapter and discovery
+but never a connection.
+
+| Step | Tap | Expected |
+| --- | --- | --- |
+| 1 | `Check BLE capability` | Console: `[kmp-miniapp-sdk] ble capability: PASS wechat.bluetooth-adapter=…, wechat.bluetooth-discovery=…, wechat.bluetooth-connection=…`. On macOS the connection key reads whatever the gate found; the other two read `Supported` |
+| 2 | `Open adapter`, then `Start discovery` | Console: `[kmp-miniapp-sdk] ble adapter: PASS opened=true`, then `ble discovery: STARTED`. Devices appear in the card as they are reported |
+| 3 | `Refresh device count` | Console: `ble device: EVENT count=N duplicatePolicy=deviceId-dedup` and `ble cleanup: PASS listeners=N`. A device reported twice still counts once |
+| 4 | `Stop discovery`, then `Close adapter` | Console: `ble discovery: STOPPED`, then `ble adapter: PASS opened=false` and `ble cleanup: PASS listeners=0` |
+
+Step 4's `listeners=0` is the evidence this capability exists to produce: it is the SDK's own count of
+host listeners, and a number above zero after a close is a registration the consumer is still paying
+for. No device identifier, MAC address, advertisement payload or raw host message appears anywhere in
+the Console: the card masks identifiers and reports only closed categories.
+
+Connecting needs a real device and a reachable peripheral; the connection rows of
+[WECHAT_HOST_VERIFICATION-en.md](platforms/wechat/WECHAT_HOST_VERIFICATION-en.md) hold that procedure.
+
+8. Confirm the version-gate states. The Runtime Detection card reads its expected state from the host, so it shows them without a code change:
 
 | Case | How to produce it | Expected |
 | --- | --- | --- |
@@ -241,7 +286,7 @@ Step 5 needs the Main tab to be the current one, so return with the tab bar firs
 
 The base library version in the card must match the one selected in Developer Tools. Record it: it is part of the evidence the verification matrix requires. This capability has completed Developer Tools and real-device acceptance; the record is in the [WeChat real-host verification matrix](../platforms/wechat/WECHAT_HOST_VERIFICATION-en.md).
 
-8. Verify the permission lifecycle. Nothing is requested while the page loads, so every step below follows a tap. The card starts at whatever state the host already holds: `NotRequested` on a fresh install or after clearing the mini program's authorization data.
+9. Verify the permission lifecycle. Nothing is requested while the page loads, so every step below follows a tap. The card starts at whatever state the host already holds: `NotRequested` on a fresh install or after clearing the mini program's authorization data.
 
 | Step | Tap | Expected |
 | --- | --- | --- |
@@ -256,7 +301,7 @@ A prompt may only ever follow a tap. If the smoke test or page load produces one
 
 This flow has been executed in WeChat Developer Tools at base library 3.17.2 and on an Android device (OnePlus PLQ110, Android 36, WeChat 8.0.76), including the full `Granted` → `Denied` → `DENIED` → `Granted` transition with no second prompt after the refusal. Step 1 is the exception: the account used already holds a decision, so `NotRequested` could not be produced. That state is instead covered by automated tests — the Fake Host contract checks, the adapter tests for a missing authorization entry and for `true`/`false`/missing conversion, and the first-prompt success and refusal paths — and reproducing it on a host would require a different account or device, or clearing the mini program's authorization history.
 
-9. Verify the privacy authorization flow. It is a different condition from the permission above, and the two are recorded separately. The debug base library must be 2.32.3 or later, and the mini program must declare its collection in the MP backend privacy guideline, or the host reports nothing to authorize.
+10. Verify the privacy authorization flow. It is a different condition from the permission above, and the two are recorded separately. The debug base library must be 2.32.3 or later, and the mini program must declare its collection in the MP backend privacy guideline, or the host reports nothing to authorize.
 
 | Step | Tap | Expected |
 | --- | --- | --- |
@@ -268,7 +313,7 @@ This flow has been executed in WeChat Developer Tools at base library 3.17.2 and
 
 Step 5 is one state, not two: WeChat publishes no field that distinguishes declining from dismissing. The SDK reports a recognizable refusal as `Refused`; an unknown failure is shown as `FAIL` and remains a `HostFailure`. `NOT_REQUIRED` never means the user agreed, because the host also reports it when the mini program declares no collection.
 
-10. Verify the WeChat session check. It is recorded separately from the login bootstrap above, because a valid session is not identity and only the login-code path establishes one. The check runs before the bootstrap while the page loads, on purpose: acquiring a code refreshes the client login state and would hide an expired session.
+11. Verify the WeChat session check. It is recorded separately from the login bootstrap above, because a valid session is not identity and only the login-code path establishes one. The check runs before the bootstrap while the page loads, on purpose: acquiring a code refreshes the client login state and would hide an expired session.
 
 | Step | Action | Expected |
 | --- | --- | --- |
@@ -279,7 +324,7 @@ Step 5 is one state, not two: WeChat publishes no field that distinguishes decli
 
 Under the host contract, the `wx.checkSession` failure callback means the login state is invalid, so the page reports `INVALID` without depending on the language or exact text of `errMsg`. Only a missing API or a call that cannot be registered rejects the Promise rather than masquerading as `VALID`.
 
-11. Verify the clipboard and haptics. Nothing touches the clipboard or the vibrator while the page loads, so every step follows a tap. The clipboard steps only ever compare against the fixed test string this page wrote; the page never displays or logs whatever else the clipboard holds, because that is the user's.
+12. Verify the clipboard and haptics. Nothing touches the clipboard or the vibrator while the page loads, so every step follows a tap. The clipboard steps only ever compare against the fixed test string this page wrote; the page never displays or logs whatever else the clipboard holds, because that is the user's.
 
 | Step | Tap | Expected |
 | --- | --- | --- |
@@ -290,7 +335,7 @@ Under the host contract, the `wx.checkSession` failure callback means the login 
 
 Steps 3 and 4 must be run on a real device. The console line records only that WeChat accepted the call; whether a vibration was actually felt is for the person holding the device to confirm, and no automated check can show it. `getClipboardData` is not an allowed `app.json.requiredPrivateInfos` entry and must not be declared in that array.
 
-12. Verify the file system. Nothing touches the file system while the page loads, so every step follows a tap. The page only ever writes a fixed, non-sensitive string to a fixed file name; it never displays or logs the sandbox root or any other file's contents.
+13. Verify the file system. Nothing touches the file system while the page loads, so every step follows a tap. The page only ever writes a fixed, non-sensitive string to a fixed file name; it never displays or logs the sandbox root or any other file's contents.
 
 | Step | Tap | Expected |
 | --- | --- | --- |
@@ -302,7 +347,7 @@ Steps 3 and 4 must be run on a real device. The console line records only that W
 
 The order matters: step 5 only reads `exists=false` when step 4 removed the file. Removing a file that is not there fails, following WeChat's `unlink` contract, so steps 4 and 5 must not be run twice in a row.
 
-13. Verify location. It is gated by three separate conditions, so the steps below walk the capability question, then the privacy contract, then the permission. Nothing reads a position while the page loads, so every step follows a tap.
+14. Verify location. It is gated by three separate conditions, so the steps below walk the capability question, then the privacy contract, then the permission. Nothing reads a position while the page loads, so every step follows a tap.
 
 | Step | Tap | Expected |
 | --- | --- | --- |
@@ -324,7 +369,7 @@ Three configuration requirements decide whether this works at all, and all three
 
 A mutation probe was executed and reverted for this capability: inverting the coordinate range check failed nine tests across the interop, adapter, and contract levels, so the shape validation is genuinely asserted rather than incidentally passing.
 
-14. Verify scanning. It opens WeChat's own scanning interface, so nothing opens while the page loads and every step below follows a tap. The page reports only whether content was present, whether the format the host named is recognized, and whether the outcome was success, an indeterminate interruption, or another failure; it **never displays or logs the scanned content, `rawData`, the character set, or the image path**.
+15. Verify scanning. It opens WeChat's own scanning interface, so nothing opens while the page loads and every step below follows a tap. The page reports only whether content was present, whether the format the host named is recognized, and whether the outcome was success, an indeterminate interruption, or another failure; it **never displays or logs the scanned content, `rawData`, the character set, or the image path**.
 
 | Step | Tap | Expected |
 | --- | --- | --- |
@@ -340,7 +385,7 @@ The interruption classification matches exactly two host messages (`scanCode:can
 
 Developer Tools is not a device: its scan implementation has the user pick an image and then decodes it, so the camera path and what `onlyFromCamera` actually does can only be settled on hardware. `Scan from camera only` only passes `onlyFromCamera=true` to WeChat to prevent an album fallback; it neither queries nor requests nor assumes `scope.camera`. The example adds no scan field to `app.json.requiredPrivateInfos`. The system or WeChat may handle camera access inside the scanning interface, which does not mean the SDK established a permission precondition.
 
-15. Verify media selection. It opens WeChat's own picker, so nothing opens while the page loads and every step below follows a tap. The page reports only how many files came back, whether every kind the host named is one the SDK recognizes, and whether the metadata is usable; it **never displays or logs the selected media, a base64 encoding, a file name, or a complete temporary path**.
+16. Verify media selection. It opens WeChat's own picker, so nothing opens while the page loads and every step below follows a tap. The page reports only how many files came back, whether every kind the host named is one the SDK recognizes, and whether the metadata is usable; it **never displays or logs the selected media, a base64 encoding, a file name, or a complete temporary path**.
 
 | Step | Tap | Expected |
 | --- | --- | --- |
@@ -359,7 +404,7 @@ Step 3 proves only that the SDK handed over files the contract can carry, not th
 
 The page reads no media itself, and nothing in the example copies the temporary files anywhere. The paths the host returns belong to the session that produced them, so treat them as short-lived: copy the media to storage you own if it has to outlive the run.
 
-16. Verify subscription requests. WeChat requires a user gesture, so nothing asks the host while the page loads and every step below follows a tap. The page prints counts and never a template id: which templates a user subscribed to is between the user and the mini program, and a screenshot must not carry it.
+17. Verify subscription requests. WeChat requires a user gesture, so nothing asks the host while the page loads and every step below follows a tap. The page prints counts and never a template id: which templates a user subscribed to is between the user and the mini program, and a screenshot must not carry it.
 
 | Step | Tap | Expected |
 | --- | --- | --- |
@@ -379,7 +424,7 @@ Step 4 proves only that the SDK handed over the host's per-template answers, not
 
 The adapter requires exact correlation: missing or unexpected template keys and blank or non-text statuses are `InvalidResponse`, never a successful “silent” answer.
 
-17. Verify the network extensions. Nothing is queried, registered, uploaded, or downloaded while the page loads, so every step follows a tap. The page never prints a URL, a header, a file path, or a response body; it reports statuses, byte counts, event counts, and whether an abort was invoked.
+18. Verify the network extensions. Nothing is queried, registered, uploaded, or downloaded while the page loads, so every step follows a tap. The page never prints a URL, a header, a file path, or a response body; it reports statuses, byte counts, event counts, and whether an abort was invoked.
 
 | Step | Tap | Expected |
 | --- | --- | --- |
@@ -397,7 +442,7 @@ Steps 3, 7, 8, and 9 are the ones automation cannot produce. Step 3 needs a devi
 
 Step 5 is the guard that the example's default state is honest: with nothing configured the page makes no host call at all, so no upload can be mistaken for a passing check. A `progressSeen=false` in step 7 or 8 is not a failure: a small transfer can complete before the host reports anything.
 
-18. Verify standard payment. Nothing touches the payment interface while the page loads, so every step follows a tap. The page's log lines never contain a payment parameter, a signature, a merchant identifier, or the host's own failure text; a failure is reduced to a closed label instead.
+19. Verify standard payment. Nothing touches the payment interface while the page loads, so every step follows a tap. The page's log lines never contain a payment parameter, a signature, a merchant identifier, or the host's own failure text; a failure is reduced to a closed label instead.
 
 | Step | Tap | Expected |
 | --- | --- | --- |
@@ -409,7 +454,7 @@ Step 5 is the guard that the example's default state is honest: with nothing con
 
 Steps 3 to 5 cannot be produced here at all: they need a legal WeChat Pay merchant account bound to this mini program's AppID, a real order, and a trusted backend that signs, which is `BackendRequired`. The Developer Tools simulator is not a merchant, so nothing it shows may be recorded as a payment result. Step 2 is the guard that the committed default is honest, and it is the only one of these steps that runs without that environment.
 
-19. Record which checks you observed and which you did not. A capability is recorded as host-verified in [PROJECT_FACTS-en.md](PROJECT_FACTS-en.md) only after a real-host run for that capability.
+20. Record which checks you observed and which you did not. A capability is recorded as host-verified in [PROJECT_FACTS-en.md](PROJECT_FACTS-en.md) only after a real-host run for that capability.
 
 The Storage check writes a dedicated test key, verifies overwrite, removes it, and confirms that the missing key reads as `null`. The network check issues a `GET` to `https://example.com/` and reports the status code and body length; point the example's `networkUrl` constant at any reachable HTTPS endpoint when verifying a different host.
 

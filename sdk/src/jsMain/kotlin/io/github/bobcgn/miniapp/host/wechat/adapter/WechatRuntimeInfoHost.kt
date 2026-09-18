@@ -1,6 +1,10 @@
 package io.github.bobcgn.miniapp.host.wechat.adapter
 
+import io.github.bobcgn.miniapp.host.wechat.interop.hasWxBleConnection
+import io.github.bobcgn.miniapp.host.wechat.interop.hasWxBluetoothAdapter
+import io.github.bobcgn.miniapp.host.wechat.interop.hasWxBluetoothDiscovery
 import io.github.bobcgn.miniapp.host.wechat.interop.hasWxCanIUse
+import io.github.bobcgn.miniapp.host.wechat.interop.hasWxGetBluetoothAdapterState
 import io.github.bobcgn.miniapp.host.wechat.interop.hasWxFileSystemMethod
 import io.github.bobcgn.miniapp.host.wechat.interop.hasWxGetAppBaseInfo
 import io.github.bobcgn.miniapp.host.wechat.interop.hasWxGetDeviceInfo
@@ -41,6 +45,21 @@ internal interface WechatRuntimeInfoHost {
 
     /** Whether the host reports a sandbox root for user files. */
     fun hasUserDataPath(): Boolean
+
+    /**
+     * Whether the host can open and close a Bluetooth adapter and report its state.
+     *
+     * Probed here rather than through `wx.canIUse` because the capability asks for
+     * a group of members, and a host that offered only some of them would leave the
+     * adapter either unopenable or uncloseable.
+     */
+    fun hasBluetoothAdapter(): Boolean
+
+    /** Whether the host can start, stop, and report a device scan. */
+    fun hasBluetoothDiscovery(): Boolean
+
+    /** Whether the host can create, close, and observe a device connection. */
+    fun hasBluetoothConnection(): Boolean
 }
 
 /** Production runtime port backed directly by the global WeChat API. */
@@ -76,4 +95,11 @@ internal object WxRuntimeInfoHost : WechatRuntimeInfoHost {
     override fun hasFileSystemMethod(method: String): Boolean = hasWxFileSystemMethod(method)
 
     override fun hasUserDataPath(): Boolean = hasWxUserDataPath()
+
+    override fun hasBluetoothAdapter(): Boolean =
+        hasWxBluetoothAdapter() && hasWxGetBluetoothAdapterState()
+
+    override fun hasBluetoothDiscovery(): Boolean = hasWxBluetoothDiscovery()
+
+    override fun hasBluetoothConnection(): Boolean = hasWxBleConnection()
 }

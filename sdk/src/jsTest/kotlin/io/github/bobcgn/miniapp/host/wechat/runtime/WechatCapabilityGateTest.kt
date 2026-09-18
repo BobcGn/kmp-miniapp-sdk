@@ -6,6 +6,7 @@ import io.github.bobcgn.miniapp.capability.lifecycle.MiniAppLifecycle
 import io.github.bobcgn.miniapp.capability.network.MiniAppHttpTransport
 import io.github.bobcgn.miniapp.capability.storage.MiniAppStorage
 import io.github.bobcgn.miniapp.host.HostVersion
+import io.github.bobcgn.miniapp.host.wechat.WeChatDeviceCapabilities
 import io.github.bobcgn.miniapp.host.wechat.testing.FakeWechatRuntimeInfoHost
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -28,6 +29,30 @@ internal class WechatCapabilityGateTest {
         assertEquals(CapabilitySupport.Supported, gate.supportFor(MiniAppStorage.Key))
         assertEquals(CapabilitySupport.Supported, gate.supportFor(MiniAppHttpTransport.Key))
         assertEquals(CapabilitySupport.Supported, gate.supportFor(MiniAppLifecycle.Key))
+    }
+
+    @Test
+    fun theThreeBluetoothCapabilitiesAreGatedSeparately() {
+        val complete = gateWith(FakeWechatRuntimeInfoHost())
+
+        assertEquals(CapabilitySupport.Supported, complete.supportFor(WeChatDeviceCapabilities.BluetoothAdapter))
+        assertEquals(CapabilitySupport.Supported, complete.supportFor(WeChatDeviceCapabilities.BluetoothDiscovery))
+        assertEquals(CapabilitySupport.Supported, complete.supportFor(WeChatDeviceCapabilities.BluetoothConnection))
+
+        // The base library shipped with the installed Developer Tools opens an adapter
+        // and scans while refusing every connection call, which is exactly the shape a
+        // single `bluetooth` answer could not express.
+        val simulator = gateWith(
+            FakeWechatRuntimeInfoHost(
+                bluetoothAdapterAvailable = true,
+                bluetoothDiscoveryAvailable = true,
+                bluetoothConnectionAvailable = false,
+            ),
+        )
+
+        assertEquals(CapabilitySupport.Supported, simulator.supportFor(WeChatDeviceCapabilities.BluetoothAdapter))
+        assertEquals(CapabilitySupport.Supported, simulator.supportFor(WeChatDeviceCapabilities.BluetoothDiscovery))
+        assertEquals(CapabilitySupport.Unsupported, simulator.supportFor(WeChatDeviceCapabilities.BluetoothConnection))
     }
 
     @Test

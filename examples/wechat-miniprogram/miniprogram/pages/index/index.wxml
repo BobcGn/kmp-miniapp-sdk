@@ -194,6 +194,25 @@
   </view>
 
   <view class="card">
+    <text class="eyebrow">Bluetooth (Experimental)</text>
+    <text class="label">Event-driven resource model</text>
+    <text class="status status--{{bleCapabilityStatus}}">capability {{bleCapabilityStatus}}</text>
+    <text class="details">{{bleCapabilityDetails}}</text>
+    <text class="status status--{{bleStatus}}">session {{bleStatus}}</text>
+    <text class="details">{{bleDetails}}</text>
+    <text class="details">devices {{bleDeviceCount}} · first {{bleFirstDevice}} · connection {{bleConnection}}</text>
+    <button class="action" bindtap="checkBleCapability">Check BLE capability</button>
+    <button class="action" bindtap="openBleAdapter">Open adapter</button>
+    <button class="action" bindtap="startBleDiscovery">Start discovery</button>
+    <button class="action" bindtap="stopBleDiscovery">Stop discovery</button>
+    <input class="action" value="{{bleDeviceId}}" bindinput="onBleDeviceIdInput" placeholder="optional device id" />
+    <button class="action" bindtap="connectBleDevice">Connect</button>
+    <button class="action" bindtap="disconnectBleDevice">Disconnect</button>
+    <button class="action" bindtap="closeBleAdapter">Close adapter</button>
+    <button class="action" bindtap="refreshBleState">Refresh device count</button>
+  </view>
+
+  <view class="card">
     <text class="eyebrow">Tab Switching</text>
     <text class="label">wx.switchTab</text>
     <text class="status status--{{switchTabStatus}}">{{switchTabStatus}}</text>

@@ -174,6 +174,60 @@ internal external object wx {
     fun offNetworkStatusChange(listener: WxNetworkStatusChangeListener?): Unit
 
     /**
+     * Opens this host's Bluetooth adapter.
+     *
+     * The whole BLE surface is experimental: see `WeChatBluetooth.kt` for what the
+     * proof of concept covers and what it deliberately does not.
+     */
+    fun openBluetoothAdapter(options: WxOpenBluetoothAdapterOptions): Unit
+
+    /** Closes the adapter and releases what opening it registered. */
+    fun closeBluetoothAdapter(options: WxCloseBluetoothAdapterOptions): Unit
+
+    /** Reports the adapter's current availability, scan state, and power state. */
+    fun getBluetoothAdapterState(options: WxGetBluetoothAdapterStateOptions): Unit
+
+    /** Starts scanning for advertising devices. */
+    fun startBluetoothDevicesDiscovery(options: WxStartBluetoothDevicesDiscoveryOptions): Unit
+
+    /** Stops scanning. */
+    fun stopBluetoothDevicesDiscovery(options: WxStopBluetoothDevicesDiscoveryOptions): Unit
+
+    /**
+     * Registers [listener] for discovery events.
+     *
+     * WeChat removes listeners by identity, so the caller must keep the same value
+     * it registered and pass it to [offBluetoothDeviceFound].
+     */
+    fun onBluetoothDeviceFound(listener: WxBluetoothDeviceFoundListener): Unit
+
+    /** Removes [listener], or every listener when none is given. */
+    fun offBluetoothDeviceFound(listener: WxBluetoothDeviceFoundListener?): Unit
+
+    /** Registers [listener] for adapter state changes. */
+    fun onBluetoothAdapterStateChange(listener: WxBluetoothAdapterStateListener): Unit
+
+    /** Removes [listener], or every listener when none is given. */
+    fun offBluetoothAdapterStateChange(listener: WxBluetoothAdapterStateListener?): Unit
+
+    /** Connects to the device named in the options. */
+    fun createBLEConnection(options: WxCreateBleConnectionOptions): Unit
+
+    /** Disconnects from the device named in the options. */
+    fun closeBLEConnection(options: WxCloseBleConnectionOptions): Unit
+
+    /**
+     * Registers [listener] for connection state changes.
+     *
+     * The event is not per device: it reports a change for any device, and names
+     * the device it belongs to.
+     */
+    fun onBLEConnectionStateChange(listener: WxBleConnectionStateChangeListener): Unit
+
+    /** Removes [listener], or every listener when none is given. */
+    fun offBLEConnectionStateChange(listener: WxBleConnectionStateChangeListener?): Unit
+
+    /**
      * Uploads a file through the host.
      *
      * Returns the host's task so the caller can report progress and stop the

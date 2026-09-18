@@ -264,6 +264,14 @@ The `export` boundary contains the version facade, Promise-based Storage functio
 - The storage, transport, and app-lifecycle contracts are each stated once as shared checks and run against both the host-neutral reference implementation and the WeChat adapter.
 - No automated test claims access to a real `wx` runtime, and no automated check substitutes for real-host verification.
 
+- Bluetooth is a proof of concept for the SDK's event-driven resource model, not a Bluetooth API, and every part of it is `Experimental`. Adapter open/close and state, discovery with its device stream, and connection with its state stream exist; services, characteristics, notifications, MTU, RSSI queries, pairing, reconnection, background scanning and `getBluetoothDevices` do not.
+- Every BLE stream registers exactly one host listener and removes **that same value** on every termination path, so a collector that ends normally, fails, or is cancelled leaves no registration behind; the adapter's own listener count is readable through `wechatBleListenerCount()` and reaches zero.
+- Discovery deduplicates by `deviceId` per collector — one event per device, first sighting wins — and the SDK also asks the host not to repeat devices (`allowDuplicatesKey = false`), so the stream's shape does not depend on the host honouring that flag.
+- Discovery and connection streams use a bounded buffer that drops the oldest events rather than an unbounded queue, and the adapter accepts no backpressure from the host callback. A dropped discovery event may not be reported again because the host is asked not to repeat devices, so discovery is a best-effort observation rather than an exhaustive result set.
+- BLE models no permission and no privacy precondition: WeChat reports a switched-off adapter as a plain `openBluetoothAdapter` failure, and no precondition for this capability could be confirmed from the host contract. The adapter's only port is the Bluetooth host, so it cannot query either.
+- The installed Developer Tools base library refuses `createBLEConnection` and `closeBLEConnection` on macOS (`createBLEConnection:fail API_NOT_SUPPORT`), so connection can only be verified on a real device; this is recorded as a host limitation rather than an SDK one.
+- BLE adapter and discovery were exercised on an Android real device on 2026-09-18: the three capability keys read `Supported`, adapter open and close succeeded, discovery started and stopped, 32 devices were reported, and the listener count fell 2 → 1 → 0. Connection and disconnection were not run, because no connectable peripheral was available, so this is a partial real-device record rather than a complete BLE acceptance. Automated adapter, interop and session tests pass, and the CommonJS smoke drives the whole surface against a fake host, but none of them substitutes for a host run.
+
 ## 10. Explicit Non-Capabilities
 
 The project currently has no:
@@ -273,7 +281,7 @@ The project currently has no:
 - A map SDK, map UI, background or continuous location, `startLocationUpdate`, `onLocationChange`, geofencing, track recording, reverse geocoding, third-party map services, the native `map` component, position caching, position upload, or `chooseLocation` and `openLocation`
 - A file system beyond UTF-8 text in the mini program sandbox: no directories, directory traversal, recursive removal, streams, file descriptors, random access, file watching, databases, secure storage, or binary and base64 file contents
 - Node `fs` or any POSIX file abstraction
-- Device capabilities gated by privacy authorization that this SDK does not implement, such as Media and Bluetooth
+- Bluetooth services, characteristics and notifications, MTU negotiation, signal-strength queries, device pairing, automatic reconnection, and background scanning: the BLE proof of concept covers adapter, discovery and connection only
 - A native camera component, continuous visual recognition, a self-built QR or barcode parser, a general camera UI, or any business parsing, persistence, or upload of what was scanned
 - A player, editor, compressor, or transcoder for the selected media; image recognition; upload, download, or backend storage; long-term management of the host's temporary files; a complete wrapper of WeChat's media APIs; or the media picker's own interface
 - A general push-notification abstraction; sending subscription messages from a backend; template management; silent or load-time subscription requests; or any claim that an accepted subscription means a message was or will be delivered

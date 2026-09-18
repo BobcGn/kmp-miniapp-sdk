@@ -37,6 +37,8 @@ import io.github.bobcgn.miniapp.host.wechat.adapter.WechatNetworkHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatNetworkStatus
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatNetworkStatusHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatPayment
+import io.github.bobcgn.miniapp.host.wechat.adapter.WechatBluetooth
+import io.github.bobcgn.miniapp.host.wechat.adapter.WechatBluetoothHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatPaymentHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatPermissionHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WechatPermissions
@@ -62,6 +64,7 @@ import io.github.bobcgn.miniapp.host.wechat.adapter.WxNavigationHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WxNetworkHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WxNetworkStatusHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WxPermissionHost
+import io.github.bobcgn.miniapp.host.wechat.adapter.WxBluetoothHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WxRequestPaymentHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WxPrivacyHost
 import io.github.bobcgn.miniapp.host.wechat.adapter.WxRequestSubscribeMessageHost
@@ -113,6 +116,13 @@ internal class WechatPlatformApi(
     internal val downloadFile: WechatDownloadFile,
     /** Standard WeChat Pay payment. */
     internal val payment: WechatPayment,
+    /**
+     * The WeChat BLE proof of concept.
+     *
+     * Experimental: it exists to exercise the event-driven resource model, not
+     * to offer Bluetooth. See `WechatBluetooth` for what it covers.
+     */
+    internal val bluetooth: WechatBluetooth,
 ) : HostPlatformApi
 
 /** First concrete [MiniAppHost], backed by the WeChat Mini Program runtime. */
@@ -135,6 +145,7 @@ internal class WechatHost(
     uploadFileHost: WechatUploadFileHost = WxUploadFileHost,
     downloadFileHost: WechatDownloadFileHost = WxDownloadFileHost,
     paymentHost: WechatPaymentHost = WxRequestPaymentHost,
+    bluetoothHost: WechatBluetoothHost = WxBluetoothHost,
 ) : MiniAppHost<WechatPlatformApi>,
     StorageCapabilityProvider,
     NetworkCapabilityProvider,
@@ -173,6 +184,7 @@ internal class WechatHost(
         uploadFile = WechatUploadFile(uploadFileHost),
         downloadFile = WechatDownloadFile(downloadFileHost),
         payment = WechatPayment(paymentHost),
+        bluetooth = WechatBluetooth(bluetoothHost),
     )
 
     override val storage: MiniAppStorage = WechatStorage(storageHost)

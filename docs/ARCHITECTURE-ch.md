@@ -90,6 +90,12 @@ SDK 的范围仅包括 shared logic、runtime integration 和 typed platform bri
 
 微信是 Host Adapter #1，其平台特定代码隔离在 `jsMain/.../host/wechat`。当前不存在支付宝或 Telegram implementation。
 
+### 事件源
+
+报告事件而不只是回答问题的 capability，需要在有 collector 关注的期间持有一个宿主注册。BLE 概念验证确立（而网络状态流此前已遵循）的规则是：**每个 collector 恰好拥有一个注册，并在所有终止路径 —— 正常结束、异常、取消 —— 上移除同一个值**。微信按身份移除 listener，因此共享一个注册就需要引用计数来决定何时移除，而那里一旦出错，listener 会泄漏到小程序的整个生命周期。
+
+由此产生两条结论：事件流必须给出明确的重复事件策略与有界缓冲，因为宿主回调与 collector 都不该决定对方可以占用多少内存；取消永远不是 SDK 报告的错误，因为停止监听的调用方并没有遭遇宿主失败。BLE 是该模型的概念验证，标记为 `Experimental`；该 adapter 仅通过平台逃生口到达宿主。
+
 ### Capability 与平台逃生口
 
 只有不同 Host 间语义真正一致的内容才应成为公共 Capability。SDK 不隐藏底层平台，也不把无关 API 强行塞入 lowest-common-denominator abstraction。`MiniAppHost.platform` 提供强类型 `HostPlatformApi` escape hatch；具体平台 API 只在出现真实 consumer 时引入。

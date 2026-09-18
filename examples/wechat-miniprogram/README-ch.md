@@ -85,7 +85,7 @@ Standard Payment 卡片把可信后端产出的参数转发给微信自身的支
 
 Network 检查会向 `https://example.com/` 发起 `GET`。微信要求该 host 已列入 request domain 白名单，或编译时关闭域名校验。验证其他 endpoint 时请修改 `networkUrl` 常量。
 
-导航需要交互，无法只靠一次页面加载验证。依次点击第二、第三页会为 `wx.navigateTo`、`wx.redirectTo`、`wx.navigateBack` 分别打印 `[kmp-miniapp-sdk] navigation: PASS <action>`；点击顺序见检查清单。Tab Switching 卡片用 `wx.switchTab` 切到 tabtarget tab 并打印 `[kmp-miniapp-sdk] switch tab: PASS`；其第二个按钮请求第三页 —— 该页面没有 tab —— 只打印 SDK 报告的封闭分类，绝不打印宿主自身的失败原文。
+导航需要交互，无法只靠一次页面加载验证。依次点击第二、第三页会为 `wx.navigateTo`、`wx.redirectTo`、`wx.navigateBack` 分别打印 `[kmp-miniapp-sdk] navigation: PASS <action>`；点击顺序见检查清单。Tab Switching 卡片用 `wx.switchTab` 切到 tabtarget tab 并打印 `[kmp-miniapp-sdk] switch tab: PASS`；其第二个按钮请求第三页 —— 该页面没有 tab —— 只打印 SDK 报告的封闭分类，绝不打印宿主自身的失败原文。 Bluetooth 卡片是实验性的，用于展示 SDK 的事件驱动资源模型而不是 Bluetooth API：它核对三个 BLE 能力键、打开 adapter、开始与停止 discovery、连接与断开，并在所有流结束后打印 `[kmp-miniapp-sdk] ble cleanup: PASS listeners=0`。设备标识被脱敏，失败只打印封闭分类。在 macOS 上模拟器的基础库拒绝一切连接调用，因此连接需要真机。
 
 File System 卡片会向小程序沙箱中的固定文件名写入固定的非敏感字符串，读回、检查存在、删除，并再次检查已删除。页面加载期间不会触碰文件系统。仅支持沙箱内的 UTF-8 文本，且沙箱根本身从不显示或记录。删除不存在的文件会失败，遵循微信契约，因此删除与最后一步检查应按顺序各执行一次。
 

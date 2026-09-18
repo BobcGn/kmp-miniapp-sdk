@@ -103,4 +103,21 @@ internal object WeChatDeviceCapabilities {
      * merchant backend is therefore never reported as an unsupported host.
      */
     val RequestPayment: CapabilityKey = CapabilityKey("wechat.request-payment")
+
+    /**
+     * The Bluetooth adapter: opening it, closing it, and reading its state.
+     *
+     * Experimental, like the rest of the BLE proof of concept. The three Bluetooth
+     * keys are separate because the host offers them separately: the base library
+     * shipped with the installed Developer Tools opens an adapter and scans while
+     * refusing every connection call on macOS, and one `bluetooth` answer would be
+     * wrong for one of the three.
+     */
+    val BluetoothAdapter: CapabilityKey = CapabilityKey("wechat.bluetooth-adapter")
+
+    /** Scanning for advertising devices and the device-found event stream. */
+    val BluetoothDiscovery: CapabilityKey = CapabilityKey("wechat.bluetooth-discovery")
+
+    /** Creating a connection, closing it, and the connection-state event stream. */
+    val BluetoothConnection: CapabilityKey = CapabilityKey("wechat.bluetooth-connection")
 }

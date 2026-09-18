@@ -446,6 +446,28 @@ SDK 校验模板与响应关联，而不猜测答案词汇：ID 必须非空白�
 
 自动化无法替代资格与后端这两半：它们需要合格账号与真实订单，与标准支付完全相同。
 
+## Bluetooth（实验性）
+
+BLE 是对 SDK **事件驱动资源模型**的概念验证，不是 Bluetooth API，其全部内容均为 `Experimental`。它存在的原因是：SDK 其他能力要么回答问题，要么转发消费者本就拥有的界面；BLE 是第一个真实的 `on`/`off` 事件源。
+
+覆盖范围：adapter 的 open / close / state；discovery 及其设备流；connection 及其连接状态流。刻意不做：service、characteristic、notify、MTU、信号强度查询、配对、自动重连、后台扫描与 `getBluetoothDevices`。
+
+```shell
+./gradlew :kmp-miniapp-sdk:jsNodeTest --tests "*Bluetooth*" --tests "*Ble*"
+```
+
+概念验证所依据、并由其测试断言的规则：
+
+- **每个 collector 一个注册，并在所有终止路径上移除。** 每条流只注册一个宿主 listener，并把同一个值交给移除调用，因此无论 collector 正常结束、失败还是被取消都不会留下残留。宿主拒绝的移除只会被计数而不会抛出 —— 在清理阶段抛出会覆盖调用方自己的结果或取消。
+- **重复事件策略：按 `deviceId` 逐 collector 一次事件**，以首次出现为准。discovery 同时以 `allowDuplicatesKey = false` 启动，因此宿主也会过滤；但流的形状不依赖宿主是否遵守该标志。
+- **背压：有界缓冲并丢弃最旧事件**，因此宿主回调永不阻塞，也没有 collector 能让 SDK 无界地持有事件。由于 discovery 同时要求宿主不要重复上报，被丢弃的事件可能永久丢失；这是尽力而为的观察流，不是完整扫描结果。
+- **幂等的状态变更。** 打开已开启的 adapter、关闭已关闭的 adapter、停止未运行的扫描，都不会调用宿主。
+- **不建模任何权限或隐私前置条件**，因为无法从宿主契约确认。蓝牙未开启以普通的 `openBluetoothAdapter` 失败到达，而 adapter 的唯一端口是 Bluetooth host，因此它无法查询二者。
+
+已安装的开发者工具基础库在 macOS 上拒绝 `createBLEConnection` 与 `closeBLEConnection`（`createBLEConnection:fail API_NOT_SUPPORT`），因此模拟器可以验证 adapter 与 discovery，但无法验证连接。这是宿主限制，连接验收因此需要真机。
+
+adapter 与 discovery 已于 2026-09-18 在 Android 真机上执行并通过：三个能力键均为 `Supported`，adapter 开启与关闭均成功，discovery 正常启动与停止，共上报 32 个设备，listener 计数由 2 → 1 → 0。连接与断开未执行，因为当时没有可连接的外设。因此能力键在 [WECHAT_CAPABILITIES-ch.md](platforms/wechat/WECHAT_CAPABILITIES-ch.md) 中保持 `Experimental`：不完整的真机记录不构成完成的验收。
+
 ## 开发原则
 
 IntelliJ IDEA 提供代码 intelligence。Gradle Wrapper 是构建事实源。IDE 显示成功并不能证明项目构建或测试成功。

@@ -461,6 +461,51 @@ Independent test plan, if it is implemented:
 
 Automation cannot stand in for the eligibility or backend halves: they need a qualifying account and a real order, exactly as standard payment does.
 
+## Bluetooth (experimental)
+
+BLE is a proof of concept for the SDK's event-driven resource model, not a Bluetooth API, and
+everything about it is `Experimental`. It exists because the SDK's other capabilities either answer a
+question or forward an interface the consumer already owns; BLE is the first real `on`/`off` source.
+
+What it covers: adapter open, close and state; discovery with its device stream; connection with its
+connection-state stream. What it deliberately does not: services, characteristics, notifications,
+MTU, signal-strength queries, pairing, reconnection, background scanning, and `getBluetoothDevices`.
+
+```shell
+./gradlew :kmp-miniapp-sdk:jsNodeTest --tests "*Bluetooth*" --tests "*Ble*"
+```
+
+The rules the proof of concept is built on, and which its tests assert:
+
+- **One registration per collector, removed on every termination path.** Each stream registers one
+  host listener and hands the same value to the removal call, so a collector that completes, fails,
+  or is cancelled leaves nothing behind. A removal the host refuses is counted rather than thrown,
+  because throwing during cleanup would replace the caller's own result or cancellation.
+- **Duplicate policy: one event per `deviceId` per collector**, first sighting wins. Discovery is also
+  started with `allowDuplicatesKey = false`, so the host filters too, but the stream does not depend
+  on the host honouring that flag.
+- **Backpressure: a bounded buffer that drops the oldest events**, so a host callback never blocks and
+  no collector can make the SDK hold events without limit. Because discovery asks the host not to
+  repeat devices, a dropped event may be lost: this is a best-effort observation, not an exhaustive
+  scan result.
+- **Idempotent state changes.** Opening an open adapter, closing a closed one, or stopping a scan that
+  is not running does not call the host.
+- **No permission and no privacy precondition is modelled**, because none could be confirmed from the
+  host contract. A switched-off adapter arrives as an ordinary `openBluetoothAdapter` failure, and the
+  adapter's only port is the Bluetooth host, so it cannot query either.
+
+The installed Developer Tools base library refuses `createBLEConnection` and `closeBLEConnection` on
+macOS (`createBLEConnection:fail API_NOT_SUPPORT`), so the simulator can exercise the adapter and
+discovery but not connection. That is a host limitation, and connection acceptance therefore needs a
+real device.
+
+Adapter and discovery were exercised on an Android real device on 2026-09-18 and passed: the three
+capability keys read `Supported`, adapter open and close succeeded, discovery started and stopped, 32
+devices were reported, and the listener count fell 2 → 1 → 0. Connection and disconnection were not
+run, because no connectable peripheral was available. The capability keys therefore stay
+`Experimental` in [WECHAT_CAPABILITIES-en.md](platforms/wechat/WECHAT_CAPABILITIES-en.md): a partial
+real-device record is not a completed acceptance.
+
 ## Development Principle
 
 IntelliJ IDEA provides code intelligence. The Gradle Wrapper is the build authority. An IDE success indicator does not prove that the project builds or that tests pass.

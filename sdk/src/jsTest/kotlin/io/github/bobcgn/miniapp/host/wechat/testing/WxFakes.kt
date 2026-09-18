@@ -20,6 +20,11 @@ import io.github.bobcgn.miniapp.host.wechat.interop.WxRequestSubscribeMessageSuc
 import io.github.bobcgn.miniapp.host.wechat.interop.WxTransferProgressResult
 import io.github.bobcgn.miniapp.host.wechat.interop.WxUploadFileSuccessResult
 import io.github.bobcgn.miniapp.host.wechat.interop.WxRequestTask
+import io.github.bobcgn.miniapp.host.wechat.interop.WxBleConnectionStateChangeResult
+import io.github.bobcgn.miniapp.host.wechat.interop.WxBluetoothAdapterStateChangeResult
+import io.github.bobcgn.miniapp.host.wechat.interop.WxBluetoothAdapterStateResult
+import io.github.bobcgn.miniapp.host.wechat.interop.WxBluetoothDeviceFoundResult
+import io.github.bobcgn.miniapp.host.wechat.interop.WxBluetoothDeviceRecord
 import io.github.bobcgn.miniapp.host.wechat.interop.WxScanCodeSuccessResult
 
 /**
@@ -411,5 +416,88 @@ internal fun fakeOpenSettingSuccess(authSetting: Any?): WxOpenSettingSuccessResu
     val result: WxOpenSettingSuccessResult = js("({})")
     js("result.errMsg = 'openSetting:ok'")
     js("result.authSetting = authSetting")
+    return result
+}
+
+/**
+ * Builds a `wx.getBluetoothAdapterState` success result.
+ *
+ * Every field is supplied as `Any?` so a test can produce the shapes the contract
+ * must reject, such as a missing `available` flag or a non-boolean one.
+ */
+internal fun fakeBluetoothAdapterStateResult(
+    available: Any?,
+    discovering: Any?,
+    powered: Any?,
+): WxBluetoothAdapterStateResult {
+    val result: WxBluetoothAdapterStateResult = js("({})")
+    js("result.errMsg = 'getBluetoothAdapterState:ok'")
+    js("result.available = available")
+    js("result.discovering = discovering")
+    js("result.powered = powered")
+    return result
+}
+
+/**
+ * Builds an `onBluetoothAdapterStateChange` payload.
+ *
+ * `powered` is deliberately absent: the installed base library's own schema lists
+ * two fields for this event and three for the query, so the fake host does not
+ * report a field the host would not.
+ */
+internal fun fakeBluetoothAdapterStateChangeResult(
+    available: Any?,
+    discovering: Any?,
+): WxBluetoothAdapterStateChangeResult {
+    val result: WxBluetoothAdapterStateChangeResult = js("({})")
+    js("result.available = available")
+    js("result.discovering = discovering")
+    return result
+}
+
+/**
+ * Builds one device entry as the host reports it.
+ *
+ * Every field is supplied as `Any?` so a test can produce the shapes the contract
+ * must reject, such as an entry without an identifier. `RSSI` keeps the host's own
+ * capitalisation, because that is the name the payload carries.
+ */
+internal fun fakeBluetoothDeviceRecord(
+    deviceId: Any?,
+    name: Any? = null,
+    rssi: Any? = null,
+): WxBluetoothDeviceRecord {
+    val record: WxBluetoothDeviceRecord = js("({})")
+    js("record.deviceId = deviceId")
+    js("record.name = name")
+    js("record.RSSI = rssi")
+    js("record.advertisServiceUUIDs = []")
+    return record
+}
+
+/**
+ * Builds an `onBluetoothDeviceFound` payload.
+ *
+ * `devices` is supplied as `Any?` so a test can produce the shape the contract must
+ * reject: the installed base library declares an array here, and anything else is a
+ * payload the SDK refuses to read rather than guesses at.
+ */
+internal fun fakeBluetoothDeviceFoundResult(devices: Any?): WxBluetoothDeviceFoundResult {
+    val result: WxBluetoothDeviceFoundResult = js("({})")
+    js("result.devices = devices")
+    return result
+}
+
+/**
+ * Builds an `onBLEConnectionStateChange` payload.
+ *
+ * Both fields are supplied as `Any?` so a test can produce the shapes the contract
+ * must reject: a change cannot be attributed without a device, and it states no
+ * change without the boolean.
+ */
+internal fun fakeBleConnectionStateResult(deviceId: Any?, connected: Any?): WxBleConnectionStateChangeResult {
+    val result: WxBleConnectionStateChangeResult = js("({})")
+    js("result.deviceId = deviceId")
+    js("result.connected = connected")
     return result
 }

@@ -90,6 +90,12 @@ WeChat client login intentionally does not become a common Auth capability. `Wec
 
 WeChat is Host Adapter #1. Its platform-specific code is isolated under `jsMain/.../host/wechat`. No Alipay or Telegram implementation currently exists.
 
+### Event sources
+
+A capability that reports events rather than answering a question owns a host registration for as long as a collector is interested in it. The rule the BLE proof of concept established, and which the network status stream already followed, is that **each collector owns exactly one registration and removes that same value on every termination path** — normal completion, an exception, or cancellation. WeChat removes listeners by identity, so a shared registration would need reference counting to decide when to remove it, and an error there leaks a listener for the lifetime of the mini program.
+
+Two consequences follow. An event stream carries a documented duplicate policy and a bounded buffer, because neither a host callback nor a collector may decide how much memory the other is allowed to use; and cancellation is never an error the SDK reports, because a caller that stopped listening did not experience a host failure. BLE is the proof of concept for this model and is `Experimental`; the adapter reaches the host only through the platform escape hatch.
+
 ### Capability and platform escape hatch
 
 Only semantics that are genuinely common across hosts should become common capabilities. The SDK does not hide the underlying platform or force unrelated APIs into a lowest-common-denominator abstraction. `MiniAppHost.platform` provides a typed `HostPlatformApi` escape hatch for platform-specific APIs; concrete platform APIs will be introduced only with real consumers.

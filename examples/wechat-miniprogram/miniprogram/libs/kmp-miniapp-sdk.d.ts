@@ -821,3 +821,86 @@ export function requirePrivacySatisfied(): Promise<void>;
  * with the permission still refused.
  */
 export function openPermissionSettings(permission: PermissionName): Promise<PermissionState>;
+
+/**
+ * One device a Bluetooth discovery session reported.
+ *
+ * `deviceId` is the host's own identifier. On some platforms it is a MAC address,
+ * so it is identifying: log a shortened or session-local form, never the value.
+ */
+export interface BleDevice {
+  readonly deviceId: string;
+  /** The advertised name, or `null` when the device advertised none. */
+  readonly name: string | null | undefined;
+  /** The reported signal strength, or `null` when the host reported none. */
+  readonly rssi: number | null | undefined;
+}
+
+/**
+ * What the host reports about its Bluetooth adapter.
+ *
+ * `discovering` and `powered` are `null` when the source of the state does not
+ * report them, which is not the same as `false`.
+ */
+export interface BleAdapterState {
+  readonly available: boolean;
+  readonly discovering: boolean | null | undefined;
+  readonly powered: boolean | null | undefined;
+}
+
+/** One connection state change. */
+export interface BleConnectionState {
+  readonly deviceId: string;
+  readonly connected: boolean;
+}
+
+/**
+ * Reports what the host says about its Bluetooth adapter.
+ *
+ * Experimental, like every BLE export here: this is a proof of concept for the SDK's
+ * event-driven resource model, not a Bluetooth API. Rejects when the adapter cannot
+ * be queried, including when the host has no Bluetooth adapter API at all.
+ */
+export function wechatBleAdapterState(): Promise<BleAdapterState>;
+
+/** Opens the adapter and starts collecting connection state changes. */
+export function wechatBleOpenAdapter(): Promise<void>;
+
+/** Stops collecting, then closes the adapter. Closing a closed adapter does nothing. */
+export function wechatBleCloseAdapter(): Promise<void>;
+
+/** Starts a scan and begins collecting the devices it reports. */
+export function wechatBleStartDiscovery(): Promise<void>;
+
+/** Stops the scan and stops collecting. Stopping a scan that is not running does nothing. */
+export function wechatBleStopDiscovery(): Promise<void>;
+
+/**
+ * The devices this session has seen, oldest first, at most 32.
+ *
+ * One entry per device: a device the host reports again is not repeated.
+ */
+export function wechatBleDevices(): BleDevice[];
+
+/** How the discovery stream ended, or `null` when it has not failed. */
+export function wechatBleDiscoveryFailure(): string | null | undefined;
+
+/** Connects to `deviceId`, which is a host value and must not be logged. */
+export function wechatBleConnect(deviceId: string): Promise<void>;
+
+/** Disconnects from `deviceId`. */
+export function wechatBleDisconnect(deviceId: string): Promise<void>;
+
+/** The connection state changes this session has seen, oldest first, at most 32. */
+export function wechatBleConnectionStates(): BleConnectionState[];
+
+/** How the connection-state stream ended, or `null` when it has not failed. */
+export function wechatBleConnectionFailure(): string | null | undefined;
+
+/**
+ * How many host listeners the BLE adapter currently holds.
+ *
+ * This is what the proof of concept exists to account for: it reaches zero once every
+ * stream has ended, and a number above zero after a stop is a listener still held.
+ */
+export function wechatBleListenerCount(): number;
