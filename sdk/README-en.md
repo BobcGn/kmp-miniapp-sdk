@@ -16,6 +16,11 @@ This is an experimental release. Check the
 [WeChat capability matrix](../docs/platforms/wechat/WECHAT_CAPABILITIES-en.md) before relying on a
 specific capability in production.
 
+The working tree builds `0.1.1`, which adds the Mini App distribution pipeline — `initMiniApp`,
+`syncMiniApp`, `assembleMiniApp` and `verifyMiniApp` — and is not published yet. A consumer that
+resolves `0.1.0` online gets the 0.1.0 behaviour: `miniappMain`, `miniappTest`, the runtime dependency,
+`miniappTest`, and `assembleMiniAppBundle`.
+
 ## Recommended KMP integration
 
 The intended consumer experience uses the companion Gradle plugin. It creates the `miniapp` target,
@@ -121,6 +126,20 @@ JavaScript remain in the Mini App project; the SDK does not render UI.
 
 Open the configured host directory in WeChat Developer Tools and verify the host console and page.
 Node tests prove Kotlin/JS behaviour; they do not replace real-host or real-device verification.
+
+On `0.1.1` the plugin also owns the host project itself, so the same build script becomes:
+
+```bash
+./gradlew initMiniApp
+./gradlew syncMiniApp
+./gradlew assembleMiniApp
+./gradlew verifyMiniApp
+```
+
+`initMiniApp` writes a minimal WeChat project at `miniApp/` once and never overwrites it, `syncMiniApp`
+copies the compiled modules into its generated library area, and `assembleMiniApp` plus `verifyMiniApp`
+produce and check a standalone project at `build/miniapp-dist/`. See the
+[README Quick Start](../README-en.md).
 
 ## Runtime-only integration for an existing Kotlin/JS target
 

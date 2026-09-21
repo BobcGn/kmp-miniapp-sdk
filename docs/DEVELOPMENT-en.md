@@ -149,7 +149,7 @@ A consumer that already had a Kotlin/JS target before applying the plugin may ne
 
 `gradle/libs.versions.toml` holds the one version the runtime SDK and this plugin share. The plugin's build generates `miniapp-plugin-metadata.properties` from it, and the plugin reads the coordinate from that resource at runtime, so neither the plugin's source nor its tests contain the version as a literal.
 
-The public 0.1.0 consumer path resolves the plugin from the Gradle Plugin Portal and the runtime coordinate from Maven Central. Repository fixtures intentionally retain composite substitution so they exercise the current working tree. A consumer that cannot resolve the runtime fails with Gradle's dependency-resolution error naming the coordinate; the plugin deliberately does not fall back to another version, another artifact, or a project path.
+After 0.1.1 passes its release gate and is published, its public consumer path resolves the plugin from the Gradle Plugin Portal and the runtime coordinate from Maven Central. Until then, 0.1.0 remains the latest public release and repository fixtures use composite substitution to exercise the 0.1.1 working tree. A consumer that cannot resolve the runtime fails with Gradle's dependency-resolution error naming the coordinate; the plugin deliberately does not fall back to another version, another artifact, or a project path.
 
 The plugin creates no source-set model and no `dependsOn` edge of its own: hand-built ones are the unused-source-set model [ADR 0010](decisions/0010-miniapp-gradle-plugin-source-set-model-en.md) rejected. It only creates the two conventional Kotlin directories on disk; repeated application preserves existing files. Applying it to a project that does not apply the Kotlin Multiplatform plugin fails with a message naming the missing plugin.
 
@@ -248,7 +248,10 @@ What it proves by running:
 | `miniappTest` runs its own tests *and* the shared ones | `build/test-results/miniappNodeTest/` holds `consumer.SharedTest` (2 tests) and `consumer.MiniAppTest` (3) |
 | the runtime SDK resolves automatically | `sdkVersion()` calls `MiniAppSdk.VERSION` |
 | the bundle satisfies its contract | the `verifyConsumerContract` task |
-| the DSL takes effect | the same task asserts the configured directory, and the host run passes `-PminiappBundleDirectory=host/miniprogram/libs` |
+| the DSL takes effect | the same task asserts the documented default bundle directory, which the fixture writes out explicitly |
+| the source host is the plugin's own output, then the consumer's | the `verifyConsumerSourceHost` task, and `initMiniApp` reporting `createdCount=0` on it |
+| the development loop fills the generated area | `initMiniApp` then `syncMiniApp`, followed by the host smoke on `miniApp/` |
+| the acceptance artifact is standalone | `assembleMiniApp` then `verifyMiniApp`, followed by the smoke run from inside `build/miniapp-dist/` |
 
 The consumer's build script contains no source-set declaration, no `dependsOn`, no `useCommonJs()`, no `generateTypeScriptDefinitions()`, no runtime artifact coordinate and no copy step. A new user's entry point is the README, whose Quick Start is taken from this fixture; `verifyMiniAppConsumerDocs` fails when the two languages drift apart, when a path the READMEs cite disappears, or when a documented consumer command is gone. Besides the two plugins it declares exactly one thing: `kotlin-test` for `commonTest`, which every Kotlin Multiplatform project does.
 
@@ -258,20 +261,20 @@ The consumer's build script contains no source-set declaration, no `dependsOn`, 
 ./gradlew --no-daemon --console=plain verifyMiniAppConsumerFixture
 ```
 
-That runs the fixture three ways: the default bundle directory, the host's directory, and the host's own consumption path. These tasks are not wired into `check`, because they compile Kotlin/JS and install npm dependencies.
+That runs the fixture four ways: the default bundle directory and its contract, the committed source host, the development loop from clean with its smoke, and the assembled distribution from clean with a smoke run from inside the distribution. These tasks are not wired into `check`, because they compile Kotlin/JS and install npm dependencies.
 
 ### The WeChat host
 
-`fixtures/miniapp-consumer/host` is a minimal WeChat mini program: WXML, WXSS and thin JavaScript that calls the assembled bundle. It is Host UI, so markup stays here and never enters the SDK or the fixture's shared Kotlin.
+`fixtures/miniapp-consumer/miniApp` is a minimal WeChat mini program. It was created once by `initMiniApp` and edited by hand since; the plugin's own test suite covers the template, and this copy is what proves the committed host stays complete and wired to the consumer's module. It is Host UI, so markup stays here and never enters the SDK or the fixture's shared Kotlin.
 
-Its `miniprogram/libs/` is build output and is git-ignored; run `verifyMiniAppConsumerHostBundle` before opening the project in WeChat Developer Tools. The fixture completed Developer Tools acceptance at base library 3.17.3: the page rendered `Hello, WeChat, from commonMain`, `5`, and `0.1.0-SNAPSHOT`, and the Console reported `fixture.result=PASS`. The host also has a Node smoke check that loads the bundle exactly the way the page does:
+Its `miniprogram/libs/` is the plugin's generated area and is git-ignored. Run `syncMiniApp` before opening the project in WeChat Developer Tools. The fixture completed Developer Tools acceptance at base library 3.17.3: the page rendered `Hello, WeChat, from commonMain`, `5`, and `0.1.0-SNAPSHOT`, and the Console reported `fixture.result=PASS`. The host also has a Node smoke check that loads the bundle exactly the way the page does:
 
 ```shell
-cd fixtures/miniapp-consumer/host
+cd fixtures/miniapp-consumer/miniApp
 node scripts/host-smoke.cjs
 ```
 
-That is a module-wiring check on Node, not host acceptance; the two are recorded separately.
+That is a module-wiring check on Node, not host acceptance; the two are recorded separately. The same script is copied into `build/miniapp-dist/` by `assembleMiniApp`, so the same check runs from inside the assembled distribution and resolves only relative to it — which is what shows the distribution needs nothing from this repository.
 
 ## Consumer Bridge
 

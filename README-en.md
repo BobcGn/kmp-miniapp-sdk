@@ -3,9 +3,9 @@
 [中文](README-ch.md)
 
 A Kotlin Multiplatform Mini App platform: a Gradle plugin that gives an ordinary Kotlin Multiplatform
-project a Mini App source set, a test source set and a host-ready bundle, plus the Kotlin runtime
-those sources compile against. Mini App is the platform; **WeChat is the current host**, and the host
-owns rendering.
+project a Mini App source set, a test source set, a WeChat source host, a host-ready bundle and a
+standalone distribution, plus the Kotlin runtime those sources compile against. Mini App is the
+platform; **WeChat is the current host**, and the host owns rendering.
 
 The workflow and every command below come from, and are executed against, the repository's real
 consumer build: [`fixtures/miniapp-consumer`](fixtures/miniapp-consumer). The snippets are shortened
@@ -28,7 +28,11 @@ environment, so it stays `Partial`. The
 [WeChat capability matrix](docs/platforms/wechat/WECHAT_CAPABILITIES-en.md) has the exact status of
 every capability, and a `Planned` entry there is not an implementation fact.
 
-Version **0.1.0** is the first public, experimental release. See the dedicated
+Version **0.1.0** is the latest public, experimental release. The **0.1.1 working tree** adds the Mini App
+distribution pipeline: `initMiniApp` creates the WeChat source host, `syncMiniApp` drives the
+development loop, and `assembleMiniApp` plus `verifyMiniApp` produce and check a standalone project.
+Everything 0.1.0 introduced — the source sets, the runtime dependency, the test run and
+`assembleMiniAppBundle` — is unchanged. See the dedicated
 [consumer setup guide](docs/CONSUMER_SETUP-en.md) for the online-resolution path, or the
 [runtime SDK README](sdk/README-en.md) for SDK-focused KMP integration and dependency guidance.
 
@@ -50,9 +54,9 @@ Version **0.1.0** is the first public, experimental release. See the dedicated
 
 | Layer | Owns | Does not own |
 | --- | --- | --- |
-| **Gradle plugin** `io.github.bobcgn.miniapp` | The `miniapp` target and the `miniappMain` / `miniappTest` source sets, the runtime dependency, the Node test run, `assembleMiniAppBundle`, the renderer boundary check, the `miniapp { }` extension | Any runtime API, any rendering, any business configuration |
+| **Gradle plugin** `io.github.bobcgn.miniapp` | The `miniapp` target and the `miniappMain` / `miniappTest` source sets, the runtime dependency, the Node test run, `assembleMiniAppBundle`, `initMiniApp`, `syncMiniApp`, `assembleMiniApp`, `verifyMiniApp`, the generated library area inside your source host, the renderer boundary check, the `miniapp { }` extension | Any runtime API, any rendering, any business configuration |
 | **Runtime SDK** `io.github.bobcgn:kmp-miniapp-sdk` | The Kotlin API your `miniappMain` compiles against: shared contracts, host capability abstraction, the WeChat adapter, the error and async model | Rendering, WXML/WXSS, view trees, business truth, authentication or payment confirmation |
-| **WeChat host** (yours) | `project.config.json`, `app.json`, pages, WXML, WXSS, the thin JavaScript that requires the bundle and calls it, `setData` and event forwarding | Nothing inside this SDK |
+| **WeChat host** (yours, scaffolded by `initMiniApp`) | `project.config.json`, `app.json`, pages, WXML, WXSS, the thin JavaScript that requires the bundle and calls it, `setData` and event forwarding | Nothing inside this SDK |
 | **Presentation Runtime** | `UiState`, `Action`, `Store`, `Effect`, state machines, presentation logic — **not implemented, and this document shows no API for it** | It is P2 scope, described in the [roadmap](docs/ROADMAP-en.md) |
 
 ## Quick start
@@ -60,8 +64,9 @@ Version **0.1.0** is the first public, experimental release. See the dedicated
 The following produces a working Mini App from an ordinary Kotlin Multiplatform project. It is the
 flow [`fixtures/miniapp-consumer`](fixtures/miniapp-consumer) runs on every verification pass.
 
-These are the fixture's own APIs and script shape, adapted to resolve the public 0.1.0 release rather
-than the fixture's repository-development composite build.
+These are the fixture's own APIs and script shape, adapted for the 0.1.1 release once it is published.
+Until 0.1.1 is published, run this flow through the repository fixture; the public repositories
+still serve 0.1.0.
 
 ### 0. What you need
 
@@ -94,7 +99,7 @@ rootProject.name = "my-miniapp"
 ```kotlin
 plugins {
     kotlin("multiplatform") version "2.4.20"
-    id("io.github.bobcgn.miniapp") version "0.1.0"
+    id("io.github.bobcgn.miniapp") version "0.1.1"
 }
 
 kotlin {
@@ -104,19 +109,13 @@ kotlin {
         }
     }
 }
-
-miniapp {
-    wechat {
-        bundleDirectory.set(layout.projectDirectory.dir("host/miniprogram/libs"))
-    }
-}
 ```
 
 That is the whole build script. There is no Kotlin/JS target to declare, no source set to create, no
 `dependsOn` to wire, no runtime artifact to name, and no output to copy. On the first Gradle import,
 the plugin creates `src/miniappMain/kotlin` and `src/miniappTest/kotlin` beside the existing common
 source directories. `miniappMain`, `miniappTest`, their edges to `commonMain` / `commonTest`, the
-runtime dependency and the bundle task all come from
+runtime dependency and the host tasks all come from
 the plugin. Kotlin 2.4.20 is the version this plugin is built and tested against; compatibility with
 other Kotlin Gradle Plugin versions has not been established yet.
 
@@ -218,42 +217,43 @@ public class MiniAppTest {
 `commonTest`. In the fixture that is `consumer.MiniAppTest` (3 tests) plus `consumer.SharedTest`
 (2 tests), and the executions are recorded under `build/test-results/miniappNodeTest/`.
 
-### 7. Assemble the bundle
+### 7. Create the Mini App source host
 
 ```shell
-./gradlew assembleMiniAppBundle
+./gradlew initMiniApp
 ```
 
-The bundle lands in the directory configured in step 2 — `host/miniprogram/libs` there, and
-`build/miniapp/bundle` if you configure nothing. It is a compiler-managed distribution and contains
-14 files in the fixture, including:
-
-| File | What it is |
-| --- | --- |
-| `miniapp-consumer-miniapp.js` | your compiled module, the only thing the host requires |
-| `miniapp-consumer-miniapp.d.ts` | its TypeScript declaration, for a TypeScript host |
-| `kmp-miniapp-sdk-kotlin.js` | the runtime SDK, as its own module |
-| `kotlin-kotlin-stdlib.js`, `kotlinx-coroutines-core.js`, `kotlinx-atomicfu.js` | the Kotlin runtime the compilation resolved |
-| `package.json` | the module metadata that ties them together |
-
-There is no WXML or WXSS in it. Markup is the host's, and the plugin generates none.
-
-### 8. Load it in the WeChat host
-
-The host is an ordinary mini program that owns its own UI. [`fixtures/miniapp-consumer/host`](fixtures/miniapp-consumer/host)
-is a minimal one:
+This writes `miniApp/` beside your build script: a minimal WeChat project. It is **source**, and it is
+yours — the plugin writes a file only when it is missing and never rewrites one that exists, so a
+second run changes nothing and your edits are safe. Nothing creates it implicitly: not applying the
+plugin, not Gradle configuration, not an IDE import.
 
 ```text
-host/
+miniApp/
 ├── project.config.json          miniprogramRoot: "miniprogram/"
+├── .gitignore                   keeps the generated library area out of version control
 └── miniprogram/
-    ├── app.json                 pages
+    ├── app.js, app.json, app.wxss, sitemap.json
     └── pages/index/
-        ├── index.wxml           the view the user sees
-        └── index.js              thin JavaScript: require the bundle, call it, setData
+        └── index.js, index.json, index.wxml, index.wxss
 ```
 
-The page requires the bundle by relative path and binds the result:
+Set your own AppID in `project.config.json` — the template ships an empty one — or use Developer
+Tools' test AppID.
+
+### 8. The development loop
+
+```shell
+./gradlew syncMiniApp
+```
+
+`syncMiniApp` compiles your Kotlin and copies the result into `miniApp/miniprogram/libs/`, so the loop
+is: edit Kotlin → `./gradlew syncMiniApp` → recompile in WeChat Developer Tools → look at the
+simulator. It is a `Sync`, not a `Copy`, because the generated library area is the plugin's: a module
+that left the bundle has to leave your source host too, or the host keeps loading code the build no
+longer produces. It never writes anywhere else in `miniApp/`.
+
+The page requires the compiled module by relative path, exactly as it does in the distribution:
 
 ```javascript
 const consumer = require('../../libs/miniapp-consumer-miniapp.js').consumer;
@@ -269,14 +269,46 @@ Page({
 });
 ```
 
-Shortened for this page: the fixture's own handler also logs each value and rendering a failure
-instead of throwing.
+Shortened for this page: the fixture's own handler also logs each value and renders a failure instead
+of throwing. The `require()` is static, so that file name is part of your page: `initMiniApp` writes
+the plugin's default module name into it, and a build that sets a different `outputModuleName` edits
+that one line.
 
-Point `miniprogramRoot` at your own mini program directory, run `assembleMiniAppBundle` with
-`bundleDirectory` aimed at a directory inside it, and open that directory in WeChat Developer Tools.
-Use your own AppID in `project.config.json`, or Developer Tools' test AppID.
+### 9. The acceptance artifact
 
-### 9. What you should see
+```shell
+./gradlew assembleMiniApp
+./gradlew verifyMiniApp
+```
+
+`assembleMiniApp` produces a complete, standalone WeChat project at `build/miniapp-dist/`: your source
+host, minus everything local to a machine, plus the compiler's current output placed where the source
+host keeps it. It does not need `syncMiniApp` to have run, and it never writes into the source host,
+so the artifact you accept with is not the project you develop in.
+
+```text
+build/miniapp-dist/
+├── project.config.json
+└── miniprogram/
+    ├── app.js, app.json, app.wxss, sitemap.json
+    ├── pages/index/...            your handwritten pages
+    └── libs/                      the compiler's output, injected here
+```
+
+Left out on the way: `project.private.config.json`, `node_modules/`, `build/`, `.gradle/`, `.idea/`,
+`.git/`, `*.iml`, `.DS_Store` and the distribution's own `.gitignore`. Kept: everything WeChat
+packages — the project configuration, the pages, the WXML and WXSS, the assets, the compiled module,
+the runtime SDK, the Kotlin runtime, `package.json` and the `.d.ts`.
+
+`verifyMiniApp` reads the assembled distribution and nothing else. It checks the project and app
+configuration, resolves `miniprogramRoot`, checks that every declared page has its entry files, checks
+that the library carries one module, one declaration and its npm manifest, resolves every `require()`
+in the distribution, and rejects absolute paths, `node_modules` and references back to the project. It
+fails with the specific missing file or broken reference.
+
+Then open `build/miniapp-dist/` in WeChat Developer Tools.
+
+### 10. What you should see
 
 The fixture's host page renders the shared greeting, the counter, and the SDK version, and its Console
 reports:
@@ -291,18 +323,80 @@ fixture.result=PASS
 That output is real-host evidence: the fixture bundle was loaded in WeChat Developer Tools at base
 library **3.17.3** and produced exactly these lines. The version line is the historical one —
 `0.1.0-SNAPSHOT` was the version catalog value at that run, and a build from this tree prints
-`0.1.0` instead; the other three lines are unchanged. It is the acceptance for *this bundle shape on
+`0.1.1` instead; the other three lines are unchanged. It is the acceptance for *this bundle shape on
 this host*, not a statement about your mini program, other base libraries, other WeChat capabilities,
 or other hosts.
 
-`host/scripts/host-smoke.cjs` runs the same `require()` on Node so module wiring can be checked
-without Developer Tools. That is a wiring check, not host acceptance, and the two are recorded
-separately.
+`miniApp/scripts/host-smoke.cjs` runs the same `require()` on Node so module wiring can be checked
+without Developer Tools, and `assembleMiniApp` copies it into the distribution so the same check can
+be run there. That is module wiring on Node, not host acceptance, and the two are recorded separately.
+
+## What is source and what is output
+
+Four directories are involved and confusing two of them is the mistake this layout exists to prevent:
+
+| Path | Kind | Who owns it | `./gradlew clean` |
+| --- | --- | --- | --- |
+| `miniApp/` | source | you | does not remove it |
+| `miniApp/miniprogram/libs/` | generated | `syncMiniApp` | does not remove it; the next sync refills it |
+| `build/miniapp/bundle/` | build output | `assembleMiniAppBundle` | removes it |
+| `build/miniapp-dist/` | build output | `assembleMiniApp` | removes it |
+
+Every path is configurable and every one has the default above:
+
+```kotlin
+miniapp {
+    wechat {
+        bundleDirectory.set(layout.buildDirectory.dir("miniapp/bundle"))
+        sourceDirectory.set(layout.projectDirectory.dir("miniApp"))
+        generatedLibraryDirectory.set(sourceDirectory.dir("miniprogram/libs"))
+        distributionDirectory.set(layout.buildDirectory.dir("miniapp-dist"))
+    }
+}
+```
+
+Each of them is validated before it is written to. A `Sync` deletes what its destination holds and
+its sources do not, so the source host must stay inside your project, the generated library area must
+stay strictly inside the source host, and the distribution must stay inside your project. A rejected
+configuration fails before anything is copied or deleted.
+
+```shell
+./gradlew assembleMiniAppBundle
+```
+
+It is unchanged since 0.1.0 and still writes the compiler-managed bundle to `build/miniapp/bundle`. It
+is the lower-level contract `syncMiniApp` and `assembleMiniApp` are built on: both republish exactly
+the Kotlin/JS production library — the modules the compiler declares as its output — rather than a
+path written into the plugin, so a Kotlin Gradle Plugin layout change moves the bundle with it.
+
+## The module contract between the host and the plugin
+
+- **CommonJS.** The compiled output is CommonJS (`useCommonJs()`). Your page requires the module by
+  relative path, the module requires its runtime siblings the same way, and `package.json` names the
+  entry file. `verifyMiniApp` resolves every `require()` in the distribution and rejects anything that
+  is not a relative path or that points outside it, because a distribution ships no `node_modules`.
+- **TypeScript is the host's choice, and Developer Tools is the only TypeScript compiler.** The
+  generated project is plain JavaScript; a host that wants TypeScript adds `.ts` pages and turns on
+  Developer Tools' `typescript` compiler plug-in. Nothing in the plugin compiles TypeScript, so there
+  is exactly one compiler and no second build step to keep in step.
+- **`.d.ts`.** The distribution carries exactly one declaration — your module's — and it is
+  self-contained: the runtime SDK's exported types are inlined into it. It is what a TypeScript host
+  page type-checks against, and `verifyMiniApp` requires it to be present and to match the module.
+- **Source maps.** `*.js.map` files are part of the compiler's declared output, and both the generated
+  area and the distribution carry them, because the `.js` files reference them by
+  `sourceMappingURL`. They are debug metadata: their `sources` entries name the original Kotlin files
+  by relative path, so they do not resolve outside your project. `verifyMiniApp` rejects an absolute
+  path in one — that would pin the artifact to the machine that built it — but accepts the relative
+  source paths, which are inert at runtime.
+- **Node smoke is not host acceptance.** Running the bundle on Node proves the module graph resolves;
+  it runs on a different runtime from the one that will load your mini program. Only WeChat Developer
+  Tools, and then a real device where a capability needs one, is host acceptance.
 
 ## Online resolution
 
-Gradle resolves plugin `io.github.bobcgn.miniapp:0.1.0` from the Gradle Plugin Portal. The plugin then
-adds runtime `io.github.bobcgn:kmp-miniapp-sdk:0.1.0`, which Gradle resolves from Maven Central. A
+After 0.1.1 is published, Gradle resolves plugin `io.github.bobcgn.miniapp:0.1.1` from the Gradle
+Plugin Portal. The plugin then adds runtime `io.github.bobcgn:kmp-miniapp-sdk:0.1.1`, which Gradle
+resolves from Maven Central. Until then, 0.1.0 is the latest public version. A
 consumer does not need this repository's source, `includeBuild`, an internal module path, or a copied
 artifact. See [CONSUMER_SETUP-en.md](docs/CONSUMER_SETUP-en.md) for the complete standalone-project
 instructions.
@@ -312,6 +406,7 @@ instructions.
 - It does not render, and it rejects a build whose runtime classpath carries Compose, Skiko or a
   browser UI runtime, because such a bundle would build successfully and still be unusable in a host.
 - It does not generate WXML or WXSS.
+- It does not compile TypeScript, start WeChat Developer Tools, or upload a mini program.
 - It does not publish a consumer project or its host artifacts; repository release automation is a
   maintainer concern, not plugin behaviour.
 - It does not put business configuration — AppIDs, secrets, merchant material, template identifiers —

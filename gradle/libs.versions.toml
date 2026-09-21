@@ -4,7 +4,7 @@ coroutines = "1.11.0"
 # Single source for the version shared by the runtime SDK and the Gradle plugin that wires it in.
 # The plugin ships this as a generated resource, so neither its source nor its tests carry the
 # version as a literal.
-miniapp = "0.1.0"
+miniapp = "0.1.1"
 maven-publish = "0.37.0"
 plugin-publish = "2.2.1"
 

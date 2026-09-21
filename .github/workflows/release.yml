@@ -1,4 +1,4 @@
-name: Release 0.1.0
+name: Release 0.1.1
 
 # Only the exact release tag starts a publication. A Maven Central artifact is immutable and the
 # Gradle Plugin Portal rejects a version it already holds, so the trigger is the one ref that names
@@ -6,7 +6,7 @@ name: Release 0.1.0
 on:
   push:
     tags:
-      - "v0.1.0"
+      - "v0.1.1"
   # A manual run exists only for recovery and has to be confirmed by typing the version. Use
   # `plugin` when Maven Central already accepted the runtime and the Plugin Portal upload failed:
   # the runtime is never re-uploaded, because a published version cannot be replaced.
@@ -22,7 +22,7 @@ on:
           - all
           - plugin
       confirmation:
-        description: "Type publish-0.1.0 to confirm"
+        description: "Type publish-0.1.1 to confirm"
         required: true
         type: string
 
@@ -32,7 +32,7 @@ permissions:
 # One publication at a time, and never cancelled midway: an interrupted upload is harder to reason
 # about than a queued one.
 concurrency:
-  group: release-0.1.0
+  group: release-0.1.1
   cancel-in-progress: false
 
 jobs:
@@ -60,7 +60,7 @@ jobs:
           set -euo pipefail
           version="$(sed -n 's/^miniapp = "\([^"]*\)"/\1/p' gradle/libs.versions.toml)"
           test -n "$version"
-          test "$version" = "0.1.0"
+          test "$version" = "0.1.1"
           if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
             test "${GITHUB_REF_NAME}" = "v${version}"
           else
@@ -78,10 +78,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          url="https://repo1.maven.org/maven2/io/github/bobcgn/kmp-miniapp-sdk/0.1.0/kmp-miniapp-sdk-0.1.0.pom"
+          url="https://repo1.maven.org/maven2/io/github/bobcgn/kmp-miniapp-sdk/0.1.1/kmp-miniapp-sdk-0.1.1.pom"
           if curl --silent --fail --location --head "$url" > /dev/null; then
             echo "published=true" >> "$GITHUB_OUTPUT"
-            echo "::notice::io.github.bobcgn:kmp-miniapp-sdk:0.1.0 is already on Maven Central; a published version is immutable, so the runtime step will be skipped."
+            echo "::notice::io.github.bobcgn:kmp-miniapp-sdk:0.1.1 is already on Maven Central; a published version is immutable, so the runtime step will be skipped."
           else
             echo "published=false" >> "$GITHUB_OUTPUT"
           fi
@@ -91,10 +91,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          url="https://plugins.gradle.org/m2/io/github/bobcgn/miniapp/io.github.bobcgn.miniapp.gradle.plugin/0.1.0/io.github.bobcgn.miniapp.gradle.plugin-0.1.0.pom"
+          url="https://plugins.gradle.org/m2/io/github/bobcgn/miniapp/io.github.bobcgn.miniapp.gradle.plugin/0.1.1/io.github.bobcgn.miniapp.gradle.plugin-0.1.1.pom"
           if curl --silent --fail --location --head "$url" > /dev/null; then
             echo "published=true" >> "$GITHUB_OUTPUT"
-            echo "::notice::io.github.bobcgn.miniapp:0.1.0 is already on the Gradle Plugin Portal; the upload will be skipped because the portal rejects a version it already holds."
+            echo "::notice::io.github.bobcgn.miniapp:0.1.1 is already on the Gradle Plugin Portal; the upload will be skipped because the portal rejects a version it already holds."
           else
             echo "published=false" >> "$GITHUB_OUTPUT"
           fi

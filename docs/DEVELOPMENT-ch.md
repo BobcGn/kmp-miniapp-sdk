@@ -149,7 +149,7 @@ build/miniapp/bundle/
 
 `gradle/libs.versions.toml` 保存 runtime SDK 与本插件共享的唯一版本。插件构建据此生成 `miniapp-plugin-metadata.properties`，插件运行期从该资源读取坐标，因此插件源码与测试中都不含版本字面量。
 
-公开的 0.1.0 消费路径从 Gradle Plugin Portal 解析插件，并从 Maven Central 解析 runtime 坐标。仓库 fixture 有意保留 composite substitution，以便测试当前工作树。无法解析 runtime 时消费者会看到 Gradle 指明该坐标的依赖解析错误；插件有意不回退到其他版本、其他 artifact 或 project path。
+0.1.1 通过 release gate 并发布后，其公开消费路径才会从 Gradle Plugin Portal 解析插件、从 Maven Central 解析 runtime 坐标。在此之前，0.1.0 仍是最新公开版本，仓库 fixture 使用 composite substitution 验证 0.1.1 工作树。无法解析 runtime 时消费者会看到 Gradle 指明该坐标的依赖解析错误；插件有意不回退到其他版本、其他 artifact 或 project path。
 
 插件自身不创建任何 source-set 模型与 `dependsOn` 边：手工搭建的正是 [ADR 0010](decisions/0010-miniapp-gradle-plugin-source-set-model-ch.md) 否决的「未使用 source set」模型。它只在磁盘上创建两个标准 Kotlin 目录；重复应用会保留现有文件。把它应用到未应用 Kotlin Multiplatform 插件的项目会失败，并给出指明缺失插件的错误信息。
 
@@ -234,7 +234,10 @@ cd fixtures/miniapp-consumer
 | `miniappTest` 运行自身测试**以及**共享测试 | `build/test-results/miniappNodeTest/` 下有 `consumer.SharedTest`（2 个）与 `consumer.MiniAppTest`（3 个） |
 | runtime SDK 自动解析 | `sdkVersion()` 调用 `MiniAppSdk.VERSION` |
 | bundle 满足其契约 | `verifyConsumerContract` 任务 |
-| DSL 真实生效 | 同一任务断言配置的目录，宿主运行则传入 `-PminiappBundleDirectory=host/miniprogram/libs` |
+| DSL 真实生效 | 同一任务断言有文档的默认 bundle 目录，夹具把它显式写出 |
+| source host 先是插件的输出、此后属于消费者 | `verifyConsumerSourceHost` 任务，以及 `initMiniApp` 在其上报告 `createdCount=0` |
+| 开发循环填充 generated area | `initMiniApp` 后 `syncMiniApp`，再对 `miniApp/` 运行宿主 smoke |
+| 验收产物是独立的 | `assembleMiniApp` 后 `verifyMiniApp`，再在 `build/miniapp-dist/` 内部运行 smoke |
 
 消费者的 build script 中没有 source set 声明、没有 `dependsOn`、没有 `useCommonJs()`、没有 `generateTypeScriptDefinitions()`、没有 runtime artifact 坐标、也没有复制步骤。 新用户的入口是 README，其快速开始取自本 fixture；当两种语言发生漂移、README 引用的路径消失、或被记录的消费者命令缺失时，`verifyMiniAppConsumerDocs` 会失败。除两个插件外它只声明了一件事：`commonTest` 的 `kotlin-test`，这是每个 Kotlin Multiplatform 项目都会做的。
 
@@ -244,20 +247,20 @@ cd fixtures/miniapp-consumer
 ./gradlew --no-daemon --console=plain verifyMiniAppConsumerFixture
 ```
 
-它会以三种方式运行该夹具：默认 bundle 目录、宿主目录，以及宿主自身的消费路径。这些任务未接入 `check`，因为它们会编译 Kotlin/JS 并安装 npm 依赖。
+它会以四种方式运行该夹具：默认 bundle 目录及其契约、已提交的 source host、从 clean 开始的开发循环及其 smoke，以及从 clean 开始组装 distribution 并在 distribution 内部运行 smoke。这些任务未接入 `check`，因为它们会编译 Kotlin/JS 并安装 npm 依赖。
 
 ### 微信宿主
 
-`fixtures/miniapp-consumer/host` 是一个最小微信小程序：WXML、WXSS 与调用组装产物的薄 JavaScript。它属于 Host UI，因此 markup 留在这里，永不进入 SDK 或夹具的共享 Kotlin。
+`fixtures/miniapp-consumer/miniApp` 是一个最小微信小程序。它由 `initMiniApp` 创建一次，此后手工编辑；模板本身由插件自己的测试覆盖，而这份副本证明已提交的宿主保持完整并与消费者 module 接线。它属于 Host UI，因此 markup 留在这里，永不进入 SDK 或夹具的共享 Kotlin。
 
-其 `miniprogram/libs/` 是构建产物并被 Git 忽略；在微信开发者工具中打开前请先运行 `verifyMiniAppConsumerHostBundle`。该夹具已完成基础库 3.17.3 的开发者工具验收：页面渲染 `Hello, WeChat, from commonMain`、`5` 与 `0.1.0-SNAPSHOT`，Console 报告 `fixture.result=PASS`。宿主另有一个 Node smoke 检查，以与页面完全相同的方式加载该 bundle：
+其 `miniprogram/libs/` 是插件的 generated area 并被 Git 忽略。在微信开发者工具中打开前请先运行 `syncMiniApp`。该夹具已完成基础库 3.17.3 的开发者工具验收：页面渲染 `Hello, WeChat, from commonMain`、`5` 与 `0.1.0-SNAPSHOT`，Console 报告 `fixture.result=PASS`。宿主另有一个 Node smoke 检查，以与页面完全相同的方式加载该 bundle：
 
 ```shell
-cd fixtures/miniapp-consumer/host
+cd fixtures/miniapp-consumer/miniApp
 node scripts/host-smoke.cjs
 ```
 
-那是在 Node 上的模块接线检查，不是宿主验收；两者分别记录。
+那是在 Node 上的模块接线检查，不是宿主验收；两者分别记录。同一个脚本会被 `assembleMiniApp` 复制进 `build/miniapp-dist/`，因此同一检查也能在组装好的 distribution 内部运行，并且只相对它解析路径 —— 这正是 distribution 不依赖本仓库任何内容的体现。
 
 ## Consumer Bridge
 

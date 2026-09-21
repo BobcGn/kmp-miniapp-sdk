@@ -334,11 +334,23 @@ runtime 以**公共 module 坐标**（`io.github.bobcgn:kmp-miniapp-sdk`）到�
 
 宿主产物是一个 compiler-managed distribution：`assembleMiniAppBundle` 把 Mini App target 的 Kotlin/JS production library 重新发布到一个稳定的消费者路径，使宿主集成依赖一个有文档的目录，而不是依赖 Kotlin Gradle Plugin 的构建目录。它包含消费者编译后的模块及其 TypeScript declaration、作为独立模块的 runtime SDK，以及该 compilation 解析出的 Kotlin runtime，并且不包含任何 markup。任务成功本身只证明存在稳定的宿主集成输入；宿主兼容性需要单独举证。消费者夹具提供了这项证据：其组装后的 distribution 已在微信开发者工具基础库 3.17.3 中加载并报告 `fixture.result=PASS`。
 
+bundle 不是宿主工程，二者不可混淆。Mini App 构建有三样东西，各由三个路径承载，每个路径只有一个归属：
+
+| 路径 | 是什么 | 归属 |
+| --- | --- | --- |
+| `miniApp/` | 开发者手工编辑的微信工程 | 消费者 |
+| `miniApp/miniprogram/libs/` | 该工程内由编译器产出的 module | `syncMiniApp` |
+| `build/miniapp-dist/` | 完整、独立的工程 | `assembleMiniApp` |
+
+`initMiniApp` 依据插件作为资源随附的模板创建第一个，只写入缺失的文件，因此重复执行不产生变化，已有修改也绝不会被还原。它绝不会由插件应用、Gradle 配置或 IDE sync 触发：一个仅因被配置就写入源码的构建，没人能对它有把握。`syncMiniApp` 是 `Sync` 而不是 `Copy`，因为 generated area 属于插件 —— 离开 bundle 的 module 也必须离开 source host，否则宿主会继续加载构建已不再产出的代码。`assembleMiniApp` 读第一个、把当前编译产物作为第二个注入、写出第三个，因此消费者用来验收的产物并不是消费者开发所用的工程，且两者都不要求对方先被产出。这些路径都会到达 `Sync` 或创建文件，因此在任何写入发生前都会先校验：source host 必须在工程内、generated area 必须严格位于 source host 内部、distribution 必须在工程内。`clean` 删除 distribution 与 bundle，从不删除 source host。
+
+`verifyMiniApp` 只读取组装好的 distribution，不读其他任何东西，因为它回答的是「该目录能否独立成立」。一个会去看工程的检查，会在「只有工程在旁边时才能工作」的 distribution 上通过。它确立的是结构与接线：微信工程文件可解析、`miniprogramRoot` 可解析、每个声明页面都有入口文件、generated library area 位于 mini program root 内且恰好包含一个 module、一个 declaration 及其 npm manifest，并且 distribution 内的每个 `require()` 都能解析到确实存在的文件。它拒绝绝对路径、`node_modules` 与回指原工程的引用。静态读取与 Node smoke 是模块接线证据；只有微信开发者工具才是宿主验收，插件中任何内容都不得把前者说成后者。
+
 由于一个宿主无法运行的 distribution 同样会构建成功，插件拒绝产生它的依赖图。当 Mini App runtime classpath 携带客户端 renderer —— Compose、Skiko、Compose 专用的 AndroidX 集成 artifact、`kotlinx-browser` 或 `kotlinx-html` —— 时，`checkMiniAppHostBoundary` 会失败，并在组装之前运行，因此不会产出不可用的 bundle。非 Compose 的 lifecycle、saved-state 与 navigation primitives 仍属于合法的共享行为，不会被拒绝。消费者的 `miniappMain` 可以继承 common source set 中的共享行为与 state，但不能继承 Compose UI：Compose UI 必须位于不作为 `miniappMain` 父 source set 的客户端 module 或 source set 中。该强制手段是**依赖规则而不是文件规则**，因为 Kotlin/JS distribution 中的文件通过 `require()` 彼此引用，删除看起来像 renderer 的文件只会把构建失败换成加载失败。未能完整解析的 classpath 会被拒绝而不是被读取：Gradle 的解析结果只列出解析成功的依赖，仅读它会把「从未看过这张图」报告成「没有 renderer」。
 
-`fixtures/miniapp-consumer` 是本仓库自己的消费者：与本仓库并列的普通构建，按 id 应用插件、按公共坐标解析 runtime，对本仓库结构一无所知。它是该边界的可执行形式 —— SDK 被消费、宿主集成被打包、宿主本身是 UI。其微信宿主是 WXML、WXSS 与薄 JavaScript，而这些 markup 留在宿主内：它们永不进入 SDK 或消费者的 Kotlin，因为某个宿主的视图词汇不是平台的词汇。
+`fixtures/miniapp-consumer` 是本仓库自己的消费者：与本仓库并列的普通构建，按 id 应用插件、按公共坐标解析 runtime，对本仓库结构一无所知。它是该边界的可执行形式 —— SDK 被消费、宿主集成被打包、宿主本身是 UI。其微信 source host 是 `miniApp/`，由 `initMiniApp` 创建一次，此后手工编辑；其微信 UI 是 WXML、WXSS 与薄 JavaScript。这些 markup 留在宿主内：它们永不进入 SDK 或消费者的 Kotlin，因为某个宿主的视图词汇不是平台的词汇。
 
-消费者侧构建配置只有一个 extension `miniapp`，其唯一宿主是 `wechat`。层级本身就是要点：`MiniAppExtension` 是平台，`WeChatHostConfiguration` 是宿主，因此新增宿主是新增一个子类型与一个访问器，而不是把微信那个类型加宽。它只承载宿主的 bundle 目录 —— Gradle DSL 中每个字段都是消费者必须做出的决定，而输出形态、CommonJS、declaration 与 renderer 边界是插件的决定，不是消费者的决定。业务与后台配置不在此建模，理由与它在运行期不被建模相同。
+消费者侧构建配置只有一个 extension `miniapp`，其唯一宿主是 `wechat`。层级本身就是要点：`MiniAppExtension` 是平台，`WeChatHostConfiguration` 是宿主，因此新增宿主是新增一个子类型与一个访问器，而不是把微信那个类型加宽。它只承载构建路径 —— bundle、source host、其中的 generated library area 与 distribution —— 因为 Gradle DSL 中每个字段都是消费者必须做出的决定，而输出形态、CommonJS、declaration 与 renderer 边界是插件的决定，不是消费者的决定。它不承载 AppID、密钥、页面 route 或能力：那些属于宿主与后端。业务与后台配置不在此建模，理由与它在运行期不被建模相同。
 
 若消费者的 `commonMain` 依赖另一个 Kotlin Multiplatform project，则必须对该 project 同样应用本插件。该依赖经由 Mini App variant 解析，不提供该 variant 的 project 会解析失败；不存在回退，把依赖移出 `commonMain` 也不是变通办法。
 

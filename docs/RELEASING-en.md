@@ -2,7 +2,7 @@
 
 [中文](RELEASING-ch.md)
 
-This document is for a repository maintainer. It describes how version 0.1.0 is published, what has to
+This document is for a repository maintainer. It describes how version 0.1.1 is published, what has to
 be true before a tag is pushed, and how to recover a publication that only half finished. It is not
 part of the consumer flow; a consumer reads [CONSUMER_SETUP-en.md](CONSUMER_SETUP-en.md).
 
@@ -13,9 +13,9 @@ workflow reads every credential from GitHub Repository Secrets and never writes 
 
 | What | Coordinate |
 | --- | --- |
-| Runtime | `io.github.bobcgn:kmp-miniapp-sdk:0.1.0` |
-| Gradle plugin | `io.github.bobcgn.miniapp` version `0.1.0` |
-| Release tag | `v0.1.0` |
+| Runtime | `io.github.bobcgn:kmp-miniapp-sdk:0.1.1` |
+| Gradle plugin | `io.github.bobcgn.miniapp` version `0.1.1` |
+| Release tag | `v0.1.1` |
 
 `gradle/libs.versions.toml` holds the single `miniapp` version. The runtime's `MiniAppSdk.VERSION` and
 the plugin's runtime coordinate are both generated from it, so a published version and a reported
@@ -62,7 +62,7 @@ Then inspect the publications themselves, because a POM that builds is not a POM
 ```
 
 Each generated POM must carry Apache-2.0, the project name and description, the project URL, the
-developer, the SCM block, and version `0.1.0`.
+developer, the SCM block, and version `0.1.1`.
 
 Finally, prove the consumer shape locally without a signing key — this is the only situation in which
 the unsigned property is legitimate, and release CI refuses to run if it is set:
@@ -77,24 +77,24 @@ the unsigned property is legitimate, and release CI refuses to run if it is set:
 
 An independent consumer project that uses **only** `mavenLocal()` plus the public repositories, with
 no `includeBuild` and no reference to this repository, must then apply
-`id("io.github.bobcgn.miniapp") version "0.1.0"`, pass a `miniappTest` asserting
-`MiniAppSdk.VERSION == "0.1.0"`, and assemble a bundle. This proves the shape that will be published;
+`id("io.github.bobcgn.miniapp") version "0.1.1"`, pass a `miniappTest` asserting
+`MiniAppSdk.VERSION == "0.1.1"`, and assemble a bundle. This proves the shape that will be published;
 it is not evidence that anything resolves online.
 
 `git diff --check` must be clean, and the working tree must be committed before the tag exists.
 
 ## 4. Publishing
 
-Pushing the annotated tag `v0.1.0` on the release commit starts
+Pushing the annotated tag `v0.1.1` on the release commit starts
 [`.github/workflows/release.yml`](../.github/workflows/release.yml). The workflow:
 
-1. refuses to run unless `gradle/libs.versions.toml` says `0.1.0` and, for a tag, the tag is exactly
-   `v0.1.0`;
+1. refuses to run unless `gradle/libs.versions.toml` says `0.1.1` and, for a tag, the tag is exactly
+   `v0.1.1`;
 2. refuses to run if `miniappLocalPublicationWithoutSigning` is set, because a release publication is
    always signed;
-3. checks Maven Central for `kmp-miniapp-sdk/0.1.0` and **skips the runtime upload when it is already
+3. checks Maven Central for `kmp-miniapp-sdk/0.1.1` and **skips the runtime upload when it is already
    there**, because a Central release is immutable;
-4. checks the Gradle Plugin Portal for `io.github.bobcgn.miniapp:0.1.0` and skips both plugin steps
+4. checks the Gradle Plugin Portal for `io.github.bobcgn.miniapp:0.1.1` and skips both plugin steps
    when it is already there, because the portal also rejects a version it holds;
 5. runs `clean check verifyMiniAppGradlePluginIntegration`;
 6. publishes the runtime to Maven Central with `publishAndReleaseToMavenCentral`;
@@ -108,7 +108,7 @@ plugin whose runtime does not exist yet.
 ## 5. Recovering a half-finished publication
 
 Maven Central and the Gradle Plugin Portal fail independently, and only one of them can be retried
-safely. `workflow_dispatch` exists for exactly that, and requires typing `publish-0.1.0` as
+safely. `workflow_dispatch` exists for exactly that, and requires typing `publish-0.1.1` as
 confirmation.
 
 | Situation | Action |
@@ -129,9 +129,15 @@ Wait until both coordinates actually resolve, then verify the complete online co
 
 1. A new empty Kotlin Multiplatform project whose `settings.gradle.kts` declares only
    `gradlePluginPortal()`, `mavenCentral()`, and `mavenCentral()`.
-2. `id("io.github.bobcgn.miniapp") version "0.1.0"` applied to the KMP module.
-3. `miniappMain` reading `MiniAppSdk.VERSION`, and a `miniappTest` asserting it is `0.1.0`.
-4. `./gradlew miniappTest` and `./gradlew assembleMiniAppBundle` both pass.
+2. `id("io.github.bobcgn.miniapp") version "0.1.1"` applied to the KMP module.
+3. `miniappMain` reading `MiniAppSdk.VERSION`, and a `miniappTest` asserting it is `0.1.1`.
+4. `./gradlew miniappTest`, `./gradlew initMiniApp`, `./gradlew syncMiniApp`,
+   `./gradlew assembleMiniApp` and `./gradlew verifyMiniApp` all pass, and the assembled
+   distribution opens in WeChat Developer Tools.
+
+Step 4's last clause is the one nothing else can substitute for: `verifyMiniApp` is structural
+checking on Node-level evidence, and only a run in the real host turns a publication into an accepted
+one.
 
 Only that run turns "published" into an accepted online consumption path. Until it passes, "published"
 means only that an upload was accepted, and it must not be written up as availability.

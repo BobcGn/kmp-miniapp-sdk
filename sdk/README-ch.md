@@ -15,6 +15,10 @@ io.github.bobcgn:kmp-miniapp-sdk:0.1.0
 这是实验性版本。在生产环境依赖具体能力前，请检查
 [微信能力矩阵](../docs/platforms/wechat/WECHAT_CAPABILITIES-ch.md)。
 
+当前工作树构建的是 `0.1.1`，它增加了 Mini App distribution pipeline —— `initMiniApp`、`syncMiniApp`、
+`assembleMiniApp` 与 `verifyMiniApp` —— 且尚未发布。在线解析 `0.1.0` 的消费者得到的是 0.1.0 的行为：
+`miniappMain`、`miniappTest`、runtime 依赖与 `assembleMiniAppBundle`。
+
 ## 推荐的 KMP 接入方式
 
 预期的消费者体验使用配套 Gradle 插件。它会创建 `miniapp` target，添加 `miniappMain` 与
@@ -117,6 +121,19 @@ SDK 不负责渲染 UI。
 
 使用微信开发者工具打开所配置的宿主目录，并检查宿主控制台和页面。Node 测试只证明 Kotlin/JS
 行为，不能替代真实宿主或真机验证。
+
+在 `0.1.1` 上插件还负责宿主工程本身，因此同一个 build script 变成：
+
+```bash
+./gradlew initMiniApp
+./gradlew syncMiniApp
+./gradlew assembleMiniApp
+./gradlew verifyMiniApp
+```
+
+`initMiniApp` 在 `miniApp/` 写出一个最小微信工程且只写一次、绝不覆盖，`syncMiniApp` 把编译后的
+module 复制进它的 generated library area，`assembleMiniApp` 与 `verifyMiniApp` 在
+`build/miniapp-dist/` 产出并检查一个独立工程。见 [README 快速开始](../README-ch.md)。
 
 ## 已有 Kotlin/JS target 的仅 runtime 接入方式
 

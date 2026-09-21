@@ -75,23 +75,30 @@ cd examples/wechat-miniprogram && npm run smoke && npm run typecheck
 | `miniappMain` / `miniappTest` exist and the test compilation inherits `commonTest` | the executed test report under `build/test-results/miniappNodeTest/`, which holds both `consumer.SharedTest` and `consumer.MiniAppTest` |
 | The runtime SDK resolves without a consumer declaration | `sdkVersion()`, which calls `MiniAppSdk.VERSION` |
 | The bundle satisfies its contract | the fixture's own `verifyConsumerContract` task |
-| The DSL changes real output | the same task, run with and without `-PminiappBundleDirectory` |
-| The host's consumption path works | `host/scripts/host-smoke.cjs`, which loads the bundle the way the page does |
+| The DSL changes real output | the same task, which asserts the documented default bundle directory the fixture writes out explicitly |
+| The committed source host is complete and wired to the consumer's module | the fixture's own `verifyConsumerSourceHost` task, and `initMiniApp` reporting `createdCount=0` on it — the template has nothing left to add |
+| The development loop fills the generated area | `initMiniApp` then `syncMiniApp`, followed by the source host's smoke |
+| The acceptance artifact is standalone | `assembleMiniApp` then `verifyMiniApp`, followed by the smoke run from inside `build/miniapp-dist/` |
+| The host's consumption path works | `miniApp/scripts/host-smoke.cjs`, which loads the bundle the way the page does |
 
-That last check runs on Node and establishes module wiring only. **It is not WeChat host acceptance**, and the two are recorded separately. The separate accepted Developer Tools run used base library 3.17.3, rendered the shared greeting, count and SDK version, and reported `fixture.result=PASS` in the Console.
+The last check runs on Node and establishes module wiring only. **It is not WeChat host acceptance**, and the two are recorded separately. The separate accepted Developer Tools run used base library 3.17.3, rendered the shared greeting, count and SDK version, and reported `fixture.result=PASS` in the Console.
 
 ### Gradle plugin suite
 
 `:miniapp-gradle-plugin:test` drives the plugin through Gradle TestKit fixtures in temporary consumer projects. It covers plugin application, the missing-Kotlin-Multiplatform failure, source-set provisioning and compilation ownership, creation of the conventional Mini App Kotlin directories without replacing existing sources, test execution, runtime dependency wiring, the `assembleMiniAppBundle` contract, the renderer rejection that guards that contract, repeat-run incrementality and configuration-cache compatibility. It also covers the `miniapp { }` extension: that the canonical `miniapp { wechat { ... } }` block compiles and executes, that a configured bundle directory is where the bundle is actually written, that a directory outside the project is rejected with an actionable message, that applying the plugin twice creates no second extension, and that WeChat is a host configuration rather than the platform extension itself.
 
+The distribution pipeline is covered in the same suite, and the split between its layers is deliberate. The *rules* — what a template writes, what a verifier rejects — are asserted as pure functions over a directory, in `MiniAppSourceHostTest` and `MiniAppDistributionVerificationTest`, because a broken `require()` is a five-line file there and a Kotlin/JS compile in TestKit. The *wiring* is asserted through real builds: `MiniAppDistributionTest` covers `initMiniApp` creating the host, changing nothing on a second run, completing a partial project, never restoring an edited file, honouring a configured source directory and refusing one outside the project; `clean` leaving the source host alone; `syncMiniApp` filling the generated area, clearing a module that left the bundle once the bundle really changed, and being up to date afterwards; `assembleMiniApp` injecting the current output without a sync, excluding machine-local and IDE files from the distribution and not writing into the source host; `verifyMiniApp` accepting a good distribution, rejecting one whose page entry file is missing, and reading nothing but the distribution; and a detached run that copies the distribution outside the repository and loads it there.
+
 The error paths are asserted on the failure's own words, not on the build merely failing: a
 project without the Kotlin Multiplatform plugin, a target that already uses `miniapp` for another
 platform (Kotlin's own diagnostic, raised during plugin application rather than a silent
 replacement), a shared Kotlin Multiplatform dependency that offers no Mini App variant, a runtime
-coordinate that cannot be resolved, a bundle directory outside the project, and a runtime classpath
-carrying Compose. Each names what the consumer has to change.
+coordinate that cannot be resolved, a bundle directory outside the project, a runtime classpath
+carrying Compose, a source host outside the project, a generated library area outside the source
+host, a distribution outside the project, and `assembleMiniApp` when there is no source host at all.
+Each names what the consumer has to change.
 
-The fixtures resolve the runtime SDK through a composite build of this repository, so that they test the current source rather than a previously released binary; that is a deliberate choice now that 0.1.0 is published, not a workaround for an unpublished coordinate. They assert on real output — the executed test report, and the files a bundle actually contains — rather than on task names alone: a task existing is not evidence that it produced anything. The bundle tests keep two conclusions apart: that the plugin generates no host markup, and that the distribution carries no renderer. The first is a statement about generated files; the second is a statement about the dependency graph and is asserted by the host-boundary check.
+The fixtures resolve the runtime SDK through a composite build of this repository, so that they test the current source rather than a previously released binary; that is a deliberate choice rather than a workaround: the fixtures must test the working tree, not a previously released binary. They assert on real output — the executed test report, and the files a bundle actually contains — rather than on task names alone: a task existing is not evidence that it produced anything. The bundle tests keep two conclusions apart: that the plugin generates no host markup, and that the distribution carries no renderer. The first is a statement about generated files; the second is a statement about the dependency graph and is asserted by the host-boundary check.
 
 These tests establish that a distribution is produced and what it contains. They do not establish that any host can load it; that needs a real host run.
 
@@ -107,9 +114,12 @@ fails the build either way; the difference is that the failure says what happene
 
 | Layer | What it proves | Where |
 | --- | --- | --- |
-| Contract / unit | Plugin descriptor to implementation class, the public runtime coordinate, the extension's platform-versus-host shape, the renderer classifier's allow-list and deny-list, the bundle-directory rule | `miniapp-gradle-plugin/src/test/.../MiniAppPluginContractTest.kt` |
+| Contract / unit | Plugin descriptor to implementation class, the public runtime coordinate, the extension's platform-versus-host shape, the renderer classifier's allow-list and deny-list, the bundle-directory rule, that every declared source-host template is shipped and writes inside the source host | `miniapp-gradle-plugin/src/test/.../MiniAppPluginContractTest.kt` |
+| Source host / unit | Template creation, idempotency asserted by content and modification time, an edited file never restored, a partial project completed, placeholder substitution, and the path rules for the source host, generated area and distribution | `miniapp-gradle-plugin/src/test/.../MiniAppSourceHostTest.kt` |
+| Verifier / unit | A well-formed distribution, and every defect the verifier names: missing project or app configuration, an unreachable `miniprogramRoot`, a page without entry files, an invalid `package.json`, a `require()` that does not resolve, a bare or escaping require, host markup, a renderer, a library outside the mini program root, an absolute path in a file or a source map, and machine-local files | `miniapp-gradle-plugin/src/test/.../MiniAppDistributionVerificationTest.kt` |
 | TestKit | Plugin application, the missing-Kotlin-Multiplatform failure, source sets and their owning compilations, `miniappTest` execution, runtime wiring, task registration, the DSL, every error path below, the bundle contract, configuration-cache compatibility | `miniapp-gradle-plugin/src/test/.../MiniAppGradlePluginTest.kt` |
-| Persistent consumer fixture | An ordinary consumer build that stays in the repository: clean build, `commonMain` reuse, both bundle directories, the bundle's contents, the host's CommonJS consumption path | `fixtures/miniapp-consumer` |
+| TestKit | The distribution pipeline's wiring: `initMiniApp`, `syncMiniApp`, `assembleMiniApp`, `verifyMiniApp`, their path rules, up-to-date behaviour, `clean`, and a distribution copied outside the repository and loaded there | `miniapp-gradle-plugin/src/test/.../MiniAppDistributionTest.kt` |
+| Persistent consumer fixture | An ordinary consumer build that stays in the repository: clean build, `commonMain` reuse, the bundle's contents, the committed source host, the development loop, the assembled distribution, and the host's CommonJS consumption path in both places | `fixtures/miniapp-consumer` |
 | Real host | That WeChat Developer Tools loads the bundle and runs it | manual, recorded in section 3 |
 
 The first three layers are automated and isolated: TestKit fixtures live in temporary directories,
@@ -212,7 +222,7 @@ The following procedure is the DeveloperTools checklist for currently implemente
 
 | Check | On the page | In the console |
 | --- | --- | --- |
-| Version | `0.1.0` | `[kmp-miniapp-sdk] sdkVersion: 0.1.0` |
+| Version | `0.1.1` | `[kmp-miniapp-sdk] sdkVersion: 0.1.1` |
 | Runtime lifecycle | The `Runtime Lifecycle` card shows `FOREGROUND` and a page route | No dedicated line; the card is the evidence |
 | Runtime detection | The `Runtime Detection and Version Gate` card shows `PASS`, the base-library version, and support states | `[kmp-miniapp-sdk] runtime detection: PASS baseLibrary=…, platform=…, runtime-detection=…, storage=Supported, ungated=Unsupported` |
 | Permission | The `Permission Lifecycle` card shows the permission name and its state after the steps below | `[kmp-miniapp-sdk] permission query: PASS permission=microphone, state=…` |

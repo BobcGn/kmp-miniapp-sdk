@@ -45,6 +45,7 @@
 - 微信标准支付已实现，并作为「后端参数的类型化转发器」通过自动化检查；Android 真机已验证运行时支持与「未配置参数」保护，真实支付验收仍受阻塞于合法商户环境与可信后端
 - 虚拟支付未实现：不存在请求、结果、capability 条目或导出，且所带开发者工具基础库中没有可发现的虚拟支付契约。其边界记录于 ARCHITECTURE，状态在能力矩阵中为 `Planned`
 - `io.github.bobcgn.miniapp` Gradle 插件已实现并有自动化覆盖。把它应用到 Kotlin Multiplatform 项目会提供 `miniappMain` 与 `miniappTest`，二者是由 compilation 拥有、以 `commonMain` / `commonTest` 为父边的真实 source set；为 IDE 与 CLI 消费者创建标准的 `src/miniappMain/kotlin` 与 `src/miniappTest/kotlin` 目录；绑定 Node.js test run 使 `miniappTest` 真正执行测试；把 runtime SDK 接入 `miniappMain`，使消费者无需声明 artifact 即可针对公开 API 编译；并提供 `assembleMiniAppBundle`，把 Kotlin/JS production library —— 消费者模块与其声明，以及它所需的 runtime 模块 —— 重新发布到 `build/miniapp/bundle`，作为 compiler-managed Mini App distribution。它会对未应用 Kotlin Multiplatform 插件的项目报错，也会在 `miniappRuntimeClasspath` 携带客户端 renderer 时报错。它通过 `miniapp { wechat { } }` extension 配置，其中唯一的设置是当前宿主的 bundle 目录，默认为 `build/miniapp/bundle`
+- Mini App distribution pipeline 已实现并有自动化覆盖。`initMiniApp` 依据插件作为资源随附的模板在消费者项目中创建微信 source host `miniApp/`，只写入缺失的文件，绝不重写已存在的文件；它只在被显式调用时运行，绝不在插件应用、Gradle 配置或 IDE sync 期间运行。`syncMiniApp` 把 compiler-managed bundle 重新发布到 `miniApp/miniprogram/libs/`，替换上一次 bundle 留下的内容。`assembleMiniApp` 由 source host 与*当前*编译产物在 `build/miniapp-dist/` 组装出完整、独立的微信工程，既不要求先运行 `syncMiniApp`，也不写入 source host。`verifyMiniApp` 只读取组装好的 distribution：解析 `miniprogramRoot`、检查每个声明页面的入口文件、检查 generated library area 恰好包含一个 module、一个 declaration 及其 npm manifest、解析 distribution 内的每一个 `require()`，并拒绝绝对路径、`node_modules` 与回指原工程的引用。source host、其 generated library area 与 distribution 是三个路径、三个归属，因此 `clean` 只删除构建产物，从不删除 source host
 - 若消费者的 `commonMain` 依赖另一个 Kotlin Multiplatform project，则必须对该 project 同样应用 Mini App 插件：该依赖经由 Mini App variant 解析，不提供该 variant 的 project 会产生 variant 解析错误，且不存在自动回退。把依赖移出 `commonMain` 以规避该问题是不可接受的变通
 - 客户端 / runtime 架构边界已记录并被强制：后端拥有业务事实，本 SDK 拥有客户端行为与宿主能力，宿主拥有渲染。当 runtime SDK 导入或声明 UI framework namespace 或 artifact 时，`:kmp-miniapp-sdk:checkArchitectureBoundaries` 会让构建失败，且它是 `:kmp-miniapp-sdk:check` 的一部分
 
@@ -72,13 +73,13 @@ Root project 'kmp-miniapp-sdk'
 \--- Project ':kmp-miniapp-sdk'
 ```
 
-`:kmp-miniapp-sdk` 是本文档其余部分描述的 Kotlin/JS runtime SDK；其源码位于 `sdk/`，而其 Gradle project 名（也就是发布的 artifact id）是 `kmp-miniapp-sdk`，这正是 composite build substitution 匹配的名字。`:miniapp-gradle-plugin` 是 `io.github.bobcgn.miniapp` Gradle 插件，只负责构建集成与开发体验：它检测 Kotlin Multiplatform 插件，注册 [ADR 0010](decisions/0010-miniapp-gradle-plugin-source-set-model-ch.md) 选定的 `miniapp` 平台 target 及其 Node.js test run，把 runtime SDK 接入 `miniappMain`，并在缺少 Kotlin Multiplatform 插件时给出指明原因的报错。注册 target 才使 `miniappMain` 与 `miniappTest` 成为由 compilation 拥有、并带有 `commonMain` / `commonTest` 父边的真实 source set；插件还会在 common source 目录同级实体化它们的标准 Kotlin 目录，且不替换现有文件；test run 才使 `miniappTest` 拥有一个真正执行的任务；该依赖才使消费者能够直接针对公开 API 编写 `miniappMain` 代码而不必声明任何 artifact。它还提供 `assembleMiniAppBundle`，把 Kotlin/JS production library 重新发布到一个宿主集成可以依赖的稳定路径，并通过 `miniapp { wechat { } }` extension 配置该路径。该插件不包含微信 runtime 代码。
+`:kmp-miniapp-sdk` 是本文档其余部分描述的 Kotlin/JS runtime SDK；其源码位于 `sdk/`，而其 Gradle project 名（也就是发布的 artifact id）是 `kmp-miniapp-sdk`，这正是 composite build substitution 匹配的名字。`:miniapp-gradle-plugin` 是 `io.github.bobcgn.miniapp` Gradle 插件，只负责构建集成与开发体验：它检测 Kotlin Multiplatform 插件，注册 [ADR 0010](decisions/0010-miniapp-gradle-plugin-source-set-model-ch.md) 选定的 `miniapp` 平台 target 及其 Node.js test run，把 runtime SDK 接入 `miniappMain`，并在缺少 Kotlin Multiplatform 插件时给出指明原因的报错。注册 target 才使 `miniappMain` 与 `miniappTest` 成为由 compilation 拥有、并带有 `commonMain` / `commonTest` 父边的真实 source set；插件还会在 common source 目录同级实体化它们的标准 Kotlin 目录，且不替换现有文件；test run 才使 `miniappTest` 拥有一个真正执行的任务；该依赖才使消费者能够直接针对公开 API 编写 `miniappMain` 代码而不必声明任何 artifact。它还提供 `assembleMiniAppBundle`，把 Kotlin/JS production library 重新发布到一个宿主集成可以依赖的稳定路径；提供四个 distribution 任务 `initMiniApp`、`syncMiniApp`、`assembleMiniApp` 与 `verifyMiniApp`；并通过 `miniapp { wechat { } }` extension 配置它们的路径 —— bundle、source host、其中的 generated library area 与 distribution。它把 Mini App source host 模板作为插件资源随附；它不包含微信 runtime 代码。
 
-插件接入的 runtime 坐标为 `io.github.bobcgn:kmp-miniapp-sdk:<version>`。`gradle/libs.versions.toml` 是该版本的唯一来源：插件侧的坐标由它生成成资源，SDK 自身的 `MiniAppSdk.VERSION` 也由同一处生成，因此二者都不可能偏离实际发布的版本。插件只把它加入 `miniappMain`，`miniappTest` 通过 source-set hierarchy 继承。0.1.0 是首个公开版本：runtime 发布到 Maven Central，插件发布到 Gradle Plugin Portal；仓库开发 fixture 仍使用 composite substitution，以便测试当前工作树而不是已发布的 binary。
+插件接入的 runtime 坐标为 `io.github.bobcgn:kmp-miniapp-sdk:<version>`。`gradle/libs.versions.toml` 是该版本的唯一来源：插件侧的坐标由它生成成资源，SDK 自身的 `MiniAppSdk.VERSION` 也由同一处生成，因此二者都不可能偏离当前构建的版本。插件只把它加入 `miniappMain`，`miniappTest` 通过 source-set hierarchy 继承。0.1.1 是当前工作树版本：0.1.0 是首个公开发布版本，0.1.1 增加了 distribution pipeline，且未改变 0.1.0 引入的任何东西。只有在 release gate（包括微信开发者工具验收）通过后，0.1.1 runtime 与插件才会发布。正式版本分别发布到 Maven Central 与 Gradle Plugin Portal；仓库开发 fixture 使用 composite substitution，以便测试当前工作树而不是已发布的 binary。
 
 `examples/` 是 integration host 目录，不是 Gradle module。
 
-`fixtures/miniapp-consumer` 是消费者集成夹具：与本仓库并列的普通 Gradle build，而不是本仓库的 module，它按外部项目的方式消费插件与 runtime。它自带一个微信宿主，位于 `host/`。其 `miniappMain` / `miniappTest`、runtime 依赖与 bundle 全部来自插件。
+`fixtures/miniapp-consumer` 是消费者集成夹具：与本仓库并列的普通 Gradle build，而不是本仓库的 module，它按外部项目的方式消费插件与 runtime。其微信 source host 是 `miniApp/`，由 `initMiniApp` 创建一次，此后手工编辑。其 `miniappMain` / `miniappTest`、runtime 依赖、bundle 与 distribution 全部来自插件。
 
 `poc/kgp-model` 是 BOB-83 的 Kotlin Gradle Plugin 模型 PoC。它是一个独立 Gradle build，根构建不包含它，因此不为 SDK 贡献任何 module、target 或依赖。其决策记录于 [ADR 0010](decisions/0010-miniapp-gradle-plugin-source-set-model-ch.md)。
 
@@ -162,7 +163,7 @@ Kotlin/JS platform variants 及其传递依赖由 Gradle 在依赖解析期间�
 - `examples/wechat-miniprogram/miniprogram/libs` 下的 consumer-facing CommonJS wrapper 暴露 `sdkVersion(): string`。
 - 严格 TypeScript consumer 与 Node/CommonJS smoke test 均通过，consumer contract 不依赖 `any`。
 - `examples/wechat-miniprogram` 已包含加载同一消费产物并显示版本值的最小 index 页面。
-- 微信开发者工具能够加载该产物，在 console 输出 SDK 版本，并在 index 页面显示相同值。已记录的运行输出的是 `0.1.0-SNAPSHOT`，即当时的版本目录取值；当前工作树输出 `0.1.0`。
+- 微信开发者工具能够加载该产物，在 console 输出 SDK 版本，并在 index 页面显示相同值。0.1.1 distribution 已在基础库 3.17.3 中通过验收，页面显示 `0.1.1`，Console 报告 `fixture.result=PASS`。
 - 一个 common test 可在 Node.js Kotlin/JS test environment 中运行。
 - 已启用 Explicit API mode。
 - `commonMain` 已定义 `MiniAppHost`、`HostPlatformApi`、`HostVersion`、`CapabilityKey` 以及 `Supported` / `Unsupported` / `VersionDependent` / `PermissionDependent` capability states，以及把任何非支持状态转换为 `MiniAppException.UnsupportedCapability` 的 `requireSupported` guard。
