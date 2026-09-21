@@ -27,20 +27,19 @@ kotlin {
 
 miniapp {
     wechat {
-        // The default is `build/miniapp/bundle`. This fixture doubles as the source of artifacts for
-        // the WeChat host beside it, so the same build can retarget the bundle into the host's mini
-        // program directory:
-        //     ./gradlew assembleMiniAppBundle -PminiappBundleDirectory=host/miniprogram/libs
-        providers.gradleProperty("miniappBundleDirectory").orNull?.let { target ->
-            bundleDirectory.set(layout.projectDirectory.dir(target))
-        }
+        // This is the documented default, written out so the fixture exercises the consumer-facing
+        // DSL rather than only the plugin's tests. The source host, its generated library area and
+        // the distribution are all left at their defaults, which is what a new consumer gets.
+        bundleDirectory.set(layout.buildDirectory.dir("miniapp/bundle"))
     }
 }
 
-val bundleDirectory = extensions.getByType(MiniAppExtension::class.java).wechat.bundleDirectory
+val miniapp = extensions.getByType(MiniAppExtension::class.java).wechat
+val bundleDirectory = miniapp.bundleDirectory
+val sourceDirectory = miniapp.sourceDirectory
+val generatedLibraryDirectory = miniapp.generatedLibraryDirectory
 val defaultBundleDirectory = layout.buildDirectory.dir("miniapp/bundle").get().asFile
 val consumerModuleName = "${rootProject.name}-miniapp"
-val customBundleRequested = providers.gradleProperty("miniappBundleDirectory").isPresent
 
 /**
  * Asserts the consumer-facing artifact contract against the bundle this build just produced.
@@ -61,7 +60,6 @@ val verifyConsumerContract by tasks.registering {
     val bundle = bundleDirectory
     val expectedDefault = defaultBundleDirectory
     val moduleName = consumerModuleName
-    val customRequested = customBundleRequested
 
     doLast {
         fun checkContract(condition: Boolean, message: () -> String) {
@@ -70,20 +68,10 @@ val verifyConsumerContract by tasks.registering {
 
         val directory = bundle.get().asFile
         checkContract(directory.isDirectory) { "the bundle was not assembled at $directory" }
-        val files = directory.listFiles()!!.map { it.name }.sorted()
-
-        if (customRequested) {
-            checkContract(directory != expectedDefault) {
-                "the configured bundle directory was ignored; the bundle landed at $directory"
-            }
-            checkContract(!expectedDefault.exists()) {
-                "the default bundle directory $expectedDefault was used even though one was configured"
-            }
-        } else {
-            checkContract(directory == expectedDefault) {
-                "with no configuration the bundle must default to $expectedDefault, but landed at $directory"
-            }
+        checkContract(directory == expectedDefault) {
+            "with the documented default configured the bundle must land at $expectedDefault, but landed at $directory"
         }
+        val files = directory.listFiles()!!.map { it.name }.sorted()
 
         // The consumer's own module and the declaration a thin host compiles against.
         val declarations = files.filter { it.endsWith(".d.ts") }
@@ -129,5 +117,69 @@ val verifyConsumerContract by tasks.registering {
         println("consumerContract.bundleDirectory=${directory.invariantSeparatorsPath}")
         println("consumerContract.files=${files.size}")
         println("consumerContract.verified=true")
+    }
+}
+
+/**
+ * Asserts the source host's own half of the contract.
+ *
+ * `verifyMiniApp` reads the distribution and deliberately never reads the source host, so nothing
+ * else checks that this fixture's handwritten host still says what it is supposed to say. The
+ * generated module path in the page is the case that matters: the plugin cannot know it, and a page
+ * that requires the wrong module would assemble and verify and then fail in the host.
+ */
+val verifyConsumerSourceHost by tasks.registering {
+    group = "mini app"
+    description = "Asserts that the fixture's Mini App source host is complete and wired to the bundle."
+
+    val source = sourceDirectory
+    val generated = generatedLibraryDirectory
+    val moduleName = consumerModuleName
+
+    doLast {
+        fun checkHost(condition: Boolean, message: () -> String) {
+            if (!condition) throw GradleException(message())
+        }
+
+        val host = source.get().asFile
+        checkHost(host.isDirectory) {
+            "the source host is missing at $host; create it once with ./gradlew initMiniApp"
+        }
+
+        val expected = listOf(
+            "project.config.json",
+            "miniprogram/app.js",
+            "miniprogram/app.json",
+            "miniprogram/app.wxss",
+            "miniprogram/sitemap.json",
+            "miniprogram/pages/index/index.js",
+            "miniprogram/pages/index/index.json",
+            "miniprogram/pages/index/index.wxml",
+            "miniprogram/pages/index/index.wxss",
+        )
+        val missing = expected.filterNot { host.resolve(it).isFile }
+        checkHost(missing.isEmpty()) { "the source host is incomplete, missing: $missing" }
+
+        val config = host.resolve("project.config.json").readText()
+        checkHost(config.contains("\"miniprogramRoot\": \"miniprogram/\"")) {
+            "the source host's project.config.json does not point miniprogramRoot at miniprogram/"
+        }
+
+        val page = host.resolve("miniprogram/pages/index/index.js").readText()
+        checkHost(page.contains("require('../../libs/$moduleName.js')")) {
+            "the host page does not require '../../libs/$moduleName.js'; it would load nothing"
+        }
+
+        // The generated library area is the plugin's, so it lives inside the source host and nowhere
+        // else. That it is inside is the plugin's rule; that this fixture has not moved it is the
+        // fixture's.
+        val library = generated.get().asFile
+        checkHost(library.toPath().startsWith(host.toPath())) {
+            "the generated library area $library is not inside the source host $host"
+        }
+
+        println("consumerSourceHost.directory=${host.invariantSeparatorsPath}")
+        println("consumerSourceHost.files=${expected.size}")
+        println("consumerSourceHost.verified=true")
     }
 }

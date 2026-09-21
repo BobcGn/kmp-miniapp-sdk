@@ -1,6 +1,9 @@
 // The thin host: it calls the assembled bundle and renders what comes back. It contains no Kotlin
 // and no business logic — the shared behaviour lives in the consumer's `commonMain`, the host-facing
 // entry points in its `miniappMain`, and the runtime SDK is what those entry points call.
+//
+// This file started as the `initMiniApp` template and was then edited by hand, which is what the
+// template expects: it is written once and never rewritten.
 const consumer = require('../../libs/miniapp-consumer-miniapp.js').consumer;
 
 Page({

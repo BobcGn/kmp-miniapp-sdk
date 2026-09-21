@@ -61,9 +61,23 @@ tasks.register<Exec>("verifyMiniAppConsumer") {
     )
 }
 
-tasks.register<Exec>("verifyMiniAppConsumerHostBundle") {
+tasks.register<Exec>("verifyMiniAppConsumerSourceHost") {
     group = "verification"
-    description = "Assembles the consumer fixture's bundle into the WeChat host's mini program."
+    description = "Asserts the fixture's committed Mini App source host is complete and wired up."
+
+    workingDir(consumerFixtureDirectory)
+    commandLine(
+        consumerFixtureWrapper,
+        "--no-daemon",
+        "--console=plain",
+        "initMiniApp",
+        "verifyConsumerSourceHost",
+    )
+}
+
+tasks.register<Exec>("verifyMiniAppConsumerSync") {
+    group = "verification"
+    description = "Runs the fixture's development loop from clean: compile, then sync into the source host."
 
     workingDir(consumerFixtureDirectory)
     commandLine(
@@ -71,18 +85,45 @@ tasks.register<Exec>("verifyMiniAppConsumerHostBundle") {
         "--no-daemon",
         "--console=plain",
         "clean",
-        "assembleMiniAppBundle",
-        "verifyConsumerContract",
-        "-PminiappBundleDirectory=host/miniprogram/libs",
+        "syncMiniApp",
     )
 }
 
-tasks.register<Exec>("verifyMiniAppConsumerHostSmoke") {
+// The smoke runs the assembled bundle the way the host page does, from inside the source host. It is
+// module-wiring evidence on Node, not WeChat host acceptance.
+tasks.register<Exec>("verifyMiniAppConsumerSourceHostSmoke") {
     group = "verification"
-    description = "Loads the consumer fixture's bundle the way the WeChat host's page does."
+    description = "Loads the fixture's synced bundle the way the source host's page does."
 
-    dependsOn("verifyMiniAppConsumerHostBundle")
-    workingDir(consumerFixtureDirectory.dir("host"))
+    dependsOn("verifyMiniAppConsumerSync")
+    workingDir(consumerFixtureDirectory.dir("miniApp"))
+    commandLine("node", "scripts/host-smoke.cjs")
+}
+
+tasks.register<Exec>("verifyMiniAppConsumerDistribution") {
+    group = "verification"
+    description = "Assembles the fixture's standalone distribution from clean and verifies it."
+
+    workingDir(consumerFixtureDirectory)
+    commandLine(
+        consumerFixtureWrapper,
+        "--no-daemon",
+        "--console=plain",
+        "clean",
+        "assembleMiniApp",
+        "verifyMiniApp",
+    )
+}
+
+// The distribution is loaded through the copy of the smoke script that `assembleMiniApp` placed
+// inside it, resolving only relative to that copy. That the script does not reach back into this
+// repository is the point of running it from there.
+tasks.register<Exec>("verifyMiniAppConsumerDistributionSmoke") {
+    group = "verification"
+    description = "Loads the fixture's assembled distribution from inside the distribution itself."
+
+    dependsOn("verifyMiniAppConsumerDistribution")
+    workingDir(consumerFixtureDirectory.dir("build/miniapp-dist"))
     commandLine("node", "scripts/host-smoke.cjs")
 }
 
@@ -90,7 +131,12 @@ tasks.register("verifyMiniAppConsumerFixture") {
     group = "verification"
     description = "Runs every consumer integration fixture check from clean."
 
-    dependsOn("verifyMiniAppConsumer", "verifyMiniAppConsumerHostSmoke")
+    dependsOn(
+        "verifyMiniAppConsumer",
+        "verifyMiniAppConsumerSourceHost",
+        "verifyMiniAppConsumerSourceHostSmoke",
+        "verifyMiniAppConsumerDistributionSmoke",
+    )
 }
 
 // The single entry point CI calls for the Mini App plugin's integration suite: the plugin's own
@@ -114,16 +160,28 @@ tasks.register("verifyMiniAppGradlePluginIntegration") {
     )
 }
 
-// Both fixture runs start with `clean`, so their order is fixed rather than left to the task graph.
-tasks.named("verifyMiniAppConsumerHostBundle") {
-    mustRunAfter("verifyMiniAppConsumer")
+// Every fixture run is a Gradle build in the same project directory, and the ones that start with
+// `clean` would undo each other, so their order is fixed rather than left to the task graph.
+val consumerFixtureRuns = listOf(
+    "verifyMiniAppConsumer",
+    "verifyMiniAppConsumerSourceHost",
+    "verifyMiniAppConsumerSync",
+    "verifyMiniAppConsumerSourceHostSmoke",
+    "verifyMiniAppConsumerDistribution",
+    "verifyMiniAppConsumerDistributionSmoke",
+)
+
+consumerFixtureRuns.zipWithNext { earlier, later ->
+    tasks.named(later) { mustRunAfter(earlier) }
 }
 
 // The fixture is a nested build that composite-includes this repository, so it writes to the same
 // build directories as the repository's own plugin and SDK tasks. Running them at the same time
 // would put two Gradle builds on one project directory; ordering them keeps that impossible.
-tasks.named("verifyMiniAppConsumer") {
-    mustRunAfter(":miniapp-gradle-plugin:test", ":kmp-miniapp-sdk:checkArchitectureBoundaries")
+consumerFixtureRuns.forEach { fixtureRun ->
+    tasks.named(fixtureRun) {
+        mustRunAfter(":miniapp-gradle-plugin:test", ":kmp-miniapp-sdk:checkArchitectureBoundaries")
+    }
 }
 
 // The READMEs are the consumer's entry point and the first place to go stale: a renamed fixture
@@ -139,7 +197,17 @@ tasks.register("verifyMiniAppConsumerDocs") {
 
     val readmes = consumerReadmes
     val projectDirectory = layout.projectDirectory.asFile
-    val documentedCommands = listOf("./gradlew miniappTest", "./gradlew assembleMiniAppBundle")
+    // The commands a consumer runs. `assembleMiniAppBundle` stays on the list because it is still the
+    // lower-level contract `syncMiniApp` and `assembleMiniApp` are built on, and a README that stopped
+    // mentioning it would hide where the bundle in the middle comes from.
+    val documentedCommands = listOf(
+        "./gradlew miniappTest",
+        "./gradlew assembleMiniAppBundle",
+        "./gradlew initMiniApp",
+        "./gradlew syncMiniApp",
+        "./gradlew assembleMiniApp",
+        "./gradlew verifyMiniApp",
+    )
 
     inputs.files(readmes).withPropertyName("readmes")
     inputs.property("documentedCommands", documentedCommands)
