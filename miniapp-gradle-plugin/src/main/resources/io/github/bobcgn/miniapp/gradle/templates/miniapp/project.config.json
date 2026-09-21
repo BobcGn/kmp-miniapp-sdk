@@ -1,0 +1,27 @@
+{
+  "description": "Mini App host project. Written once by `./gradlew initMiniApp` and yours from then on.",
+  "miniprogramRoot": "miniprogram/",
+  "compileType": "miniprogram",
+  "appid": "",
+  "projectname": "__MINIAPP_PROJECT__",
+  "setting": {
+    "es6": true,
+    "enhance": true,
+    "postcss": true,
+    "minified": false,
+    "minifyWXSS": true,
+    "minifyWXML": true,
+    "uploadWithSourceMap": true,
+    "packNpmManually": false,
+    "packNpmRelationList": [],
+    "babelSetting": {
+      "ignore": [],
+      "disablePlugins": [],
+      "outputPath": ""
+    }
+  },
+  "packOptions": {
+    "ignore": [],
+    "include": []
+  }
+}

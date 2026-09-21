@@ -47,6 +47,7 @@ internal object MiniAppPlatformSupport {
         addMiniAppRuntimeDependency(project)
         registerMiniAppHostBoundaryCheck(project)
         registerMiniAppBundleTask(project)
+        MiniAppDistributionSupport.registerMiniAppDistributionTasks(project)
     }
 
     /**

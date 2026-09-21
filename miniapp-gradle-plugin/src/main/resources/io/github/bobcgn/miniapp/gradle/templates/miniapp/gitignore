@@ -1,0 +1,6 @@
+# Written by `initMiniApp`; yours from then on. `syncMiniApp` and `assembleMiniApp` own the
+# generated library area below, so a committed copy of it would be stale on the next build.
+miniprogram/libs/
+
+# WeChat Developer Tools records machine-local preferences here once the project is opened.
+project.private.config.json

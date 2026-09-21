@@ -9,7 +9,7 @@ import javax.inject.Inject
  * `miniapp { }` — Mini App platform build integration.
  *
  * The platform owns the Kotlin sources and the runtime SDK the consumer compiles against. A host is
- * the runtime that loads the bundle, and it is configured under this extension rather than beside
+ * the runtime that loads the result, and it is configured under this extension rather than beside
  * it, so the hierarchy reads Mini App Platform → Host → WeChat and stays that way when a second host
  * exists:
  *
@@ -17,13 +17,21 @@ import javax.inject.Inject
  * miniapp {
  *     wechat {
  *         bundleDirectory.set(layout.buildDirectory.dir("miniapp/bundle"))
+ *         sourceDirectory.set(layout.projectDirectory.dir("miniApp"))
+ *         generatedLibraryDirectory.set(
+ *             sourceDirectory.dir("miniprogram/libs"),
+ *         )
+ *         distributionDirectory.set(layout.buildDirectory.dir("miniapp-dist"))
  *     }
  * }
  * ```
  *
- * Declaring a host is optional. Applying the plugin already targets the current host, so a consumer
- * that configures nothing keeps working; the block exists to name the host explicitly and to change
- * what genuinely belongs to the build.
+ * Every one of those has a default, so the block is optional twice over: applying the plugin already
+ * targets the current host, and a consumer that configures nothing gets the documented layout.
+ *
+ * Only build paths are configurable. Declaring a host is not a business configuration surface, and
+ * nothing about the mini program itself — its identifier, its pages, its capabilities, its markup —
+ * is reachable from here.
  *
  * Deliberately absent, because Gradle is not where they belong: application identifiers and secrets,
  * merchant and payment material, order or signature data, API tokens, user identity, subscription
@@ -44,6 +52,16 @@ public abstract class MiniAppExtension @Inject constructor(
     public val wechat: WeChatHostConfiguration =
         objects.newInstance(WeChatHostConfiguration::class.java).apply {
             bundleDirectory.convention(layout.buildDirectory.dir(MiniAppPluginDiagnostics.MINIAPP_BUNDLE_DIRECTORY))
+            sourceDirectory.convention(layout.projectDirectory.dir(MiniAppPluginDiagnostics.MINIAPP_SOURCE_DIRECTORY))
+            distributionDirectory.convention(
+                layout.buildDirectory.dir(MiniAppPluginDiagnostics.MINIAPP_DISTRIBUTION_DIRECTORY),
+            )
+            // Derived from the source host's *convention* rather than from its current value, so a
+            // consumer that moves the source host moves the generated area with it unless it says
+            // otherwise.
+            generatedLibraryDirectory.convention(
+                sourceDirectory.dir(MiniAppPluginDiagnostics.MINIAPP_GENERATED_LIBRARY_DIRECTORY),
+            )
         }
 
     /** Configures the current host. */

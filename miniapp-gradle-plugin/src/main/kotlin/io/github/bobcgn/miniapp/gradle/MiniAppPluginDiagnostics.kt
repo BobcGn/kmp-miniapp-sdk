@@ -48,6 +48,51 @@ internal object MiniAppPluginDiagnostics {
     public const val MINIAPP_BUNDLE_DIRECTORY: String = "miniapp/bundle"
 
     /**
+     * The Mini App source host, relative to the consumer's project directory.
+     *
+     * It is the small WeChat project a developer opens in WeChat Developer Tools and edits by hand.
+     * It is source, not build output, so `clean` never removes it and the plugin only ever creates
+     * the files that are missing from it.
+     */
+    public const val MINIAPP_SOURCE_DIRECTORY: String = "miniApp"
+
+    /**
+     * Where the compiled Kotlin/JS modules are written inside the source host, relative to it.
+     *
+     * The WeChat half of the path is deliberate: it is WeChat's word for the directory the host
+     * packages, and it lives on [WeChatHostConfiguration] rather than on the platform.
+     */
+    public const val MINIAPP_GENERATED_LIBRARY_DIRECTORY: String = "miniprogram/libs"
+
+    /**
+     * The complete standalone Mini App project, relative to the consumer's build directory.
+     *
+     * It is build output: deletable and rebuildable, and nothing in it is edited by hand.
+     */
+    public const val MINIAPP_DISTRIBUTION_DIRECTORY: String = "miniapp-dist"
+
+    /** Creates the Mini App source host. Never runs implicitly. */
+    public const val INIT_MINIAPP_TASK_NAME: String = "initMiniApp"
+
+    /** Republishes the compiled modules into the source host's generated library area. */
+    public const val SYNC_MINIAPP_TASK_NAME: String = "syncMiniApp"
+
+    /** Assembles the standalone Mini App distribution. */
+    public const val ASSEMBLE_MINIAPP_TASK_NAME: String = "assembleMiniApp"
+
+    /** Verifies the assembled distribution. */
+    public const val VERIFY_MINIAPP_TASK_NAME: String = "verifyMiniApp"
+
+    /**
+     * The plugin's Mini App source-host templates, as classpath resources.
+     *
+     * A resource name is the template's destination path relative to the source host, so the
+     * template tree and the created tree have exactly one shape to keep in step.
+     */
+    public const val MINIAPP_TEMPLATE_RESOURCE_ROOT: String =
+        "io/github/bobcgn/miniapp/gradle/templates/miniapp"
+
+    /**
      * The Mini App compilation's runtime classpath — exactly the dependency set the Kotlin/JS
      * production library distribution is built from, so it is also the set the host bundle carries.
      */

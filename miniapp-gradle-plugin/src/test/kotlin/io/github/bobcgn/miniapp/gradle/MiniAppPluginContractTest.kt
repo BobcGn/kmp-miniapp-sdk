@@ -143,16 +143,61 @@ class MiniAppPluginContractTest {
     fun `the plugin ships only its own Gradle integration classes`() {
         // The runtime SDK and the WeChat host are dependencies a consumer resolves, not code this
         // plugin carries. Anything outside the plugin's own package, the metadata resource it
-        // generates, and META-INF means a runtime has been shaded into the plugin.
+        // generates, its own source-host templates, and META-INF means a runtime has been shaded into
+        // the plugin.
         val unexpected = pluginOutputEntries().filterNot { entry ->
             entry.startsWith("META-INF/") ||
                 entry == PLUGIN_METADATA_RESOURCE ||
-                PLUGIN_CLASS_ENTRY.matches(entry)
+                PLUGIN_CLASS_ENTRY.matches(entry) ||
+                PLUGIN_TEMPLATE_ENTRY.matches(entry)
         }
 
         assertTrue(
             unexpected.isEmpty(),
             "the plugin output must contain only its own Gradle integration, found: $unexpected",
+        )
+    }
+
+    /**
+     * The source-host templates are a second output of this plugin, so they are held to a contract of
+     * their own: every template it declares is really on the classpath, and every template lands
+     * inside the source host rather than beside or above it.
+     *
+     * The resource name is checked separately from the destination because Gradle's default excludes
+     * drop a dotfile from `processResources`, which is why the one dotfile the template tree contains
+     * ships under a name that does not begin with a dot.
+     */
+    @Test
+    fun `every declared source-host template is shipped and writes inside the source host`() {
+        assertTrue(
+            MiniAppSourceHost.templates.isNotEmpty(),
+            "the plugin must ship at least one source-host template",
+        )
+
+        MiniAppSourceHost.templates.forEach { template ->
+            val destination = template.destination
+            assertTrue(
+                !destination.startsWith("/") && !destination.split('/').contains(".."),
+                "template '$destination' must be a relative path inside the source host",
+            )
+            assertTrue(
+                !template.resource.startsWith("/"),
+                "template resource '${template.resource}' must be a classpath-relative name",
+            )
+
+            val text = MiniAppSourceHost.templateText(destination)
+            assertTrue(text.isNotEmpty(), "template '$destination' is empty")
+        }
+
+        // The dotfile is the case the resource name exists for; if Gradle ever copies dotfiles, this
+        // assertion keeps the mapping honest rather than silently depending on the excludes.
+        assertEquals(
+            ".gitignore",
+            MiniAppSourceHost.templates.single { it.destination == ".gitignore" }.destination,
+        )
+        assertTrue(
+            MiniAppSourceHost.templates.none { it.destination.endsWith("/.gitignore") },
+            "only the source host's own ignore file belongs in the template",
         )
     }
 
@@ -199,5 +244,8 @@ class MiniAppPluginContractTest {
         const val PLUGIN_METADATA_RESOURCE: String = "miniapp-plugin-metadata.properties"
 
         val PLUGIN_CLASS_ENTRY: Regex = Regex("""io/github/bobcgn/miniapp/gradle/[^/]+\.class""")
+
+        /** The source-host templates, which are the plugin's own data rather than a shaded runtime. */
+        val PLUGIN_TEMPLATE_ENTRY: Regex = Regex("""io/github/bobcgn/miniapp/gradle/templates/.+""")
     }
 }

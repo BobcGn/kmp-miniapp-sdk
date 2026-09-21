@@ -1,0 +1,18 @@
+.page {
+  padding: 32rpx;
+}
+
+.title {
+  font-size: 34rpx;
+  font-weight: 600;
+  margin-bottom: 16rpx;
+}
+
+.row {
+  font-size: 28rpx;
+  color: #333;
+}
+
+.failure {
+  color: #c00000;
+}
