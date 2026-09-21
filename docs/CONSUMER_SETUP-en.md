@@ -2,9 +2,7 @@
 
 [中文](CONSUMER_SETUP-ch.md)
 
-This guide describes the online consumer path for 0.1.1 once that version passes its release gate and
-is published. Until then, 0.1.0 remains the latest public version and the 0.1.1 workflow is exercised
-through this repository's composite-build fixture. The published path does not use a checkout of this
+This guide describes the published online consumer path for 0.1.1. It does not use a checkout of this
 repository, `includeBuild`, an internal project dependency, or a copied SDK artifact.
 
 ## Requirements

@@ -149,7 +149,7 @@ build/miniapp/bundle/
 
 `gradle/libs.versions.toml` 保存 runtime SDK 与本插件共享的唯一版本。插件构建据此生成 `miniapp-plugin-metadata.properties`，插件运行期从该资源读取坐标，因此插件源码与测试中都不含版本字面量。
 
-0.1.1 通过 release gate 并发布后，其公开消费路径才会从 Gradle Plugin Portal 解析插件、从 Maven Central 解析 runtime 坐标。在此之前，0.1.0 仍是最新公开版本，仓库 fixture 使用 composite substitution 验证 0.1.1 工作树。无法解析 runtime 时消费者会看到 Gradle 指明该坐标的依赖解析错误；插件有意不回退到其他版本、其他 artifact 或 project path。
+0.1.1 公开消费路径从 Gradle Plugin Portal 解析插件、从 Maven Central 解析 runtime 坐标。仓库 fixture 仍使用 composite substitution 验证当前工作树。无法解析 runtime 时消费者会看到 Gradle 指明该坐标的依赖解析错误；插件有意不回退到其他版本、其他 artifact 或 project path。
 
 插件自身不创建任何 source-set 模型与 `dependsOn` 边：手工搭建的正是 [ADR 0010](decisions/0010-miniapp-gradle-plugin-source-set-model-ch.md) 否决的「未使用 source set」模型。它只在磁盘上创建两个标准 Kotlin 目录；重复应用会保留现有文件。把它应用到未应用 Kotlin Multiplatform 插件的项目会失败，并给出指明缺失插件的错误信息。
 
@@ -253,7 +253,7 @@ cd fixtures/miniapp-consumer
 
 `fixtures/miniapp-consumer/miniApp` 是一个最小微信小程序。它由 `initMiniApp` 创建一次，此后手工编辑；模板本身由插件自己的测试覆盖，而这份副本证明已提交的宿主保持完整并与消费者 module 接线。它属于 Host UI，因此 markup 留在这里，永不进入 SDK 或夹具的共享 Kotlin。
 
-其 `miniprogram/libs/` 是插件的 generated area 并被 Git 忽略。在微信开发者工具中打开前请先运行 `syncMiniApp`。该夹具已完成基础库 3.17.3 的开发者工具验收：页面渲染 `Hello, WeChat, from commonMain`、`5` 与 `0.1.0-SNAPSHOT`，Console 报告 `fixture.result=PASS`。宿主另有一个 Node smoke 检查，以与页面完全相同的方式加载该 bundle：
+其 `miniprogram/libs/` 是插件的 generated area 并被 Git 忽略。在微信开发者工具中打开前请先运行 `syncMiniApp`。该夹具已完成基础库 3.17.3 的开发者工具验收：页面渲染 `Hello, WeChat, from commonMain`、`5` 与 `0.1.1`，Console 报告 `fixture.result=PASS`。宿主另有一个 Node smoke 检查，以与页面完全相同的方式加载该 bundle：
 
 ```shell
 cd fixtures/miniapp-consumer/miniApp

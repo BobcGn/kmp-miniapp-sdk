@@ -6,29 +6,26 @@
 所需的 Kotlin API。它是 Kotlin Multiplatform library，但当前发布的平台实现面向 Kotlin/JS Mini App
 宿主。
 
-版本 `0.1.0` 已发布至 Maven Central：
+版本 `0.1.1` 已发布至 Maven Central：
 
 ```kotlin
-io.github.bobcgn:kmp-miniapp-sdk:0.1.0
+io.github.bobcgn:kmp-miniapp-sdk:0.1.1
 ```
 
 这是实验性版本。在生产环境依赖具体能力前，请检查
 [微信能力矩阵](../docs/platforms/wechat/WECHAT_CAPABILITIES-ch.md)。
 
-当前工作树构建的是 `0.1.1`，它增加了 Mini App distribution pipeline —— `initMiniApp`、`syncMiniApp`、
-`assembleMiniApp` 与 `verifyMiniApp` —— 且尚未发布。在线解析 `0.1.0` 的消费者得到的是 0.1.0 的行为：
-`miniappMain`、`miniappTest`、runtime 依赖与 `assembleMiniAppBundle`。
+版本 `0.1.1` 增加了 Mini App distribution pipeline —— `initMiniApp`、`syncMiniApp`、
+`assembleMiniApp` 与 `verifyMiniApp` —— 且未改变 0.1.0 引入的 source set、runtime 依赖、
+`miniappTest` 与 `assembleMiniAppBundle`。
 
 ## 推荐的 KMP 接入方式
 
 预期的消费者体验使用配套 Gradle 插件。它会创建 `miniapp` target，添加 `miniappMain` 与
 `miniappTest`，接入本 runtime 依赖，配置 Node 测试并提供 `assembleMiniAppBundle`。
 
-> **当前发布状态：**上述 runtime artifact 已在 Maven Central 上线。首次提交的
-> `io.github.bobcgn.miniapp:0.1.0` 插件仍在等待 Gradle Plugin Portal 审核。下列配置是最终支持的
-> 使用形式，但只有审核完成后才能在线解析插件。在此之前，请使用
-> [源码检出工作流](../docs/CONSUMER_SETUP-ch.md#当前源码检出工作流)，或使用下方仅接入 runtime
-> 的方式。
+> **当前发布状态：** runtime `0.1.1` 已发布至 Maven Central，插件
+> `io.github.bobcgn.miniapp:0.1.1` 已发布至 Gradle Plugin Portal。
 
 ### 1. 配置仓库
 
@@ -56,7 +53,7 @@ dependencyResolutionManagement {
 ```kotlin
 plugins {
     kotlin("multiplatform") version "2.4.20"
-    id("io.github.bobcgn.miniapp") version "0.1.0"
+    id("io.github.bobcgn.miniapp") version "0.1.1"
 }
 
 kotlin {
@@ -152,7 +149,7 @@ kotlin {
 
     sourceSets {
         jsMain.dependencies {
-            implementation("io.github.bobcgn:kmp-miniapp-sdk:0.1.0")
+            implementation("io.github.bobcgn:kmp-miniapp-sdk:0.1.1")
         }
     }
 }

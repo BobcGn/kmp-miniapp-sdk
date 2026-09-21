@@ -149,7 +149,7 @@ A consumer that already had a Kotlin/JS target before applying the plugin may ne
 
 `gradle/libs.versions.toml` holds the one version the runtime SDK and this plugin share. The plugin's build generates `miniapp-plugin-metadata.properties` from it, and the plugin reads the coordinate from that resource at runtime, so neither the plugin's source nor its tests contain the version as a literal.
 
-After 0.1.1 passes its release gate and is published, its public consumer path resolves the plugin from the Gradle Plugin Portal and the runtime coordinate from Maven Central. Until then, 0.1.0 remains the latest public release and repository fixtures use composite substitution to exercise the 0.1.1 working tree. A consumer that cannot resolve the runtime fails with Gradle's dependency-resolution error naming the coordinate; the plugin deliberately does not fall back to another version, another artifact, or a project path.
+The 0.1.1 public consumer path resolves the plugin from the Gradle Plugin Portal and the runtime coordinate from Maven Central. Repository fixtures still use composite substitution to exercise the working tree. A consumer that cannot resolve the runtime fails with Gradle's dependency-resolution error naming the coordinate; the plugin deliberately does not fall back to another version, another artifact, or a project path.
 
 The plugin creates no source-set model and no `dependsOn` edge of its own: hand-built ones are the unused-source-set model [ADR 0010](decisions/0010-miniapp-gradle-plugin-source-set-model-en.md) rejected. It only creates the two conventional Kotlin directories on disk; repeated application preserves existing files. Applying it to a project that does not apply the Kotlin Multiplatform plugin fails with a message naming the missing plugin.
 
@@ -267,7 +267,7 @@ That runs the fixture four ways: the default bundle directory and its contract, 
 
 `fixtures/miniapp-consumer/miniApp` is a minimal WeChat mini program. It was created once by `initMiniApp` and edited by hand since; the plugin's own test suite covers the template, and this copy is what proves the committed host stays complete and wired to the consumer's module. It is Host UI, so markup stays here and never enters the SDK or the fixture's shared Kotlin.
 
-Its `miniprogram/libs/` is the plugin's generated area and is git-ignored. Run `syncMiniApp` before opening the project in WeChat Developer Tools. The fixture completed Developer Tools acceptance at base library 3.17.3: the page rendered `Hello, WeChat, from commonMain`, `5`, and `0.1.0-SNAPSHOT`, and the Console reported `fixture.result=PASS`. The host also has a Node smoke check that loads the bundle exactly the way the page does:
+Its `miniprogram/libs/` is the plugin's generated area and is git-ignored. Run `syncMiniApp` before opening the project in WeChat Developer Tools. The fixture completed Developer Tools acceptance at base library 3.17.3: the page rendered `Hello, WeChat, from commonMain`, `5`, and `0.1.1`, and the Console reported `fixture.result=PASS`. The host also has a Node smoke check that loads the bundle exactly the way the page does:
 
 ```shell
 cd fixtures/miniapp-consumer/miniApp

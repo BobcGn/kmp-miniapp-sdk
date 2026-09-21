@@ -20,7 +20,7 @@ App lifecycle、微信页面栈导航、运行时能力检测、权限生命周�
 真机。微信标准支付是「后端参数的类型化转发器」，其验收需要合法商户环境，因此保持 `Partial`。每项能力的准确
 状态见[微信能力矩阵](docs/platforms/wechat/WECHAT_CAPABILITIES-ch.md)，其中的 `Planned` 条目不是实现事实。
 
-版本 **0.1.0** 是当前最新的公开实验性版本。**0.1.1 工作树**增加了 Mini App distribution pipeline：
+版本 **0.1.1** 是当前最新的公开实验性版本。它增加了 Mini App distribution pipeline：
 `initMiniApp` 创建微信 source host，`syncMiniApp` 驱动开发循环，`assembleMiniApp` 与 `verifyMiniApp`
 产出并检查一个独立工程。0.1.0 引入的一切 —— source set、runtime 依赖、test run 与 `assembleMiniAppBundle`
 —— 均未改变。在线解析方式见专门的[消费者接入指南](docs/CONSUMER_SETUP-ch.md)；以 SDK 为中心的 KMP 接入与依赖
@@ -54,8 +54,7 @@ App lifecycle、微信页面栈导航、运行时能力检测、权限生命周�
 以下步骤从一个普通 Kotlin Multiplatform 项目得到可用的 Mini App。这正是
 [`fixtures/miniapp-consumer`](fixtures/miniapp-consumer) 每次验证所运行的流程。
 
-这些 API 与脚本形态来自 fixture，并适配为 0.1.1 发布后的公开消费方式。在 0.1.1 发布前，请通过
-仓库 fixture 运行该流程；公共仓库当前仍提供 0.1.0。
+这些 API 与脚本形态来自 fixture，并已作为 0.1.1 消费者流程发布。
 
 ### 0. 前置条件
 
@@ -360,9 +359,8 @@ generated library area 必须严格位于 source host 内部、distribution 必�
 
 ## 在线解析
 
-0.1.1 发布后，Gradle 从 Gradle Plugin Portal 解析插件 `io.github.bobcgn.miniapp:0.1.1`。插件随后添加
-runtime `io.github.bobcgn:kmp-miniapp-sdk:0.1.1`，Gradle 从 Maven Central 解析它。在此之前，0.1.0 仍是
-最新公开版本。消费者不需要本仓库源码、
+Gradle 从 Gradle Plugin Portal 解析插件 `io.github.bobcgn.miniapp:0.1.1`。插件随后添加
+runtime `io.github.bobcgn:kmp-miniapp-sdk:0.1.1`，Gradle 从 Maven Central 解析它。消费者不需要本仓库源码、
 `includeBuild`、内部 module 路径或手工复制的 artifact。完整独立项目说明见
 [CONSUMER_SETUP-ch.md](docs/CONSUMER_SETUP-ch.md)。
 

@@ -6,20 +6,19 @@ The runtime module of `kmp-miniapp-sdk` provides Kotlin APIs for shared Mini App
 host capabilities and the current WeChat adapter. It is a Kotlin Multiplatform library, but its
 published platform implementation currently targets Kotlin/JS Mini App hosts.
 
-Version `0.1.0` is available from Maven Central:
+Version `0.1.1` is available from Maven Central:
 
 ```kotlin
-io.github.bobcgn:kmp-miniapp-sdk:0.1.0
+io.github.bobcgn:kmp-miniapp-sdk:0.1.1
 ```
 
 This is an experimental release. Check the
 [WeChat capability matrix](../docs/platforms/wechat/WECHAT_CAPABILITIES-en.md) before relying on a
 specific capability in production.
 
-The working tree builds `0.1.1`, which adds the Mini App distribution pipeline — `initMiniApp`,
-`syncMiniApp`, `assembleMiniApp` and `verifyMiniApp` — and is not published yet. A consumer that
-resolves `0.1.0` online gets the 0.1.0 behaviour: `miniappMain`, `miniappTest`, the runtime dependency,
-`miniappTest`, and `assembleMiniAppBundle`.
+Version `0.1.1` adds the Mini App distribution pipeline — `initMiniApp`, `syncMiniApp`,
+`assembleMiniApp` and `verifyMiniApp` — without changing the source sets, runtime dependency,
+`miniappTest`, or `assembleMiniAppBundle` introduced in 0.1.0.
 
 ## Recommended KMP integration
 
@@ -27,12 +26,8 @@ The intended consumer experience uses the companion Gradle plugin. It creates th
 adds `miniappMain` and `miniappTest`, wires this runtime dependency, configures Node tests and
 provides `assembleMiniAppBundle`.
 
-> **Current publication status:** the runtime artifact above is live on Maven Central. The first
-> `io.github.bobcgn.miniapp:0.1.0` plugin submission is still waiting for Gradle Plugin Portal
-> approval. The configuration below is the supported final form, but online plugin resolution will
-> work only after that approval is complete. Until then, use the
-> [source-checkout workflow](../docs/CONSUMER_SETUP-en.md#current-source-checkout-workflow) or the
-> runtime-only option below.
+> **Current publication status:** runtime `0.1.1` is published to Maven Central and plugin
+> `io.github.bobcgn.miniapp:0.1.1` is published to the Gradle Plugin Portal.
 
 ### 1. Configure repositories
 
@@ -60,7 +55,7 @@ In the KMP module's `build.gradle.kts`:
 ```kotlin
 plugins {
     kotlin("multiplatform") version "2.4.20"
-    id("io.github.bobcgn.miniapp") version "0.1.0"
+    id("io.github.bobcgn.miniapp") version "0.1.1"
 }
 
 kotlin {
@@ -158,7 +153,7 @@ kotlin {
 
     sourceSets {
         jsMain.dependencies {
-            implementation("io.github.bobcgn:kmp-miniapp-sdk:0.1.0")
+            implementation("io.github.bobcgn:kmp-miniapp-sdk:0.1.1")
         }
     }
 }

@@ -2,8 +2,7 @@
 
 [English](CONSUMER_SETUP-en.md)
 
-本文描述 0.1.1 通过 release gate 并发布后的在线消费路径。在此之前，0.1.0 仍是最新公开版本，0.1.1
-工作流通过本仓库的 composite-build fixture 验证。正式发布路径不需要检出本仓库，不使用 `includeBuild`、
+本文描述 0.1.1 已发布的在线消费路径。正式发布路径不需要检出本仓库，不使用 `includeBuild`、
 内部 project 依赖或手工复制的 SDK 产物。
 
 ## 前置条件

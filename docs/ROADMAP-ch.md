@@ -58,7 +58,7 @@ runtime 的公共坐标是 `io.github.bobcgn:kmp-miniapp-sdk`。第 D 步正式�
 
 第 H 步的实现已就位：插件集成套件分层为 contract 测试、Gradle TestKit fixture 与持久消费者 fixture，并以 `verifyMiniAppGradlePluginIntegration` 作为 CI 调用的唯一入口。它刻意不接入 `check`，因为该 fixture 会驱动一个编译 Kotlin/JS 并安装 npm 依赖的嵌套 Gradle 构建。套件还会拒绝未能解析的 Mini App runtime classpath，因此 renderer 检查不会对一张它从未看过的依赖图作出报告。
 
-第 I 步的文档已就位：README 是以已验收 fixture 为依据的消费者快速开始 —— 按 id 应用插件、编写 `commonMain`、在 `miniappMain` 导出、运行 `miniappTest`、组装 bundle、在微信宿主中加载。0.1.1 工作树尚待 release gate，当前最新公开版本仍为 0.1.0；0.1.1 发布后才会从 Gradle Plugin Portal 解析插件、从 Maven Central 解析 runtime。仓库 fixture 保留 composite build 以测试当前工作树。仓库维护者命令与旧的 `examples/wechat-miniprogram` 路径仍位于消费者主流程之外。
+第 I 步的文档已就位：README 是以已验收 fixture 为依据的消费者快速开始 —— 按 id 应用插件、编写 `commonMain`、在 `miniappMain` 导出、运行 `miniappTest`、组装 bundle、在微信宿主中加载。0.1.1 是当前最新公开版本，从 Gradle Plugin Portal 解析插件、从 Maven Central 解析 runtime。仓库 fixture 保留 composite build 以测试当前工作树。仓库维护者命令与旧的 `examples/wechat-miniprogram` 路径仍位于消费者主流程之外。
 
 第 J 步已验收：Mini App distribution pipeline 已实现并通过验证。`initMiniApp` 依据插件随附的模板创建消费者的微信 source host，只写入缺失的文件，且绝不隐式运行；`syncMiniApp` 把 compiler-managed bundle 重新发布到 source host 的 generated library area，因此「改 Kotlin + 一个任务」就是完整的开发循环；`assembleMiniApp` 产出完整、独立的微信工程，既不要求先 sync，也不写入 source host；`verifyMiniApp` 只读取该 distribution，并在入口文件缺失、`require()` 无法解析或出现绝对路径时失败。三个路径 —— source host、generated library area、distribution —— 各有归属，因此 `clean` 只删除构建产物、从不删除源码。组装后的 distribution 也已在微信开发者工具基础库 3.17.3 中通过验收：页面渲染共享 greeting、计数 `5` 与 SDK 版本 `0.1.1`，Console 报告 `fixture.result=PASS`。
 

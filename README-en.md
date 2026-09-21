@@ -28,7 +28,7 @@ environment, so it stays `Partial`. The
 [WeChat capability matrix](docs/platforms/wechat/WECHAT_CAPABILITIES-en.md) has the exact status of
 every capability, and a `Planned` entry there is not an implementation fact.
 
-Version **0.1.0** is the latest public, experimental release. The **0.1.1 working tree** adds the Mini App
+Version **0.1.1** is the latest public, experimental release. It adds the Mini App
 distribution pipeline: `initMiniApp` creates the WeChat source host, `syncMiniApp` drives the
 development loop, and `assembleMiniApp` plus `verifyMiniApp` produce and check a standalone project.
 Everything 0.1.0 introduced — the source sets, the runtime dependency, the test run and
@@ -64,9 +64,7 @@ Everything 0.1.0 introduced — the source sets, the runtime dependency, the tes
 The following produces a working Mini App from an ordinary Kotlin Multiplatform project. It is the
 flow [`fixtures/miniapp-consumer`](fixtures/miniapp-consumer) runs on every verification pass.
 
-These are the fixture's own APIs and script shape, adapted for the 0.1.1 release once it is published.
-Until 0.1.1 is published, run this flow through the repository fixture; the public repositories
-still serve 0.1.0.
+These are the fixture's own APIs and script shape, published as the 0.1.1 consumer workflow.
 
 ### 0. What you need
 
@@ -394,10 +392,9 @@ path written into the plugin, so a Kotlin Gradle Plugin layout change moves the 
 
 ## Online resolution
 
-After 0.1.1 is published, Gradle resolves plugin `io.github.bobcgn.miniapp:0.1.1` from the Gradle
+Gradle resolves plugin `io.github.bobcgn.miniapp:0.1.1` from the Gradle
 Plugin Portal. The plugin then adds runtime `io.github.bobcgn:kmp-miniapp-sdk:0.1.1`, which Gradle
-resolves from Maven Central. Until then, 0.1.0 is the latest public version. A
-consumer does not need this repository's source, `includeBuild`, an internal module path, or a copied
+resolves from Maven Central. A consumer does not need this repository's source, `includeBuild`, an internal module path, or a copied
 artifact. See [CONSUMER_SETUP-en.md](docs/CONSUMER_SETUP-en.md) for the complete standalone-project
 instructions.
 
