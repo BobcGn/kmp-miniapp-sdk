@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-[English](CLAUDE-en.md)
+[English](CLAUDE.md)
 
 面向 Claude Code 的本仓库操作指南。
 
@@ -49,15 +49,21 @@ WeChat Mini Program
 
 绝不可从路线图推断某项能力已经实现。路线图条目、TODO、issue 和注释都是计划，不能作为功能已存在的证据。
 
+源码与文档或不同文档冲突时，按 AGENTS.md 第 2 节的层级处理，向用户报告差异，不悄悄修改文档来掩盖冲突。
+
 ## 4. 不可违反的规则
 
 **范围纪律。** 在没有明确任务的情况下，不要添加 Android、iOS、JVM 或 Wasm target；不要添加 Compose、Ktor、serialization 或依赖注入框架；不要添加 npm 或 Maven 发布；不要添加投机性的 Gradle module。
 
 **UI 与渲染边界。** runtime SDK 与未来的 Presentation Core 不得依赖 Compose、其他 UI framework，或 WXML、WXSS 这类宿主 markup。Compose 是客户端 UI consumer。Mini App host integration 只做宿主状态与宿主事件的 binding，从不渲染。`./gradlew :kmp-miniapp-sdk:checkArchitectureBoundaries` 强制其中的依赖部分，并且是 `:kmp-miniapp-sdk:check` 的一部分；见 `AGENTS.md` 第 10 节与 [ADR 0011](docs/decisions/0011-presentation-state-shared-rendering-host-native-ch.md)。
 
+**凭据安全。** 不提交 AppID 密钥、token、证书或其他凭据；示例与测试使用占位值。
+
+**破坏性操作。** 删除文件、重写历史或批量改写前，说明影响范围并取得用户确认。
+
 **最小改动。** 只做当前任务所需的最小改动。不要因为"以后可能有用"而添加基础设施。
 
-**构建权威。** 任何"构建通过"的结论都必须由真实的 Gradle Wrapper 调用支撑。IDE 状态不能作为证据。
+**构建权威。** 任何"构建通过"的结论都必须由真实的 Gradle Wrapper 调用支撑。IDE 状态不能作为证据。每项改动至少有一条适合其范围的可执行验证命令，并报告结果及未运行的检查。
 
 **计划不等于事实。** 不要把路线图条目当作已交付的工作来陈述。
 
@@ -65,7 +71,7 @@ WeChat Mini Program
 
 **JS 边界。** `dynamic`、`external` 和 `js()` 绝不能进入 `commonMain`。原始 JavaScript interop 应尽可能收窄，最好放在 `jsMain/.../wechat/interop` 下。
 
-**文档同步。** 面向人的文档使用同步的 `-en.md` / `-ch.md` 配对。任一语言发生变化时，必须在同一任务中更新其对应版本，且事实、结构与意图保持一致。本文件同样适用。
+**文档同步。** 面向人的文档使用同步的 `-en.md` / `-ch.md` 配对；权威文件 AGENTS.md 与有意采用不同文件名的 CLAUDE.md / CLAUDE-ch.md 指南配对除外。任一语言发生变化时，必须在同一任务中更新其对应版本，且事实、结构与意图保持一致。本文件同样适用。
 
 **ADR 是历史记录。** `docs/decisions/` 中已接受的决策是历史档案。要改变某个决策，应新增一个取代它的 ADR，而不是改写原记录。
 
@@ -79,7 +85,7 @@ WeChat Mini Program
 
 ```text
 AGENTS.md                    仓库规则
-CLAUDE-en.md / CLAUDE-ch.md  本操作指南
+CLAUDE.md / CLAUDE-ch.md  本操作指南
 README-en.md / README-ch.md
 docs/                        PROJECT_FACTS、ARCHITECTURE、DEVELOPMENT、TESTING、ROADMAP、decisions/（ADR）
 gradle/libs.versions.toml    依赖与插件版本的唯一来源
@@ -133,10 +139,10 @@ Node.js 只是本地 Kotlin/JS 构建与测试环境。预期生产宿主是微�
 
 ## 7. 工作流程
 
-1. 阅读第 2 节中与所改区域相关的文档。
+1. 按 AGENTS.md 第 14 节采用完整、轻量或明确跳过的需求对齐流程，并阅读第 2 节中的相关文档。
 2. 在源码与 Gradle 配置中确认当前状态，不要仅凭文档假设。
 3. 修改前检查工作区并切换到任务分支，然后做出满足任务的最小改动。
-4. 使用 Gradle Wrapper 进行验证。
+4. 执行适合本次改动的验证命令；构建与测试验证使用 Gradle Wrapper。仅改文档时执行文档检查，不适用 Gradle 时如实写“未运行”。
 5. 更新受改动影响的 `-en` / `-ch` 文档配对；当 module、依赖、Kotlin 或 Gradle 版本、target、公共架构或当前能力发生变化时，一并更新 `docs/PROJECT_FACTS-en.md` 与 `docs/PROJECT_FACTS-ch.md`。
 6. 通过 PR 提交仓库修改，正文使用三个证据章节，再按下述格式汇报；未经授权不合并。
 
@@ -151,3 +157,40 @@ Node.js 只是本地 Kotlin/JS 构建与测试环境。预期生产宿主是微�
 - Next step
 
 然后停止。
+
+## 9. 需求对齐
+
+### 适用范围
+
+- 新能力、公共 API 变更、多文件或多模块改动、需求模糊或存在多种可行方案时，采用完整流程。
+- 改文案、错别字或描述明确的 bug，采用轻量流程：用一两句话说明理解的目标与范围，取得用户同意后再修改。
+- 用户说“直接做”／“skip alignment”时，根据现有信息先输出边界卡，再执行，无需再次确认。“问题够了”只结束澄清，不代表允许执行。
+
+### 阶段一：澄清
+
+- 保持只读：不修改受版本控制的文件，不创建分支。追问为什么需要这项改动，直到根本目标明确。
+- 区分按 AGENTS.md 第 2 节核实的事实与未验证假设。质疑更简单的动作或不修改是否已能满足目标，并按 AGENTS.md 第 3 节检查范围纪律。
+- 每次只问 1～3 个问题。需要用户决策时提供 2～3 个选项，说明优缺点和推荐理由；理由必须适合当前目标，不能只凭惯例。
+- Roadmap、TODO、注释不构成需求证据。直接指出风险或不合理之处。
+- 用户说“问题够了”时停止追问，根据现有信息输出边界卡。
+
+### 阶段二：边界卡
+
+采用 AGENTS.md 第 12 节的三个章节，使边界卡可复用为 PR 正文：
+
+1. **做什么。** 用一句话说明根本目标，列出已核实事实、假设及每条假设的验证或验证前处理方式，给出最小方案和明确不做的范围。
+2. **为什么。** 说明用户确认的需求，以及为什么该方案是满足目标的最小动作。
+3. **证据与验证。** 列出可检验的验收标准和拟运行的 Gradle Wrapper 命令。仅改文档时列出可执行的文档检查；不适用 Gradle 时明确写“未运行”。
+
+除用户明确跳过对齐外，收到用户“确认”后才进入阶段三。
+
+### 阶段三：执行
+
+- 先按 AGENTS.md 第 11 节创建或切换到任务分支，再严格按确认的边界卡实现。不加功能，不顺手重构。
+- 假设不成立、需要修改边界卡或源码与文档冲突时，停止并询问用户，再继续。
+- 结束时按 AGENTS.md 第 13 节输出 Final Report。用户说“回到阶段一”时，边界卡作废，重新澄清。
+
+### 沟通与记录
+
+- 对用户使用中文，代码标识符和命令保留英文。技术术语首次出现时用一句话解释，一次只推进一小步。
+- 确认的边界卡保存在 PR 正文中；涉及架构决策时记录到 docs/decisions。除非用户要求，不另建文档。

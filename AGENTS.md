@@ -2,7 +2,7 @@
 
 These rules apply to the entire repository. A nested `AGENTS.md` may add more specific restrictions for its directory, but it must not conflict with these root rules.
 
-`CLAUDE-en.md` and `CLAUDE-ch.md` are the Claude Code operating guide. They summarize these rules and must stay consistent with them; where they differ, this file is authoritative.
+`CLAUDE.md` and `CLAUDE-ch.md` are the Claude Code operating guide. They summarize these rules and must stay consistent with them; where they differ, this file is authoritative.
 
 ## 1. Read Before Changing
 
@@ -11,6 +11,8 @@ Before modifying the project, read:
 - `docs/PROJECT_FACTS-en.md` or `docs/PROJECT_FACTS-ch.md`
 - `docs/ARCHITECTURE-en.md` or `docs/ARCHITECTURE-ch.md`
 - `docs/DEVELOPMENT-en.md` or `docs/DEVELOPMENT-ch.md`
+
+For new requirements, follow Section 14 before implementation; clarification stays read-only.
 
 If the task concerns future scope or sequencing, also read `docs/ROADMAP-en.md` or `docs/ROADMAP-ch.md`.
 
@@ -28,23 +30,33 @@ source code and executable Gradle configuration
 
 Never infer an implemented capability from the roadmap.
 
+When source and documentation, or documents, conflict, follow the hierarchy above and report the discrepancy to the user. Do not silently rewrite documentation to hide it.
+
 ## 3. Scope Discipline
 
 This project is an SDK / library, not an application, UI framework, or renderer.
 
 Without an explicit task, do not add Android, iOS, JVM, or Wasm targets; Compose, Ktor, serialization, or dependency injection frameworks; npm or Maven publication; or speculative Gradle modules.
 
+Never commit AppID secrets, tokens, certificates, or other credentials. Use placeholders in examples and tests.
+
 ## 4. Minimal Change Principle
 
 Make the smallest change required by the current task. Do not add infrastructure because it might be useful later.
+
+Before destructive actions such as deleting files, rewriting history, or bulk rewrites, explain the affected scope and obtain user confirmation.
 
 ## 5. Build Authority
 
 Any claim that the build passes must be supported by an actual Gradle Wrapper invocation. Do not infer build success from IDE state.
 
+Every change must have at least one executable validation command appropriate to its scope; report the command, result, and any checks not run.
+
 ## 6. Documentation Synchronization
 
-All human-facing project documentation uses synchronized `-en.md` and `-ch.md` pairs. When either language changes, update its counterpart in the same task with the same facts, structure, and intent.
+AGENTS.md is authoritative; CLAUDE.md and CLAUDE-ch.md form the synchronized English/Chinese operating-guide pair with intentionally different filenames.
+
+All other human-facing project documentation uses synchronized `-en.md` and `-ch.md` pairs. When either language changes, update its counterpart in the same task with the same facts, structure, and intent.
 
 When a change affects modules, dependencies, Kotlin or Gradle versions, targets, public architecture, or current capabilities, check and update both `docs/PROJECT_FACTS-en.md` and `docs/PROJECT_FACTS-ch.md` when necessary.
 
@@ -107,3 +119,40 @@ After completing a task, report:
 - Next step
 
 Do not automatically start the next phase.
+
+## 14. Requirement Alignment
+
+### Applicability
+
+- Use the full flow for new capabilities, public API changes, multi-file or multi-module changes, ambiguous requirements, or multiple viable approaches.
+- For wording, typos, or a clearly described bug, state the understood goal and scope in one or two sentences and wait for user agreement before editing.
+- If the user says "directly do it" / "skip alignment", publish a boundary card from available information and execute without another confirmation. "Enough questions" only ends clarification; it does not authorize execution.
+
+### Stage 1: Clarify
+
+- Stay read-only: do not modify version-controlled files or create a branch. Ask why the change is needed until the fundamental goal is clear.
+- Separate facts verified under AGENTS.md Section 2 from unverified assumptions. Challenge whether a simpler action, or no change, would satisfy the goal; check Section 3 scope discipline.
+- Ask only 1–3 questions at a time. For a user decision, offer 2–3 options with trade-offs and a recommendation tied to this goal, not convention.
+- Roadmaps, TODOs, and comments are not requirement evidence. State risks or unreasonable requests directly.
+- When the user says "enough questions", stop questioning and produce the boundary card from current information.
+
+### Stage 2: Boundary Card
+
+Use the same three sections as Section 12 so the card can become the PR body:
+
+1. **What.** State the fundamental goal in one sentence, verified facts, assumptions and how each will be checked or handled before verification, the minimum solution, and explicit exclusions.
+2. **Why.** State the user-confirmed need and why this is the smallest action that satisfies it.
+3. **Evidence and validation.** Define testable acceptance criteria and intended Gradle Wrapper commands. For documentation-only work, specify executable document checks and state that Gradle is not run when it is not applicable.
+
+Wait for the user's "confirm" before Stage 3, except for the explicit skip-alignment path.
+
+### Stage 3: Execute
+
+- Follow Section 11 to create or switch to a task branch, then implement only the agreed boundary card. Do not add features or perform incidental refactoring.
+- If an assumption fails, the card must change, or source and documentation conflict, stop and ask the user before proceeding.
+- Finish with the Section 13 Final Report. If the user says "back to Stage 1", invalidate the card and resume clarification.
+
+### Communication and Records
+
+- Reply in Chinese; keep code identifiers and commands in English. Explain a technical term in one sentence on first use, and advance one small step at a time.
+- Keep the agreed card in the PR body. Record architecture decisions in docs/decisions when relevant; do not create another document unless the user requests it.
