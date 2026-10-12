@@ -69,6 +69,10 @@ Never infer an implemented capability from the roadmap. Roadmap entries, TODOs, 
 
 **ADRs are historical.** Accepted decisions in `docs/decisions/` are records. To change one, add a new ADR that supersedes it; do not rewrite the original.
 
+**Branch and PR workflow.** Before editing tracked files, check the branch/worktree and move to a task branch; never develop or commit on the default/main branch. All repository changes, including documentation and rules, reach the default branch through a PR. Preserve unrelated changes, record branch/commit/PR and validation, and report access blockers without bypassing the workflow. See `AGENTS.md` §11.
+
+**PR and Multica bodies.** Use three ordered sections: what the change does or the record explains; why the action follows from a confirmed need or observed problem; evidence and validation with proved results, pending checks, environments, and limits. Multica prose is Chinese and additionally lists real Issue chains as `BOB-123 -> BOB-124`, distinguishing prerequisites, parallel work, history, and external blockers. Cancelled/deferred Issues do not become active gates. Multica records user-confirmed work rather than initiating requirements or direction. Description maintenance uses `--no-start`, preserves metadata/comments, and is read back. See `AGENTS.md` §12.
+
 **Do not start the next phase.** Finish the current task and report. Do not automatically begin the next roadmap item.
 
 ## 5. Layout
@@ -131,10 +135,10 @@ A Git repository is present in this working copy. A change may be uncommitted, s
 
 1. Read the documents listed in section 2 for the area you are touching.
 2. Confirm the current state in source code and Gradle configuration rather than assuming it from documentation.
-3. Make the smallest change that satisfies the task.
+3. Check the worktree and switch to a task branch before editing; make the smallest change that satisfies the task.
 4. Validate with the Gradle Wrapper.
 5. Update the `-en` / `-ch` documentation pairs affected by the change, including `docs/PROJECT_FACTS-en.md` and `docs/PROJECT_FACTS-ch.md` when modules, dependencies, Kotlin or Gradle versions, targets, public architecture, or current capabilities changed.
-6. Report using the format below.
+6. Submit repository changes through a PR with the three-section evidence body, then report using the format below; do not merge without authorization.
 
 ## 8. Final report format
 
