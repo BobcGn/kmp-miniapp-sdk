@@ -62,8 +62,30 @@ Storage 与 network 的检查各跑两遍：一遍跑在中性实现上（`MiniA
 ```
 
 ```shell
-cd examples/wechat-miniprogram && npm run smoke && npm run typecheck
+./gradlew buildMiniAppSdk
+cd examples/wechat-miniprogram && npm ci && npm run smoke && npm run typecheck
 ```
+
+示例检查必须在 `buildMiniAppSdk` 之后运行：它读取示例中复制的 JS 和声明文件，而非 `sdk/build/`。
+smoke 将 `sdkVersion()` 与 `gradle/libs.versions.toml` 精确比较，因此旧 bundle 或版本不一致会失败。
+缺失 runtime 的 TestKit 用例仅从依赖仓库中排除 `io.github.bobcgn:kmp-miniapp-sdk`，其失败不再取决于
+该版本是否已公开发布。
+
+### CI 与发布保护检查
+
+`.github/workflows/ci.yml` 在目标为 `main` 的 PR、向 `main` 和 `codex/**` 的 push，以及手动运行时触发，
+使用 Ubuntu、JDK 21 和 Node.js 20。快速检查 job 运行 `check`、`:build-logic:test`、发布保护测试，随后执行
+`buildMiniAppSdk verifyMiniAppBundleSize`，再运行示例的 `npm ci`、smoke 和 typecheck。
+集成 job 运行 `verifyMiniAppGradlePluginIntegration`。当前两个 job 都执行插件测试；本次范围保留这一重复。
+
+```shell
+python3 .github/scripts/test-release-workflow.py
+```
+
+该测试仅使用 Python 标准库，通过隔离的 git/curl 响应执行 `release.yml` 中实际的 shell 保护代码，覆盖确认输入
+仅作为数据处理、手动和 tag 身份校验、checkout 或 tag 变化、无签名发布拒绝、200/404/异常区分、runtime
+部分可见、仅插件恢复的前置条件，以及可见性轮询。它不调用发布任务、不使用 Secret，也不证明真实上传成功或
+在线消费者链路已验收。
 
 ### 消费者集成夹具
 
@@ -146,7 +168,7 @@ BLE 是本 SDK 第一个建立在真实 `on`/`off` 事件源之上的能力，�
 ./gradlew :build-logic:test
 ```
 
-`verifyMiniAppBundleSize` 测量 SDK 生产分发并与已提交的基线比较。其逻辑位于 `build-logic/`，带 **25** 个单元测试：分类、原始字节准确性、gzip 确定性、稳定排序、分类与合计的算术、各类拒绝（空目录、缺失预期产物、宿主 markup）、基线往返、比较中的新增/移除/变化/不变四种情形，以及阈值边界 —— 恰好达到两个阈值时失败，低一字节则不失败。
+`verifyMiniAppBundleSize` 测量 SDK 生产分发并与已提交的基线比较。其逻辑位于 `build-logic/`，带 **26** 个单元测试：分类、原始字节准确性、gzip 确定性、稳定排序、分类与合计的算术、各类拒绝（空目录、缺失预期产物、宿主 markup）、基线往返、比较中的新增/移除/变化/不变四种情形，以及阈值边界 —— 恰好达到两个阈值时失败，低一字节则不失败。
 
 可重复性是证据而非断言。对同一批文件的两次运行产生完全相同的报告，且任务复用 configuration cache。**重建**会让输入略微移动：Kotlin 编译器重新生成 `kotlinx-coroutines-core.js` 与 `kotlin-kotlin-stdlib.js` 时会有几字节差异，四次重建中总计 gzip 数字观察到的浮动为 7 字节。基线文档记录了这一点，阈值规则中的下限部分也正是为此存在。
 

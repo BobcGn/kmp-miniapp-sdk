@@ -37,7 +37,7 @@ runtime 坐标都由它生成，因此发布出去的版本与代码里上报的
 
 ```shell
 ./gradlew projects
-./gradlew --no-daemon --console=plain clean check
+./gradlew --no-daemon --console=plain clean check :build-logic:test
 ./gradlew --no-daemon --console=plain :kmp-miniapp-sdk:jsNodeTest --rerun-tasks
 ./gradlew --no-daemon --console=plain :miniapp-gradle-plugin:test --rerun-tasks
 ./gradlew --no-daemon --console=plain buildMiniAppSdk
@@ -79,35 +79,47 @@ runtime 坐标都由它生成，因此发布出去的版本与代码里上报的
 
 ## 4. 发布
 
-在 release commit 上推送 annotated tag `v0.1.1` 会触发
-[`.github/workflows/release.yml`](../.github/workflows/release.yml)。该 workflow：
+该 workflow 专用于已有的 `v0.1.1` 发布。它检出固定发布提交
+`024abd672224700a78349f9b94bab90f135f3736`，获取 tags，并校验 `HEAD` 与 `v0.1.1^{commit}`
+均等于该 SHA。版本目录必须仍为 `0.1.1`；tag push 的事件 ref 与 SHA 也必须匹配。
+手动恢复即使从 tag 发起，也必须输入 `publish-0.1.1`；确认输入通过环境变量进入 shell，绝不作为脚本文本插入。
+新版本需要明确评审版本、tag 与提交的更新，绝不移动已有 tag。
 
-1. 若 `gradle/libs.versions.toml` 不是 `0.1.1`，或 tag 触发时 tag 不是精确的 `v0.1.1`，则拒绝运行；
-2. 若 `miniappLocalPublicationWithoutSigning` 被设置，则拒绝运行，因为正式发布必须签名；
-3. 查询 Maven Central 是否已有 `kmp-miniapp-sdk/0.1.1`，**已存在时跳过 runtime 上传**，因为 Central 的发布不可覆盖；
-4. 查询 Gradle Plugin Portal 是否已有 `io.github.bobcgn.miniapp:0.1.1`，已存在时跳过两个插件步骤，因为 portal 同样拒绝其已持有的版本；
-5. 运行 `clean check verifyMiniAppGradlePluginIntegration`；
-6. 用 `publishAndReleaseToMavenCentral` 把 runtime 发布到 Maven Central；
-7. 用 `publishPlugins --validate-only` 校验插件发布；
-8. 把插件发布到 Gradle Plugin Portal。
+[`.github/workflows/release.yml`](../.github/workflows/release.yml) 随后：
 
-这个顺序是刻意的：runtime 先发布，插件后发布，且插件的步骤只在其之前的步骤全部成功后才执行 —— 失败时留下的是一个
-完整的、不可变的 Central 发布，而不是一个「runtime 还不存在」的插件。
+1. 拒绝无签名发布的环境属性，包括空值；
+2. 查询 Maven Central 上 runtime 根 POM 与 JS POM：两个 HTTP 200 表示存在，两个 404 表示缺失，
+   部分可见或其他响应都停止运行；
+3. 若 `target: plugin`，在任何可能发布的操作之前要求 runtime 已存在；
+4. 查询 Plugin Portal marker POM，区分 200 与 404，查询异常时停止；
+5. 在固定发布源码上运行 `clean check verifyMiniAppGradlePluginIntegration`；
+6. 仅当 runtime 缺失且目标为 `all`（或 tag push）时发布 runtime；
+7. 在任何插件上传前轮询两个 runtime POM，最多 30 次，间隔 10 秒，curl 有连接与总时长限制；
+   仅 404 会重试，网络与其他 HTTP 异常立即停止；
+8. 仅当插件 marker 缺失且之前每一步均成功时，校验并发布插件。
+
+这些 POM 检查证明仓库元数据可见，不等于完整在线消费者构建成功。公开仓库的 404 不能判定 Portal 审核或
+Central 部署是否仍在进行；手动恢复前必须核对对应 portal 状态，禁止重复提交仍在处理的部署。
 
 ## 5. 发布只完成一半时的恢复
 
-Maven Central 与 Gradle Plugin Portal 会各自独立失败，而其中只有一侧可以安全重试。`workflow_dispatch` 正是为此
-存在，并要求手工输入 `publish-0.1.1` 作为确认。
+PR 合并后，从默认分支运行更新后的 workflow；无论 dispatch 选择哪个分支，它都检出固定的发布 SHA。
+选择旧 tag 会使用该 tag 上的旧 workflow 定义，不包含这些新保护。输入 `publish-0.1.1` 作为确认。
 
 | 情况 | 处理方式 |
 | --- | --- |
-| 两者都成功 | 什么都不做。不要再次运行该 workflow。 |
-| Central 已接受，Portal 上传失败 | 以 `target: plugin` 运行该 workflow。Maven Central 不会被触碰：runtime 检查会发现产物已存在并跳过。 |
-| Central 失败，尚未发布任何内容 | 修复原因后，在 release commit 上以 `target: all` 运行。不必重新推送 tag。 |
-| Central 正在同步中（Central Portal 显示 `PENDING`/`VALIDATED`） | 等待。不要重复上传：同一版本的第二次部署会被拒绝，或制造出需要人工撤销的重复工作。 |
-| Portal 将插件挂起以待审核 | 无需修复。上传已经成功；某个新插件 id 的首次发布可能被 Gradle 自己的审核流程挂起，之后才可从 portal 解析。记录为 pending approval，且不得把该插件描述为已经可用。 |
+| 两者都成功 | 什么都不做，不要再次运行 workflow。 |
+| 两个 runtime POM 可解析，Portal 上传失败 | 使用 `target: plugin`，绝不重复上传 runtime。 |
+| Central 失败且没有待处理的部署 | 修复原因后使用 `target: all`，workflow 仍构建固定发布提交。 |
+| Central 正在同步（`PENDING`/`VALIDATED`），或仅一个 runtime POM 可解析 | 等待，不要重复上传。 |
+| 仓库查询失败 | 停止并解决查询故障，不能将其当成发布缺失的证据。 |
+| Portal 将插件挂起以待审核 | 等待审核；公开 marker 返回 404 不授权重复上传。 |
 
-**绝不重复上传 runtime。** 已发布的 Maven Central 版本无法替换；纠正方式是发布新版本，而不是把同一版本再传一次。
+固定的 0.1.1 源码含有一条历史缺失 runtime 测试，其前提是 Central 上不存在该 runtime。如今该版本已可获取，
+旧测试可能阻断恢复验证。当前分支修复了测试，但无法追溯修改不可变的发布提交。workflow 不绕过该测试、不移动
+tag；若它失败，恢复仍保持阻断。修改该历史验证策略需要单独评审的决定。
+
+**绝不重复上传 runtime。** 已发布版本无法替换，纠正方式是发布新版本。
 
 ## 6. 发布之后
 

@@ -62,8 +62,33 @@ Add a new capability guarantee to the shared check object rather than to one ada
 ```
 
 ```shell
-cd examples/wechat-miniprogram && npm run smoke && npm run typecheck
+./gradlew buildMiniAppSdk
+cd examples/wechat-miniprogram && npm ci && npm run smoke && npm run typecheck
 ```
+
+The example checks must follow `buildMiniAppSdk`: they load the example's copied JS and declarations,
+not `sdk/build/`. The smoke compares `sdkVersion()` with `gradle/libs.versions.toml` exactly, so a
+stale bundle or a version mismatch fails. The missing-runtime TestKit case excludes only
+`io.github.bobcgn:kmp-miniapp-sdk` from its dependency repositories; its failure does not depend
+on whether that version is publicly available.
+
+### CI and release guard checks
+
+`.github/workflows/ci.yml` runs on PRs targeting `main`, pushes to `main` and `codex/**`, and manual
+runs, using Ubuntu, JDK 21 and Node.js 20. The quick job runs `check`, `:build-logic:test`, the
+release guard tests, then `buildMiniAppSdk verifyMiniAppBundleSize`, followed by the example's
+`npm ci`, smoke and typecheck. The integration job runs `verifyMiniAppGradlePluginIntegration`.
+Both jobs currently run the plugin tests; this duplication is intentional for this change's scope.
+
+```shell
+python3 .github/scripts/test-release-workflow.py
+```
+
+This standard-library test runner executes the actual shell guard blocks from `release.yml` with
+isolated git/curl responses. It covers confirmation as data, manual and tag identity, a changed
+checkout or tag, unsigned publication refusal, 200/404/error distinctions, partial runtime visibility,
+plugin-only prerequisites and visibility polling. It invokes no publication task, uses no secrets,
+and provides no evidence of an actual upload or online consumer acceptance.
 
 ### Consumer integration fixture
 
@@ -181,7 +206,7 @@ every registered and removed listener, so the identity pairing is asserted rathe
 ```
 
 `verifyMiniAppBundleSize` measures the SDK's production distribution and compares it with the
-committed baseline. Its logic lives in `build-logic/`, with **25** unit tests: classification, raw size
+committed baseline. Its logic lives in `build-logic/`, with **26** unit tests: classification, raw size
 accuracy, gzip determinism, stable ordering, category and total arithmetic, the refusals (an empty
 directory, a missing expected artifact, host markup), the baseline round trip, the comparison's added,
 removed, changed and unchanged cases, and the threshold boundaries — a change exactly at both

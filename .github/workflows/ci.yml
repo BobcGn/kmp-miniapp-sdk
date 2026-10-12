@@ -1,0 +1,86 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+      - "codex/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quick-check:
+    name: Quick checks, boundaries, and unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: examples/wechat-miniprogram/package-lock.json
+
+      - name: Run Gradle check
+        run: ./gradlew --no-daemon --console=plain check :build-logic:test
+
+      - name: Test release workflow guards
+        run: python3 .github/scripts/test-release-workflow.py
+
+      - name: Verify Mini App bundle size
+        run: ./gradlew --no-daemon --console=plain buildMiniAppSdk verifyMiniAppBundleSize
+
+      - name: Verify WeChat example smoke and typecheck
+        working-directory: examples/wechat-miniprogram
+        run: |
+          npm ci
+          npm run smoke
+          npm run typecheck
+
+  integration-test:
+    name: Plugin TestKit and consumer fixture integration
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Run plugin integration and consumer fixture
+        run: ./gradlew --no-daemon --console=plain verifyMiniAppGradlePluginIntegration

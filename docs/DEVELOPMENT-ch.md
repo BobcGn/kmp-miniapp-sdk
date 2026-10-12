@@ -40,6 +40,12 @@ VS Code 可用于处理 `examples/wechat-miniprogram` 下的文件。Consumer Br
 
 `:kmp-miniapp-sdk:jsTest` suite 覆盖 Host boundary、error model、callback adaptation、cancellation、double completion、可选 abort、微信 error mapping、包含取消时宿主中止的 HTTP transport adaptation、生命周期状态迁移、导航适配（含仅限 tabBar 的 `switchTab` 与其空白 route 拒绝）、capability support 状态与版本门控、包含并发请求合并的权限生命周期行为、包含拒绝分类的隐私授权、包含过期分类的微信会话检查、包含逐项门控的微信剪贴板与震动 adapter、包含沙箱与文本边界的微信文件系统 adapter、包含坐标校验与隐私前置条件的微信定位 adapter、包含不可归因中断分类与结果校验的微信扫码 adapter、包含请求边界、结果校验与中断分类的微信媒体 adapter、包含模板校验与逐模板结果策略的微信订阅消息 adapter、包含逐 collector 监听配对的网络状态 adapter、包含 abort、进度与超时行为的微信上传与下载 adapter、包含参数转发、空白参数拒绝、精确中断分类与单次终态行为的微信支付 adapter，以及 interop object construction。这些测试使用 fake callbacks，不代表能够访问真实 `wx` runtime。
 
+## CI 验证
+
+CI workflow 使用 Ubuntu、JDK 21 和 Node.js 20，显式运行 included build 的 `:build-logic:test` 与消费者
+集成入口，并在 smoke/typecheck 之前通过 `buildMiniAppSdk` 刷新示例。完整命令和发布保护检查见
+[TESTING-ch.md](TESTING-ch.md)。自动化结果证明构建与契约行为；微信宿主和后端验收仍需独立记录。
+
 ## 架构边界
 
 runtime SDK 共享客户端行为、宿主能力与 presentation state，从不渲染。[ADR 0011](decisions/0011-presentation-state-shared-rendering-host-native-ch.md) 固定了四层职责，责任矩阵见 [ARCHITECTURE-ch.md](ARCHITECTURE-ch.md)。

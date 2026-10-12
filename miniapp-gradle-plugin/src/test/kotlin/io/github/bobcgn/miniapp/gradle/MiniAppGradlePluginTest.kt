@@ -543,6 +543,22 @@ class MiniAppGradlePluginTest {
         val projectDir = newFixture("kmp-missing-runtime", includeSdkBuild = false)
         writeConsumerBuildScript(projectDir)
         writeConsumerSources(projectDir)
+        // A released runtime would otherwise resolve from Central and make this negative test
+        // succeed. Exclude only the SDK module; Kotlin and coroutine dependencies still resolve.
+        projectDir.resolve("settings.gradle.kts").appendText(
+            """
+
+            dependencyResolutionManagement {
+                repositories {
+                    all {
+                        content {
+                            excludeModule("io.github.bobcgn", "kmp-miniapp-sdk")
+                        }
+                    }
+                }
+            }
+            """.trimIndent() + "\n",
+        )
 
         val result = runner(projectDir, "compileKotlinMiniapp").buildAndFail()
 
@@ -658,9 +674,8 @@ class MiniAppGradlePluginTest {
         val projectDir = createTempDirectory(name).toFile()
         val sdkBuild = if (includeSdkBuild) {
             """
-            // The fixture consumes the Mini App runtime as a public module coordinate. Nothing is
-            // published yet, so the coordinate resolves through this composite build; after
-            // publication it resolves from a repository with the same group, name and version.
+            // The fixture consumes the Mini App runtime as a public module coordinate. It is
+            // substituted with current source so these tests do not consume an older release.
             includeBuild("${sdkRepository.invariantSeparatorsPath}")
             """.trimIndent()
         } else {

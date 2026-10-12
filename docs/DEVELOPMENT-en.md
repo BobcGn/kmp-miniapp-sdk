@@ -39,6 +39,14 @@ The release procedure — the single version source, the tag rule, the GitHub Re
 
 The `:kmp-miniapp-sdk:jsTest` suite includes host-boundary, error-model, callback adaptation, cancellation, double-completion, optional abort, WeChat error-mapping, HTTP transport adaptation including host abort on cancellation, lifecycle state transitions, navigation adaptation including the tabBar-only `switchTab` and its blank-route refusal, capability-support states and version gating, permission lifecycle behaviour including concurrent request merging, privacy authorization including the refusal classification, WeChat session checking including the expiry classification, the WeChat clipboard and vibration adapters including their per-capability gating, the WeChat file-system adapter including its sandbox and text boundaries, the WeChat location adapter including its coordinate validation and privacy precondition, the WeChat scan adapter including indeterminate-interruption classification and result validation, the WeChat media adapter including its request boundaries, result validation, and interruption classification, the WeChat subscription adapter including its template validation and per-template result policy, the network status adapter including its per-collector listener pairing, the WeChat upload and download adapters including their abort, progress, and timeout behaviour, the WeChat payment adapter including its parameter forwarding, blank-parameter refusal, exact interruption classification, and single-terminal-state behaviour, and interop object-construction coverage. These tests use fake callbacks and do not claim access to a real `wx` runtime.
 
+## CI verification
+
+The CI workflow uses Ubuntu, JDK 21 and Node.js 20. It explicitly runs the included build's
+`:build-logic:test` and the consumer integration entry point, and refreshes the example via
+`buildMiniAppSdk` before smoke/typecheck. See [TESTING-en.md](TESTING-en.md) for the complete
+commands and release guard checks. Automated results establish build and contract behavior;
+WeChat host and backend acceptance remain separate.
+
 ## Architecture boundaries
 
 The runtime SDK shares client behaviour, host capabilities and presentation state; it never renders. [ADR 0011](decisions/0011-presentation-state-shared-rendering-host-native-en.md) fixes the four layers, and [ARCHITECTURE-en.md](ARCHITECTURE-en.md) carries the responsibility matrix.
