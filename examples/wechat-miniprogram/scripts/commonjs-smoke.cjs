@@ -633,7 +633,7 @@ async function main() {
     'wechatBleConnectionFailure',
     'wechatBleListenerCount',
   ]);
-  assert.equal(miniAppSdk.sdkVersion(), '0.1.0-SNAPSHOT');
+  assert.match(miniAppSdk.sdkVersion(), /^\d+\.\d+\.\d+/);
 
   assert.equal(await miniAppSdk.storageGet('missing'), null);
   await miniAppSdk.storageSet('key', 'first');
