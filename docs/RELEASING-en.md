@@ -39,7 +39,7 @@ Run all of these from a clean working tree, and keep the output:
 
 ```shell
 ./gradlew projects
-./gradlew --no-daemon --console=plain clean check
+./gradlew --no-daemon --console=plain clean check :build-logic:test
 ./gradlew --no-daemon --console=plain :kmp-miniapp-sdk:jsNodeTest --rerun-tasks
 ./gradlew --no-daemon --console=plain :miniapp-gradle-plugin:test --rerun-tasks
 ./gradlew --no-daemon --console=plain buildMiniAppSdk
@@ -85,42 +85,52 @@ it is not evidence that anything resolves online.
 
 ## 4. Publishing
 
-Pushing the annotated tag `v0.1.1` on the release commit starts
-[`.github/workflows/release.yml`](../.github/workflows/release.yml). The workflow:
+The workflow is specific to the existing `v0.1.1` release. It checks out the fixed release commit
+`024abd672224700a78349f9b94bab90f135f3736`, with tags fetched, and verifies that both `HEAD` and
+`v0.1.1^{commit}` equal that SHA. The version catalog must still say `0.1.1`. A tag push must also
+carry the matching event ref and SHA. Manual recovery requires `publish-0.1.1` even when dispatched
+from a tag; the confirmation enters the shell as an environment variable, never script text.
+A new release needs an explicitly reviewed version/tag/commit update; never move the existing tag.
 
-1. refuses to run unless `gradle/libs.versions.toml` says `0.1.1` and, for a tag, the tag is exactly
-   `v0.1.1`;
-2. refuses to run if `miniappLocalPublicationWithoutSigning` is set, because a release publication is
-   always signed;
-3. checks Maven Central for `kmp-miniapp-sdk/0.1.1` and **skips the runtime upload when it is already
-   there**, because a Central release is immutable;
-4. checks the Gradle Plugin Portal for `io.github.bobcgn.miniapp:0.1.1` and skips both plugin steps
-   when it is already there, because the portal also rejects a version it holds;
-5. runs `clean check verifyMiniAppGradlePluginIntegration`;
-6. publishes the runtime to Maven Central with `publishAndReleaseToMavenCentral`;
-7. validates the plugin publication with `publishPlugins --validate-only`;
-8. publishes the plugin to the Gradle Plugin Portal.
+[`.github/workflows/release.yml`](../.github/workflows/release.yml) then:
 
-The order is deliberate. The runtime goes first, the plugin second, and the plugin steps run only if
-everything before them succeeded: a failure leaves a complete, immutable Central release rather than a
-plugin whose runtime does not exist yet.
+1. refuses the unsigned-publication environment property, including an empty value;
+2. probes both the runtime root POM and JS POM on Maven Central: two HTTP 200 responses mean
+   present, two 404 responses mean missing, and partial visibility or any other response stops the run;
+3. for `target: plugin`, requires the runtime to be present before doing anything that could publish;
+4. probes the Plugin Portal marker POM, distinguishing 200 from 404 and stopping on query errors;
+5. runs the pinned release source's `clean check verifyMiniAppGradlePluginIntegration`;
+6. publishes the runtime only when absent and the target is `all` (or a tag push);
+7. before any plugin upload, polls both runtime POMs for up to 30 attempts, with 10 seconds between
+   attempts and bounded curl timeouts; only 404 is retried, while network and other HTTP errors stop;
+8. validates and publishes the plugin only if its marker was missing and every prior step succeeded.
+
+These POM checks establish repository metadata visibility, not a complete online consumer build.
+Portal review and Central deployments still in progress cannot be inferred from a public 404:
+inspect their portal state before manual recovery and do not resubmit a pending deployment.
 
 ## 5. Recovering a half-finished publication
 
-Maven Central and the Gradle Plugin Portal fail independently, and only one of them can be retried
-safely. `workflow_dispatch` exists for exactly that, and requires typing `publish-0.1.1` as
-confirmation.
+Run the updated workflow from the default branch after its PR is merged; it always checks out the
+fixed release SHA regardless of the branch selected for dispatch. Selecting the old tag would use
+that tag's old workflow definition, without these new guards. Type `publish-0.1.1` as confirmation.
 
 | Situation | Action |
 | --- | --- |
 | Both succeeded | Nothing. Do not run the workflow again. |
-| Central accepted, the Portal upload failed | Run the workflow with `target: plugin`. Maven Central is not touched: the runtime check finds the artifact and the runtime step is skipped. |
-| Central failed, nothing published | Fix the cause, then run the workflow with `target: all` from the release commit. Re-running a tag is not necessary. |
-| Central is mid-sync (`PENDING`/`VALIDATED` on the Central Portal) | Wait. Do not upload a second time; a second deployment of the same version is rejected or duplicates work a human then has to undo. |
-| The Portal holds the plugin for review | Nothing to fix. The upload succeeded; a first publication of a new plugin id may be held for Gradle's own review before it resolves from the portal. Record it as pending approval and do not describe the plugin as available yet. |
+| Both runtime POMs resolve, Portal upload failed | Use `target: plugin`; the runtime is never re-uploaded. |
+| Central failed and no deployment is pending | Fix the cause, then use `target: all`; the workflow still builds the fixed release commit. |
+| Central is mid-sync (`PENDING`/`VALIDATED`), or only one runtime POM resolves | Wait. Do not upload a second time. |
+| A repository query fails | Stop and resolve the query failure; it is not evidence that a publication is missing. |
+| Portal holds the plugin for review | Wait for review. A public marker 404 does not authorize re-uploading it. |
 
-**Never re-upload the runtime.** A published Maven Central version cannot be replaced; a correction
-is a new version, not a second upload of the same one.
+The fixed 0.1.1 source contains a historical missing-runtime test that assumes the runtime is absent
+from Central. Since the release is now available, that old test can block recovery verification.
+The current branch fixes the test, but cannot retroactively change the immutable release commit.
+This workflow does not bypass the test or move the tag; recovery remains blocked if it fails.
+Any change to that historical verification policy requires a separate reviewed decision.
+
+**Never re-upload the runtime.** A published version cannot be replaced; a correction is a new version.
 
 ## 6. After the publication
 

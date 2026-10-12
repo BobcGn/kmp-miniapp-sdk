@@ -4,12 +4,9 @@ pluginManagement {
         mavenCentral()
     }
 
-    // Neither the plugin nor the runtime SDK is published yet, so an ordinary consumer build cannot
-    // resolve them from a repository. A composite build of this repository stands in for
-    // publication: the plugin is resolved by its id, and the runtime by its public module
-    // coordinate (`io.github.bobcgn:kmp-miniapp-sdk`), exactly as a published consumer would
-    // resolve them. When they are published, both includeBuild calls are what change — the build
-    // script and the source sets do not.
+    // Resolve the plugin by id and substitute the runtime's public module coordinate with
+    // this checkout. Public releases exist, but repository verification must test current source.
+    // An online consumer removes both includeBuild calls; the source sets and build script stay.
     includeBuild("../..")
 }
 

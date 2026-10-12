@@ -5053,7 +5053,7 @@
     this.lastObservation_1 = null;
   }
   protoOf(MiniAppExports).sdkVersion = function () {
-    return '0.1.0';
+    return '0.1.1';
   };
   protoOf(MiniAppExports).storageGet_o5km91_k$ = function (key, $completion) {
     return this.storage_1.get_3l5a7q_k$(key, $completion);

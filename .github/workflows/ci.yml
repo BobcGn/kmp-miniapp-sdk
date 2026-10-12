@@ -44,10 +44,13 @@ jobs:
           cache-dependency-path: examples/wechat-miniprogram/package-lock.json
 
       - name: Run Gradle check
-        run: ./gradlew check
+        run: ./gradlew --no-daemon --console=plain check :build-logic:test
+
+      - name: Test release workflow guards
+        run: python3 .github/scripts/test-release-workflow.py
 
       - name: Verify Mini App bundle size
-        run: ./gradlew verifyMiniAppBundleSize
+        run: ./gradlew --no-daemon --console=plain buildMiniAppSdk verifyMiniAppBundleSize
 
       - name: Verify WeChat example smoke and typecheck
         working-directory: examples/wechat-miniprogram

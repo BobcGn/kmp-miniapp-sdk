@@ -1,6 +1,13 @@
 'use strict';
 
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+
+// Compare the loaded bundle with the build's version source, so stale example files fail.
+const versionCatalog = fs.readFileSync(path.join(__dirname, '../../../gradle/libs.versions.toml'), 'utf8');
+const expectedSdkVersion = /^miniapp\s*=\s*"([^"]+)"\s*$/m.exec(versionCatalog)?.[1];
+assert.ok(expectedSdkVersion, 'miniapp version is missing from the version catalog');
 
 const storage = new Map();
 const requests = [];
@@ -633,7 +640,7 @@ async function main() {
     'wechatBleConnectionFailure',
     'wechatBleListenerCount',
   ]);
-  assert.match(miniAppSdk.sdkVersion(), /^\d+\.\d+\.\d+/);
+  assert.equal(miniAppSdk.sdkVersion(), expectedSdkVersion);
 
   assert.equal(await miniAppSdk.storageGet('missing'), null);
   await miniAppSdk.storageSet('key', 'first');

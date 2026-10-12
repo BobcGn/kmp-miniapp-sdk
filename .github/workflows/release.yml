@@ -40,10 +40,16 @@ jobs:
     name: Publish runtime and Gradle plugin
     runs-on: ubuntu-latest
     timeout-minutes: 90
+    env:
+      RELEASE_TAG: v0.1.1
+      RELEASE_COMMIT: 024abd672224700a78349f9b94bab90f135f3736
 
     steps:
       - name: Check out the release commit
         uses: actions/checkout@v4
+        with:
+          ref: 024abd672224700a78349f9b94bab90f135f3736
+          fetch-depth: 0
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
@@ -56,19 +62,24 @@ jobs:
 
       - name: Verify the release identity
         shell: bash
+        env:
+          CONFIRMATION: ${{ inputs.confirmation }}
         run: |
           set -euo pipefail
           version="$(sed -n 's/^miniapp = "\([^"]*\)"/\1/p' gradle/libs.versions.toml)"
-          test -n "$version"
           test "$version" = "0.1.1"
-          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
-            test "${GITHUB_REF_NAME}" = "v${version}"
+          test "$RELEASE_TAG" = "v${version}"
+          test "$(git rev-parse HEAD)" = "$RELEASE_COMMIT"
+          test "$(git rev-parse "refs/tags/${RELEASE_TAG}^{commit}")" = "$RELEASE_COMMIT"
+          if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
+            test "$CONFIRMATION" = "publish-${version}"
           else
-            test "${{ inputs.confirmation }}" = "publish-${version}"
+            test "$GITHUB_EVENT_NAME" = "push"
+            test "$GITHUB_REF_TYPE" = "tag"
+            test "$GITHUB_REF_NAME" = "$RELEASE_TAG"
+            test "$GITHUB_SHA" = "$RELEASE_COMMIT"
           fi
-          # A release publication is always signed. The unsigned path exists only for a maintainer
-          # proving Maven Local resolution on their own machine.
-          if [[ -n "${ORG_GRADLE_PROJECT_miniappLocalPublicationWithoutSigning:-}" ]]; then
+          if [[ -n "${ORG_GRADLE_PROJECT_miniappLocalPublicationWithoutSigning+x}" ]]; then
             echo "::error::miniappLocalPublicationWithoutSigning must never be set in release CI"
             exit 1
           fi
@@ -78,12 +89,36 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          url="https://repo1.maven.org/maven2/io/github/bobcgn/kmp-miniapp-sdk/0.1.1/kmp-miniapp-sdk-0.1.1.pom"
-          if curl --silent --fail --location --head "$url" > /dev/null; then
+          present=0
+          missing=0
+          for artifact in kmp-miniapp-sdk kmp-miniapp-sdk-js; do
+            url="https://repo1.maven.org/maven2/io/github/bobcgn/${artifact}/0.1.1/${artifact}-0.1.1.pom"
+            status="$(curl --silent --show-error --location --head --connect-timeout 10 --max-time 30 --output /dev/null --write-out '%{http_code}' "$url")"
+            case "$status" in
+              200) present=$((present + 1)) ;;
+              404) missing=$((missing + 1)) ;;
+              *) echo "::error::Maven Central query failed: HTTP $status"; exit 1 ;;
+            esac
+          done
+          if (( present == 2 )); then
             echo "published=true" >> "$GITHUB_OUTPUT"
-            echo "::notice::io.github.bobcgn:kmp-miniapp-sdk:0.1.1 is already on Maven Central; a published version is immutable, so the runtime step will be skipped."
-          else
+          elif (( missing == 2 )); then
             echo "published=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "::error::Runtime publication is only partially visible; wait and do not re-upload"
+            exit 1
+          fi
+
+      - name: Require the runtime for plugin-only recovery
+        if: github.event_name == 'workflow_dispatch' && inputs.target == 'plugin'
+        shell: bash
+        env:
+          RUNTIME_PUBLISHED: ${{ steps.central.outputs.published }}
+        run: |
+          set -euo pipefail
+          if [[ "$RUNTIME_PUBLISHED" != "true" ]]; then
+            echo "::error::Plugin-only recovery requires the runtime on Maven Central"
+            exit 1
           fi
 
       - name: Check whether the plugin is already on the Gradle Plugin Portal
@@ -92,12 +127,12 @@ jobs:
         run: |
           set -euo pipefail
           url="https://plugins.gradle.org/m2/io/github/bobcgn/miniapp/io.github.bobcgn.miniapp.gradle.plugin/0.1.1/io.github.bobcgn.miniapp.gradle.plugin-0.1.1.pom"
-          if curl --silent --fail --location --head "$url" > /dev/null; then
-            echo "published=true" >> "$GITHUB_OUTPUT"
-            echo "::notice::io.github.bobcgn.miniapp:0.1.1 is already on the Gradle Plugin Portal; the upload will be skipped because the portal rejects a version it already holds."
-          else
-            echo "published=false" >> "$GITHUB_OUTPUT"
-          fi
+          status="$(curl --silent --show-error --location --head --connect-timeout 10 --max-time 30 --output /dev/null --write-out '%{http_code}' "$url")"
+          case "$status" in
+            200) echo "published=true" >> "$GITHUB_OUTPUT" ;;
+            404) echo "published=false" >> "$GITHUB_OUTPUT" ;;
+            *) echo "::error::Plugin Portal query failed: HTTP $status"; exit 1 ;;
+          esac
 
       - name: Run release verification
         run: ./gradlew --no-daemon --console=plain clean check verifyMiniAppGradlePluginIntegration
@@ -111,6 +146,30 @@ jobs:
           ORG_GRADLE_PROJECT_signingInMemoryKeyId: ${{ secrets.SIGNING_KEY_ID }}
           ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_PASSWORD }}
           ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.GPG_KEY_CONTENTS }}
+
+      - name: Confirm the runtime is visible before publishing the plugin
+        if: steps.portal.outputs.published == 'false'
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in {1..30}; do
+            ready=true
+            for artifact in kmp-miniapp-sdk kmp-miniapp-sdk-js; do
+              url="https://repo1.maven.org/maven2/io/github/bobcgn/${artifact}/0.1.1/${artifact}-0.1.1.pom"
+              status="$(curl --silent --show-error --location --head --connect-timeout 10 --max-time 30 --output /dev/null --write-out '%{http_code}' "$url")"
+              case "$status" in
+                200) ;;
+                404) ready=false ;;
+                *) echo "::error::Runtime visibility query failed: HTTP $status"; exit 1 ;;
+              esac
+            done
+            if [[ "$ready" == "true" ]]; then
+              exit 0
+            fi
+            if (( attempt < 30 )); then sleep 10; fi
+          done
+          echo "::error::Runtime is not yet visible; wait and recover with target: plugin"
+          exit 1
 
       - name: Validate the Gradle plugin publication
         if: steps.portal.outputs.published == 'false'
