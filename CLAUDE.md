@@ -49,15 +49,21 @@ source code and executable Gradle configuration
 
 Never infer an implemented capability from the roadmap. Roadmap entries, TODOs, issues, and comments are plans, not evidence that a feature exists.
 
+For source/document or document/document conflicts, follow AGENTS.md Section 2, report the discrepancy, and do not silently change documents to hide it.
+
 ## 4. Non-negotiable rules
 
 **Scope discipline.** Without an explicit task, do not add Android, iOS, JVM, or Wasm targets; Compose, Ktor, serialization, or dependency injection frameworks; npm or Maven publication; or speculative Gradle modules.
 
 **UI and rendering boundary.** The runtime SDK and any future Presentation Core must not depend on Compose, another UI framework, or host markup such as WXML or WXSS. Compose is a client UI consumer. Mini App host integration binds host state and host events and never renders. `./gradlew :kmp-miniapp-sdk:checkArchitectureBoundaries` enforces the dependency half and runs as part of `:kmp-miniapp-sdk:check`; see `AGENTS.md` §10 and [ADR 0011](docs/decisions/0011-presentation-state-shared-rendering-host-native-en.md).
 
+**Credential safety.** Never commit AppID secrets, tokens, certificates, or other credentials; examples and tests use placeholders.
+
+**Destructive actions.** Explain the affected scope and obtain user confirmation before file deletion, history rewriting, or bulk rewrites.
+
 **Minimal change.** Make the smallest change the current task requires. Do not add infrastructure because it might be useful later.
 
-**Build authority.** Any claim that the build passes must be backed by an actual Gradle Wrapper invocation. IDE state proves nothing.
+**Build authority.** Any claim that the build passes must be backed by an actual Gradle Wrapper invocation. IDE state proves nothing. Every change needs at least one executable validation command appropriate to its scope; report results and checks not run.
 
 **Plans are not facts.** Do not present a roadmap item as shipped work.
 
@@ -65,7 +71,7 @@ Never infer an implemented capability from the roadmap. Roadmap entries, TODOs, 
 
 **JS boundary.** `dynamic`, `external`, and `js()` must never enter `commonMain`. Keep raw JavaScript interop as narrow as possible, preferably under `jsMain/.../wechat/interop`.
 
-**Documentation sync.** Human-facing documentation uses synchronized `-en.md` / `-ch.md` pairs. When either language changes, update its counterpart in the same task with the same facts, structure, and intent. This applies to this file too.
+**Documentation sync.** Human-facing documentation uses synchronized `-en.md` / `-ch.md` pairs, except the authoritative AGENTS.md and the intentional CLAUDE.md / CLAUDE-ch.md guide pair. When either language changes, update its counterpart in the same task with the same facts, structure, and intent. This applies to this file too.
 
 **ADRs are historical.** Accepted decisions in `docs/decisions/` are records. To change one, add a new ADR that supersedes it; do not rewrite the original.
 
@@ -79,7 +85,7 @@ Never infer an implemented capability from the roadmap. Roadmap entries, TODOs, 
 
 ```text
 AGENTS.md                  repository rules
-CLAUDE-en.md / CLAUDE-ch.md  this operating guide
+CLAUDE.md / CLAUDE-ch.md  this operating guide
 README-en.md / README-ch.md
 docs/                      PROJECT_FACTS, ARCHITECTURE, DEVELOPMENT, TESTING, ROADMAP, decisions/ (ADRs)
 gradle/libs.versions.toml  single source of dependency and plugin versions
@@ -133,10 +139,10 @@ A Git repository is present in this working copy. A change may be uncommitted, s
 
 ## 7. Workflow
 
-1. Read the documents listed in section 2 for the area you are touching.
+1. Apply requirement alignment under AGENTS.md Section 14 (full, lightweight, or explicit skip), and read the documents listed in section 2.
 2. Confirm the current state in source code and Gradle configuration rather than assuming it from documentation.
 3. Check the worktree and switch to a task branch before editing; make the smallest change that satisfies the task.
-4. Validate with the Gradle Wrapper.
+4. Run executable checks appropriate to the change; use the Gradle Wrapper for build/test validation. For documentation-only work, run document checks and report Gradle as not run when it is not applicable.
 5. Update the `-en` / `-ch` documentation pairs affected by the change, including `docs/PROJECT_FACTS-en.md` and `docs/PROJECT_FACTS-ch.md` when modules, dependencies, Kotlin or Gradle versions, targets, public architecture, or current capabilities changed.
 6. Submit repository changes through a PR with the three-section evidence body, then report using the format below; do not merge without authorization.
 
@@ -151,3 +157,40 @@ Report:
 - Next step
 
 Then stop.
+
+## 9. Requirement Alignment
+
+### Applicability
+
+- Use the full flow for new capabilities, public API changes, multi-file or multi-module changes, ambiguous requirements, or multiple viable approaches.
+- For wording, typos, or a clearly described bug, state the understood goal and scope in one or two sentences and wait for user agreement before editing.
+- If the user says "directly do it" / "skip alignment", publish a boundary card from available information and execute without another confirmation. "Enough questions" only ends clarification; it does not authorize execution.
+
+### Stage 1: Clarify
+
+- Stay read-only: do not modify version-controlled files or create a branch. Ask why the change is needed until the fundamental goal is clear.
+- Separate facts verified under AGENTS.md Section 2 from unverified assumptions. Challenge whether a simpler action, or no change, would satisfy the goal; check AGENTS.md Section 3 scope discipline.
+- Ask only 1–3 questions at a time. For a user decision, offer 2–3 options with trade-offs and a recommendation tied to this goal, not convention.
+- Roadmaps, TODOs, and comments are not requirement evidence. State risks or unreasonable requests directly.
+- When the user says "enough questions", stop questioning and produce the boundary card from current information.
+
+### Stage 2: Boundary Card
+
+Use the same three sections as AGENTS.md Section 12 so the card can become the PR body:
+
+1. **What.** State the fundamental goal in one sentence, verified facts, assumptions and how each will be checked or handled before verification, the minimum solution, and explicit exclusions.
+2. **Why.** State the user-confirmed need and why this is the smallest action that satisfies it.
+3. **Evidence and validation.** Define testable acceptance criteria and intended Gradle Wrapper commands. For documentation-only work, specify executable document checks and state that Gradle is not run when it is not applicable.
+
+Wait for the user's "confirm" before Stage 3, except for the explicit skip-alignment path.
+
+### Stage 3: Execute
+
+- Follow AGENTS.md Section 11 to create or switch to a task branch, then implement only the agreed boundary card. Do not add features or perform incidental refactoring.
+- If an assumption fails, the card must change, or source and documentation conflict, stop and ask the user before proceeding.
+- Finish with the AGENTS.md Section 13 Final Report. If the user says "back to Stage 1", invalidate the card and resume clarification.
+
+### Communication and Records
+
+- Reply in Chinese; keep code identifiers and commands in English. Explain a technical term in one sentence on first use, and advance one small step at a time.
+- Keep the agreed card in the PR body. Record architecture decisions in docs/decisions when relevant; do not create another document unless the user requests it.
