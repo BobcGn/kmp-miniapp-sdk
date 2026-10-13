@@ -1,0 +1,9 @@
+{
+  "desc": "Indexing rules for this mini program.",
+  "rules": [
+    {
+      "action": "allow",
+      "page": "*"
+    }
+  ]
+}

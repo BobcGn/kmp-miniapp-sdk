@@ -1,0 +1,6 @@
+<view class="page">
+  <view class="title">Mini App host</view>
+  <view class="row">module: {{modulePath}}</view>
+  <view class="row">exports: {{exports}}</view>
+  <view class="row failure" wx:if="{{failure}}">failure: {{failure}}</view>
+</view>
