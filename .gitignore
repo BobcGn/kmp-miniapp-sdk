@@ -13,3 +13,7 @@ out/
 
 # Reproducible local debugging output from ./gradlew buildMiniAppSdk.
 examples/wechat-miniprogram/miniprogram/libs/*.js.map
+
+# Local output copies in the repository's Gradle build projects.
+/build-logic/bin/
+/miniapp-gradle-plugin/bin/
