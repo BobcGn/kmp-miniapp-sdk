@@ -4,3 +4,9 @@ miniprogram/libs/
 
 # WeChat Developer Tools records machine-local preferences here once the project is opened.
 project.private.config.json
+
+# Local tooling and operating-system files, also when the host is used standalone.
+node_modules/
+.idea/
+.vscode/
+.DS_Store

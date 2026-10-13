@@ -32,6 +32,24 @@ npm run typecheck
 
 ## 微信开发者工具
 
+### 开发者工具本地配置
+
+`project.config.json` 是共享项目配置。开发者工具打开项目时可以创建 `project.private.config.json`；
+该文件保存本地偏好，并被 Git 忽略。已提交的 `project.private.config.example.json` 提供可复现的基础库
+选择（`3.17.2`），并保持 request domain 校验开启，其中不包含 AppID 或凭据。
+
+如需使用该参考，在本目录执行以下命令；已有本地偏好不会被覆盖：
+
+```shell
+if [ ! -e project.private.config.json ]; then
+  cp project.private.config.example.json project.private.config.json
+fi
+```
+
+后续修改保留在 `project.private.config.json`。按本次运行需要选择基础库，并随验证证据记录。
+Network 检查仍需要配置 request domain，或由开发者明确在本地调试中关闭域名校验；参考配置不会绕过它。
+`initMiniApp` 新建的消费者会获得宿主忽略规则。该任务不会替换已有 `.gitignore`，因此已有消费者自行维护规则。
+
 将本目录作为小程序项目导入并编译。剪贴板与震动卡片需要真机才能验证震动，剪贴板检查需要剪贴板访问权限。index 页面必须显示 `0.1.0-SNAPSHOT`、`FOREGROUND` 生命周期状态与页面 route、基础库版本，以及 Runtime detection、Storage、Client login code、Network 四项 `PASS`。Console 必须包含：
 
 ```text
