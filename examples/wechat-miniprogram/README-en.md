@@ -32,6 +32,27 @@ npm run typecheck
 
 ## WeChat Developer Tools
 
+### Local Developer Tools configuration
+
+`project.config.json` is the shared project configuration. Developer Tools can create
+`project.private.config.json` when it opens the project; that file holds local preferences and is
+ignored by Git. The checked-in `project.private.config.example.json` supplies a reproducible base
+library selection (`3.17.2`) and keeps request-domain checking enabled. It contains no AppID or credentials.
+
+To use that reference from this directory without replacing existing local preferences:
+
+```shell
+if [ ! -e project.private.config.json ]; then
+  cp project.private.config.example.json project.private.config.json
+fi
+```
+
+Keep later edits in `project.private.config.json`. Select the base library needed by your run and
+record it with the evidence. The Network check still needs the request domain configured, or an
+explicit local debugging choice to turn off domain checking; the reference does not bypass it.
+Fresh consumers created by `initMiniApp` receive the host ignore rules. That task never replaces an
+existing `.gitignore`, so existing consumers maintain their own rules.
+
 Import this directory as a Mini Program project and compile it. The clipboard and vibration card needs a device for the vibration checks, and the clipboard checks need clipboard access. The index page must display `0.1.0-SNAPSHOT`, a `FOREGROUND` lifecycle state with a page route, the base-library version, and a `PASS` status for Runtime detection, Storage, the client login code, and the network check. The console must contain:
 
 ```text

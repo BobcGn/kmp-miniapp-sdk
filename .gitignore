@@ -17,3 +17,10 @@ examples/wechat-miniprogram/miniprogram/libs/*.js.map
 # Local output copies in the repository's Gradle build projects.
 /build-logic/bin/
 /miniapp-gradle-plugin/bin/
+
+# Repository-local tool state; do not rely on a developer's global excludes.
+.code-review-graph/
+**/.claude/settings.local.json
+
+# WeChat Developer Tools stores local preferences here; example files stay tracked.
+project.private.config.json

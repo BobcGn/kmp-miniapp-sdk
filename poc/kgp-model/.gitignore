@@ -1,6 +1,7 @@
 build/
-**/build/
+.gradle/
 .kotlin/
-**/.kotlin/
+node_modules/
+
+# This experiment keeps its generated JS store and lockfile local.
 kotlin-js-store/
-**/kotlin-js-store/
