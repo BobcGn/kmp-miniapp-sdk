@@ -1,0 +1,29 @@
+*.iml
+.kotlin
+.gradle
+**/build/
+xcuserdata
+!src/**/build/
+local.properties
+.idea
+.DS_Store
+captures
+.externalNativeBuild
+.cxx
+*.xcodeproj/*
+!*.xcodeproj/project.pbxproj
+!*.xcodeproj/xcshareddata/
+!*.xcodeproj/project.xcworkspace/
+!*.xcworkspace/contents.xcworkspacedata
+**/xcshareddata/WorkspaceSettings.xcsettings
+node_modules/
+
+# Local Apple/Android tooling output; source projects and assets remain tracked.
+DerivedData/
+.swiftpm/
+*.xcuserstate
+.xcode.env.local
+
+# Keep the reproducible Kotlin/JS lockfile, ignore other local store output.
+/kotlin-js-store/*
+!/kotlin-js-store/yarn.lock
