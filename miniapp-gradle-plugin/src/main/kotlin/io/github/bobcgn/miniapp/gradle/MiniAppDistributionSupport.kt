@@ -6,6 +6,8 @@ import org.gradle.api.file.FileCopyDetails
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Sync
 import org.gradle.api.tasks.TaskProvider
+import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
+import org.jetbrains.kotlin.gradle.targets.js.dsl.KotlinJsTargetDsl
 
 /**
  * Registers the four tasks that take a consumer from "I applied the plugin" to "I have a WeChat
@@ -38,13 +40,37 @@ internal object MiniAppDistributionSupport {
     public fun registerMiniAppDistributionTasks(project: Project) {
         val wechat = project.extensions.getByType(MiniAppExtension::class.java).wechat
         val distribution = project.tasks.named(MiniAppPluginDiagnostics.MINIAPP_DISTRIBUTION_TASK_NAME)
-        val projectDirectory = project.layout.projectDirectory.asFile
+        val moduleDirectory = project.layout.projectDirectory.asFile
+        val rootDirectory = project.rootProject.layout.projectDirectory.asFile
+        val rootBuildDirectory = project.rootProject.layout.buildDirectory
+        val projectDirectory = wechat.rootHost.map { enabled -> if (enabled) rootDirectory else moduleDirectory }
 
         val sourceDirectory = wechat.sourceDirectory
         val generatedLibraryDirectory = wechat.generatedLibraryDirectory
         val distributionDirectory = wechat.distributionDirectory
 
-        registerInitMiniApp(project, sourceDirectory)
+        val rootHost = wechat.rootHost
+        val source = sourceDirectory
+        val generated = generatedLibraryDirectory
+        val assembled = distributionDirectory
+        listOf(
+            MiniAppPluginDiagnostics.INIT_MINIAPP_TASK_NAME,
+            MiniAppPluginDiagnostics.SYNC_MINIAPP_TASK_NAME,
+            MiniAppPluginDiagnostics.ASSEMBLE_MINIAPP_TASK_NAME,
+        ).forEach { name ->
+            project.tasks.matching { it.name == name }.configureEach { task ->
+                task.doFirst {
+                    MiniAppPathDiagnostics.requireSourceAndDistributionDisjoint(source.get().asFile, assembled.get().asFile)
+                    if (rootHost.get()) {
+                        MiniAppPathDiagnostics.requireSourceOutsideBuild(source.get().asFile, rootBuildDirectory.get().asFile)
+                        MiniAppPathDiagnostics.requireDistributionInsideProject(assembled.get().asFile, rootBuildDirectory.get().asFile)
+                    }
+                    MiniAppPathDiagnostics.requireGeneratedLibraryInsideSource(generated.get().asFile, source.get().asFile)
+                    MiniAppPathDiagnostics.requireNoHandwrittenFilesInGeneratedLibrary(generated.get().asFile)
+                }
+            }
+        }
+        registerInitMiniApp(project, sourceDirectory, projectDirectory)
         registerSyncMiniApp(project, distribution, sourceDirectory, generatedLibraryDirectory, projectDirectory)
         registerAssembleMiniApp(
             project = project,
@@ -75,9 +101,11 @@ internal object MiniAppDistributionSupport {
     private fun registerInitMiniApp(
         project: Project,
         sourceDirectory: org.gradle.api.file.DirectoryProperty,
+        projectDirectory: Provider<java.io.File>,
     ) {
         val projectName = project.name
-        val projectDirectory = project.layout.projectDirectory.asFile
+        val moduleName = (project.extensions.getByType(KotlinMultiplatformExtension::class.java)
+            .targets.getByName(MiniAppPluginDiagnostics.MINIAPP_TARGET_NAME) as KotlinJsTargetDsl).outputModuleName
 
         project.tasks.register(MiniAppPluginDiagnostics.INIT_MINIAPP_TASK_NAME) { task ->
             task.group = GROUP
@@ -88,9 +116,9 @@ internal object MiniAppDistributionSupport {
             val source = sourceDirectory
             task.doLast { executed ->
                 val sourceHost = source.get().asFile
-                MiniAppPathDiagnostics.requireSourceInsideProject(sourceHost, projectDirectory)
+                MiniAppPathDiagnostics.requireSourceInsideProject(sourceHost, projectDirectory.get())
 
-                val result = MiniAppSourceHost.initialize(sourceHost, projectName)
+                val result = MiniAppSourceHost.initialize(sourceHost, projectName, moduleName.get())
                 val logger = executed.logger
 
                 logger.lifecycle("miniApp.init.sourceDirectory=${sourceHost.invariantSeparatorsPath}")
@@ -125,7 +153,7 @@ internal object MiniAppDistributionSupport {
         distribution: TaskProvider<*>,
         sourceDirectory: org.gradle.api.file.DirectoryProperty,
         generatedLibraryDirectory: org.gradle.api.file.DirectoryProperty,
-        projectDirectory: java.io.File,
+        projectDirectory: Provider<java.io.File>,
     ) {
         project.tasks.register(MiniAppPluginDiagnostics.SYNC_MINIAPP_TASK_NAME, Sync::class.java) { task ->
             task.group = GROUP
@@ -141,7 +169,7 @@ internal object MiniAppDistributionSupport {
             val generated = generatedLibraryDirectory
             // `doFirst`, so a destination the build must not own fails before Sync deletes anything.
             task.doFirst {
-                MiniAppPathDiagnostics.requireSourceInsideProject(source.get().asFile, projectDirectory)
+                MiniAppPathDiagnostics.requireSourceInsideProject(source.get().asFile, projectDirectory.get())
                 MiniAppPathDiagnostics.requireGeneratedLibraryInsideSource(
                     generated.get().asFile,
                     source.get().asFile,
@@ -168,7 +196,7 @@ internal object MiniAppDistributionSupport {
         sourceDirectory: org.gradle.api.file.DirectoryProperty,
         generatedLibraryDirectory: org.gradle.api.file.DirectoryProperty,
         distributionDirectory: org.gradle.api.file.DirectoryProperty,
-        projectDirectory: java.io.File,
+        projectDirectory: Provider<java.io.File>,
     ) {
         val libraryPathInDistribution: Provider<String> = libraryPathInDistribution(
             sourceDirectory,
@@ -231,11 +259,11 @@ internal object MiniAppDistributionSupport {
             val assembled = distributionDirectory
             task.doFirst {
                 val sourceHost = source.get().asFile
-                MiniAppPathDiagnostics.requireSourceInsideProject(sourceHost, projectDirectory)
+                MiniAppPathDiagnostics.requireSourceInsideProject(sourceHost, projectDirectory.get())
                 MiniAppPathDiagnostics.requireGeneratedLibraryInsideSource(generated.get().asFile, sourceHost)
                 MiniAppPathDiagnostics.requireDistributionInsideProject(
                     assembled.get().asFile,
-                    projectDirectory,
+                    projectDirectory.get(),
                 )
                 if (!sourceHost.isDirectory) {
                     throw GradleException(
@@ -270,7 +298,7 @@ internal object MiniAppDistributionSupport {
         sourceDirectory: org.gradle.api.file.DirectoryProperty,
         generatedLibraryDirectory: org.gradle.api.file.DirectoryProperty,
         distributionDirectory: org.gradle.api.file.DirectoryProperty,
-        projectDirectory: java.io.File,
+        projectDirectory: Provider<java.io.File>,
     ) {
         val libraryPathInDistribution = libraryPathInDistribution(sourceDirectory, generatedLibraryDirectory)
 
@@ -288,7 +316,7 @@ internal object MiniAppDistributionSupport {
                 val directory = assembled.get().asFile
                 val report = MiniAppDistributionVerification.verify(
                     distributionDirectory = directory,
-                    projectDirectory = projectDirectory,
+                    projectDirectory = projectDirectory.get(),
                     libraryPathInSource = libraryPath.get(),
                 )
 

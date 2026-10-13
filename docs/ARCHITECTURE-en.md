@@ -354,6 +354,9 @@ The consumer-facing build configuration is one extension, `miniapp`, whose only 
 
 A consumer whose `commonMain` depends on another Kotlin Multiplatform project must apply this plugin to that project as well. The dependency resolves through a Mini App variant, so a project that offers none fails variant resolution; there is no fallback, and moving the dependency out of `commonMain` is not a workaround.
 
+
+Root host mode keeps module and host ownership distinct: the one module selecting `rootHost=true` still owns Kotlin compilation and the bundle; the root owns the WeChat source host and standalone distribution lifecycle. The default mode is unchanged. Path checks use the selected mode's container, while root mode also rejects source/build overlap, source/distribution overlap, multiple producers and replacement of existing root tasks; handwritten UI never belongs to generated libraries. This capability is in current source and is not released.
+
 ## 8. Non-goals
 
 - Reimplementing Kuikly

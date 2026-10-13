@@ -390,6 +390,28 @@ path written into the plugin, so a Kotlin Gradle Plugin layout change moves the 
   it runs on a different runtime from the one that will load your mini program. Only WeChat Developer
   Tools, and then a real device where a capability needs one, is host acceptance.
 
+## Multi-module root WeChat host (current source, not released)
+
+A multi-module consumer can select its one final artifact module (for example `shared`) as the root host owner:
+
+```kotlin
+miniapp {
+    wechat {
+        rootHost.set(true)
+    }
+}
+```
+
+This retains Kotlin sources and the bundle in the module, provides `miniApp/` at the consumer root, and places the standalone acceptance project in root `build/miniapp-dist/`. Root entry points delegate to the selected module:
+
+```shell
+./gradlew initMiniApp
+./gradlew syncMiniApp
+./gradlew assembleMiniApp verifyMiniApp
+```
+
+Initialization is explicit and creates missing files only; synchronization owns only `miniApp/miniprogram/libs/`; `clean` preserves handwritten host source. This configuration is not yet in the public 0.1.1 release. The repository's [multi-module consumer](fixtures/miniapp-root-consumer) uses current source; see the [development guide](docs/DEVELOPMENT-en.md) for complete safety and compatibility rules. Renderer checks still apply; root paths do not solve CMP resource compatibility.
+
 ## Online resolution
 
 Gradle resolves plugin `io.github.bobcgn.miniapp:0.1.1` from the Gradle

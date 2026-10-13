@@ -51,6 +51,7 @@ public abstract class MiniAppExtension @Inject constructor(
      */
     public val wechat: WeChatHostConfiguration =
         objects.newInstance(WeChatHostConfiguration::class.java).apply {
+            rootHost.convention(false)
             bundleDirectory.convention(layout.buildDirectory.dir(MiniAppPluginDiagnostics.MINIAPP_BUNDLE_DIRECTORY))
             sourceDirectory.convention(layout.projectDirectory.dir(MiniAppPluginDiagnostics.MINIAPP_SOURCE_DIRECTORY))
             distributionDirectory.convention(

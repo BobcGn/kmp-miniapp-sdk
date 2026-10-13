@@ -180,6 +180,30 @@ The tests are Gradle TestKit fixtures plus a contract test. The fixtures put the
 
 The extension carries one setting — where the host's bundle is written. Business and host configuration stays outside Gradle by design, and the reasons are in the [mini app extension section](#the-miniapp--extension) above.
 
+### Root WeChat host in a multi-module consumer (current source, not released)
+
+The default host paths remain relative to the module applying the plugin, preserving the existing single-project workflow. A multi-module consumer can explicitly select its one final artifact producer (for example `shared`) as the root host owner:
+
+```kotlin
+miniapp {
+    wechat {
+        rootHost.set(true)
+    }
+}
+```
+
+`rootHost` defaults to `false`. When enabled, the module's Kotlin source sets and `build/miniapp/bundle` are unchanged. The host defaults to `miniApp/` at the consumer root, its generated libraries to `miniprogram/libs/`, and the standalone acceptance project to the root `build/miniapp-dist/`. Root `initMiniApp`, `syncMiniApp`, `assembleMiniApp` and `verifyMiniApp` tasks delegate to the selected module. Only an explicit `initMiniApp` initializes the host; plugin application and IDE sync do not create it.
+
+```shell
+./gradlew initMiniApp
+./gradlew syncMiniApp
+./gradlew assembleMiniApp verifyMiniApp
+```
+
+Only one module may select `rootHost`; existing root tasks of the same names are not replaced. Root source must stay inside the consumer root and outside its build directory; distribution must stay inside root build; the two may not overlap. Generated libraries must be strictly inside source and may not point to handwritten WXML/WXSS, App configuration or Kotlin/Swift/Java source trees. `clean` deletes build outputs and preserves host source. Root tasks retain renderer checks and do not solve CMP resource compatibility.
+
+This is a current-source addition, not part of the published 0.1.1 contract. `fixtures/miniapp-root-consumer` consumes current source through a composite build and demonstrates the multi-module workflow without UI dependencies. WeChat Developer Tools results require separate evidence.
+
 ## Bundle size
 
 `build-logic/` is an included build that holds this repository's own build logic: the bundle-size

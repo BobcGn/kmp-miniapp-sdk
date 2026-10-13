@@ -63,6 +63,9 @@ The WeChat navigation bridge adapts `wx.navigateTo`, `wx.redirectTo`, `wx.naviga
 
 Capability support is answered from the running host rather than from a hardcoded list. `MiniAppHost.capabilitySupport` reports `Supported`, `Unsupported`, `VersionDependent`, or `PermissionDependent`, and `requireSupported` turns every state other than `Supported` into `MiniAppException.UnsupportedCapability`. The WeChat gate reads `wx.canIUse` and the base-library version, with `wx.getAppBaseInfo` preferred and the unmaintained `wx.getSystemInfoSync` as the fallback, so the same build can answer differently on two hosts. Version and platform reads are deferred until their respective first use and cached independently; `wx.canIUse` remains a live query. Automated Kotlin/JS, fake-host, CommonJS, and TypeScript checks pass. WeChat Developer Tools (base library 3.17.2) and an Android device (OnePlus PLQ110, Android 36, WeChat 8.0.76) both verified the `Supported` and `Unsupported` states.
 
+
+Current source adds explicit root host mode through `miniapp.wechat.rootHost` (default `false`, not released). One selected module supplies the bundle and the consumer root exposes host task entry points; source defaults to root `miniApp/` and distribution to root `build/miniapp-dist/`. Legacy paths are unchanged. `fixtures/miniapp-root-consumer` is the multi-module example; this mode adds no renderer and does not solve shared CMP resource compatibility. See DEVELOPMENT's multi-module section for configuration, safety boundaries and commands.
+
 ## 3. Current Gradle Modules
 
 Verified with `./gradlew projects`:

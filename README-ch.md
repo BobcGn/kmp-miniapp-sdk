@@ -357,6 +357,28 @@ generated library area 必须严格位于 source host 内部、distribution 必�
 - **Node smoke 不是宿主验收。** 在 Node 上运行 bundle 只证明 module graph 可以解析；它运行在与加载你小程序的
   运行时不同的环境上。只有微信开发者工具，以及在能力需要时再加真机，才是宿主验收。
 
+## 多模块根级微信工程（当前源码，尚未发布）
+
+多模块消费者可在唯一的最终产物模块（例如 `shared`）配置根级宿主：
+
+```kotlin
+miniapp {
+    wechat {
+        rootHost.set(true)
+    }
+}
+```
+
+这保留模块中的 Kotlin 源码和 bundle，在消费者根目录提供 `miniApp/`，并将独立验收工程放到根级 `build/miniapp-dist/`。根级入口委托给选中的模块：
+
+```shell
+./gradlew initMiniApp
+./gradlew syncMiniApp
+./gradlew assembleMiniApp verifyMiniApp
+```
+
+初始化只显式运行且只补缺失文件；同步仅管理 `miniApp/miniprogram/libs/`；`clean` 保留手写宿主。此配置尚未包含在公开的 0.1.1 中。仓库的 [多模块消费者](fixtures/miniapp-root-consumer) 使用当前源码；完整路径保护和兼容说明见 [开发指南](docs/DEVELOPMENT-ch.md)。renderer 检查继续适用，根级目录不解决 CMP 资源兼容性。
+
 ## 在线解析
 
 Gradle 从 Gradle Plugin Portal 解析插件 `io.github.bobcgn.miniapp:0.1.1`。插件随后添加

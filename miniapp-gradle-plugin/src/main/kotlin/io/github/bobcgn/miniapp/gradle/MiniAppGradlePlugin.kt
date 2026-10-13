@@ -30,6 +30,7 @@ public class MiniAppGradlePlugin : Plugin<Project> {
             if (!evaluated.pluginManager.hasPlugin(MiniAppPluginDiagnostics.KOTLIN_MULTIPLATFORM_PLUGIN_ID)) {
                 throw MiniAppPluginDiagnostics.missingKotlinMultiplatform(evaluated.path)
             }
+            MiniAppRootHostSupport.configure(evaluated)
         }
     }
 }

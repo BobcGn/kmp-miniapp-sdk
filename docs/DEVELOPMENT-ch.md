@@ -175,6 +175,30 @@ build/miniapp/bundle/
 
 extension 只承载一个设置 —— 宿主 bundle 的写入位置。业务与宿主配置按设计留在 Gradle 之外，理由见上文 `miniapp { }` extension 一节。
 
+### 多模块消费者的根级微信工程（当前源码，尚未发布）
+
+插件默认仍以应用插件的模块为宿主路径归属，保持现有单项目工作流。多模块消费者可以在唯一的最终产物模块（例如 `shared`）显式选择根级宿主：
+
+```kotlin
+miniapp {
+    wechat {
+        rootHost.set(true)
+    }
+}
+```
+
+`rootHost` 默认为 `false`。启用后，模块的 Kotlin source sets 与 `build/miniapp/bundle` 不变；宿主默认位于消费者根目录 `miniApp/`，生成库位于其中的 `miniprogram/libs/`，独立验收工程默认位于根目录 `build/miniapp-dist/`。根工程提供 `initMiniApp`、`syncMiniApp`、`assembleMiniApp`、`verifyMiniApp` 入口，委托给选中的模块。只有显式调用 `initMiniApp` 才创建宿主；导入插件与 IDE sync 不创建微信工程。
+
+```shell
+./gradlew initMiniApp
+./gradlew syncMiniApp
+./gradlew assembleMiniApp verifyMiniApp
+```
+
+只能有一个模块选择 `rootHost`，已有同名根级任务不会被覆盖。根级 source 必须位于消费者根工程内且在根级 build 外；distribution 必须在根级 build 内；二者不能重叠。生成库必须严格位于 source 内，不能指向含 WXML/WXSS、App 配置或 Kotlin/Swift/Java 源码的手写目录。`clean` 删除 build 输出，保留宿主源码。根级任务沿用 renderer 检查，不解决 CMP 资源依赖的宿主兼容性。
+
+此配置是当前源码新增的能力，不属于已发布的 0.1.1 契约。`fixtures/miniapp-root-consumer` 通过 composite build 消费当前源码，演示没有 UI 依赖的多模块工作流；微信开发者工具运行结果需独立记录。
+
 ## 包体积
 
 `build-logic/` 是一个 included build，存放本仓库自己的构建逻辑：包体积任务。它只被 include，从不发布，消费者也不会应用它。

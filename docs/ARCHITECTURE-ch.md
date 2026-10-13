@@ -354,6 +354,9 @@ bundle 不是宿主工程，二者不可混淆。Mini App 构建有三样东西�
 
 若消费者的 `commonMain` 依赖另一个 Kotlin Multiplatform project，则必须对该 project 同样应用本插件。该依赖经由 Mini App variant 解析，不提供该 variant 的 project 会解析失败；不存在回退，把依赖移出 `commonMain` 也不是变通办法。
 
+
+根级宿主模式保持 module 与 host 的不同归属：`rootHost=true` 的单个模块仍拥有 Kotlin compilation 和 bundle，根工程拥有微信 source host 与独立 distribution 的生命周期。默认模式不变。路径校验改用选定模式的容器，根级模式还拒绝 source/build 重叠、source/distribution 重叠、多个产物所有者和覆盖已有根级任务；手写 UI 永远不属于生成库区域。此能力在当前源码中，尚未发布。
+
 ## 8. 非目标
 
 - 重新实现 Kuikly

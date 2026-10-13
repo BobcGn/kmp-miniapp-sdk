@@ -105,6 +105,12 @@ python3 .github/scripts/test-release-workflow.py
 
 最后一项运行在 Node 上，只证明模块接线。**它不是微信宿主验收**，两者分别记录。单独完成的开发者工具验收使用基础库 3.17.3，页面渲染共享 greeting、计数与 SDK 版本，Console 报告 `fixture.result=PASS`。
 
+
+`MiniAppRootHostTest` 使用多模块 TestKit 消费者验证根级 init/sync/assemble/verify、真实编译器模块名、配置缓存、Kotlin 修改后的陈旧生成物清理、手写文件与 clean 保护、唯一所有者、任务冲突、工程外/重叠路径及旧默认路径。`fixtures/miniapp-root-consumer` 是持久的无 UI 依赖消费者，根目录工程可用仓库 Wrapper 构建；Node 只证明模块接线，微信工具运行单独验收。
+
+
+2026-10-13 根级 fixture 验收：仓库 Wrapper 的 `initMiniApp syncMiniApp assembleMiniApp verifyMiniApp` 通过，source host 与 distribution 的 `node scripts/smoke.cjs` 均报告 `rootHost.nodeWiring=PASS`。微信开发者工具 Stable `2.02.2608060` 实际导入 `fixtures/miniapp-root-consumer/miniApp/` 并运行，基础库 `3.17.4`，页面显示 `Hello, WeChat · devtools · 基础库 3.17.4!`，Console 为 `rootHost.result=PASS`、Errors=0。导入使用本地测试配置；仓库只保留 `touristappid` 占位，不提交测试号或私有配置。此证据只覆盖该根级纯逻辑消费者的开发者工具运行，不覆盖真机、后端、CMP 资源或 BOB-122 全部 TypeScript 验收。
+
 ### Gradle 插件套件
 
 `:miniapp-gradle-plugin:test` 通过 Gradle TestKit 在临时消费者工程中驱动插件。它覆盖插件应用、缺少 Kotlin Multiplatform 时的失败、source set 提供与 compilation 归属、不替换现有源码的标准 Mini App Kotlin 目录创建、测试执行、runtime 依赖接线、`assembleMiniAppBundle` 契约、为该契约把关的 renderer 拒绝、重复执行的增量行为，以及 configuration cache 兼容性。它还覆盖 `miniapp { }` extension：规范的 `miniapp { wechat { ... } }` 块能编译并执行；配置的 bundle 目录确实是 bundle 的写入位置；项目之外的目录会被拒绝并给出可操作的错误信息；重复应用插件不会创建第二个 extension；以及微信是宿主配置而不是平台 extension 本身。

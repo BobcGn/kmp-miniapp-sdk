@@ -115,6 +115,37 @@ internal object MiniAppPathDiagnostics {
         return source.relativize(generated).joinToString("/") { element -> element.toString() }
     }
 
+    /** A disposable Sync output may neither contain nor be contained by handwritten source. */
+    public fun requireSourceAndDistributionDisjoint(sourceDirectory: File, distributionDirectory: File) {
+        val source = sourceDirectory.canonicalFile.toPath()
+        val distribution = distributionDirectory.canonicalFile.toPath()
+        if (source.startsWith(distribution) || distribution.startsWith(source)) {
+            throw GradleException("Mini App sourceDirectory and distributionDirectory must not overlap: $source and $distribution")
+        }
+    }
+
+    /** Root clean must never own the handwritten source host. */
+    public fun requireSourceOutsideBuild(sourceDirectory: File, buildDirectory: File) {
+        val source = sourceDirectory.canonicalFile.toPath()
+        val build = buildDirectory.canonicalFile.toPath()
+        if (source.startsWith(build) || build.startsWith(source)) {
+            throw GradleException("The root Mini App sourceDirectory must stay outside the root build directory: $source")
+        }
+    }
+
+    /** Reject an existing UI/source tree before Sync can erase it as if it were compiler output. */
+    public fun requireNoHandwrittenFilesInGeneratedLibrary(generatedLibraryDirectory: File) {
+        if (!generatedLibraryDirectory.exists()) return
+        val protectedNames = setOf("app.js", "app.ts", "app.json", "project.config.json", "sitemap.json")
+        val protectedExtensions = setOf("wxml", "wxss", "kt", "swift", "java")
+        val handwritten = generatedLibraryDirectory.walkTopDown().firstOrNull {
+            it.isFile && (it.name in protectedNames || it.extension in protectedExtensions)
+        }
+        if (handwritten != null) {
+            throw GradleException("The Mini App generated library directory contains handwritten host/source files: $handwritten")
+        }
+    }
+
     private fun requireStrictlyInside(
         header: String,
         property: String,
