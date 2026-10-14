@@ -20,6 +20,27 @@ VS Code 可用于处理 `examples/wechat-miniprogram` 下的文件。Consumer Br
 
 需要运行微信宿主验收时，使用 [微信真实宿主验证矩阵](platforms/wechat/WECHAT_HOST_VERIFICATION-ch.md) 选择最低环境并填写证据模板。不得用 DeveloperTools 结果代替真机、权限、隐私或后端链路证据。
 
+## Kotlin 消费者源码与 KDoc 验收
+
+Kotlin API 导航与宿主 JS/TS 声明导航是两条链路。2026-10-14，用户在 IntelliJ IDEA 2026.2.3 验证服务器 demo：Cmd 点击可定位到真实的 `MiniAppExports` 对象与 `wechatRuntimeInfo()` 实现，在消费调用处悬停可展示 SDK KDoc，包括基础库版本可能为 null 的说明。该 demo 使用 `includeBuild`，因此证据仅覆盖本地源码消费。
+
+`fixtures/miniapp-published-consumer` 是带独立 Wrapper 的发布版消费者构建。它有意在自己的 catalog 固定已发布的 Kotlin 2.4.20／Mini App 0.1.1 组合，与当前工作树版本独立。插件从 Plugin Portal 和 Maven Central 解析，runtime 从 Maven Central 解析。它没有 `includeBuild`、`mavenLocal` 或本地 runtime project 依赖，不是新增 runtime SDK 模块，不改两个应用 demo，也不执行发布。
+
+```shell
+cd fixtures/miniapp-published-consumer
+./gradlew --no-daemon --no-configuration-cache --console=plain compileKotlinMiniapp verifyPublishedSdkSources
+```
+
+2026-10-14，上述 Wrapper 命令通过。实际 runtime binary 为 `io.github.bobcgn:kmp-miniapp-sdk-js:0.1.1`，同版本源码 JAR 包含 `MiniAppExports.kt`、`MiniAppSdk.kt`、函数实现与 KDoc。`build/reports/published-sdk-navigation.txt` 记录组件身份、路径、SHA-256 摘要和源码条目。显式解析与检查源码包只能证明归档可用及内容正确，不能证明 IDE 自动关联或导航。校验器要求 KMP/JS runtime 为外部 module，并拒绝 project 替换。
+
+剩余人工验收：
+
+1. 在 IDEA 新窗口中仅打开 `fixtures/miniapp-published-consumer`，使用其 Wrapper 导入 Gradle 构建。不要把 SDK 仓库附加为模块，也不要在首次检查前手动关联源码。
+2. 打开 `src/miniappMain/kotlin/consumer/PublishedSdkUsage.kt`，对 `MiniAppExports.sdkVersion()`、`MiniAppExports.wechatRuntimeInfo()` 和 `MiniAppSdk.VERSION` 执行 Cmd 点击。目标必须是 0.1.1 依赖关联的真实 Kotlin 源码，例如 `sources.jar` 归档／缓存中的文件；不能是仓库 `sdk/src` 或反编译声明桩。
+3. 在消费调用处悬停 `wechatRuntimeInfo()`，确认 SDK KDoc 展示。记录 IDEA／版本、依赖版本与目标路径，提供源码和文档截图。若源码没有关联，先反馈现象，再尝试手动修复。
+
+2026-10-14，用户确认发布版消费者在 IDEA 2026.2.3 中三个调用均可定位到对应源码位置，鼠标悬停正常展示 KDoc，发布依赖的人工验收通过。该证据来自用户确认，本轮未另附发布模式截图。Android Studio 尚无验收记录。本机 JetBrains Kotlin 扩展 0.0.13 将 KMP 支持列为后续工作，因此 VS Code Kotlin 导航不作为本任务的发布门禁，见 [Kotlin 语言服务官方支持边界](https://kotlinlang.org/docs/kotlin-lsp.html)。目前没有发现源码／KDoc 产物缺失，因此不修改 SDK API 或发布配置。
+
 ## 命令
 
 ```shell

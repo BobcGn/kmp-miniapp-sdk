@@ -1,0 +1,8 @@
+[versions]
+# Frozen released pair for source-navigation acceptance, independent of the SDK checkout version.
+kotlin = "2.4.20"
+miniapp = "0.1.1"
+
+[plugins]
+kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+miniapp = { id = "io.github.bobcgn.miniapp", version.ref = "miniapp" }

@@ -24,6 +24,7 @@ The project is not a WeChat Mini Program UI framework, Kuikly replacement, Compo
 - Pre-alpha
 - Bootstrap completed
 - Consumer Bridge completed and verified in WeChat Developer Tools
+- Kotlin consumer source and KDoc navigation verified by the user in IDEA 2026.2.3 for the server demo using local `includeBuild`. The independent `fixtures/miniapp-published-consumer` compiles against released 0.1.1 and verifies matching source/KDoc archives; on 2026-10-14 the user confirmed published-dependency IDEA source navigation and KDoc display passed. No SDK API or publishing behavior changed.
 - Typed WeChat interop foundation implemented
 - Host and capability boundary contracts implemented
 - Common error model and internal callback-to-coroutine primitive implemented

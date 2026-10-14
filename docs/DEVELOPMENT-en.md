@@ -20,6 +20,27 @@ Before starting or closing WeChat capability work, review the [WeChat capability
 
 When running WeChat host acceptance, use the [WeChat real-host verification matrix](platforms/wechat/WECHAT_HOST_VERIFICATION-en.md) to select the minimum environment and complete its evidence template. A DeveloperTools result must not replace real-device, permission, privacy, or backend-chain evidence.
 
+## Kotlin consumer source and KDoc acceptance
+
+Kotlin API navigation is distinct from host JS/TS declaration navigation. On 2026-10-14, the user verified the server demo in IntelliJ IDEA 2026.2.3: Cmd-click reaches the real `MiniAppExports` object and `wechatRuntimeInfo()` implementation, and hovering over the consumer call displays its SDK KDoc, including the nullable base-library version explanation. That demo uses `includeBuild`, so this evidence covers local-source consumption only.
+
+`fixtures/miniapp-published-consumer` is a separate release-consumer build with its own Wrapper. It pins the released Kotlin 2.4.20 / Mini App 0.1.1 pair in its own catalog deliberately, independently of the checkout's current version. It resolves plugins from the Plugin Portal and Maven Central, and runtime dependencies from Maven Central. It has no `includeBuild`, `mavenLocal` or local runtime project dependency, and is not a new runtime SDK module. It does not change either application demo or publish anything.
+
+```shell
+cd fixtures/miniapp-published-consumer
+./gradlew --no-daemon --no-configuration-cache --console=plain compileKotlinMiniapp verifyPublishedSdkSources
+```
+
+On 2026-10-14 this Wrapper command passed. The actual runtime binary was `io.github.bobcgn:kmp-miniapp-sdk-js:0.1.1`; the same version's sources JAR contained `MiniAppExports.kt`, `MiniAppSdk.kt`, function implementations and KDoc. `build/reports/published-sdk-navigation.txt` records component identity, paths, SHA-256 digests and source entries. Explicitly resolving and inspecting the sources proves archive availability/content, not automatic IDE attachment or navigation. The verifier requires the KMP/JS runtime to be an external module and rejects project substitution.
+
+For the remaining manual acceptance:
+
+1. Open only `fixtures/miniapp-published-consumer` in a new IDEA window and import its Gradle build using its Wrapper. Do not attach the SDK repository as a module or manually attach sources before the initial check.
+2. Open `src/miniappMain/kotlin/consumer/PublishedSdkUsage.kt`. Cmd-click `MiniAppExports.sdkVersion()`, `MiniAppExports.wechatRuntimeInfo()` and `MiniAppSdk.VERSION`. The destination must be real Kotlin source associated with the 0.1.1 dependency (such as a `sources.jar` archive/cache), not the repository's `sdk/src` or decompiled stubs.
+3. Hover over `wechatRuntimeInfo()` at the consumer call and confirm the SDK KDoc is displayed. Record IDEA/version, dependency version and target path, and provide source and documentation screenshots. Report missing attachment before attempting manual fixes.
+
+On 2026-10-14, the user confirmed that the published-consumer fixture in IDEA 2026.2.3 navigates all three call sites to the corresponding source locations and displays KDoc normally on hover, completing published-dependency manual acceptance. This evidence is the user's confirmation; no additional published-mode screenshot was supplied. Android Studio has no acceptance recorded. VS Code's installed JetBrains Kotlin extension 0.0.13 documents KMP support as future work; Kotlin navigation there is not a release gate for this task. See the [official Kotlin language-server support boundary](https://kotlinlang.org/docs/kotlin-lsp.html). No SDK API or publishing configuration was changed because no missing source/KDoc artifact was found.
+
 ## Commands
 
 ```shell
