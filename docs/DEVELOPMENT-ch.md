@@ -39,7 +39,7 @@ cd fixtures/miniapp-published-consumer
 2. 打开 `src/miniappMain/kotlin/consumer/PublishedSdkUsage.kt`，对 `MiniAppExports.sdkVersion()`、`MiniAppExports.wechatRuntimeInfo()` 和 `MiniAppSdk.VERSION` 执行 Cmd 点击。目标必须是 0.1.1 依赖关联的真实 Kotlin 源码，例如 `sources.jar` 归档／缓存中的文件；不能是仓库 `sdk/src` 或反编译声明桩。
 3. 在消费调用处悬停 `wechatRuntimeInfo()`，确认 SDK KDoc 展示。记录 IDEA／版本、依赖版本与目标路径，提供源码和文档截图。若源码没有关联，先反馈现象，再尝试手动修复。
 
-发布依赖的 IDEA 导航仍待上述人工验收。Android Studio 尚无验收记录。本机 JetBrains Kotlin 扩展 0.0.13 将 KMP 支持列为后续工作，因此 VS Code Kotlin 导航不作为本任务的发布门禁，见 [Kotlin 语言服务官方支持边界](https://kotlinlang.org/docs/kotlin-lsp.html)。目前没有发现源码／KDoc 产物缺失，因此不修改 SDK API 或发布配置。
+2026-10-14，用户确认发布版消费者在 IDEA 2026.2.3 中三个调用均可定位到对应源码位置，鼠标悬停正常展示 KDoc，发布依赖的人工验收通过。该证据来自用户确认，本轮未另附发布模式截图。Android Studio 尚无验收记录。本机 JetBrains Kotlin 扩展 0.0.13 将 KMP 支持列为后续工作，因此 VS Code Kotlin 导航不作为本任务的发布门禁，见 [Kotlin 语言服务官方支持边界](https://kotlinlang.org/docs/kotlin-lsp.html)。目前没有发现源码／KDoc 产物缺失，因此不修改 SDK API 或发布配置。
 
 ## 命令
 

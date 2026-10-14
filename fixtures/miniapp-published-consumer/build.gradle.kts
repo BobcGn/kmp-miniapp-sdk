@@ -62,7 +62,7 @@ tasks.register("verifyPublishedSdkSources") {
         } + listOf(
             "sdk.sources=$sources", "sdk.sources.sha256=${sha256(sources)}",
             "sdk.sourceEntries=${requiredSources.joinToString()}",
-            "sdk.sources.verified=true", "scope=artifact contents only; IDEA source attachment and KDoc acceptance pending",
+            "sdk.sources.verified=true", "scope=artifact contents only; IDEA navigation and KDoc are checked separately and recorded in DEVELOPMENT",
         )
         navigationReport.get().asFile.apply { parentFile.mkdirs(); writeText(lines.joinToString("\n", postfix = "\n")) }
         lines.forEach(::println)
