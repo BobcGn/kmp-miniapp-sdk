@@ -3,10 +3,10 @@
     "pages/index/index"
   ],
   "window": {
-    "navigationBarTitleText": "shared",
-    "navigationBarBackgroundColor": "#ffffff",
+    "navigationBarTitleText": "KMP Greeting",
+    "navigationBarBackgroundColor": "#eaddff",
     "navigationBarTextStyle": "black",
-    "backgroundColor": "#f5f7fa"
+    "backgroundColor": "#eaddff"
   },
   "sitemapLocation": "sitemap.json"
 }

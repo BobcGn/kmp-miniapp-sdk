@@ -34,8 +34,11 @@ internal object MiniAppRootHostSupport {
             }
         }
         properties.set(OWNER, project.path)
-        wechat.sourceDirectory.convention(root.layout.projectDirectory.dir(MiniAppPluginDiagnostics.MINIAPP_SOURCE_DIRECTORY))
-        wechat.distributionDirectory.convention(root.layout.buildDirectory.dir(MiniAppPluginDiagnostics.MINIAPP_DISTRIBUTION_DIRECTORY))
+        val coordinator = root.extensions.findByType(MiniAppExtension::class.java)
+        if (coordinator?.logicProject?.orNull != project) {
+            wechat.sourceDirectory.convention(root.layout.projectDirectory.dir(MiniAppPluginDiagnostics.MINIAPP_SOURCE_DIRECTORY))
+            wechat.distributionDirectory.convention(root.layout.buildDirectory.dir(MiniAppPluginDiagnostics.MINIAPP_DISTRIBUTION_DIRECTORY))
+        }
 
         if (root != project) {
             // Root clean owns root build outputs; source host remains outside that directory.

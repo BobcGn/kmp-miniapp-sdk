@@ -1,40 +1,54 @@
-# KMP 消费者示例
+# 无服务器的 KMP 消费者示例
 
 [English](README-en.md)
 
-这是独立消费者构建，通过 `includeBuild("../..")` 使用当前仓库的 SDK 与 Gradle 插件。它不是 SDK 根构建的模块，也不代表已发布插件版本的消费结果。
+这是通过 `includeBuild("../..")` 使用当前 SDK/插件源码的独立消费者。根级产物模块选择不属于已发布的 0.1.1，不需要后端。
 
-## 目录
+## 目录与依赖边界
 
-- `androidApp/` 与 `iosApp/`：原生应用入口；Compose UI 位于 `shared` 的 Android/iOS source sets。
-- `shared/src/commonMain` 与 `commonTest`：共享 greeting 逻辑与测试。
-- `shared/src/miniappMain` 与 `miniappTest`：Mini App 逻辑、SDK 运行时信息读取与测试；不包含 renderer。
-- `miniApp/`：根级微信宿主源码，由 `initMiniApp` 创建后作为源码维护。`miniprogram/libs/` 是被忽略的生成物。
-- `build/miniapp-dist/`：被 Git 忽略的独立分发构建产物。
+- `core/`：`Greeting`、`sayHello`、平台信息与实现、Mini App 导出和逻辑测试。应用 Kotlin Multiplatform，不包含 Compose 依赖。
+- `shared/`：Android/iOS Compose UI、Compose 资源与 iOS controller。通过 `api(project(":core"))` 消费 core，core 不反向依赖 shared。
+- `androidApp/` 与 `iosApp/`：移动端应用入口。
+- `miniApp/`：根级微信宿主源码，用原生 WXML/WXSS 展示 greeting；生成库 `miniprogram/libs/` 被忽略。
+- `core/build/miniapp/bundle/` 与根级 `build/miniapp-dist/`：生成的构建产物。
 
-## 当前状态与限制
+## 根工程明确选择
 
-消费者启用了 `miniapp { wechat { rootHost.set(true) } }`，根级宿主初始化已通过。Mini App Kotlin 入口导出 `platformGreeting()`，使用共享 greeting 逻辑与 SDK 读取的平台、微信基础库版本，不需要后端。
-
-按照用户决定，Compose 资源依赖仍保留在 `commonMain`。它目前将 renderer 依赖引入 Mini App 依赖图，生成库同步被 SDK 宿主边界检查阻塞。本示例尚未通过完整 Mini App 构建和运行验收。微信页面仍是列出模块导出的初始化模板，尚未展示预期的 greeting 首屏。提交这些文件不构成 Android/iOS 构建或运行验收。BOB-122 仍待推进；BOB-126 的运行证据来自独立根级宿主 fixture。
-
-`project.config.json` 只包含 `touristappid`。在微信开发者工具中配置本地测试环境，私有工具配置和凭据不要提交。iOS 的 `TEAM_ID` 为空，签名时需要在本地提供。
-
-## 命令
-
-在本目录使用自身 Gradle Wrapper：
-
-```bash
-./gradlew --no-daemon --no-configuration-cache initMiniApp
-./gradlew --no-daemon --no-configuration-cache syncMiniApp assembleMiniApp verifyMiniApp
-./gradlew :shared:miniappTest
-./gradlew :androidApp:assembleDebug
-./gradlew :shared:testAndroidHostTest
-./gradlew :shared:iosSimulatorArm64Test
+```kotlin
+// Root build.gradle.kts
+plugins {
+    alias(libs.plugins.kotlinMultiplatform) apply false
+    id("io.github.bobcgn.miniapp")
+}
+miniapp {
+    logicProject.set(project(":core"))
+}
 ```
 
-第一条命令补齐宿主缺失文件，不覆盖已有文件。后两条 Mini App 命令仍受上述资源依赖问题阻塞。成功同步后，再将 `miniApp/` 导入微信开发者工具。iOS 使用 Xcode 打开 `iosApp/iosApp.xcodeproj`。这些命令描述工作流，不表示每条命令都已通过。
+所选 core 照常应用 KMP，由根工程在其中接入 Mini App。模块名是消费者决定，不是插件要求。本仓库将原混合 shared 模块手工迁移为 core 与 shared UI；插件不猜测名称、不创建模块、不移动源码、不排除依赖。所选模块不能再次覆盖根工程管理的宿主路径。已有模块内接入继续支持，带服务器示例保留该方式。
 
-## 版本管理边界
+迁移保留移动端 UI/资源，将已有 greeting 与 expect/actual 平台逻辑迁移但不改包名。`platformGreeting()` 与移动端 UI 调用同一 `Greeting().greet()`；微信平台/基础库信息由 SDK 提供，缺失时显示未知。页面 require 从旧 shared 模块改为实际 core 模块；初始化不重写手工页面。
 
-提交 Kotlin、宿主 UI、平台资源、Gradle 配置、Wrapper 文件、Xcode 工程文件及 `kotlin-js-store/yarn.lock`。忽略构建产物、宿主生成库、本机 SDK 路径、IDE/缓存文件、Xcode 用户状态和微信私有配置。忽略规则保留源码与依赖锁文件。
+## 构建与检查
+
+在本目录运行：
+
+```bash
+./gradlew --no-daemon --no-configuration-cache --console=plain \
+  :core:miniappTest syncMiniApp assembleMiniApp verifyMiniApp \
+  :androidApp:assembleDebug :shared:compileKotlinIosSimulatorArm64
+node miniApp/scripts/smoke.cjs
+node build/miniapp-dist/scripts/smoke.cjs
+```
+
+iOS 应用使用 Xcode 打开 `iosApp/iosApp.xcodeproj`。这些命令定义验收步骤，实际结果与限制记录如下。Node smoke 检查隔离的 mock devtools、Android 和无宿主场景，不代表真实微信运行。
+
+## 验证与限制
+
+原 shared/commonMain 的资源依赖曾导致 renderer 边界拒绝。现在资源只属于 shared UI 模块，Mini App 编译 core。这是依赖隔离，不是 Mini App 支持共享 Compose Res。2026-10-14，上述 Wrapper 命令通过：3 项 Mini App 测试、同步/组装/校验（24 files、verified=true）、Android assembleDebug 与 iOS Simulator Kotlin 编译。Source host 与 distribution 的 Node smoke 均通过 3 个模拟宿主场景。Android 保留 Compose 资源，Mini App 无 Compose/Skiko 模块，旧 shared 模块陈旧产物已移除。这些是构建/接线证据，不是设备运行验收。
+
+成功同步后使用本地测试配置导入 `miniApp/`，预期首屏为 `Hello, WeChat · devtools · 基础库 <实际基础库版本>!`，Console `demo.result=PASS`；分别检查重新编译/打开和独立 distribution。迁移后的无服务器示例需用户独立验收，带服务器示例的截图不能替代它。不会自动上传、发布或合并。
+
+## 版本管理
+
+保留源码、平台资源、Wrapper、工程配置和依赖锁文件；忽略生成库/build、微信私有配置与本机设置。工程配置只保留 touristappid；iOS TEAM_ID 仍为空。

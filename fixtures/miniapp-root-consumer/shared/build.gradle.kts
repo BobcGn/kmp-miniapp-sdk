@@ -1,11 +1,5 @@
 plugins {
-    kotlin("multiplatform") version "2.4.20"
-    id("io.github.bobcgn.miniapp")
+    kotlin("multiplatform")
 }
 
-// One producer, explicit opt-in. Kotlin sources and the bundle remain owned by this module.
-miniapp {
-    wechat {
-        rootHost.set(true)
-    }
-}
+// Mini App integration is applied here by the root's explicit logicProject selection.

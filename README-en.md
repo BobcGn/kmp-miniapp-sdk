@@ -412,6 +412,25 @@ This retains Kotlin sources and the bundle in the module, provides `miniApp/` at
 
 Initialization is explicit and creates missing files only; synchronization owns only `miniApp/miniprogram/libs/`; `clean` preserves handwritten host source. This configuration is not yet in the public 0.1.1 release. The repository's [multi-module consumer](fixtures/miniapp-root-consumer) uses current source; see the [development guide](docs/DEVELOPMENT-en.md) for complete safety and compatibility rules. Renderer checks still apply; root paths do not solve CMP resource compatibility.
 
+Alternatively, configure the plugin once at a non-KMP root and select an **existing compatible logic module**, regardless of its name or whether a server exists. The module must apply KMP; the root uses `apply false` for the Kotlin plugin:
+
+```kotlin
+// Root build.gradle.kts; the catalog alias must match your project's Kotlin plugin entry.
+plugins {
+    alias(libs.plugins.kotlinMultiplatform) apply false
+    id("io.github.bobcgn.miniapp")
+}
+
+miniapp {
+    logicProject.set(project(":sharedLogic"))
+    wechat {
+        sourceDirectory.set(layout.projectDirectory.dir("app/miniApp"))
+    }
+}
+```
+
+The plugin adds Mini App integration only to the selected module; it does not create `core`, migrate sources or remove UI dependencies. CMP UI/resources must remain outside that module’s Mini App dependency graph. Module-local integration remains compatible. This root selector is not in published 0.1.1; see DEVELOPMENT for validation and configuration ownership.
+
 ## Online resolution
 
 Gradle resolves plugin `io.github.bobcgn.miniapp:0.1.1` from the Gradle

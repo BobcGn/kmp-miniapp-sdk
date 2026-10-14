@@ -109,6 +109,8 @@ and provides no evidence of an actual upload or online consumer acceptance.
 The last check runs on Node and establishes module wiring only. **It is not WeChat host acceptance**, and the two are recorded separately. The separate accepted Developer Tools run used base library 3.17.3, rendered the shared greeting, count and SDK version, and reported `fixture.result=PASS` in the Console.
 
 
+`MiniAppRootProjectTest` exercises explicit root selection of a module named `domain`, configuration-cache reuse, real Kotlin tests and source/distribution Node wiring, preservation of an unrelated server, missing/non-KMP/self selection, role/configuration conflicts, and unchanged renderer/path rejection. `fixtures/miniapp-root-consumer` now uses root selection of `:shared`; it does not require a module called core. These checks are build/wiring evidence, not new WeChat runtime acceptance.
+
 `MiniAppRootHostTest` uses a multi-module TestKit consumer to verify root init/sync/assemble/verify, the actual compiler module name, configuration cache, stale-output cleanup after Kotlin changes, handwritten-file and clean protection, unique ownership, task collisions, outside/overlapping paths and legacy defaults. `fixtures/miniapp-root-consumer` is a persistent consumer without UI dependencies; its root host can be built with the repository Wrapper. Node proves module wiring only; WeChat execution requires separate acceptance.
 
 

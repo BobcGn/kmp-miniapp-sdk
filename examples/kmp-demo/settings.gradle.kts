@@ -34,3 +34,5 @@ includeBuild("../..")
 
 include(":androidApp")
 include(":shared")
+
+include(":core")

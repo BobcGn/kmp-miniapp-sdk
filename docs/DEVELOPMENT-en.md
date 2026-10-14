@@ -74,7 +74,7 @@ The runtime is a **public module coordinate**, `io.github.bobcgn:kmp-miniapp-sdk
 
 ### The `miniapp { }` extension
 
-The plugin registers one extension named `miniapp`. Its configuration is the current host, and the host's only setting is where its bundle is written:
+The plugin registers the `miniapp` extension. Module-local configuration controls host build paths; a non-KMP root may additionally select an existing producer with `logicProject` (see the multi-module section):
 
 ```kotlin
 plugins {
@@ -159,7 +159,7 @@ A consumer that already had a Kotlin/JS target before applying the plugin may ne
 
 The 0.1.1 public consumer path resolves the plugin from the Gradle Plugin Portal and the runtime coordinate from Maven Central. Repository fixtures still use composite substitution to exercise the working tree. A consumer that cannot resolve the runtime fails with Gradle's dependency-resolution error naming the coordinate; the plugin deliberately does not fall back to another version, another artifact, or a project path.
 
-The plugin creates no source-set model and no `dependsOn` edge of its own: hand-built ones are the unused-source-set model [ADR 0010](decisions/0010-miniapp-gradle-plugin-source-set-model-en.md) rejected. It only creates the two conventional Kotlin directories on disk; repeated application preserves existing files. Applying it to a project that does not apply the Kotlin Multiplatform plugin fails with a message naming the missing plugin.
+The plugin creates no source-set model and no `dependsOn` edge of its own: hand-built ones are the unused-source-set model [ADR 0010](decisions/0010-miniapp-gradle-plugin-source-set-model-en.md) rejected. It only creates the two conventional Kotlin directories on disk; repeated application preserves existing files. The compilation project must apply Kotlin Multiplatform; a non-KMP root may instead explicitly select a KMP subproject through logicProject.
 
 ```shell
 ./gradlew :miniapp-gradle-plugin:test
@@ -178,7 +178,7 @@ A consumer whose `commonMain` depends on another Kotlin Multiplatform project mu
 
 The tests are Gradle TestKit fixtures plus a contract test. The fixtures put the Kotlin Gradle Plugin and the plugin under test on one buildscript classpath deliberately: `withPluginClasspath()` injects the plugin under test into the plugin-resolution classpath only, so a fixture that resolves a second plugin separately cannot reproduce the classpath a real consumer build gives the plugin. One fixture carries `commonMain`, `miniappMain`, `commonTest` and `miniappTest` sources and asserts the executed test report, so the source-set wiring and the test execution are both proved by running tests rather than by reading the model. The fixtures consume the runtime through a composite build (`includeBuild` of this repository) so they test the current source rather than a previously released binary; the plugin itself never sees that path.
 
-The extension carries one setting — where the host's bundle is written. Business and host configuration stays outside Gradle by design, and the reasons are in the [mini app extension section](#the-miniapp--extension) above.
+The extension carries producer selection and host build paths. Business and host configuration stays outside Gradle by design, and the reasons are in the [mini app extension section](#the-miniapp--extension) above.
 
 ### Root WeChat host in a multi-module consumer (current source, not released)
 
@@ -203,6 +203,29 @@ miniapp {
 Only one module may select `rootHost`; existing root tasks of the same names are not replaced. Root source must stay inside the consumer root and outside its build directory; distribution must stay inside root build; the two may not overlap. Generated libraries must be strictly inside source and may not point to handwritten WXML/WXSS, App configuration or Kotlin/Swift/Java source trees. `clean` deletes build outputs and preserves host source. Root tasks retain renderer checks and do not solve CMP resource compatibility.
 
 This is a current-source addition, not part of the published 0.1.1 contract. `fixtures/miniapp-root-consumer` consumes current source through a composite build and demonstrates the multi-module workflow without UI dependencies. WeChat Developer Tools results require separate evidence.
+
+### Select an existing logic module from the root
+
+Apply the plugin to a non-KMP root and explicitly select an existing KMP subproject. The name is arbitrary (`:core`, `:shared`, `:domain` or a nested path); the presence of a server is irrelevant. The root declares the Kotlin plugin with `apply false` so it shares the Kotlin plugin classpath without creating a root compilation:
+
+```kotlin
+// Root build.gradle.kts; the catalog alias must match your project's Kotlin plugin entry.
+plugins {
+    alias(libs.plugins.kotlinMultiplatform) apply false
+    id("io.github.bobcgn.miniapp")
+}
+
+miniapp {
+    logicProject.set(project(":sharedLogic"))
+    wechat {
+        sourceDirectory.set(layout.projectDirectory.dir("app/miniApp"))
+    }
+}
+```
+
+The selected module applies Kotlin Multiplatform as usual; it need not also declare the Mini App plugin. Root selection applies Mini App integration there. The bundle remains in that module's `build/miniapp/bundle`; host source defaults to root `miniApp/`, or `app/miniApp/` as above, and distribution to root `build/miniapp-dist/`. Host path settings belong to the root in this mode; changing them again in the selected module is rejected instead of silently overriding them. `rootHost` is enabled implicitly for the selected module. The existing module-local `rootHost` workflow remains supported.
+
+The selector must name an existing subproject in the same build before it is evaluated. It cannot select the root itself; the root cannot simultaneously compile KMP and coordinate another module. A selected project without KMP fails. No module name is inferred, no `core` is created, and no source or dependency is migrated or removed. A module mixing CMP UI/resources into its inherited `commonMain` must first separate them into a client UI module/source set. Compatible logic-only `shared` can be selected directly. Shared KMP dependencies still need Mini App variants; selecting one entry module does not automatically configure its dependency projects. Dependency/path/unique-owner checks and actual WeChat acceptance remain required. This selector is current-source functionality, not part of published 0.1.1.
 
 ## Bundle size
 

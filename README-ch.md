@@ -379,6 +379,25 @@ miniapp {
 
 初始化只显式运行且只补缺失文件；同步仅管理 `miniApp/miniprogram/libs/`；`clean` 保留手写宿主。此配置尚未包含在公开的 0.1.1 中。仓库的 [多模块消费者](fixtures/miniapp-root-consumer) 使用当前源码；完整路径保护和兼容说明见 [开发指南](docs/DEVELOPMENT-ch.md)。renderer 检查继续适用，根级目录不解决 CMP 资源兼容性。
 
+也可在不编译 KMP 的根工程统一接入，明确选择**已有且兼容的逻辑模块**，名称不限，与是否有服务器无关。模块需要应用 KMP，根工程通过 `apply false` 声明 Kotlin 插件：
+
+```kotlin
+// Root build.gradle.kts; the catalog alias must match your project's Kotlin plugin entry.
+plugins {
+    alias(libs.plugins.kotlinMultiplatform) apply false
+    id("io.github.bobcgn.miniapp")
+}
+
+miniapp {
+    logicProject.set(project(":sharedLogic"))
+    wechat {
+        sourceDirectory.set(layout.projectDirectory.dir("app/miniApp"))
+    }
+}
+```
+
+插件只在所选模块增加 Mini App 接入，不创建 `core`、迁移源码或移除 UI 依赖。CMP UI/资源必须位于该模块的 Mini App 依赖图之外。模块内接入仍兼容。此根级选择器尚未包含在公开的 0.1.1 中；校验与配置归属见 DEVELOPMENT。
+
 ## 在线解析
 
 Gradle 从 Gradle Plugin Portal 解析插件 `io.github.bobcgn.miniapp:0.1.1`。插件随后添加

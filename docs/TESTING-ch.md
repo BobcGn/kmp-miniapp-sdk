@@ -106,6 +106,8 @@ python3 .github/scripts/test-release-workflow.py
 最后一项运行在 Node 上，只证明模块接线。**它不是微信宿主验收**，两者分别记录。单独完成的开发者工具验收使用基础库 3.17.3，页面渲染共享 greeting、计数与 SDK 版本，Console 报告 `fixture.result=PASS`。
 
 
+`MiniAppRootProjectTest` 验证根级明确选择名为 `domain` 的模块、配置缓存复用、真实 Kotlin 测试与 source/distribution Node 接线、无关服务器保留、缺失/非 KMP/自身选择、角色与配置冲突，以及 renderer/路径拒绝不变。`fixtures/miniapp-root-consumer` 现通过根工程选择 `:shared`，不要求模块名为 core。这些检查属于构建/接线证据，不是新增微信运行验收。
+
 `MiniAppRootHostTest` 使用多模块 TestKit 消费者验证根级 init/sync/assemble/verify、真实编译器模块名、配置缓存、Kotlin 修改后的陈旧生成物清理、手写文件与 clean 保护、唯一所有者、任务冲突、工程外/重叠路径及旧默认路径。`fixtures/miniapp-root-consumer` 是持久的无 UI 依赖消费者，根目录工程可用仓库 Wrapper 构建；Node 只证明模块接线，微信工具运行单独验收。
 
 

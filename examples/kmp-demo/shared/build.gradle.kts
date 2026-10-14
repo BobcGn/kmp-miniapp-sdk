@@ -1,9 +1,7 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
-    id("io.github.bobcgn.miniapp")
     alias(libs.plugins.androidMultiplatformLibrary)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
@@ -42,9 +40,9 @@ kotlin {
     }
 
     sourceSets {
-        // Keep the resource catalog shared for this experiment; UI code remains mobile-only.
-        // Mini App compatibility is checked against the actual resolved dependencies.
+        // UI/resources belong to this client module; only core is compiled for Mini App.
         commonMain.dependencies {
+            api(project(":core"))
             implementation(libs.compose.components.resources)
         }
         androidMain.dependencies {
@@ -74,17 +72,4 @@ kotlin {
 
 dependencies {
     androidRuntimeClasspath(libs.compose.uiTooling)
-}
-
-// No Mini App composables are compiled; shared resource compatibility is tested separately.
-composeCompiler {
-    targetKotlinPlatforms.set(KotlinPlatformType.values().filterNot { it == KotlinPlatformType.js })
-}
-
-
-// Root application layout (BOB-126); shared Res compatibility remains a separate blocker.
-miniapp {
-    wechat {
-        rootHost.set(true)
-    }
 }
