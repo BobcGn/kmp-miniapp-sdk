@@ -47,3 +47,7 @@ Developer Tools runtime acceptance remains pending: the user confirmed they will
 After synchronization, import `app/miniApp/` with a local test configuration. The first screen must show `Hello, WeChat · devtools · 基础库 <actual base-library version>!`, matching the selected base library. Console must report `demo.result=PASS` with no application exception. Recompile/reopen to verify repeat loading. The screenshot and runtime result must be recorded separately from Node/build results. Do not upload or publish during this demo acceptance.
 
 The committed configuration must use only `touristappid`; local private configuration and credentials must stay out of version control. Source host files remain outside build output so clean does not remove them. No SDK renderer or server dependency has been added.
+
+## JS/TS declaration navigation
+
+The host includes `miniprogram/jsconfig.json` and JSDoc type annotations on the bundle import. Open the standalone `miniprogram` directory in the IDE, then Cmd/Ctrl-click `platformGreeting()` and `MiniAppExports.sdkVersion()` in `pages/index/index.js`. Each should resolve to the corresponding generated declaration under `libs/`; actual IntelliJ IDEA 2026.2.3 navigation is pending retest, not established by the TypeScript checks. The page also logs `demo.sdkVersion`. See [DEVELOPMENT](../../docs/DEVELOPMENT-en.md#jsts-consumer-declarations-and-navigation-current-source-unreleased) for executable declaration checks and evidence requirements. No Kotlin navigation claim is made.

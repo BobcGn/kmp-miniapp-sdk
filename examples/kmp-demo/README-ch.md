@@ -52,3 +52,7 @@ iOS 应用使用 Xcode 打开 `iosApp/iosApp.xcodeproj`。这些命令定义验�
 ## 版本管理
 
 保留源码、平台资源、Wrapper、工程配置和依赖锁文件；忽略生成库/build、微信私有配置与本机设置。工程配置只保留 touristappid；iOS TEAM_ID 仍为空。
+
+## JS/TS 声明导航
+
+宿主包含 `miniprogram/jsconfig.json` 和 bundle 引用的 JSDoc 类型注解。在 IDE 独立打开 `miniprogram` 目录，对 `pages/index/index.js` 的 `platformGreeting()` 与 `MiniAppExports.sdkVersion()` 执行 Cmd/Ctrl 点击。两者预期定位到 `libs/` 中对应的生成声明；IntelliJ IDEA 2026.2.3 实际导航待复验，TypeScript 检查不能替代它。页面另外记录 `demo.sdkVersion`。可执行声明检查和证据要求见 [DEVELOPMENT](../../docs/DEVELOPMENT-ch.md#jsts-消费者声明与导航当前源码尚未发布)。不声称 Kotlin 导航已通过。
