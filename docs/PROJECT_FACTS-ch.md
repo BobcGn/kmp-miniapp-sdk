@@ -66,6 +66,8 @@ Capability support 由正在运行的宿主回答，而不是依据硬编码清�
 
 当前源码新增显式的根级宿主模式 `miniapp.wechat.rootHost`（默认 `false`，尚未发布）。选中的单个模块提供 bundle，消费者根工程提供宿主任务入口；默认 source 为根级 `miniApp/`，distribution 为根级 `build/miniapp-dist/`。旧模式路径不变。多模块示例为 `fixtures/miniapp-root-consumer`；该模式不引入 renderer，也不解决共享 CMP 资源的兼容性。配置、安全范围与命令见 DEVELOPMENT 的多模块消费者一节。
 
+`examples/kmp-demo-with-server` 是独立消费者：逻辑位于 `core`，Compose UI/资源位于 `app/shared`，微信宿主位于 `app/miniApp`。只有 `core` 应用 Mini App 插件。Greeting bundle 与 Mini App 测试在不继承客户端 renderer 的情况下构建通过；这是依赖隔离，不是普遍支持将 Compose 资源编译到 Mini App。开发者工具运行结果单独记录于示例 README。
+
 ## 3. 当前 Gradle Modules
 
 通过 `./gradlew projects` 验证：

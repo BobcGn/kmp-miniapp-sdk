@@ -66,6 +66,8 @@ Capability support is answered from the running host rather than from a hardcode
 
 Current source adds explicit root host mode through `miniapp.wechat.rootHost` (default `false`, not released). One selected module supplies the bundle and the consumer root exposes host task entry points; source defaults to root `miniApp/` and distribution to root `build/miniapp-dist/`. Legacy paths are unchanged. `fixtures/miniapp-root-consumer` is the multi-module example; this mode adds no renderer and does not solve shared CMP resource compatibility. See DEVELOPMENT's multi-module section for configuration, safety boundaries and commands.
 
+`examples/kmp-demo-with-server` is an independent consumer with logic in `core`, Compose UI/resources in `app/shared`, and the WeChat host in `app/miniApp`. Only `core` applies the Mini App plugin. Its greeting bundle and Mini App tests build successfully without inheriting the client renderer; this is dependency isolation, not general support for compiling Compose resources into Mini Apps. Developer Tools execution is recorded separately in the example README.
+
 ## 3. Current Gradle Modules
 
 Verified with `./gradlew projects`:
