@@ -150,7 +150,7 @@ node miniapp-gradle-plugin/src/test/js/verify-consumer-declarations.cjs examples
 
 只读校验器使用各宿主的实际配置与生成声明，检查真实页面的 `platformGreeting()` 和 `MiniAppExports.sdkVersion()` 定义位置，接受合法类型调用，并拒绝错误参数、错误返回值类型和不存在的 SDK API。TypeScript 包路径显式来自消费者构建，不新增 npm 安装。结果证明编译器／语言服务行为，不证明 IDE 行为。
 
-人工验收时，在目标 IDE 独立打开 `miniprogram` 目录，对 `pages/index/index.js` 中两个调用执行 Cmd/Ctrl 点击或“转到声明”，记录 IDE／版本、调用与目标路径及结果。目标必须是同一 bundle 的 `libs/<module>.d.ts` 和正确符号。跳到 JS 实现或出现同名候选列表不算声明导航通过。“转到类型声明”可能定位返回值类型，并不等同于 API 声明导航。IntelliJ IDEA 2026.2.3 导航仍待人工复验，不承诺所有 IDE 的导航行为一致。Kotlin 源码／KDoc 导航是独立工作。
+人工验收时，在目标 IDE 独立打开 `miniprogram` 目录，对 `pages/index/index.js` 中两个调用执行 Cmd/Ctrl 点击或“转到声明”，记录 IDE／版本、调用与目标路径及结果。目标必须是同一 bundle 的 `libs/<module>.d.ts` 和正确符号。跳到 JS 实现或出现同名候选列表不算声明导航通过。“转到类型声明”可能定位返回值类型，并不等同于 API 声明导航。2026-10-14，用户确认服务器 demo 的两个调用在 VS Code 1.141.0（Universal）均定位到对应生成声明；截图显示 `libs/kmp-demo-with-server-core-miniapp.d.ts` 中的 `platformGreeting(): string` 和 `sdkVersion(): string`。IntelliJ IDEA 2026.2.3 对 `sdkVersion()` 提供声明候选，而 `platformGreeting()` 进入 JS。这是已记录的 IDE 差异，不是 IDEA 验收通过。不承诺所有 IDE 导航行为一致。无服务器 demo、微信开发者工具编辑器及 Android Studio 尚无人工声明导航验收记录。未做修改前后的对照，不能证明新增配置是 VS Code 导航成功的必要条件。Kotlin 源码／KDoc 导航是独立工作。
 
 ### Mini App source set 的架构前置条件
 

@@ -72,7 +72,7 @@ Capability support 由正在运行的宿主回答，而不是依据硬编码清�
 
 `examples/kmp-demo` 演示无服务器消费者的手工分离：core 拥有已有共享逻辑和 Mini App 编译，shared 拥有 Compose UI/资源并依赖 core，根工程明确选择 :core。插件不会自动执行该迁移；迁移后的宿主需单独运行验收。
 
-当前源码在小程序宿主初始化时提供 JavaScript 分析配置与编译器声明类型注解，两个 KMP demo 已采用。消费者声明校验区分 TypeScript 解析与实际 IDE 导航。IntelliJ IDEA 2026.2.3 声明导航仍待人工复验，Kotlin 源码／KDoc 导航未变更。这些宿主变更尚未发布。
+当前源码在小程序宿主初始化时提供 JavaScript 分析配置与编译器声明类型注解，两个 KMP demo 已采用。消费者声明校验区分 TypeScript 解析与实际 IDE 导航。2026-10-14 用户验证服务器 demo 的 greeting 与 SDK 版本声明导航在 VS Code 1.141.0（Universal）通过。IntelliJ IDEA 2026.2.3 对 SDK 版本提供声明候选、对 greeting 则进入 JS，各 IDE 导航并不一致。Kotlin 源码／KDoc 导航未变更。这些宿主变更尚未发布。
 
 ## 3. 当前 Gradle Modules
 
