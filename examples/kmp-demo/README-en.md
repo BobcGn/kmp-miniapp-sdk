@@ -52,3 +52,7 @@ Import `miniApp/` with a local test configuration after successful sync. Expecte
 ## Version control
 
 Keep source, platform assets, Wrapper, project configuration and the dependency lockfile. Generated libraries/build outputs, private WeChat config and machine-local settings are ignored. Only touristappid is retained in project config; iOS TEAM_ID remains empty.
+
+## JS/TS declaration navigation
+
+The host includes `miniprogram/jsconfig.json` and JSDoc type annotations on the bundle import. Open the standalone `miniprogram` directory in the IDE, then Cmd/Ctrl-click `platformGreeting()` and `MiniAppExports.sdkVersion()` in `pages/index/index.js`. Each should resolve to the corresponding generated declaration under `libs/`; this no-server demo still requires its own manual navigation acceptance. The server demo has separate VS Code acceptance and an IDEA navigation difference; neither establishes this demo's IDE behavior. The page also logs `demo.sdkVersion`. See [DEVELOPMENT](../../docs/DEVELOPMENT-en.md#jsts-consumer-declarations-and-navigation-current-source-unreleased) for executable declaration checks and evidence requirements. No Kotlin navigation claim is made.

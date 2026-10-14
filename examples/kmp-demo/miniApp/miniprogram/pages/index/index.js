@@ -1,4 +1,5 @@
 // Kotlin owns the greeting logic and host inspection; WXML/WXSS own rendering.
+/** @type {typeof import('../../libs/kmp-demo-core-miniapp.js')} */
 const core = require('../../libs/kmp-demo-core-miniapp.js');
 
 Page({
@@ -9,6 +10,7 @@ Page({
       const greeting = core.org.example.kmp_demo.platformGreeting();
       this.setData({ greeting, failure: '' });
       console.log('demo.greeting=' + greeting);
+      console.log('demo.sdkVersion=' + core.io.github.bobcgn.miniapp.export.MiniAppExports.sdkVersion());
       console.log('demo.result=PASS');
     } catch (error) {
       this.setData({ greeting: '', failure: '暂时无法读取平台信息，请重新打开小程序。' });

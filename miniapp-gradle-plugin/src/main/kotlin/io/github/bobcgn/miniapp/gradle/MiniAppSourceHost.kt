@@ -48,6 +48,7 @@ internal object MiniAppSourceHost {
     public val templates: List<Template> = listOf(
         Template(destination = ".gitignore", resource = "gitignore"),
         Template("project.config.json"),
+        Template("miniprogram/jsconfig.json"),
         Template("miniprogram/app.js"),
         Template("miniprogram/app.json"),
         Template("miniprogram/app.wxss"),

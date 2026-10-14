@@ -17,6 +17,7 @@ Page({
 
   onLoad() {
     try {
+      /** @type {typeof import('../../libs/__MINIAPP_MODULE__.js')} */
       const miniAppModule = require('../../libs/__MINIAPP_MODULE__.js');
       const exported = Object.keys(miniAppModule).sort().join(',');
       this.setData({ exports: exported });

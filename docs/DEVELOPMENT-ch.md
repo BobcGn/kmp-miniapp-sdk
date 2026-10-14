@@ -156,6 +156,23 @@ build/miniapp/bundle/
 - **Kotlin/JS library 只导出 `@JsExport` 声明，其余一律被消除。** 因此消费者的宿主侧表面就是其 `miniappMain` 中自己的 `@JsExport` 声明；没有被导出的代码永远不会进入 bundle。测试 fixture 之所以给被断言的对象加上导出，正是这个原因。
 - **runtime SDK 是独立模块，而不是被内联进消费者模块**，因为 runtime 声明了自己的 Kotlin/JS 输出模块名。因此 bundle 中有多个 JavaScript 文件需要宿主加载，入口模块会 require 其余部分。
 
+### JS/TS 消费者声明与导航（当前源码，尚未发布）
+
+初始化的宿主包含 `miniprogram/jsconfig.json`，启用 JavaScript 分析、Node16 模块解析和不生成文件。页面在原有 CommonJS `require()` 旁使用 JSDoc `typeof import(...)` 类型注解：注解向工具指明编译器声明，微信仍执行 JavaScript。普通宿主文件的 `checkJs` 关闭，因为最小宿主没有提供完整微信环境 API 类型；这不是完整的宿主类型检查配置。初始工程扫描排除生成的 `libs/**/*.js`，纳入 `libs/**/*.d.ts`；这不会阻止 IDE 打开 JS 实现。插件不手写或改写声明。
+
+`initMiniApp` 补充缺失配置并保留已有用户文件。已有宿主显式加入配置与注解；再次初始化不会迁移或重写页面。`examples/kmp-demo` 与 `examples/kmp-demo-with-server` 都演示该配置及真实 greeting／SDK 版本调用。生成库仍由 `syncMiniApp` 管理。
+
+各 demo 使用自己的 Gradle Wrapper 同步 bundle 后，在 SDK 仓库根目录执行：
+
+```shell
+node miniapp-gradle-plugin/src/test/js/verify-consumer-declarations.cjs examples/kmp-demo/miniApp/miniprogram examples/kmp-demo/build/js/node_modules/typescript
+node miniapp-gradle-plugin/src/test/js/verify-consumer-declarations.cjs examples/kmp-demo-with-server/app/miniApp/miniprogram examples/kmp-demo-with-server/build/js/node_modules/typescript
+```
+
+只读校验器使用各宿主的实际配置与生成声明，检查真实页面的 `platformGreeting()` 和 `MiniAppExports.sdkVersion()` 定义位置，接受合法类型调用，并拒绝错误参数、错误返回值类型和不存在的 SDK API。TypeScript 包路径显式来自消费者构建，不新增 npm 安装。结果证明编译器／语言服务行为，不证明 IDE 行为。
+
+人工验收时，在目标 IDE 独立打开 `miniprogram` 目录，对 `pages/index/index.js` 中两个调用执行 Cmd/Ctrl 点击或“转到声明”，记录 IDE／版本、调用与目标路径及结果。目标必须是同一 bundle 的 `libs/<module>.d.ts` 和正确符号。跳到 JS 实现或出现同名候选列表不算声明导航通过。“转到类型声明”可能定位返回值类型，并不等同于 API 声明导航。2026-10-14，用户确认服务器 demo 的两个调用在 VS Code 1.141.0（Universal）均定位到对应生成声明；截图显示 `libs/kmp-demo-with-server-core-miniapp.d.ts` 中的 `platformGreeting(): string` 和 `sdkVersion(): string`。IntelliJ IDEA 2026.2.3 对 `sdkVersion()` 提供声明候选，而 `platformGreeting()` 进入 JS。这是已记录的 IDE 差异，不是 IDEA 验收通过。不承诺所有 IDE 导航行为一致。无服务器 demo、微信开发者工具编辑器及 Android Studio 尚无人工声明导航验收记录。未做修改前后的对照，不能证明新增配置是 VS Code 导航成功的必要条件。Kotlin 源码／KDoc 导航是独立工作。
+
 ### Mini App source set 的架构前置条件
 
 `miniappMain` 继承 `commonMain`，因此 common source set 中的内容都会进入 Mini App compilation。它可以继承共享行为、model 与 state，但**不得**继承 Compose UI、Skiko 或浏览器 renderer：Compose UI 必须位于不作为 `miniappMain` 父 source set 的客户端 module 或 source set 中，例如 Compose 客户端应用自身的 UI source set。

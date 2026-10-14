@@ -47,3 +47,7 @@ Mini App 已导出 `org.example.kmp_demo_with_server.platformGreeting()`，与�
 成功同步后，用本地测试配置导入 `app/miniApp/`。首屏应显示 `Hello, WeChat · devtools · 基础库 <实际基础库版本>!`，与工具选择的基础库一致；Console 应报告 `demo.result=PASS`，无应用异常。重新编译或重新打开后检查重复加载。截图和运行结果必须与 Node/构建结果分别记录；本次示例验收不上传或发布。
 
 入库配置必须只使用 `touristappid`；本地私有配置和凭据不得纳入版本管理。宿主源码位于 build 外，clean 不删除它。此次没有给 SDK 增加 renderer 或服务器依赖。
+
+## JS/TS 声明导航
+
+宿主包含 `miniprogram/jsconfig.json` 和 bundle 引用的 JSDoc 类型注解。在 IDE 独立打开 `miniprogram` 目录，对 `pages/index/index.js` 的 `platformGreeting()` 与 `MiniAppExports.sdkVersion()` 执行 Cmd/Ctrl 点击。两者预期定位到 `libs/` 中对应的生成声明；2026-10-14 用户确认两个调用在 VS Code 1.141.0（Universal）均定位到正确声明，并提供目标截图。IntelliJ IDEA 2026.2.3 对 `sdkVersion()` 提供 `.d.ts` 候选，而 `platformGreeting()` 进入 JS，尚未实现一致的 IDEA 导航。自动化 TypeScript 检查不能替代这些人工观察。页面另外记录 `demo.sdkVersion`。可执行声明检查和证据要求见 [DEVELOPMENT](../../docs/DEVELOPMENT-ch.md#jsts-消费者声明与导航当前源码尚未发布)。不声称 Kotlin 导航已通过。

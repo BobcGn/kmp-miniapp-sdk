@@ -56,11 +56,15 @@ class MiniAppSourceHostTest {
         val page = File(source, "miniprogram/pages/index/index.js")
         val edited = "// edited by hand\nPage({ data: {}, onLoad() {} });\n"
         page.writeText(edited)
+        val config = File(source, "miniprogram/jsconfig.json")
+        val customConfig = """{"compilerOptions":{"allowJs":true},"include":["pages/**/*.js"]}"""
+        config.writeText(customConfig)
         File(source, "project.config.json").delete()
 
         val result = MiniAppSourceHost.initialize(source, "sample")
 
         assertEquals(edited, page.readText(), "the template must not overwrite an edited file")
+        assertEquals(customConfig, config.readText(), "initialization must preserve user type configuration")
         assertEquals(listOf("project.config.json"), result.created)
         assertTrue(result.skipped.contains("miniprogram/pages/index/index.js"))
     }

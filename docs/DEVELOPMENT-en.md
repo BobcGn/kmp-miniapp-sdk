@@ -158,6 +158,23 @@ Two consequences are worth stating because they surprise people:
 - **A Kotlin/JS library exports only `@JsExport` declarations, and eliminates everything else.** A consumer's host-facing surface is therefore its own `@JsExport` declarations in `miniappMain`; code nothing exports never reaches the bundle. This is why the fixtures export what they assert on.
 - **The runtime SDK is a separate module, not inlined** into the consumer's module, because the runtime declares its own Kotlin/JS output module name. The bundle therefore has more than one JavaScript file a host must load, and the entry module requires the rest.
 
+### JS/TS consumer declarations and navigation (current source, unreleased)
+
+The initialized host includes `miniprogram/jsconfig.json` with JavaScript analysis, Node16 module resolution and no emission. Its page uses a JSDoc `typeof import(...)` annotation alongside the unchanged CommonJS `require()`: the annotation points tooling at the compiler declaration, while WeChat still executes JavaScript. `checkJs` is disabled for ordinary host files because this minimal host does not supply the complete WeChat ambient API types; it is not a full host type-checking setup. Generated `libs/**/*.js` files are excluded from the initial project scan, while `libs/**/*.d.ts` is included; this does not prevent an IDE from opening a JS implementation. No declaration is handwritten or rewritten by the plugin.
+
+`initMiniApp` adds missing configuration and preserves existing user files. Existing hosts add the configuration and annotations explicitly; rerunning initialization never migrates or rewrites their pages. Both `examples/kmp-demo` and `examples/kmp-demo-with-server` demonstrate the configuration and actual greeting/SDK-version calls. Their generated libraries remain owned by `syncMiniApp`.
+
+From the SDK repository root, after each demo's Wrapper has synchronized its bundle, run:
+
+```shell
+node miniapp-gradle-plugin/src/test/js/verify-consumer-declarations.cjs examples/kmp-demo/miniApp/miniprogram examples/kmp-demo/build/js/node_modules/typescript
+node miniapp-gradle-plugin/src/test/js/verify-consumer-declarations.cjs examples/kmp-demo-with-server/app/miniApp/miniprogram examples/kmp-demo-with-server/build/js/node_modules/typescript
+```
+
+The read-only verifier uses each host's actual configuration and generated declarations. It checks real-page definition locations for `platformGreeting()` and `MiniAppExports.sdkVersion()`, accepts valid typed calls, and rejects wrong arguments, a wrong return type and an unknown SDK API. The TypeScript package path is explicit and comes from the consumer build, not a new npm installation. These results prove compiler/language-service behavior, not IDE behavior.
+
+For manual acceptance, open the standalone `miniprogram` directory in the target IDE and use Cmd/Ctrl-click or Go to Declaration on both calls in `pages/index/index.js`. Record the IDE/version, source and destination paths, and navigation result. The target must be the same bundle's `libs/<module>.d.ts` and the correct symbol. A JS implementation destination or a same-name chooser is not a passing declaration-navigation result. Go to Type Declaration can instead locate the return type; it is not equivalent to locating the API declaration. On 2026-10-14, the user confirmed both calls navigate to the matching generated declarations in VS Code 1.141.0 (Universal), using the server demo; screenshots show `platformGreeting(): string` and `sdkVersion(): string` in `libs/kmp-demo-with-server-core-miniapp.d.ts`. IntelliJ IDEA 2026.2.3 instead offers a declaration candidate for `sdkVersion()` while `platformGreeting()` navigates to JS. This is a recorded IDE difference, not a passing IDEA result. No universal IDE navigation guarantee is claimed. The no-server demo, WeChat Developer Tools editor and Android Studio have no manual declaration-navigation acceptance recorded. No before/after comparison establishes that the new configuration is necessary for VS Code navigation. Kotlin source/KDoc navigation is separate work.
+
 ### The Mini App source set's architecture precondition
 
 `miniappMain` inherits `commonMain`, so whatever a common source set carries reaches the Mini App compilation. It may inherit shared behaviour, models and state. It may **not** inherit Compose UI, Skiko, or a browser renderer: Compose UI belongs in a client module or source set that is not a parent of `miniappMain`, such as a Compose client application's own UI source set.
