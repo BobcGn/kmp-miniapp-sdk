@@ -73,7 +73,7 @@ runtime 是**公共 module 坐标** `io.github.bobcgn:kmp-miniapp-sdk:<version>`
 
 ### `miniapp { }` extension
 
-插件注册一个名为 `miniapp` 的 extension。它配置的是当前宿主，而宿主目前唯一的设置是 bundle 的写入位置：
+插件注册名为 `miniapp` 的 extension。模块内配置管理宿主构建路径；不编译 KMP 的根工程还可用 `logicProject` 选择已有产物模块，见多模块一节：
 
 ```kotlin
 plugins {
@@ -157,7 +157,7 @@ build/miniapp/bundle/
 
 0.1.1 公开消费路径从 Gradle Plugin Portal 解析插件、从 Maven Central 解析 runtime 坐标。仓库 fixture 仍使用 composite substitution 验证当前工作树。无法解析 runtime 时消费者会看到 Gradle 指明该坐标的依赖解析错误；插件有意不回退到其他版本、其他 artifact 或 project path。
 
-插件自身不创建任何 source-set 模型与 `dependsOn` 边：手工搭建的正是 [ADR 0010](decisions/0010-miniapp-gradle-plugin-source-set-model-ch.md) 否决的「未使用 source set」模型。它只在磁盘上创建两个标准 Kotlin 目录；重复应用会保留现有文件。把它应用到未应用 Kotlin Multiplatform 插件的项目会失败，并给出指明缺失插件的错误信息。
+插件自身不创建任何 source-set 模型与 `dependsOn` 边：手工搭建的正是 [ADR 0010](decisions/0010-miniapp-gradle-plugin-source-set-model-ch.md) 否决的「未使用 source set」模型。它只在磁盘上创建两个标准 Kotlin 目录；重复应用会保留现有文件。编译项目必须应用 Kotlin Multiplatform；不编译 KMP 的根工程可改用 logicProject 明确选择 KMP 子模块。
 
 ```shell
 ./gradlew :miniapp-gradle-plugin:test
@@ -173,7 +173,54 @@ build/miniapp/bundle/
 
 测试由 Gradle TestKit fixture 与契约测试组成。fixture 有意把 Kotlin Gradle Plugin 与被测插件放在同一个 buildscript classpath 上：`withPluginClasspath()` 只把被测插件注入 plugin-resolution classpath，因此单独解析第二个插件的 fixture 无法复现真实消费者构建给插件的 classpath。其中一个 fixture 带有 `commonMain`、`miniappMain`、`commonTest` 与 `miniappTest` 源码，并断言实际执行出的测试报告，因此 source set 接线与测试执行都是由运行测试证明的，而不是靠读模型。fixture 经 composite build（`includeBuild` 本仓库）消费 runtime，以便测试当前源码而不是已经发布的旧 binary；插件自身永远看不到该路径。
 
-extension 只承载一个设置 —— 宿主 bundle 的写入位置。业务与宿主配置按设计留在 Gradle 之外，理由见上文 `miniapp { }` extension 一节。
+extension 只承载产物模块选择与宿主构建路径。业务与宿主配置按设计留在 Gradle 之外，理由见上文 `miniapp { }` extension 一节。
+
+### 多模块消费者的根级微信工程（当前源码，尚未发布）
+
+插件默认仍以应用插件的模块为宿主路径归属，保持现有单项目工作流。多模块消费者可以在唯一的最终产物模块（例如 `shared`）显式选择根级宿主：
+
+```kotlin
+miniapp {
+    wechat {
+        rootHost.set(true)
+    }
+}
+```
+
+`rootHost` 默认为 `false`。启用后，模块的 Kotlin source sets 与 `build/miniapp/bundle` 不变；宿主默认位于消费者根目录 `miniApp/`，生成库位于其中的 `miniprogram/libs/`，独立验收工程默认位于根目录 `build/miniapp-dist/`。根工程提供 `initMiniApp`、`syncMiniApp`、`assembleMiniApp`、`verifyMiniApp` 入口，委托给选中的模块。只有显式调用 `initMiniApp` 才创建宿主；导入插件与 IDE sync 不创建微信工程。
+
+```shell
+./gradlew initMiniApp
+./gradlew syncMiniApp
+./gradlew assembleMiniApp verifyMiniApp
+```
+
+只能有一个模块选择 `rootHost`，已有同名根级任务不会被覆盖。根级 source 必须位于消费者根工程内且在根级 build 外；distribution 必须在根级 build 内；二者不能重叠。生成库必须严格位于 source 内，不能指向含 WXML/WXSS、App 配置或 Kotlin/Swift/Java 源码的手写目录。`clean` 删除 build 输出，保留宿主源码。根级任务沿用 renderer 检查，不解决 CMP 资源依赖的宿主兼容性。
+
+此配置是当前源码新增的能力，不属于已发布的 0.1.1 契约。`fixtures/miniapp-root-consumer` 通过 composite build 消费当前源码，演示没有 UI 依赖的多模块工作流；微信开发者工具运行结果需独立记录。
+
+### 在根工程明确选择已有逻辑模块
+
+将插件应用到不编译 KMP 的根工程，明确指定已有 KMP 子模块。名称可以是 `:core`、`:shared`、`:domain` 或嵌套路径，是否有服务器不影响选择。根工程用 `apply false` 声明 Kotlin 插件，共享插件 classpath，但不创建根工程 compilation：
+
+```kotlin
+// Root build.gradle.kts; the catalog alias must match your project's Kotlin plugin entry.
+plugins {
+    alias(libs.plugins.kotlinMultiplatform) apply false
+    id("io.github.bobcgn.miniapp")
+}
+
+miniapp {
+    logicProject.set(project(":sharedLogic"))
+    wechat {
+        sourceDirectory.set(layout.projectDirectory.dir("app/miniApp"))
+    }
+}
+```
+
+所选模块照常应用 Kotlin Multiplatform，不必再声明 Mini App 插件；根级选择会在其中接入 Mini App。Bundle 仍位于该模块的 `build/miniapp/bundle`；宿主源码默认是根级 `miniApp/`，也可如上配置为 `app/miniApp/`；distribution 默认是根级 `build/miniapp-dist/`。此模式的宿主路径由根工程配置，所选模块再次修改这些字段会报错，不静默覆盖。所选模块隐式启用 `rootHost`；现有模块内 `rootHost` 接入继续兼容。
+
+必须在子模块求值前选择同一构建内的已有子模块，不能选择根工程自身；根工程不能同时编译 KMP 并协调另一个模块。所选模块缺少 KMP 会失败。不推断模块名，不自动创建 `core`，不迁移源码或移除依赖。若模块的 `commonMain` 混入 CMP UI/资源，需先分离到客户端 UI 模块或 source set；兼容的纯逻辑 `shared` 可直接选用。共享 KMP 依赖仍需提供 Mini App variant，选择一个入口不会自动配置其依赖项目。依赖、路径、唯一所有者检查与真实微信验收仍然必要。此选择器属于当前源码能力，不属于已发布的 0.1.1。
 
 ## 包体积
 

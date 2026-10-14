@@ -1,6 +1,8 @@
 package io.github.bobcgn.miniapp.gradle
 
 import org.gradle.api.Action
+import org.gradle.api.Project
+import org.gradle.api.provider.Property
 import org.gradle.api.file.ProjectLayout
 import org.gradle.api.model.ObjectFactory
 import javax.inject.Inject
@@ -29,7 +31,7 @@ import javax.inject.Inject
  * Every one of those has a default, so the block is optional twice over: applying the plugin already
  * targets the current host, and a consumer that configures nothing gets the documented layout.
  *
- * Only build paths are configurable. Declaring a host is not a business configuration surface, and
+ * Only producer selection and build paths are configurable. Declaring a host is not a business configuration surface, and
  * nothing about the mini program itself — its identifier, its pages, its capabilities, its markup —
  * is reachable from here.
  *
@@ -44,6 +46,16 @@ public abstract class MiniAppExtension @Inject constructor(
 ) {
 
     /**
+     * Explicit existing KMP project to compile when this plugin is applied to the build root.
+     *
+     * Unset for the existing module-local workflow. A root coordinator selects one subproject,
+     * applies the Mini App plugin there and exposes its host tasks at the root. Names are arbitrary;
+     * no project, source migration or UI dependency exclusion is inferred or created.
+     * The root declares the Kotlin Multiplatform plugin with apply false to share its classpath.
+     */
+    public abstract val logicProject: Property<Project>
+
+    /**
      * The current host.
      *
      * One property per host rather than a string map: a host's build configuration is typed, and a
@@ -51,6 +63,7 @@ public abstract class MiniAppExtension @Inject constructor(
      */
     public val wechat: WeChatHostConfiguration =
         objects.newInstance(WeChatHostConfiguration::class.java).apply {
+            rootHost.convention(false)
             bundleDirectory.convention(layout.buildDirectory.dir(MiniAppPluginDiagnostics.MINIAPP_BUNDLE_DIRECTORY))
             sourceDirectory.convention(layout.projectDirectory.dir(MiniAppPluginDiagnostics.MINIAPP_SOURCE_DIRECTORY))
             distributionDirectory.convention(

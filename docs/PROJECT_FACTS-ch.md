@@ -44,7 +44,7 @@
 - 微信订阅消息请求已实现并通过自动化检查；Android 真机已验证运行时支持与零模板保护，弹窗结果仍受阻于当前 AppID 下的有效模板
 - 微信标准支付已实现，并作为「后端参数的类型化转发器」通过自动化检查；Android 真机已验证运行时支持与「未配置参数」保护，真实支付验收仍受阻塞于合法商户环境与可信后端
 - 虚拟支付未实现：不存在请求、结果、capability 条目或导出，且所带开发者工具基础库中没有可发现的虚拟支付契约。其边界记录于 ARCHITECTURE，状态在能力矩阵中为 `Planned`
-- `io.github.bobcgn.miniapp` Gradle 插件已实现并有自动化覆盖。把它应用到 Kotlin Multiplatform 项目会提供 `miniappMain` 与 `miniappTest`，二者是由 compilation 拥有、以 `commonMain` / `commonTest` 为父边的真实 source set；为 IDE 与 CLI 消费者创建标准的 `src/miniappMain/kotlin` 与 `src/miniappTest/kotlin` 目录；绑定 Node.js test run 使 `miniappTest` 真正执行测试；把 runtime SDK 接入 `miniappMain`，使消费者无需声明 artifact 即可针对公开 API 编译；并提供 `assembleMiniAppBundle`，把 Kotlin/JS production library —— 消费者模块与其声明，以及它所需的 runtime 模块 —— 重新发布到 `build/miniapp/bundle`，作为 compiler-managed Mini App distribution。它会对未应用 Kotlin Multiplatform 插件的项目报错，也会在 `miniappRuntimeClasspath` 携带客户端 renderer 时报错。它通过 `miniapp { wechat { } }` extension 配置，其中唯一的设置是当前宿主的 bundle 目录，默认为 `build/miniapp/bundle`
+- `io.github.bobcgn.miniapp` Gradle 插件已实现并有自动化覆盖。把它应用到 Kotlin Multiplatform 项目会提供 `miniappMain` 与 `miniappTest`，二者是由 compilation 拥有、以 `commonMain` / `commonTest` 为父边的真实 source set；为 IDE 与 CLI 消费者创建标准的 `src/miniappMain/kotlin` 与 `src/miniappTest/kotlin` 目录；绑定 Node.js test run 使 `miniappTest` 真正执行测试；把 runtime SDK 接入 `miniappMain`，使消费者无需声明 artifact 即可针对公开 API 编译；并提供 `assembleMiniAppBundle`，把 Kotlin/JS production library —— 消费者模块与其声明，以及它所需的 runtime 模块 —— 重新发布到 `build/miniapp/bundle`，作为 compiler-managed Mini App distribution。它会对缺少 Kotlin Multiplatform 的编译项目报错，但允许不编译 KMP 的根工程明确选择 KMP 逻辑子模块，也会在 `miniappRuntimeClasspath` 携带客户端 renderer 时报错。它通过 `miniapp { wechat { } }` extension 配置，用于选择产物模块和配置宿主构建路径；模块 bundle 默认为 `build/miniapp/bundle`
 - Mini App distribution pipeline 已实现并有自动化覆盖。`initMiniApp` 依据插件作为资源随附的模板在消费者项目中创建微信 source host `miniApp/`，只写入缺失的文件，绝不重写已存在的文件；它只在被显式调用时运行，绝不在插件应用、Gradle 配置或 IDE sync 期间运行。`syncMiniApp` 把 compiler-managed bundle 重新发布到 `miniApp/miniprogram/libs/`，替换上一次 bundle 留下的内容。`assembleMiniApp` 由 source host 与*当前*编译产物在 `build/miniapp-dist/` 组装出完整、独立的微信工程，既不要求先运行 `syncMiniApp`，也不写入 source host。`verifyMiniApp` 只读取组装好的 distribution：解析 `miniprogramRoot`、检查每个声明页面的入口文件、检查 generated library area 恰好包含一个 module、一个 declaration 及其 npm manifest、解析 distribution 内的每一个 `require()`，并拒绝绝对路径、`node_modules` 与回指原工程的引用。source host、其 generated library area 与 distribution 是三个路径、三个归属，因此 `clean` 只删除构建产物，从不删除 source host
 - 若消费者的 `commonMain` 依赖另一个 Kotlin Multiplatform project，则必须对该 project 同样应用 Mini App 插件：该依赖经由 Mini App variant 解析，不提供该 variant 的 project 会产生 variant 解析错误，且不存在自动回退。把依赖移出 `commonMain` 以规避该问题是不可接受的变通
 - 客户端 / runtime 架构边界已记录并被强制：后端拥有业务事实，本 SDK 拥有客户端行为与宿主能力，宿主拥有渲染。当 runtime SDK 导入或声明 UI framework namespace 或 artifact 时，`:kmp-miniapp-sdk:checkArchitectureBoundaries` 会让构建失败，且它是 `:kmp-miniapp-sdk:check` 的一部分
@@ -63,6 +63,15 @@ App 级 lifecycle capability 建模应用是否呈现在用户面前。它是唯
 
 Capability support 由正在运行的宿主回答，而不是依据硬编码清单。`MiniAppHost.capabilitySupport` 报告 `Supported`、`Unsupported`、`VersionDependent` 或 `PermissionDependent`，`requireSupported` 会把除 `Supported` 外的每个状态转换为 `MiniAppException.UnsupportedCapability`。微信 gate 读取 `wx.canIUse` 与基础库版本，优先使用 `wx.getAppBaseInfo`，并以已停止维护的 `wx.getSystemInfoSync` 作为回退，因此同一份构建在两个宿主上可以给出不同答案。版本与平台读取推迟到各自首次使用并分别缓存；`wx.canIUse` 保持实时查询。Kotlin/JS、fake-host、CommonJS 与 TypeScript 自动检查均已通过。开发者工具（基础库 3.17.2）与 Android 真机（OnePlus PLQ110、Android 36、微信 8.0.76）均已验证 `Supported` 与 `Unsupported` 两种状态。
 
+
+当前源码新增显式的根级宿主模式 `miniapp.wechat.rootHost`（默认 `false`，尚未发布）。选中的单个模块提供 bundle，消费者根工程提供宿主任务入口；默认 source 为根级 `miniApp/`，distribution 为根级 `build/miniapp-dist/`。旧模式路径不变。多模块示例为 `fixtures/miniapp-root-consumer`；该模式不引入 renderer，也不解决共享 CMP 资源的兼容性。配置、安全范围与命令见 DEVELOPMENT 的多模块消费者一节。
+
+`examples/kmp-demo-with-server` 是独立消费者：逻辑位于 `core`，Compose UI/资源位于 `app/shared`，微信宿主位于 `app/miniApp`。只有 `core` 应用 Mini App 插件。Greeting bundle 与 Mini App 测试在不继承客户端 renderer 的情况下构建通过；这是依赖隔离，不是普遍支持将 Compose 资源编译到 Mini App。开发者工具运行结果单独记录于示例 README。
+
+当前源码还提供根级 `miniapp.logicProject`，明确选择已有且兼容的 KMP 子模块，与模块名称和服务器无关。根工程通过 Kotlin `apply false` 接入，只在所选产物模块应用 Mini App 集成，保留其 compilation/bundle 归属。不创建模块，不迁移源码或 UI 依赖。模块内接入继续支持，此 API 尚未发布；`fixtures/miniapp-root-consumer` 演示根级选择。
+
+`examples/kmp-demo` 演示无服务器消费者的手工分离：core 拥有已有共享逻辑和 Mini App 编译，shared 拥有 Compose UI/资源并依赖 core，根工程明确选择 :core。插件不会自动执行该迁移；迁移后的宿主需单独运行验收。
+
 ## 3. 当前 Gradle Modules
 
 通过 `./gradlew projects` 验证：
@@ -73,7 +82,7 @@ Root project 'kmp-miniapp-sdk'
 \--- Project ':kmp-miniapp-sdk'
 ```
 
-`:kmp-miniapp-sdk` 是本文档其余部分描述的 Kotlin/JS runtime SDK；其源码位于 `sdk/`，而其 Gradle project 名（也就是发布的 artifact id）是 `kmp-miniapp-sdk`，这正是 composite build substitution 匹配的名字。`:miniapp-gradle-plugin` 是 `io.github.bobcgn.miniapp` Gradle 插件，只负责构建集成与开发体验：它检测 Kotlin Multiplatform 插件，注册 [ADR 0010](decisions/0010-miniapp-gradle-plugin-source-set-model-ch.md) 选定的 `miniapp` 平台 target 及其 Node.js test run，把 runtime SDK 接入 `miniappMain`，并在缺少 Kotlin Multiplatform 插件时给出指明原因的报错。注册 target 才使 `miniappMain` 与 `miniappTest` 成为由 compilation 拥有、并带有 `commonMain` / `commonTest` 父边的真实 source set；插件还会在 common source 目录同级实体化它们的标准 Kotlin 目录，且不替换现有文件；test run 才使 `miniappTest` 拥有一个真正执行的任务；该依赖才使消费者能够直接针对公开 API 编写 `miniappMain` 代码而不必声明任何 artifact。它还提供 `assembleMiniAppBundle`，把 Kotlin/JS production library 重新发布到一个宿主集成可以依赖的稳定路径；提供四个 distribution 任务 `initMiniApp`、`syncMiniApp`、`assembleMiniApp` 与 `verifyMiniApp`；并通过 `miniapp { wechat { } }` extension 配置它们的路径 —— bundle、source host、其中的 generated library area 与 distribution。它把 Mini App source host 模板作为插件资源随附；它不包含微信 runtime 代码。
+`:kmp-miniapp-sdk` 是本文档其余部分描述的 Kotlin/JS runtime SDK；其源码位于 `sdk/`，而其 Gradle project 名（也就是发布的 artifact id）是 `kmp-miniapp-sdk`，这正是 composite build substitution 匹配的名字。`:miniapp-gradle-plugin` 是 `io.github.bobcgn.miniapp` Gradle 插件，只负责构建集成与开发体验：它检测 Kotlin Multiplatform 插件，注册 [ADR 0010](decisions/0010-miniapp-gradle-plugin-source-set-model-ch.md) 选定的 `miniapp` 平台 target 及其 Node.js test run，把 runtime SDK 接入 `miniappMain`，并在所选编译项目缺少 Kotlin Multiplatform 时给出指明原因的报错；不编译 KMP 的根工程可通过 logicProject 协调该项目。注册 target 才使 `miniappMain` 与 `miniappTest` 成为由 compilation 拥有、并带有 `commonMain` / `commonTest` 父边的真实 source set；插件还会在 common source 目录同级实体化它们的标准 Kotlin 目录，且不替换现有文件；test run 才使 `miniappTest` 拥有一个真正执行的任务；该依赖才使消费者能够直接针对公开 API 编写 `miniappMain` 代码而不必声明任何 artifact。它还提供 `assembleMiniAppBundle`，把 Kotlin/JS production library 重新发布到一个宿主集成可以依赖的稳定路径；提供四个 distribution 任务 `initMiniApp`、`syncMiniApp`、`assembleMiniApp` 与 `verifyMiniApp`；并通过 `miniapp { wechat { } }` extension 配置它们的路径 —— bundle、source host、其中的 generated library area 与 distribution。它把 Mini App source host 模板作为插件资源随附；它不包含微信 runtime 代码。
 
 插件接入的 runtime 坐标为 `io.github.bobcgn:kmp-miniapp-sdk:<version>`。`gradle/libs.versions.toml` 是该版本的唯一来源：插件侧的坐标由它生成成资源，SDK 自身的 `MiniAppSdk.VERSION` 也由同一处生成，因此二者都不可能偏离当前构建的版本。插件只把它加入 `miniappMain`，`miniappTest` 通过 source-set hierarchy 继承。0.1.1 是当前最新公开版本：0.1.0 是首个公开发布版本，0.1.1 增加了 distribution pipeline，且未改变 0.1.0 引入的任何东西。正式版本分别发布到 Maven Central 与 Gradle Plugin Portal；仓库开发 fixture 使用 composite substitution，以便测试当前工作树而不是已发布的 binary。
 
@@ -297,7 +306,7 @@ Kotlin/JS platform variants 及其传递依赖由 Gradle 在依赖解析期间�
 - 可以携带客户端 renderer 的 Mini App 宿主 bundle：当 `miniappRuntimeClasspath` 携带 Compose、Skiko、Compose 专用的 AndroidX 集成 artifact、`kotlinx-browser` 或 `kotlinx-html` 时，`checkMiniAppHostBoundary` 会让构建失败。非 Compose 的 lifecycle、saved-state 与 navigation primitives 仍允许作为共享行为。消费者的 `miniappMain` 可以继承共享行为与 state，但 Compose UI 必须位于不作为 `miniappMain` 父 source set 的客户端 module 或 source set 中
 - npm publication
 - Maven publication
-- 承载宿主业务配置的 Gradle DSL。`miniapp { }` extension 已存在，且只承载一个构建设置 —— 微信宿主的 bundle 目录 —— 并有意不含其他内容：没有 AppID 或密钥、没有商户或支付材料、没有订单或签名数据、没有 API token、没有模板 ID、没有 presentation state、没有 markup 或 View 定义。插件会组装 compiler-managed Mini App distribution，但不执行上传、发布或宿主部署。其消费者夹具 bundle 已在基础库 3.17.3 上完成微信开发者工具验收；该结果不会把部署变成插件职责
+- 承载宿主业务配置的 Gradle DSL。`miniapp { }` extension 已存在，且只承载明确的产物模块选择与宿主构建路径 —— 并有意不含其他内容：没有 AppID 或密钥、没有商户或支付材料、没有订单或签名数据、没有 API token、没有模板 ID、没有 presentation state、没有 markup 或 View 定义。插件会组装 compiler-managed Mini App distribution，但不执行上传、发布或宿主部署。其消费者夹具 bundle 已在基础库 3.17.3 上完成微信开发者工具验收；该结果不会把部署变成插件职责
 - 第二个 Mini App 宿主。当前只有微信；extension 的形状使得新增宿主是「新增一个 `MiniAppHostConfiguration` 子类型与一个访问器」，而不是把微信那个类型加宽
 - 支付宝或 Telegram Host implementations
 

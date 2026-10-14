@@ -1,0 +1,20 @@
+.page {
+  box-sizing: border-box;
+  min-height: 100vh;
+  padding: 48rpx 32rpx;
+  padding-bottom: calc(48rpx + env(safe-area-inset-bottom));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.greeting, .failure {
+  font-size: 32rpx;
+  line-height: 1.6;
+  text-align: center;
+  color: #1d192b;
+}
+
+.failure {
+  color: #b3261e;
+}

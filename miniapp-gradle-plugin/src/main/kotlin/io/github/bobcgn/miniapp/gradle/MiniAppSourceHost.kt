@@ -93,11 +93,10 @@ internal object MiniAppSourceHost {
     public fun initialize(
         sourceDirectory: File,
         projectName: String,
+        moduleName: String = defaultModuleName(projectName),
     ): Result {
         val created = mutableListOf<String>()
         val skipped = mutableListOf<String>()
-        val moduleName = defaultModuleName(projectName)
-
         templateDestinations.forEach { relativePath ->
             val target = File(sourceDirectory, relativePath)
             if (target.exists()) {

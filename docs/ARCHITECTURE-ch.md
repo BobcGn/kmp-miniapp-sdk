@@ -328,7 +328,7 @@ Kotlin/JS compilation
 
 插件隐藏构建接线，而不隐藏语义。它不手工搭建 compilation 或 source set，不通过不受支持的 API 把 source set 挂到 compilation 上，也不把产物组装任务呈现为消费者契约。把本仓库自身 SDK 分发到微信示例的 `buildMiniAppSdk`，是组装环节的基础证据，而不是消费者工作流。
 
-`:miniapp-gradle-plugin` module 就是该插件本身。它注册 `miniapp` target 与该 target 的 Node.js test run，把 runtime SDK 接入 `miniappMain`，并对未应用 Kotlin Multiplatform 插件的项目报错。这些注册就是它全部的模型提供内容：`miniappMain`、`miniappTest`、拥有它们的 compilation，以及它们与 `commonMain` / `commonTest` 的边，全部来自 Kotlin Gradle Plugin；插件从不手工搭建 source set 或层级边，因为手工搭建的正是 [ADR 0010](decisions/0010-miniapp-gradle-plugin-source-set-model-ch.md) 否决的「未使用 source set」模型。另外，它会在插件应用期间实体化标准的 `src/miniappMain/kotlin` 与 `src/miniappTest/kotlin` 目录，使 IDE 导入在任何项目向导生成结果上都能显示这两个空 source set。这项文件系统便利是幂等的，会保留现有源码，且不改变 source-set 模型的归属。
+`:miniapp-gradle-plugin` module 就是该插件本身。它注册 `miniapp` target 与该 target 的 Node.js test run，把 runtime SDK 接入 `miniappMain`，并对缺少 Kotlin Multiplatform 的编译项目报错；不编译 KMP 的根工程可协调明确选中的 KMP 子模块。这些注册就是它全部的模型提供内容：`miniappMain`、`miniappTest`、拥有它们的 compilation，以及它们与 `commonMain` / `commonTest` 的边，全部来自 Kotlin Gradle Plugin；插件从不手工搭建 source set 或层级边，因为手工搭建的正是 [ADR 0010](decisions/0010-miniapp-gradle-plugin-source-set-model-ch.md) 否决的「未使用 source set」模型。另外，它会在插件应用期间实体化标准的 `src/miniappMain/kotlin` 与 `src/miniappTest/kotlin` 目录，使 IDE 导入在任何项目向导生成结果上都能显示这两个空 source set。这项文件系统便利是幂等的，会保留现有源码，且不改变 source-set 模型的归属。
 
 runtime 以**公共 module 坐标**（`io.github.bobcgn:kmp-miniapp-sdk`）到达消费者，而不是 project path。消费者构建无法访问本仓库结构，因此插件不能、也不得写出 `project(":kmp-miniapp-sdk")`；同一个坐标今天经 composite build 解析，发布后由仓库解析。它只被加入 `miniappMain`，因此同时面向 Android、iOS 或 JVM 的项目不会在这些平台上获得 Mini App runtime；`miniappTest` 通过 source-set hierarchy 继承，而不是再次声明。
 
@@ -353,6 +353,11 @@ bundle 不是宿主工程，二者不可混淆。Mini App 构建有三样东西�
 消费者侧构建配置只有一个 extension `miniapp`，其唯一宿主是 `wechat`。层级本身就是要点：`MiniAppExtension` 是平台，`WeChatHostConfiguration` 是宿主，因此新增宿主是新增一个子类型与一个访问器，而不是把微信那个类型加宽。它只承载构建路径 —— bundle、source host、其中的 generated library area 与 distribution —— 因为 Gradle DSL 中每个字段都是消费者必须做出的决定，而输出形态、CommonJS、declaration 与 renderer 边界是插件的决定，不是消费者的决定。它不承载 AppID、密钥、页面 route 或能力：那些属于宿主与后端。业务与后台配置不在此建模，理由与它在运行期不被建模相同。
 
 若消费者的 `commonMain` 依赖另一个 Kotlin Multiplatform project，则必须对该 project 同样应用本插件。该依赖经由 Mini App variant 解析，不提供该 variant 的 project 会解析失败；不存在回退，把依赖移出 `commonMain` 也不是变通办法。
+
+
+根级宿主模式保持 module 与 host 的不同归属：`rootHost=true` 的单个模块仍拥有 Kotlin compilation 和 bundle，根工程拥有微信 source host 与独立 distribution 的生命周期。默认模式不变。路径校验改用选定模式的容器，根级模式还拒绝 source/build 重叠、source/distribution 重叠、多个产物所有者和覆盖已有根级任务；手写 UI 永远不属于生成库区域。此能力在当前源码中，尚未发布。
+
+根级 `logicProject` 是配置协调器，不是另一套编译器：明确选择已有 KMP 子模块，在其中应用相同 Mini App 插件。根工程自身不应用 KMP，通过 Kotlin apply false 共享插件 classpath。选择在子模块求值前固定；宿主配置由根工程唯一管理，所选模块不得静默覆盖。不推断模块名，不迁移源码、不排除依赖、不自动配置依赖项目。编译、边界检查和 bundle 仍归所选模块；runtime SDK 架构不变。
 
 ## 8. 非目标
 

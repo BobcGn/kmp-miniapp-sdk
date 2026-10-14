@@ -27,9 +27,15 @@ public class MiniAppGradlePlugin : Plugin<Project> {
         // Deferred on purpose: applying this plugin before `kotlin("multiplatform")` is valid, so
         // the missing-plugin case is only knowable once the project has been evaluated.
         target.afterEvaluate { evaluated ->
+            val extension = evaluated.extensions.getByType(MiniAppExtension::class.java)
+            if (extension.logicProject.isPresent) {
+                MiniAppRootProjectSupport.configure(evaluated, extension)
+                return@afterEvaluate
+            }
             if (!evaluated.pluginManager.hasPlugin(MiniAppPluginDiagnostics.KOTLIN_MULTIPLATFORM_PLUGIN_ID)) {
                 throw MiniAppPluginDiagnostics.missingKotlinMultiplatform(evaluated.path)
             }
+            MiniAppRootHostSupport.configure(evaluated)
         }
     }
 }

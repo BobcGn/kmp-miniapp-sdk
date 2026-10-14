@@ -1,0 +1,12 @@
+{
+  "pages": [
+    "pages/index/index"
+  ],
+  "window": {
+    "navigationBarTitleText": "KMP Greeting",
+    "navigationBarBackgroundColor": "#eaddff",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#eaddff"
+  },
+  "sitemapLocation": "sitemap.json"
+}

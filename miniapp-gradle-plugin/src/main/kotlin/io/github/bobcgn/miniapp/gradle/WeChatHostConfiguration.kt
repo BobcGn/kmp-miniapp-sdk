@@ -1,6 +1,7 @@
 package io.github.bobcgn.miniapp.gradle
 
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.provider.Property
 
 /**
  * Build configuration for the WeChat host — the current and only Mini App host.
@@ -14,6 +15,15 @@ import org.gradle.api.file.DirectoryProperty
  * so it is declared here and not on the platform.
  */
 public abstract class WeChatHostConfiguration : MiniAppHostConfiguration() {
+
+    /**
+     * Selects this module as the sole producer of a host maintained at the consumer build root.
+     *
+     * Defaults to false for compatibility. When true, source/distribution defaults use the root
+     * project's directories, and root-level host tasks delegate to this module. Only one module
+     * may opt in. It does not change this module's Kotlin source sets or bundle output.
+     */
+    public abstract val rootHost: Property<Boolean>
 
     /**
      * Where the compiled Kotlin/JS modules are written inside [MiniAppHostConfiguration.sourceDirectory].

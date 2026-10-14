@@ -1,0 +1,4 @@
+<view class="page">
+  <text class="greeting">{{greeting}}</text>
+  <text wx:if="{{failure}}" class="failure">{{failure}}</text>
+</view>
