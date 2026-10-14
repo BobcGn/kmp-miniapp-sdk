@@ -25,3 +25,7 @@ DerivedData/
 .xcode.env.local
 /kotlin-js-store/*
 !/kotlin-js-store/yarn.lock
+
+# Local DevTools projects created by importing outside the canonical app/miniApp host.
+/project.config.json
+/app/miniApp/miniprogram/project.config.json
