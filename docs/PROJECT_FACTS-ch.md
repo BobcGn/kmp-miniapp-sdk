@@ -24,7 +24,7 @@
 - Pre-alpha
 - Bootstrap completed
 - Consumer Bridge 已完成并通过微信开发者工具验证
-- 用户已在 IDEA 2026.2.3 验证服务器 demo 本地 `includeBuild` 模式的 Kotlin 消费者源码与 KDoc 导航。独立 `fixtures/miniapp-published-consumer` 针对发布版 0.1.1 编译并验证对应源码／KDoc 归档；2026-10-14 用户确认发布依赖的 IDEA 源码导航与 KDoc 展示通过。不变更 SDK API 或发布行为。
+- 用户已在 IDEA 2026.2.3 验证服务器 demo 本地 `includeBuild` 模式的 Kotlin 消费者源码与 KDoc 导航。独立 `fixtures/miniapp-published-consumer` 针对发布版 0.1.1 编译并验证对应源码／KDoc 归档；2026-10-14 用户确认发布依赖的 IDEA 源码导航与 KDoc 展示通过。2026-10-15 用户反馈 Android Studio 无法通过悬停或 Cmd 点击查看源码与 KDoc（根因未核实），并确认 Kotlin 源码导航的支持范围为 IDEA，Android Studio 不在当前支持范围内。不变更 SDK API 或发布行为。
 - 微信强类型 interop 基础已实现
 - Host 与 Capability 边界 contract 已实现
 - 公共错误模型与 internal callback-to-coroutine primitive 已实现

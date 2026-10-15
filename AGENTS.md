@@ -60,6 +60,8 @@ All other human-facing project documentation uses synchronized `-en.md` and `-ch
 
 When a change affects modules, dependencies, Kotlin or Gradle versions, targets, public architecture, or current capabilities, check and update both `docs/PROJECT_FACTS-en.md` and `docs/PROJECT_FACTS-ch.md` when necessary.
 
+When a change alters a project fact or boundary — a capability, supported scope, supported tool or IDE, workflow, verified result, or known limit — update every fact source that states it in the same task and PR: `docs/PROJECT_FACTS-*`, `docs/ARCHITECTURE-*`, `README-*`, `docs/DEVELOPMENT-*`, `docs/TESTING-*`, and the platform capability and verification matrices, in both languages. Check each of these sources; leave unaffected ones unchanged and state in the PR or report which sources were checked and found unaffected. Do not leave one fact source contradicting another.
+
 ## 7. Plans Are Not Facts
 
 Roadmap entries, TODOs, issues, and comments are not evidence that a feature exists.
@@ -85,7 +87,7 @@ The SDK shares client behaviour, host capabilities, and presentation state. It n
 
 ## 11. Branch and Pull Request Workflow
 
-- Never develop, edit tracked project files, or commit directly on the repository's default/main branch (including `main` and `master`). Check the current branch and worktree before changing files, then create or switch to a task branch. Use the `codex/` prefix for Codex-created branches.
+- Never develop, edit tracked project files, or commit directly on the repository's default/main branch (including `main` and `master`). Check the current branch and worktree before changing files, then create or switch to a task branch. Name task branches `<type>/<short-description>`, where `<type>` states the kind of change — `feat`, `fix`, `docs`, `refactor`, `test`, `build`, or `chore` — and `<short-description>` is lowercase English kebab-case, optionally starting with the Multica Issue key, for example `docs/refine-agent-rules` or `fix/bob-123-ide-navigation`. Do not name branches after the tool or agent that created them, such as `codex/` or `claude/`.
 - All repository changes, including documentation and rules, must reach the default branch through a pull request. Do not push commits directly to the default branch or merge locally into it. Opening a PR does not authorize merging it.
 - Preserve unrelated working-tree changes. Stage and commit only the files owned by the current task.
 - Record the branch, commit, PR link, and actual validation results. If pushing or opening a PR is blocked, report the completed local change and the concrete blocker; do not bypass this workflow.
