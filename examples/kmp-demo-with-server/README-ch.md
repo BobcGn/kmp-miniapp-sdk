@@ -50,4 +50,6 @@ Mini App 已导出 `org.example.kmp_demo_with_server.platformGreeting()`，与�
 
 ## JS/TS 声明导航
 
-宿主包含 `miniprogram/jsconfig.json` 和 bundle 引用的 JSDoc 类型注解。在 IDE 独立打开 `miniprogram` 目录，对 `pages/index/index.js` 的 `platformGreeting()` 与 `MiniAppExports.sdkVersion()` 执行 Cmd/Ctrl 点击。两者预期定位到 `libs/` 中对应的生成声明；2026-10-14 用户确认两个调用在 VS Code 1.141.0（Universal）均定位到正确声明，并提供目标截图。IntelliJ IDEA 2026.2.3 对 `sdkVersion()` 提供 `.d.ts` 候选，而 `platformGreeting()` 进入 JS，尚未实现一致的 IDEA 导航。自动化 TypeScript 检查不能替代这些人工观察。页面另外记录 `demo.sdkVersion`。可执行声明检查和证据要求见 [DEVELOPMENT](../../docs/DEVELOPMENT-ch.md#jsts-消费者声明与导航当前源码尚未发布)。不声称 Kotlin 导航已通过。
+宿主包含 `miniprogram/jsconfig.json` 和 bundle 引用的 JSDoc 类型注解。2026-10-14 用户在 VS Code 1.141.0（Universal）验证 `platformGreeting()` 和 `MiniAppExports.sdkVersion()` 均进入生成 `.d.ts`。IDEA 2026.2.3 的两个悬停签名指向该声明；`sdkVersion()` 提供声明候选，`platformGreeting()` 则打开对应生成 JS。2026-10-15 用户接受该交互差异，它不再是阻塞项，也不代表导航完全一致。可选项目级 library 实验不是接入必需步骤或已验证修复。页面另外记录 `demo.sdkVersion`。
+
+本 demo 的本地 `includeBuild` 模式已在 IDEA 2026.2.3 通过 Kotlin 消费源码导航与 KDoc 验收；发布版 SDK 0.1.1 由 `fixtures/miniapp-published-consumer` 单独验收，不能据此将本 demo 说成发布插件夹具。命令、证据与工具限制见 [DEVELOPMENT](../../docs/DEVELOPMENT-ch.md#jsts-消费者声明与导航当前源码尚未发布)。Node／类型检查不能替代人工 IDE 验收，不宣称 Android Studio 或 VS Code Kotlin/KMP 已通过。
