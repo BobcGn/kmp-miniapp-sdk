@@ -33,7 +33,7 @@ cd fixtures/miniapp-published-consumer
 
 2026-10-14，上述 Wrapper 命令通过。实际 runtime binary 为 `io.github.bobcgn:kmp-miniapp-sdk-js:0.1.1`，同版本源码 JAR 包含 `MiniAppExports.kt`、`MiniAppSdk.kt`、函数实现与 KDoc。`build/reports/published-sdk-navigation.txt` 记录组件身份、路径、SHA-256 摘要和源码条目。显式解析与检查源码包只能证明归档可用及内容正确，不能证明 IDE 自动关联或导航。校验器要求 KMP/JS runtime 为外部 module，并拒绝 project 替换。
 
-剩余人工验收：
+可重复执行的人工验收步骤（已通过，结果见下文）：
 
 1. 在 IDEA 新窗口中仅打开 `fixtures/miniapp-published-consumer`，使用其 Wrapper 导入 Gradle 构建。不要把 SDK 仓库附加为模块，也不要在首次检查前手动关联源码。
 2. 打开 `src/miniappMain/kotlin/consumer/PublishedSdkUsage.kt`，对 `MiniAppExports.sdkVersion()`、`MiniAppExports.wechatRuntimeInfo()` 和 `MiniAppSdk.VERSION` 执行 Cmd 点击。目标必须是 0.1.1 依赖关联的真实 Kotlin 源码，例如 `sources.jar` 归档／缓存中的文件；不能是仓库 `sdk/src` 或反编译声明桩。
@@ -171,7 +171,17 @@ node miniapp-gradle-plugin/src/test/js/verify-consumer-declarations.cjs examples
 
 只读校验器使用各宿主的实际配置与生成声明，检查真实页面的 `platformGreeting()` 和 `MiniAppExports.sdkVersion()` 定义位置，接受合法类型调用，并拒绝错误参数、错误返回值类型和不存在的 SDK API。TypeScript 包路径显式来自消费者构建，不新增 npm 安装。结果证明编译器／语言服务行为，不证明 IDE 行为。
 
-人工验收时，在目标 IDE 独立打开 `miniprogram` 目录，对 `pages/index/index.js` 中两个调用执行 Cmd/Ctrl 点击或“转到声明”，记录 IDE／版本、调用与目标路径及结果。目标必须是同一 bundle 的 `libs/<module>.d.ts` 和正确符号。跳到 JS 实现或出现同名候选列表不算声明导航通过。“转到类型声明”可能定位返回值类型，并不等同于 API 声明导航。2026-10-14，用户确认服务器 demo 的两个调用在 VS Code 1.141.0（Universal）均定位到对应生成声明；截图显示 `libs/kmp-demo-with-server-core-miniapp.d.ts` 中的 `platformGreeting(): string` 和 `sdkVersion(): string`。IntelliJ IDEA 2026.2.3 对 `sdkVersion()` 提供声明候选，而 `platformGreeting()` 进入 JS。这是已记录的 IDE 差异，不是 IDEA 验收通过。不承诺所有 IDE 导航行为一致。无服务器 demo、微信开发者工具编辑器及 Android Studio 尚无人工声明导航验收记录。未做修改前后的对照，不能证明新增配置是 VS Code 导航成功的必要条件。Kotlin 源码／KDoc 导航是独立工作。
+SDK 提供相匹配的 API 声明与运行产物，以及同版本 Kotlin 源码／KDoc；不保证各编辑器默认点击目标一致。验收分别记录类型信息、声明／源码身份和支持的操作，无关来源或旧版本目标仍属于失败。“转到类型声明”可能定位返回值类型，而不是 API 声明。
+
+| 环境 | 实际行为与验收 |
+| --- | --- |
+| VS Code 1.141.0（Universal），服务器 demo | 2026-10-14 用户确认 `platformGreeting()` 和 `sdkVersion()` 均定位到 `libs/kmp-demo-with-server-core-miniapp.d.ts` 中对应声明，并提供目标截图。 |
+| IntelliJ IDEA 2026.2.3，服务器 demo JS 消费 | 2026-10-15 截图显示两个调用的悬停签名来自同一 bundle 的 `.d.ts`，均为无参数、返回 `string`。`sdkVersion()` 的候选包含正确声明；`platformGreeting()` 仍进入对应的生成 JS 实现。用户于 2026-10-15 明确接受该交互差异，不再作为已约定导航范围的阻塞项。这不证明 `platformGreeting()` 能直接导航到 `.d.ts`。 |
+| IntelliJ IDEA 2026.2.3，Kotlin 消费 | 本地 `includeBuild` 与发布版 SDK 0.1.1 的源码／KDoc 验收通过，结果见 Kotlin 一节。 |
+
+复验时独立打开 `miniprogram` 目录，悬停 `pages/index/index.js` 的两个调用，再执行 Cmd/Ctrl 点击或“转到声明”，记录实际目标。正确声明候选可以接受；默认进入对应 JS 实现是已接受的 IDEA 差异。不要手动打开同名文件并报告为自动导航。尚未证实重新打开后的持久性，也未证实可选 IDEA 项目级 library 配置的必要性；该配置是诊断实验，不是接入必需步骤或已验证修复。
+
+无服务器 demo、微信开发者工具编辑器及 Android Studio 尚无人工 JS 声明导航验收记录。未做修改前后的对照，不能证明新增宿主配置是 VS Code 导航成功的必要条件。本项未认证所有 Promise／接口／联合类型形状，未审计全部 `any`／Kotlin 专属类型，也未证明完整的生成 JS/TS hover 文档；不能从代表性导航测试推导早期更宽的契约审计已通过。不承诺所有编辑器行为一致、真机／后端结果或已发布新版本。
 
 ### Mini App source set 的架构前置条件
 

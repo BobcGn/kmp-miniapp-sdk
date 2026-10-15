@@ -55,4 +55,4 @@ iOS 应用使用 Xcode 打开 `iosApp/iosApp.xcodeproj`。这些命令定义验�
 
 ## JS/TS 声明导航
 
-宿主包含 `miniprogram/jsconfig.json` 和 bundle 引用的 JSDoc 类型注解。在 IDE 独立打开 `miniprogram` 目录，对 `pages/index/index.js` 的 `platformGreeting()` 与 `MiniAppExports.sdkVersion()` 执行 Cmd/Ctrl 点击。两者预期定位到 `libs/` 中对应的生成声明；本无服务器 demo 仍需自己的人工导航验收。服务器 demo 已有单独的 VS Code 验收与 IDEA 导航差异记录，两者均不能证明本 demo 的 IDE 行为。页面另外记录 `demo.sdkVersion`。可执行声明检查和证据要求见 [DEVELOPMENT](../../docs/DEVELOPMENT-ch.md#jsts-消费者声明与导航当前源码尚未发布)。不声称 Kotlin 导航已通过。
+宿主包含 `miniprogram/jsconfig.json` 和 bundle 引用的 JSDoc 类型注解。`platformGreeting()` 与 `MiniAppExports.sdkVersion()` 已有自动化声明检查，但本无服务器 demo 仍需自己的人工 IDE 验收。服务器 demo 的 VS Code 结果及 2026-10-15 已接受的 IDEA 交互差异不能证明本 demo 的行为。SDK 接入保证声明／运行产物身份对应，不保证各编辑器默认点击目标一致。检查与限制见 [DEVELOPMENT](../../docs/DEVELOPMENT-ch.md#jsts-消费者声明与导航当前源码尚未发布)。页面另外记录 `demo.sdkVersion`，不声称本 demo 的 Kotlin 导航已人工通过。
