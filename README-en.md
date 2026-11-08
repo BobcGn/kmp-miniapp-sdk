@@ -473,6 +473,8 @@ and why its verification is not part of `check`.
 
 ## Documentation
 
+- [Project goal and scope (spec-tree entry)](goal-and-requirements-en.md)
+- [Documentation, decision and evidence ownership](docs/SPEC-en.md)
 - [Current project facts](docs/PROJECT_FACTS-en.md)
 - [Architecture](docs/ARCHITECTURE-en.md)
 - [Development guide](docs/DEVELOPMENT-en.md)

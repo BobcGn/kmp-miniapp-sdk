@@ -35,6 +35,8 @@ WeChat Mini Program
 
 随后，针对受影响的区域阅读嵌套规则：`sdk/**` 读 `sdk/AGENTS.md`，`examples/**` 读 `examples/AGENTS.md`。
 
+项目规格构成一棵中文树：`goal-and-requirements-ch.md` 为目标根，`docs/ARCHITECTURE-ch.md` 为架构节点，真实模块或关键子模块就近使用 `SPEC-ch.md`，不按每个源码文件建规格。任务受已记录的边界、契约、不变量、行为或决策约束时，修改前先用可用的 `spec_grep`、`spec_get` 或 `spec_graph` 定位，再按需阅读归属规格正文；工具不可用时回退文件读取。此导航不改变下述事实层级。
+
 ## 3. 事实层级
 
 按以下顺序确定权威性：
@@ -55,7 +57,7 @@ WeChat Mini Program
 
 **范围纪律。** 在没有明确任务的情况下，不要添加 Android、iOS、JVM 或 Wasm target；不要添加 Compose、Ktor、serialization 或依赖注入框架；不要添加 npm 或 Maven 发布；不要添加投机性的 Gradle module。
 
-**UI 与渲染边界。** runtime SDK 与未来的 Presentation Core 不得依赖 Compose、其他 UI framework，或 WXML、WXSS 这类宿主 markup。Compose 是客户端 UI consumer。Mini App host integration 只做宿主状态与宿主事件的 binding，从不渲染。`./gradlew :kmp-miniapp-sdk:checkArchitectureBoundaries` 强制其中的依赖部分，并且是 `:kmp-miniapp-sdk:check` 的一部分；见 `AGENTS.md` 第 10 节与 [ADR 0011](docs/decisions/0011-presentation-state-shared-rendering-host-native-ch.md)。
+**UI 与渲染边界。** runtime SDK 与未来的 Presentation Core 不得依赖 Compose、其他 UI framework，或 WXML、WXSS 这类宿主 markup。Compose 是客户端 UI consumer。Mini App host integration 只做宿主状态与宿主事件的 binding，从不渲染。`./gradlew :kmp-miniapp-sdk:checkArchitectureBoundaries` 按分类清单检查 Kotlin import/package 与声明依赖，不检测任意 renderer 或全部传递依赖，并且是 `:kmp-miniapp-sdk:check` 的一部分；见 `AGENTS.md` 第 10 节与 [ADR 0011](docs/decisions/0011-presentation-state-shared-rendering-host-native-ch.md)。
 
 **凭据安全。** 不提交 AppID 密钥、token、证书或其他凭据；示例与测试使用占位值。
 
@@ -71,7 +73,7 @@ WeChat Mini Program
 
 **JS 边界。** `dynamic`、`external` 和 `js()` 绝不能进入 `commonMain`。原始 JavaScript interop 应尽可能收窄，最好放在 `jsMain/.../wechat/interop` 下。
 
-**文档同步。** 面向人的文档使用同步的 `-en.md` / `-ch.md` 配对；权威文件 AGENTS.md 与有意采用不同文件名的 CLAUDE.md / CLAUDE-ch.md 指南配对除外。任一语言发生变化时，必须在同一任务中更新其对应版本，且事实、结构与意图保持一致。本文件同样适用。改动项目事实或边界（能力、支持范围、支持的工具或 IDE、工作流、验证结果或已知限制）时，须在同一 PR 中更新所有陈述该事实的事实源（PROJECT_FACTS、ARCHITECTURE、README、DEVELOPMENT、TESTING、平台矩阵）；见 `AGENTS.md` 第 6 节。
+**文档同步。** 面向人的文档使用同步的 `-en.md` / `-ch.md` 配对；权威文件 AGENTS.md 与有意采用不同文件名的 CLAUDE.md / CLAUDE-ch.md 指南配对除外。任一语言发生变化时，必须在同一任务中更新其对应版本，且事实、结构与意图保持一致。本文件同样适用。只有中文规格以 YAML `id` 与 `type` 注册唯一图节点；英文 `-en.md` 译文使用 `translation-of: <中文规格 ID>`，不带 `id` 或 `type`。两语言规格在用户 review 前均保持 `draft`：正文同步，身份元数据有意不同。改动项目事实或边界（能力、支持范围、支持的工具或 IDE、工作流、验证结果或已知限制）时，须在同一 PR 中更新所有陈述该事实的事实源（PROJECT_FACTS、ARCHITECTURE、README、DEVELOPMENT、TESTING、平台矩阵）。改变已记录的边界、契约、不变量、行为或决策时，也须同步归属规格及译文。源码／契约差异须显式标记为未决，不通过文档将其变成新决定；见 `AGENTS.md` 第 6 节。
 
 **ADR 是历史记录。** `docs/decisions/` 中已接受的决策是历史档案。要改变某个决策，应新增一个取代它的 ADR，而不是改写原记录。
 
@@ -91,18 +93,19 @@ docs/                        PROJECT_FACTS、ARCHITECTURE、DEVELOPMENT、TESTIN
 gradle/libs.versions.toml    依赖与插件版本的唯一来源
 settings.gradle.kts          include :kmp-miniapp-sdk 与 :miniapp-gradle-plugin
 sdk/                         Kotlin/JS runtime SDK module
-miniapp-gradle-plugin/       io.github.bobcgn.miniapp Gradle 插件骨架
-examples/                    集成宿主；不是 Gradle module
+miniapp-gradle-plugin/       io.github.bobcgn.miniapp Gradle 插件与分发流水线
+examples/                    宿主与独立 demo；不是 SDK 根构建的 module
 ```
 
 `sdk/src` 内部：
 
 - `commonMain` —— 平台无关的 API、model、error 与共享逻辑。不得出现 `wx`，不得出现 DOM 或 Node API，不得出现 `dynamic` / `external` / `js()`。
 - `commonTest` —— 共享测试。
-- `jsMain/kotlin/io/github/bobcgn/miniapp/host/wechat/` —— `interop`、`adapter`、`runtime`、`export`，以及 `WechatHost` 实现。
+- `jsMain/kotlin/io/github/bobcgn/miniapp/host/wechat/` —— `interop`、`adapter`、`runtime`，以及 `WechatHost` 实现。
+- `jsMain/kotlin/io/github/bobcgn/miniapp/export/` —— Kotlin 到 JavaScript 与 TypeScript 的边界，不在 `host/wechat` 下。
 - `jsTest` —— JavaScript 测试。
 
-`jsMain/.../host/wechat` 各层职责：`interop` 只描述底层 JavaScript 与 `wx` 契约，不放置业务逻辑；`adapter` 负责类型转换、错误映射与异步适配，不承担 UI 职责；`runtime` 只负责宿主 runtime 与生命周期集成；`export` 负责 Kotlin 到 JavaScript 与 TypeScript 的边界，不得演变为业务实现层。
+`jsMain/.../host/wechat` 各层职责：`interop` 只描述底层 JavaScript 与 `wx` 契约，不放置业务逻辑；`adapter` 负责类型转换、错误映射与异步适配，不承担 UI 职责；`runtime` 只负责宿主 runtime 与生命周期集成。独立的 `jsMain/.../export` 边界不得演变为业务实现层。
 
 依赖方向：`commonMain` 绝不依赖微信相关代码；`interop` 绝不依赖业务实现逻辑；平台代码可以实现平台无关代码定义的契约，反向依赖被禁止。
 
@@ -122,15 +125,15 @@ examples/                    集成宿主；不是 Gradle module
 
 工具链：Gradle 9.3.1（来自仓库内置 Wrapper），项目 Kotlin 2.4.20（来自 `gradle/libs.versions.toml`），`kotlinx-coroutines-core` 1.11.0，验证环境为 JDK 25.0.2。项目未 pin JDK toolchain。始终使用 `./gradlew`（Unix）或 `gradlew.bat`（Windows），不要使用系统安装的 Gradle。
 
-截至 2026-09-15 的当前状态：
+当前源码摘要（2026-09-15 状态基线与上表命令结果均为历史证据，不是本次新执行的验证）：
 
-- 状态为实验性 / pre-alpha。Bootstrap 已完成，所有已实现的 capability 均已通过微信开发者工具验证，并在适用处通过真机验证。唯一缺口是权限的 `NotRequested` 状态：所用账号无法复现，改由自动化测试覆盖。
-- module 列表为 `:kmp-miniapp-sdk` 与 `:miniapp-gradle-plugin`。`examples/` 是集成宿主目录，不是 Gradle module。插件注册 `miniapp` target 及其 Node.js test run，由此提供由 compilation 拥有的 `miniappMain` / `miniappTest` 并让 `miniappTest` 真正执行，以公共坐标 `io.github.bobcgn:kmp-miniapp-sdk` 把 runtime SDK 接入 `miniappMain`，由 `assembleMiniAppBundle` 把宿主 bundle 重新发布到 `build/miniapp/bundle/`，并由 `miniapp { wechat { } }` extension 配置该位置；不暴露其他构建设置。
-- JavaScript target 配置为 `nodejs()`、`useCommonJs()`、`binaries.library()` 与 `generateTypeScriptDefinitions()`。
-- `sdk/src/commonMain/.../api/MiniAppSdk.kt` 声明 `MiniAppSdk.VERSION = "0.1.0-SNAPSHOT"`，`commonTest` 对其断言。
+- 状态为实验性 / pre-alpha，Bootstrap 已完成。实现不等于宿主验收；各能力的逐项证据和待验证项见[微信能力矩阵](docs/platforms/wechat/WECHAT_CAPABILITIES-ch.md)与[真实宿主验证矩阵](docs/platforms/wechat/WECHAT_HOST_VERIFICATION-ch.md)。
+- SDK 根构建的 module 为 `:kmp-miniapp-sdk` 与 `:miniapp-gradle-plugin`；`examples/` 下的宿主与独立 demo 构建不是该构建的 module。插件注册 `miniapp` target 及其 Node.js test run，由此提供由 compilation 拥有的 `miniappMain` / `miniappTest` 并让 `miniappTest` 真正执行。它以公共坐标 `io.github.bobcgn:kmp-miniapp-sdk` 把 runtime SDK 接入 `miniappMain`；`assembleMiniAppBundle` 把宿主 bundle 重新发布到 `build/miniapp/bundle/`。`miniapp { wechat { } }` extension 配置 bundle、source host、generated library 与 distribution 路径。当前源码还支持根级宿主模式与根级 `logicProject` 选择，两者均不属于已发布的 0.1.1。
+- SDK 的 JavaScript target 配置为 `nodejs()`、`useCommonJs()`、`binaries.library()` 与 `generateTypeScriptDefinitions()`。
+- `MiniAppSdk.VERSION` 引用 `GeneratedMiniAppSdkVersion.VALUE`，由 `sdk/build.gradle.kts` 从 `gradle/libs.versions.toml` 生成；`commonTest` 校验该关系而不是版本字面量。插件的 runtime 坐标也由同一 catalog 生成至 `miniapp-plugin-metadata.properties`。
 - `commonMain` 包含 `MiniAppHost` / `HostPlatformApi`、`HostVersion`、`CapabilityKey` / `CapabilitySupport`（含 `Supported` / `Unsupported` / `VersionDependent` / `PermissionDependent` 四态与 `requireSupported` guard）、带 `StorageCapabilityProvider` 的 `MiniAppStorage`、带 `NetworkCapabilityProvider` 的 `MiniAppHttpTransport`、带 `LifecycleCapabilityProvider` 的 `MiniAppLifecycle`、带 `PermissionCapabilityProvider` 的 `MiniAppPermissions` 及其 `PermissionKey` / `PermissionState` 模型、`MiniAppException`，以及 internal 的 `awaitHostCallback` primitive。
-- 微信 interop 覆盖 typed `login`、`showToast`、Storage、`request`、三个页面栈导航契约、带 presence guard 的 runtime inspection 成员，以及三个权限方法与原始授权 map reader。Storage、微信客户端 login、HTTP transport、导航与权限生命周期均有 adapter；`showToast` 仍仅为 interop contract。`WechatAppLifecycle`、`WechatPageLifecycle`、`WechatRuntimeInfo` 与能力目录表及 gate 位于微信 `runtime` package，`WechatPermissions` 与 `WechatPermissionScopes` 位于其 `adapter` package；`WechatPermissionScopes` 是微信 scope 字符串唯一存在的地方，当前只映射麦克风权限。
-- 只有 App 级生命周期是公共 capability。Page 级生命周期、导航与 runtime 自身描述属于微信专属，仅通过 `WechatPlatformApi` 可达。Capability support 由正在运行的宿主回答，因此对某次构建并不恒定。
+- 微信 interop 包括 typed `login`、`showToast`、Storage、`request`、四个导航契约、带 presence guard 的 runtime inspection 成员，以及三个权限方法与原始授权 map reader。Storage、微信客户端 login、HTTP transport、导航与权限生命周期均有 adapter；`showToast` 仍仅为 interop contract。`WechatAppLifecycle`、`WechatPageLifecycle`、`WechatRuntimeInfo` 与能力目录表及 gate 位于微信 `runtime` package，`WechatPermissions` 与 `WechatPermissionScopes` 位于其 `adapter` package。`WechatPermissionScopes` 是微信 scope 字符串的唯一映射点，映射麦克风与位置两种权限。
+- App 级生命周期是公共 capability。Page 级生命周期、导航与 runtime 自身描述属于微信专属，仅通过 `WechatPlatformApi` 可达。Capability support 由正在运行的宿主回答，因此对某次构建并不恒定。
 - 编译器生成的 TypeScript declaration 包含版本、Storage、微信 login、HTTP transport、生命周期、导航、capability support 与权限 exports，手工维护的 CommonJS wrapper 将其暴露为扁平函数。
 
 Node.js 只是本地 Kotlin/JS 构建与测试环境。预期生产宿主是微信小程序 JavaScript runtime，Node.js 测试通过并不代表微信小程序集成成功。这两类结果必须分别汇报。

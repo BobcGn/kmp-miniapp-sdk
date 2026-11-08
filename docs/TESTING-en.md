@@ -187,7 +187,7 @@ the fixture and the SDK architecture check, which `check` does not run.
 ./gradlew :kmp-miniapp-sdk:jsNodeTest --tests "*Bluetooth*" --tests "*Ble*"
 ```
 
-BLE is the first capability in this SDK built on a real `on`/`off` event source, so its tests are
+BLE further exercises the resource model for real `on`/`off` event sources, rather than being the first or only source, so its tests are
 about the resource model rather than about Bluetooth: **24** adapter tests, **12** interop tests and
 **7** session tests, plus a capability-gate check that the three keys are gated separately.
 
@@ -230,6 +230,17 @@ The report measures bytes. It does not measure startup, and nothing in this repo
 first-load observation is a person reading WeChat Developer Tools' own Launch Time, and
 [PERFORMANCE_BASELINE-en.md](PERFORMANCE_BASELINE-en.md) says exactly how and what that figure does
 and does not mean.
+
+### Spec-document checks
+
+The spec tree has one [product-goal](../goal-and-requirements-en.md) root, with ownership and coverage navigated from [Architecture](ARCHITECTURE-en.md). Chinese specs register unique nodes; English pairs are synchronized translations rather than duplicate nodes. Documentation changes use `spec_validate` for duplicate IDs, dangling links and parent cycles, together with whole-tree reachability, translation-structure and local-file-link checks. These are documentation checks, not runtime acceptance.
+
+```shell
+./gradlew --no-daemon --console=plain verifyMiniAppConsumerDocs
+git diff --check
+```
+
+The Gradle task checks only root README structure, consumer paths and commands; the full graph also needs `spec_*` and tree-coverage checks. Documentation-only changes do not thereby require a full SDK build, and documentation checks must never be reported as WeChat or real-device verification.
 
 ## 3. Real-host layer
 

@@ -1,3 +1,10 @@
+---
+translation-of: architecture
+language: en
+status: draft
+title: System architecture and module boundaries
+---
+
 # Architecture
 
 [中文](ARCHITECTURE-ch.md)
@@ -92,7 +99,7 @@ WeChat is Host Adapter #1. Its platform-specific code is isolated under `jsMain/
 
 ### Event sources
 
-A capability that reports events rather than answering a question owns a host registration for as long as a collector is interested in it. The rule the BLE proof of concept established, and which the network status stream already followed, is that **each collector owns exactly one registration and removes that same value on every termination path** — normal completion, an exception, or cancellation. WeChat removes listeners by identity, so a shared registration would need reference counting to decide when to remove it, and an error there leaks a listener for the lifetime of the mini program.
+A capability that reports events rather than answering a question owns a host registration for as long as a collector is interested in it. The rule the BLE proof of concept established, and which the network status stream already followed, is that **each collector owns exactly one registration and attempts to remove that same value on every termination path** — normal completion, an exception, or cancellation. BLE records a rejected host removal and retains the listener count; successful host cleanup is not guaranteed. WeChat removes listeners by identity, so a shared registration would need reference counting to decide when to remove it, and an error there leaks a listener for the lifetime of the mini program.
 
 Two consequences follow. An event stream carries a documented duplicate policy and a bounded buffer, because neither a host callback nor a collector may decide how much memory the other is allowed to use; and cancellation is never an error the SDK reports, because a caller that stopped listening did not experience a host failure. BLE is the proof of concept for this model and is `Experimental`; the adapter reaches the host only through the platform escape hatch.
 
@@ -104,7 +111,7 @@ Capability support has four states: `Supported`, `Unsupported`, `VersionDependen
 
 Version comparison is platform-neutral logic and lives in `commonMain` as `HostVersion`. Which base library provides a capability is host data, so it lives in the WeChat catalog, and an entry may leave its minimum version unset and rely on `wx.canIUse` instead — a live answer for the host actually running rather than a figure copied from a table. What the WeChat runtime reports about itself, including the base-library version, is host-specific and reachable only through the escape hatch.
 
-`requireSupported` turns any state other than `Supported` into `MiniAppException.UnsupportedCapability`, and is the only path that produces it. A host that cannot be probed at all fails closed: a capability the SDK cannot confirm is reported `Unsupported` rather than assumed present.
+`requireSupported` turns any state other than `Supported` into `MiniAppException.UnsupportedCapability`. Current adapters also produce that exception directly in presence checks, and not every operation calls the guard first; the single-path requirement in [ADR 0007](decisions/0007-capability-support-and-version-gating-en.md) is not uniformly implemented. This records the implementation/decision gap rather than claiming an enforced invariant or deciding to unify gating as part of spec import. A host that cannot be probed at all fails closed: a capability the SDK cannot confirm is reported `Unsupported` rather than assumed present.
 
 ### Runtime families
 
@@ -162,7 +169,7 @@ A capability can also require something of the caller rather than of the host. A
 
 A capability's *concept* can be common while its *vocabulary* is not. Network status is the case: every host can say whether it is online and over what kind of link, so the question and the model are common, but the words are the host's. The answer therefore carries both — a name this SDK recognizes and the host's own word beside it — and a link kind the SDK has never seen is reported rather than folded into an `unknown` member that would claim more knowledge than the SDK has. The same split applies to gating: a host may answer the question without offering change events, so the query and the listener are separate keys rather than one capability that is either present or absent.
 
-An event-shaped capability has to decide who owns the host registration. Lifecycle avoids the question because the consumer forwards the hooks it owns. Where the SDK registers a listener itself, this SDK registers one per collector and removes it when that collector ends: the host removes listeners by identity, so sharing one registration between collectors would need reference counting, and a mistake there leaks a listener for the lifetime of the mini program. One registration per collector costs a listener per active collector and makes the pairing exact on every termination path.
+An event-shaped capability has to decide who owns the host registration. Lifecycle avoids the question because the consumer forwards the hooks it owns. Where the SDK registers a listener itself, this SDK registers one per collector and attempts its removal when that collector ends: the host removes listeners by identity, so sharing one registration between collectors would need reference counting, and a mistake there leaks a listener for the lifetime of the mini program. One registration per collector costs a listener per active collector and makes the pairing exact on every termination path.
 
 A capability whose request and result are built on a host *file* stays behind the escape hatch even when the surrounding operation is portable. An upload and a download are HTTP exchanges, which the common transport capability already covers; what they add is a path in the host's own file system, and this SDK deliberately has no portable file reference, so promoting them would mean inventing one. Their task handle is modelled where it is useful: a consumer can stop the transfer, and stopping the wait stops it too, because a caller that stopped waiting for a transfer did not ask for it to keep running. Advisory progress is reported as the host's last figure and never as an estimate.
 
@@ -209,7 +216,7 @@ JavaScript-specific constructs such as `external`, `dynamic`, and `js()` may exi
 
 Business and shared layers must not manipulate `dynamic` values directly. Conversion to typed Kotlin values belongs at the adapter boundary.
 
-The WeChat interop layer models the global `wx` object, option bags, result shapes, and callbacks only. Its plain-object factories exist solely because external interfaces have no Kotlin constructors; they do not invoke host APIs or contain error mapping, capability policy, or business logic.
+The WeChat interop layer models the global `wx` object, option bags, result shapes and callbacks, and supplies presence probes and safe decoding of raw values. Its plain-object factories exist solely because external interfaces have no Kotlin constructors; those factories do not invoke host APIs. Raw-value type/range checks may remain at the decoding boundary, while SDK error classification, capability policy and business logic belong to adapters or runtime, not interop.
 
 `host/wechat` is the platform-specific namespace beneath the host boundary. This namespace preserves room for future hosts without introducing additional host implementations or Gradle modules now.
 
@@ -236,7 +243,7 @@ Coroutine cancellation and host cancellation are distinct:
 - Without an abort hook, cancellation stops result consumption but the host operation may continue.
 - With a real abort hook, cancellation invokes that hook at most once.
 
-Promise and event adaptation remain future, use-case-driven work, except for the one event-shaped capability that has a use case: app lifecycle state. `MiniAppLifecycle` publishes the current state and a `Flow` of later changes, which is the only stream abstraction the SDK introduces.
+Asynchronous adaptation has concrete uses today: the callback-to-coroutine primitive, the JS Promise facade, app-lifecycle and network-status `Flow`s, and experimental BLE streams and explicit observation sessions. The consumer forwards app-lifecycle hooks; network-status and BLE collectors own host listeners. There is no independent general-purpose Promise/event adaptation framework; that limit does not mean event adaptation is absent.
 
 The first concrete capability follows this path:
 
@@ -305,7 +312,7 @@ The project distinguishes two API surfaces:
 
 The export surface may adapt the Kotlin API; it must not become the business implementation layer.
 
-The host-neutral export facade belongs under `jsMain/.../export` and may call shared Kotlin APIs from `commonMain`. It must not contain `wx` calls or platform capability implementations. When the compiler-generated CommonJS namespace is unsuitable as the stable consumer ABI, a thin JavaScript wrapper may normalize module and export shape only; it must not contain business logic, host error mapping, or platform behavior.
+The export facade belongs under `jsMain/.../export`, outside the `host/wechat` namespace, but its current implementation constructs and binds `WechatHost`; it is not a generic facade accepting arbitrary hosts. It may call shared Kotlin APIs and host adapters, but must not directly call `wx` or implement platform capabilities or business rules. When the compiler-generated CommonJS namespace is unsuitable as the stable consumer ABI, a thin JavaScript wrapper may normalize module and export shape only; it must not contain business logic, host error mapping, or platform behavior.
 
 Kotlin collections cannot cross the `@JsExport` boundary, because a JavaScript caller has no way to construct a Kotlin map. An export that needs key-value data therefore carries it in a primitively representable shape and lets the wrapper restore an object shape; the Kotlin API keeps its idiomatic collection types. The HTTP transport export follows this rule for headers, representing them as a flat sequence of alternating name and value strings.
 
@@ -342,7 +349,7 @@ A bundle is not a host project, and the two must not be confused. Three paths ca
 | `miniApp/miniprogram/libs/` | the compiler's modules inside that project | `syncMiniApp` |
 | `build/miniapp-dist/` | the complete standalone project | `assembleMiniApp` |
 
-`initMiniApp` creates the first from a template the plugin ships as resources, writing only files that are absent, so a repeated run changes nothing and an edit is never restored. It is never invoked by plugin application, by Gradle configuration, or by an IDE sync: a build that writes source merely by being configured is one nobody can reason about. `syncMiniApp` is a `Sync` rather than a `Copy` because the generated area belongs to the plugin — a module that left the bundle has to leave the source host too, or the host keeps loading code the build no longer produces. `assembleMiniApp` reads the first, injects the current compiler output as the second, and writes the third, so the artifact a consumer accepts with is not the project a consumer develops in, and neither one requires the other to have been produced first. Every one of those paths reaches a `Sync` or creates files, so all three are validated before anything is written: the source host must be inside the project, the generated area strictly inside the source host, and the distribution inside the project. `clean` removes the distribution and the bundle and never the source host.
+`initMiniApp` creates the first from a template the plugin ships as resources, writing only files that are absent, so a repeated run changes nothing and an edit is never restored. It is never invoked by plugin application, by Gradle configuration, or by an IDE sync: a build that writes source merely by being configured is one nobody can reason about. `syncMiniApp` is a `Sync` rather than a `Copy` because the generated area belongs to the plugin — a module that left the bundle has to leave the source host too, or the host keeps loading code the build no longer produces. `assembleMiniApp` reads the first, injects the current compiler output as the second, and writes the third, so the artifact a consumer accepts with is not the project a consumer develops in, and neither one requires the other to have been produced first. Every one of those paths reaches a `Sync` or creates files, so all three are validated before anything is written: the source host must be inside the project, the generated area strictly inside the source host, and the distribution inside the project. With the default layout, `clean` removes the distribution and bundle under build and preserves the source host. Root host mode enforces a source host outside the root build directory; module-local mode does not forbid placing source under build, so the default preservation guarantee does not cover every custom path.
 
 `verifyMiniApp` reads the assembled distribution and nothing else, because the question it answers is whether that directory stands on its own. A check that consulted the project would pass on a distribution that only works while the project is beside it. What it establishes is structure and wiring: the WeChat project files parse, `miniprogramRoot` resolves, every declared page has its entry files, the generated library area sits inside the mini program root and carries one module, one declaration and its npm manifest, and every `require()` in the distribution resolves to a file that is there. It refuses absolute paths, `node_modules` and references back to the project. Static reading and a Node smoke are module-wiring evidence; only WeChat Developer Tools is host acceptance, and nothing in the plugin may describe the former as the latter.
 
@@ -350,7 +357,7 @@ Because a distribution that a host cannot run would still build successfully, th
 
 `fixtures/miniapp-consumer` is the repository's own consumer: an ordinary build beside this one that applies the plugin by id and resolves the runtime by its public coordinate, with no knowledge of this repository's structure. It is the executable form of this boundary — the SDK is consumed, the host integration is packaged, and the host itself is UI. Its WeChat source host is `miniApp/`, created once by `initMiniApp` and edited by hand afterwards, and its WeChat UI is WXML, WXSS and thin JavaScript. That markup stays in the host: it never enters the SDK or the consumer's Kotlin, because a host's view vocabulary is not a platform's.
 
-The consumer-facing build configuration is one extension, `miniapp`, whose only host is `wechat`. The hierarchy is the point: `MiniAppExtension` is the platform and `WeChatHostConfiguration` is a host, so another host is another subtype and another accessor rather than a widened WeChat type. It carries only build paths — the bundle, the source host, the generated library area inside it, and the distribution — because every field in a Gradle DSL is a decision a consumer must make, while the output shape, CommonJS, declarations and the renderer boundary are the plugin's decisions, not the consumer's. It carries no application identifier, secret, page route or capability: those are the host's and the backend's. Business and backend configuration is not modelled here for the same reason it is not modelled at runtime.
+The consumer-facing build configuration is one extension, `miniapp`, whose only host is `wechat`. The hierarchy is the point: `MiniAppExtension` is the platform and `WeChatHostConfiguration` is a host, so another host is another subtype and another accessor rather than a widened WeChat type. It carries only explicit producer selection and host build paths — `logicProject`, `rootHost`, the bundle, source host, generated library area inside it, and distribution — because every field in a Gradle DSL is a decision a consumer must make, while the output shape, CommonJS, declarations and the renderer boundary are the plugin's decisions, not the consumer's. It carries no application identifier, secret, page route or capability: those are the host's and the backend's. Business and backend configuration is not modelled here for the same reason it is not modelled at runtime.
 
 A consumer whose `commonMain` depends on another Kotlin Multiplatform project must apply this plugin to that project as well. The dependency resolves through a Mini App variant, so a project that offers none fails variant resolution; there is no fallback, and moving the dependency out of `commonMain` is not a workaround.
 
@@ -368,3 +375,17 @@ Root `logicProject` is a configuration coordinator, not another compiler: it exp
 - Mirroring the complete `wx` API
 - Selecting hosts through a central platform enum
 - Hiding platform-specific APIs behind misleading common abstractions
+
+## 9. Spec navigation and repository boundaries
+
+Chinese specs use this document as their architecture parent; English files are synchronized translations rather than duplicate nodes. `parent` builds the sidebar tree; dependency edges and body links express collaboration. Directory names alone do not establish tree relationships.
+
+- [[module-sdk]] owns the runtime; its subtree describes common contracts, WeChat implementation, exports and tests. The actual call direction is export → Host → adapters/runtime → interop; runtime also uses adapter inspection ports, not a mechanical chain of four directories.
+- [[module-miniapp-gradle-plugin]] owns consumer build integration. It injects the public SDK coordinate without linking runtime implementation; the consumer Kotlin compilation depends on the runtime.
+- [[module-build-logic]] owns repository-only bundle-size checks. It measures compiler artifacts and never enters the consumer dependency graph.
+- [[module-fixtures]] and [[module-examples]] own independent consumers and hosts. Demo client UI, servers and core have their own dependency graphs; they are neither SDK root-build modules nor new runtime targets.
+- [[module-kgp-model-poc]] holds isolated model experiments; [[module-ci-release]] owns repository validation and maintainer publication; [[module-docs]] separates documentation, decisions and evidence responsibilities.
+
+These are responsibilities in existing code, not new Gradle modules. Root `settings.gradle.kts` still includes only the runtime and consumer plugin, plus repository build logic as an included build. The Wrapper, version catalog, internal `buildMiniAppSdk` and consumer integration entries are root-build wiring, not extra consumer-plugin responsibilities.
+
+Architecture prohibitions and automated coverage are different: the SDK guard checks Kotlin imports/packages and declared dependency lists, while the consumer guard checks the resolved runtime classpath. Neither is semantic detection of every handwritten renderer. [DEVELOPMENT](DEVELOPMENT-en.md) describes coverage and the remaining manual review.

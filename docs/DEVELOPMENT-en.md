@@ -2,6 +2,14 @@
 
 [中文](DEVELOPMENT-ch.md)
 
+## Project specs and documentation validation
+
+Specs form one Chinese tree: [goal root](../goal-and-requirements-ch.md) → [architecture node](ARCHITECTURE-ch.md) → nearby `SPEC-ch.md` files for real modules or key submodules, not individual source files. Before changing a documented boundary, contract, invariant, behavior, or decision, locate the owning spec with `spec_grep`, `spec_get`, or `spec_graph` when available, then read its relevant body; fall back to file reads without these tools.
+
+Only Chinese specs register unique nodes with YAML `id` / `type`; their English `-en.md` counterparts are synchronized translations linked by `translation-of: <Chinese spec ID>`, without duplicate `id` / `type`. Their bodies synchronize facts, structure, and intent, while identity metadata intentionally differs; both versions remain `draft` until user review. Navigation does not change the fact hierarchy in `AGENTS.md`; boundary changes update the owning spec and translation. When source and contract disagree, distinguish verified implementation, contract requirements, and **unresolved discrepancies**, rather than changing APIs or accepted ADRs through documentation reconciliation.
+
+For documentation-only changes, run `git diff --check` and, when spec tools are available, `spec_validate` to check graph links, duplicate IDs, and `parent` cycles. Body facts, bilingual meaning, and ordinary Markdown links need separate review. These checks establish no build, test, WeChat-host, or backend acceptance and require no new infrastructure or dependency installation.
+
 ## Requirements
 
 - A JDK compatible with the checked-in Gradle 9.3.1 Wrapper. The project does not pin a JDK toolchain; JDK 25.0.2 is the currently verified environment.
@@ -76,11 +84,11 @@ The runtime SDK shares client behaviour, host capabilities and presentation stat
 ./gradlew :kmp-miniapp-sdk:checkArchitectureBoundaries
 ```
 
-This task fails when anything under `sdk/**` imports a UI framework namespace or declares a UI framework dependency, and it runs as part of `:kmp-miniapp-sdk:check`. It is a build failure rather than a review note on purpose: "the SDK does not depend on Compose" has to survive contributors who have not read the ADR.
+This task scans `import` / `package` statements in `sdk/src/**/*.kt` and checks declared dependency coordinates in the Gradle model, failing on matches against the namespace and dependency classification lists in `sdk/build.gradle.kts`. It runs as part of `:kmp-miniapp-sdk:check`. It is a build failure rather than a review note on purpose: "the SDK does not depend on Compose" has to survive contributors who have not read the ADR.
 
 A dependency is matched by group when the group exists only to serve a UI framework, and by exact module coordinate when the group also carries a dependency this SDK legitimately uses. `org.jetbrains.kotlinx` carries `kotlinx-coroutines-core`, so the whole group cannot be forbidden; `kotlinx-html` and its `-js` / `-jvm` variants are forbidden as modules instead. Before the task trusts the classifier on the real model, it runs it against a fixed table of expected verdicts and fails if any coordinate is classified against expectation, so a later edit cannot silently widen or narrow the rule.
 
-What the check does not do: it cannot detect a renderer that imports no UI framework. A WXML generator or a view tree assembled from the SDK's own types would pass it. That class of mistake is still caught by review and by the rules in `sdk/AGENTS.md`, not by the build.
+The check neither scans non-Kotlin files nor resolves all transitive dependencies; it cannot detect a renderer that touches none of its classification lists. A WXML generator or a view tree assembled from the SDK's own types would pass it. That class of mistake is still caught by review and by the rules in `sdk/AGENTS.md`, not by this task.
 
 ## Mini App Gradle plugin
 
@@ -110,6 +118,8 @@ miniapp {
 }
 ```
 
+This table covers this section's bundle field only; later distribution and multi-module sections describe other host paths and root selection.
+
 | Field | Default | What it changes |
 | --- | --- | --- |
 | `wechat.bundleDirectory` | `build/miniapp/bundle` | where `assembleMiniAppBundle` writes the host bundle |
@@ -122,7 +132,7 @@ Both the block and the field are optional. `bundleDirectory` defaults to `build/
 
 **What is deliberately not here.** Application identifiers and secrets, merchant and payment material, order or signature data, API tokens, user identity, subscription template identifiers, permission state, presentation state, page routes, markup, view definitions, and any other business or backend configuration. Those are not build inputs. A Gradle extension is not a second copy of a host's console, and the SDK does not model them at build time for the same reason it does not model them at runtime.
 
-**The one validation.** `bundleDirectory` must be a directory inside the project. `assembleMiniAppBundle` is a `Sync`, which deletes files in its destination that the bundle does not contain, so a directory outside the project — or the project directory itself — would be deleted rather than assembled into. The failure names the field, both paths and the expected value. Writing into a mini program folder inside the project is allowed; relaxing the rule needs a real external case.
+**This field's directory validation.** `bundleDirectory` must be a directory inside the project. `assembleMiniAppBundle` is a `Sync`, which deletes files in its destination that the bundle does not contain, so a directory outside the project — or the project directory itself — would be deleted rather than assembled into. The failure names the field, both paths and the expected value. Writing into a mini program folder inside the project is allowed; relaxing the rule needs a real external case.
 
 ### The host bundle
 
@@ -288,7 +298,7 @@ tasks. It is included, never published, and a consumer never applies it.
 `verifyMiniAppBundleSize` measures the SDK's production distribution — raw and gzip bytes per file,
 per category, and in total — writes `build/reports/miniapp-size/bundle-size.json`, and compares the
 result with the committed baseline in `docs/performance-baseline.json`. It fails only when a shipped
-category grows past both a 4 KB floor and a 5% share, so a compiler that re-emits a file with a few
+category reaches or exceeds both a 4,096-byte floor and a 5% share, so a compiler that re-emits a file with a few
 bytes of difference does not break the build. `updateMiniAppSizeBaseline` rewrites that baseline; it
 is a maintainer action, and its diff is reviewed like any other.
 
@@ -574,7 +584,7 @@ Automation cannot stand in for the eligibility or backend halves: they need a qu
 
 BLE is a proof of concept for the SDK's event-driven resource model, not a Bluetooth API, and
 everything about it is `Experimental`. It exists because the SDK's other capabilities either answer a
-question or forward an interface the consumer already owns; BLE is the first real `on`/`off` source.
+question or forward an interface the consumer already owns; BLE further exercises registration, buffering and cleanup for real `on`/`off` sources. Network-status observation already has a similar resource boundary, so BLE is neither the only nor the first event source.
 
 What it covers: adapter open, close and state; discovery with its device stream; connection with its
 connection-state stream. What it deliberately does not: services, characteristics, notifications,
@@ -586,9 +596,10 @@ MTU, signal-strength queries, pairing, reconnection, background scanning, and `g
 
 The rules the proof of concept is built on, and which its tests assert:
 
-- **One registration per collector, removed on every termination path.** Each stream registers one
-  host listener and hands the same value to the removal call, so a collector that completes, fails,
-  or is cancelled leaves nothing behind. A removal the host refuses is counted rather than thrown,
+- **One registration per collector, with removal of the same value attempted on every termination path.**
+  Each stream hands the host listener it registered to the removal call whether the collector
+  completes, fails, or is cancelled. The active count decreases only when the host removal call
+  succeeds; a refusal retains that count and increments the failure count rather than throwing,
   because throwing during cleanup would replace the caller's own result or cancellation.
 - **Duplicate policy: one event per `deviceId` per collector**, first sighting wins. Discovery is also
   started with `allowDuplicatesKey = false`, so the host filters too, but the stream does not depend

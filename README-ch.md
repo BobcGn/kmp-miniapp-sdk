@@ -437,6 +437,8 @@ runtime `io.github.bobcgn:kmp-miniapp-sdk:0.1.1`，Gradle 从 Maven Central 解�
 
 ## 文档
 
+- [项目目标与范围（规格树入口）](goal-and-requirements-ch.md)
+- [文档、决策与证据职责](docs/SPEC-ch.md)
 - [当前项目事实](docs/PROJECT_FACTS-ch.md)
 - [架构](docs/ARCHITECTURE-ch.md)
 - [开发指南](docs/DEVELOPMENT-ch.md)
