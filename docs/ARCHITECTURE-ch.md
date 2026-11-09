@@ -5,6 +5,7 @@ status: draft
 title: 系统架构与模块边界
 parent: goal-and-requirements
 tags: [architecture, host-boundary]
+references: [module-repository-build, module-sdk, module-miniapp-gradle-plugin, module-build-logic, module-fixtures, module-examples, module-kgp-model-poc, module-ci-release, module-docs]
 ---
 
 # 架构
@@ -382,6 +383,7 @@ bundle 不是宿主工程，二者不可混淆。Mini App 构建有三样东西�
 
 中文规格以本文件为架构父节点；英文文件是同步译文，不重复注册。节点通过 `parent` 组成侧栏树，通过依赖边和正文链接表达协作；目录名本身不会建立树关系。
 
+- [[module-repository-build]] 拥有根构建产物与验证接线，[[submodule-gradle-toolchain]] 说明 Wrapper 与版本输入。
 - [[module-sdk]] 拥有 runtime；公共契约、微信实现、导出与测试在其子树说明。真实调用方向是 export → Host → adapter/runtime → interop；runtime 也使用 adapter inspection port，不是四个目录机械串联。
 - [[module-miniapp-gradle-plugin]] 拥有消费者构建集成。它注入 SDK 公共坐标而不链接 runtime 实现；消费者 Kotlin compilation 才依赖 runtime。
 - [[module-build-logic]] 拥有本仓库专用的包体积检查；它测量编译产物，不进入消费者依赖图。

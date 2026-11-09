@@ -289,7 +289,7 @@ tab 切换从 index 页面核对，它是唯一一个目标必须声明在小程
 - `CapabilitySupportContractChecks` 在 Fake Host 与真实 `WechatHost` 两处运行同一组契约断言。
 - 变异探针已实测并回滚：把版本比较方向取反后，方向项与边界项共 3 项失败。
 
-卡片中的基础库版本必须与所选调试基础库一致，请记录下来：它是验证矩阵所要求的证据的一部分。该能力已完成开发者工具与真机验收，记录见 [微信真实宿主验证矩阵](../platforms/wechat/WECHAT_HOST_VERIFICATION-ch.md)。
+卡片中的基础库版本必须与所选调试基础库一致，请记录下来：它是验证矩阵所要求的证据的一部分。该能力已完成开发者工具与真机验收，记录见 [微信真实宿主验证矩阵](platforms/wechat/WECHAT_HOST_VERIFICATION-ch.md)。
 
 9. 验证权限生命周期。页面加载期间不会请求任何权限，因此以下每一步都由点击触发。卡片初始显示宿主已有的状态：全新安装或清除小程序授权数据后为 `NotRequested`。
 

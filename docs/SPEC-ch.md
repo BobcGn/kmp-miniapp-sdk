@@ -15,6 +15,8 @@ tags: [documentation, evidence]
 
 保存源码无法单独解释的责任边界，以及可追溯的能力与验证记录。[[goal-and-requirements]] 拥有产品目标，[[architecture]] 拥有系统约束；就近模块规格拥有局部契约，不在这里复制它们。
 
+目录级规格 [[submodule-architecture-decisions]] 与 [[submodule-wechat-evidence]] 分别细化历史决定和微信证据职责，不重复注册原始 ADR 或矩阵文件。
+
 ## 文档边界
 
 - `PROJECT_FACTS-*` 是当前事实索引，源码与可执行配置仍是实现事实的最高依据。

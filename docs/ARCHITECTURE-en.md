@@ -380,6 +380,7 @@ Root `logicProject` is a configuration coordinator, not another compiler: it exp
 
 Chinese specs use this document as their architecture parent; English files are synchronized translations rather than duplicate nodes. `parent` builds the sidebar tree; dependency edges and body links express collaboration. Directory names alone do not establish tree relationships.
 
+- [[module-repository-build]] owns root artifact/verification wiring; [[submodule-gradle-toolchain]] describes Wrapper and version inputs.
 - [[module-sdk]] owns the runtime; its subtree describes common contracts, WeChat implementation, exports and tests. The actual call direction is export → Host → adapters/runtime → interop; runtime also uses adapter inspection ports, not a mechanical chain of four directories.
 - [[module-miniapp-gradle-plugin]] owns consumer build integration. It injects the public SDK coordinate without linking runtime implementation; the consumer Kotlin compilation depends on the runtime.
 - [[module-build-logic]] owns repository-only bundle-size checks. It measures compiler artifacts and never enters the consumer dependency graph.

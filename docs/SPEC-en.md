@@ -13,6 +13,8 @@ title: docs · documentation, decisions and evidence
 
 Preserve responsibilities that source alone cannot explain, together with traceable capability and verification records. [[goal-and-requirements]] owns product goals, [[architecture]] owns system constraints, and nearby module specs own local contracts; this document does not copy them.
 
+Directory specs [[submodule-architecture-decisions]] and [[submodule-wechat-evidence]] refine historical-decision and WeChat-evidence responsibilities without separately registering original ADR or matrix files.
+
 ## Documentation boundaries
 
 - `PROJECT_FACTS-*` indexes current facts; source and executable configuration remain the highest authority for implementation facts.

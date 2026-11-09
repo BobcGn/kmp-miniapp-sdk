@@ -342,7 +342,7 @@ Connecting needs a real device and a reachable peripheral; the connection rows o
 - `CapabilitySupportContractChecks` runs the same assertions against the Fake Host and the real `WechatHost`.
 - A mutation probe was executed and reverted: inverting the version comparison failed three tests, covering both the direction and the boundary.
 
-The base library version in the card must match the one selected in Developer Tools. Record it: it is part of the evidence the verification matrix requires. This capability has completed Developer Tools and real-device acceptance; the record is in the [WeChat real-host verification matrix](../platforms/wechat/WECHAT_HOST_VERIFICATION-en.md).
+The base library version in the card must match the one selected in Developer Tools. Record it: it is part of the evidence the verification matrix requires. This capability has completed Developer Tools and real-device acceptance; the record is in the [WeChat real-host verification matrix](platforms/wechat/WECHAT_HOST_VERIFICATION-en.md).
 
 9. Verify the permission lifecycle. Nothing is requested while the page loads, so every step below follows a tap. The card starts at whatever state the host already holds: `NotRequested` on a fresh install or after clearing the mini program's authorization data.
 
