@@ -18,10 +18,16 @@ Directory specs [[submodule-architecture-decisions]] and [[submodule-wechat-evid
 ## Documentation boundaries
 
 - `PROJECT_FACTS-*` indexes current facts; source and executable configuration remain the highest authority for implementation facts.
-- `decisions/` preserves accepted decisions and their context. A historical “not implemented” does not negate later source. Changing a decision requires a new ADR rather than rewriting the old record into new history. This import references ADRs without registering them individually as graph nodes.
+- `decisions/` preserves accepted decisions and their context. A historical “not implemented” does not negate later source. Changing a decision requires a new ADR rather than rewriting the old record into new history. This graph references ADRs as sources without individually registering decision nodes.
 - `DEVELOPMENT-*`, `CONSUMER_SETUP-*`, `TESTING-*` and `RELEASING-*` own development, integration, testing and maintainer-publication workflows respectively.
 - The WeChat capability matrix owns status and minimum evidence levels; the host-verification matrix owns environments, records and evidence limits. Node results cannot substitute for host, device or backend results.
-- `ROADMAP-*` is planning input and `performance-baseline.json` is size-comparison input; neither establishes a new capability or a result from this run.
+- `ROADMAP-*` is planning input and `performance-baseline.json` is size-comparison input; neither establishes a new capability or a fresh execution result.
+
+## Intent, facts and inference
+
+A module spec answers what it owns, why the boundary matters and the cost of crossing it, not a file-by-file implementation explanation. Reasons preferably come from applicable ADRs, existing documentation or explicit source contracts. Code establishes dependencies/behaviour, not automatically historical motives. Unevidenced explanations must be marked unconfirmed beside the claim; draft status or cross-references between new specs do not turn them into decisions.
+
+Architecture owns system invariants once, parents own sibling dependencies, and leaves retain local responsibility/trade-offs/necessary evidence. Confirmed intent can justify responsibility without establishing implementation or new acceptance results. Node counts, file coverage and structural validation prove no semantic correctness.
 
 ## Graph and maintenance contract
 
@@ -33,4 +39,4 @@ Chinese `*-ch.md` files register nodes with unique `id`, `type`, `title` and rea
 
 `spec_validate` checks duplicate IDs, dangling links and parent cycles. Tree coverage, non-indexed English translations, translated structure and local file links are checked separately. `verifyMiniAppConsumerDocs` covers only README structure, paths and consumer commands, not semantic consistency of all documentation.
 
-Implementation/contract gaps verified during import remain explicit in the owning spec; historical ADRs and original acceptance evidence are not silently rewritten. The spec index is not a new SDK API, publication or Gradle module.
+Verified implementation/contract gaps remain explicit in the owning spec; historical ADRs and original acceptance evidence are not silently rewritten. The spec index is not a new SDK API, publication or Gradle module.

@@ -15,7 +15,7 @@ title: server · Ktor JVM example service
 
 ## Dependency and runtime boundary
 
-Server depends on core's JVM variant and Ktor/logging. Core, runtime SDK and Mini App greeting do not depend on server. Current source binds 0.0.0.0:8080; startup listens on the network, not a read-only compilation check. This import does not start it.
+Server depends on core's JVM variant and Ktor/logging. Core, runtime SDK and Mini App greeting do not depend on server. Current source binds 0.0.0.0:8080; startup listens on the network, not a read-only compilation check. Invoking run must account for that listening side effect.
 
 ## Verification
 

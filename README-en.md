@@ -7,6 +7,8 @@ project a Mini App source set, a test source set, a WeChat source host, a host-r
 standalone distribution, plus the Kotlin runtime those sources compile against. Mini App is the
 platform; **WeChat is the current host**, and the host owns rendering.
 
+The main track brings existing shared KMP logic to Mini Apps; runtime host capabilities are its foundation, with direct JS/TS SDK consumption supplementary. Both KMP demos are experimental reference cases, not generic templates. [Product goals](goal-and-requirements-en.md) and [example specs](examples/SPEC-en.md) own their responsibilities.
+
 The workflow and every command below come from, and are executed against, the repository's real
 consumer build: [`fixtures/miniapp-consumer`](fixtures/miniapp-consumer). The snippets are shortened
 where the text says so, but do not introduce an unverified API or build step.

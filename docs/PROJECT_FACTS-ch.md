@@ -11,7 +11,7 @@
 ## 1. 项目标识
 
 - 项目：`kmp-miniapp-sdk`
-- 目的：一个 Kotlin Multiplatform client runtime，用于跨 Mini App 平台共享客户端行为、宿主能力与 presentation state，同时保持渲染由宿主原生负责。它使用官方 Kotlin Multiplatform 和 Kotlin/JS，让共享 Kotlin 逻辑可由微信小程序 JavaScript 或 TypeScript runtime 消费。
+- 目的：让已有 Kotlin Multiplatform 共享客户端逻辑接入 Mini App，同时保持渲染由宿主原生负责。Gradle 插件负责消费者编译与分发接线，runtime 宿主能力是底座，直接 JS/TS 消费 SDK 是补充方式；当前微信桥接使用官方 Kotlin/JS。presentation state 的责任边界不等于当前已有 Presentation Core 实现。
 - 类型：SDK / library。
 
 后端拥有业务事实，Kotlin 拥有客户端行为，宿主拥有渲染。[ADR 0011](decisions/0011-presentation-state-shared-rendering-host-native-ch.md) 固定了四层 —— backend、KMP client runtime、host integration、platform UI —— 及其责任矩阵；矩阵内容见 [ARCHITECTURE-ch.md](ARCHITECTURE-ch.md)。
@@ -89,7 +89,7 @@ Root project 'kmp-miniapp-sdk'
 
 插件接入的 runtime 坐标为 `io.github.bobcgn:kmp-miniapp-sdk:<version>`。`gradle/libs.versions.toml` 是该版本的唯一来源：插件侧的坐标由它生成成资源，SDK 自身的 `MiniAppSdk.VERSION` 也由同一处生成，因此二者都不可能偏离当前构建的版本。插件只把它加入 `miniappMain`，`miniappTest` 通过 source-set hierarchy 继承。0.1.1 是当前最新公开版本：0.1.0 是首个公开发布版本，0.1.1 增加了 distribution pipeline，且未改变 0.1.0 引入的任何东西。正式版本分别发布到 Maven Central 与 Gradle Plugin Portal；仓库开发 fixture 使用 composite substitution，以便测试当前工作树而不是已发布的 binary。
 
-`examples/` 包含 `wechat-miniprogram` integration host，以及 `kmp-demo`、`kmp-demo-with-server` 两个独立消费者构建。两个 demo 各有自己的 module 与平台配置；以上均不是 SDK 根构建的 module，也不为 SDK 新增 target。
+`examples/` 包含 `wechat-miniprogram` integration host，以及 `kmp-demo`、`kmp-demo-with-server` 两个独立消费者构建。维护者确认两个 demo 仅为实验性参考案例，不是通用模板；SDK 尚有待验证与待推进内容，不能由案例成功推出完整支持。它们各有自己的 module 与平台配置；以上均不是 SDK 根构建的 module，也不为 SDK 新增 target。
 
 SDK 的 Maven publication 已配置于 `sdk/build.gradle.kts`；既有发布与在线消费者验证保留原日期。本次文档对账未重新执行发布或在线验证。
 

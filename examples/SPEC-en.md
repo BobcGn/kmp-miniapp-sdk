@@ -13,6 +13,12 @@ title: examples · hosts and client examples
 
 [[module-example-wechat]] is an independent npm/WeChat capability-acceptance host. [[module-example-kmp]] and [[module-example-server]] are independent KMP consumers with their own Wrappers, modules and mobile clients. examples is neither one app nor an SDK root-build Gradle module.
 
+## Why the cases are distinct
+
+The confirmed role of both KMP demos is experimental reference consumption, not generic templates. They expose shared logic, client UI and WeChat integration in real project shapes; the server case also supplies a JVM consumer without creating SDK backend responsibilities. SDK verification/development gaps remain: a running case does not turn them into supported capabilities.
+
+They promise no stable project layout, complete platform compatibility or generic template. The two integration styles are current experimental facts, not a decision to retain both forever. Each case owns its wiring/results; directory organization is not public SDK API. Non-template status applies to these two KMP demos, not removal of the plugin's minimal WeChat source-host initialization-template contract.
+
 ## Dependencies and responsibility boundary
 
 The capability host consumes SDK/thin wrapper. Each demo's UI and WeChat host consume its core, with WeChat using the Mini App artifact. The server example's server consumes core's JVM variant, not a dependency of SDK or WeChat greeting.

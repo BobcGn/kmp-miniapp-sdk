@@ -15,6 +15,12 @@ title: runtime · gating, host information and lifecycle
 
 `WechatRuntimeInfo` lazily reads/caches version and platform separately, preferring modern APIs with an older-library fallback; `canIUse` stays live. A known base-library version does not establish every API's availability.
 
+## Why availability is answered at runtime
+
+[WechatCapabilityGate.kt](WechatCapabilityGate.kt), [WechatRuntimeInfo.kt](WechatRuntimeInfo.kt) and ADR 0007 reflect that one build runs on different libraries/devices: build-time inventories cannot answer current capability. Lazy scalar reads avoid touching an unready host during module load; caching version/platform must not freeze live probes.
+
+An adapter's presence consequently establishes no current callability; unconfirmed support is answered conservatively. Lifecycle belongs to consumer registration, so receiving reports grants runtime no ownership of pages/navigation.
+
 ## Lifecycle and boundary
 
 `WechatAppLifecycle` accepts consumer-forwarded launch/show/hide and supplies common app state; `WechatPageLifecycle` tracks shown-page routes/state behind the WeChat escape hatch. Neither intercepts App/Page registration nor owns a page tree or navigation framework.

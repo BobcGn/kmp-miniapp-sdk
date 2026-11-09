@@ -15,6 +15,12 @@ Declare global `wx`, option bags, callbacks, task handles and raw result shapes.
 
 Raw readers may check types, finite numbers and ranges, distinguishing absent from malformed values. They neither produce business answers nor classify SDK errors. Checks in decoders such as `WxLocation.kt` do not move platform policy into common code.
 
+## Why raw interop has its own boundary
+
+[Wx.kt](Wx.kt) and sibling contracts represent objects the host can actually supply, not desired shared models. Localizing presence, construction and raw decoding prevents base-library shape changes from forcing dynamic into common Kotlin and makes malformed results reproducible with fake raw objects.
+
+The cost is platform vocabulary, not a common capability surface. Deciding refusal, timeout or business success would cross the decoding boundary. SDK JS-isolation rules require this split; adapters own policy/error interpretation.
+
 ## Boundary
 
 Keep `dynamic`, `external` and `js()` narrow at this raw boundary; no raw JS object enters common APIs. Factories do not call the host; adapter ports perform concrete callback calls. Interop depends on no business implementation, export or host UI and adds no Kotlin renderer.

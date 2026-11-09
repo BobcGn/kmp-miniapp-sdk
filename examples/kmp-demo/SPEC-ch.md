@@ -2,9 +2,10 @@
 id: module-example-kmp
 type: module-design
 status: draft
-title: kmp-demo · 无服务器客户端组合
+title: kmp-demo · 实验性无服务器消费者
 parent: module-examples
 references: [module-miniapp-gradle-plugin]
+tags: [experimental-consumer]
 ---
 
 # 无服务器客户端组合
@@ -13,7 +14,13 @@ references: [module-miniapp-gradle-plugin]
 
 ## 职责与根配置
 
-用独立 build 演示已有共享逻辑同时被移动 UI 与微信消费。根通过 logicProject 选择 `:core`，自身不编译 KMP；通过 includeBuild 使用当前仓库源码，不把尚未发布的根级选择当成发布版契约。
+作为 [[module-examples]] 所定义的实验性参考消费者，用独立 build 观察已有共享逻辑同时被移动 UI 与微信消费；不是通用工程模板。根通过 logicProject 选择 `:core`，自身不编译 KMP；通过 includeBuild 使用当前仓库源码，不把尚未发布的根级选择当成发布版契约。
+
+## 为什么把 core 与 UI 分开
+
+Mini App compilation 会继承 common source-set 的依赖；如果 shared 同时拥有 Compose UI/资源，单纯增加一个 target 并不能使那些依赖适合微信。本例通过消费者手工分离保留已有行为和移动 UI，观察 core 是否能单独交付 Mini App 产物；原始问题与验证范围记录在 [README](README-ch.md)。
+
+根 logicProject 接入是当前案例形态，不是所有消费者必须采用的布局。模板稳定性、所有平台运行和自动迁移都不由这个实验推出；两种 demo 的角色及这项取舍由父规格拥有。
 
 ## 模块依赖
 

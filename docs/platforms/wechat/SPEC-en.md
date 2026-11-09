@@ -13,6 +13,12 @@ title: wechat · capability status and acceptance evidence
 
 The [capability matrix](WECHAT_CAPABILITIES-en.md) indexes current implementation and status; the [host-verification matrix](WECHAT_HOST_VERIFICATION-en.md) owns minimum environments, regression and evidence format. Neither defines new runtime APIs or promotes plans into capabilities.
 
+## Why capability status and runtime evidence have separate owners
+
+Implementation presence shows what SDK code exists; fakes/Node show behaviour under constructed conditions. Permissions, hardware, account eligibility and backend results depend on environments outside SDK control. The capability matrix answers current status; the verification matrix defines sufficient evidence, not a single green checklist impersonating every environment.
+
+The existing matrices/TESTING establish these rules. Completed code may leave acceptance gaps; missing templates, controlled services or merchant environments remain limitations rather than invented success for spec completeness.
+
 ## Status boundary
 
 `Stable` requires implementation, automation and the required host-level evidence. `Partial` preserves semantic or verification gaps; `Experimental` promises no stability. `Planned`, `Unsupported` and presentation entries are not existing interfaces.

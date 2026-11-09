@@ -13,6 +13,12 @@ title: miniapp-gradle-plugin · consumer build integration
 
 `MiniAppGradlePlugin` implements `io.github.bobcgn.miniapp`. Public configuration is `MiniAppExtension` and typed `wechat`; task contracts are miniappTest, assembleMiniAppBundle, initMiniApp, syncMiniApp, assembleMiniApp, verifyMiniApp and checkMiniAppHostBoundary. It injects the public SDK coordinate into consumers without linking runtime implementation.
 
+## Why the plugin owns wiring instead of consumer scripts
+
+[ADR 0010](../docs/decisions/0010-miniapp-gradle-plugin-source-set-model-en.md) compares manual named targets, unconsumed custom source sets and plugin-owned targets. Names without compilations silently ignore consumer source; correct wiring handwritten by each consumer still preserves the integration burden. The plugin therefore creates a target, KGP owns its model, and consumers keep business source.
+
+[MiniAppPlatformSupport.kt](src/main/kotlin/io/github/bobcgn/miniapp/gradle/MiniAppPlatformSupport.kt) establishes current implementation. The cost is KGP naming/variant/compatibility constraints, not an independent Mini App compiler. Public runtime coordinates also avoid consumer dependence on SDK-internal project paths.
+
 ## Platform and configuration ownership
 
 A Kotlin/JS target named `miniapp` lets KGP derive real source sets, compilations and common parents. The plugin does not hand-build dependsOn models. Configuration materializes conventional Kotlin directories, not WeChat hosts. Node, CommonJS libraries and declarations describe the current host build shape.

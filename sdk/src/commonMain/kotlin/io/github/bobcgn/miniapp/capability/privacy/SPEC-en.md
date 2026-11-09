@@ -13,6 +13,12 @@ title: privacy · privacy requirements and outcomes
 
 `MiniAppPrivacy` supplies status, requestAuthorization and query-only requireSatisfied under key `privacy`. `PrivacyStatus` describes the host's current requirement/name; `PrivacyAuthorizationOutcome` describes Authorized/Refused for one request. Requirements, outcomes and errors are separate concepts.
 
+## Why this is not another permission state
+
+[MiniAppPrivacy.kt](MiniAppPrivacy.kt) and ADR 0009 rely on hosts prompting/storing/clearing permission and privacy separately; a shared model would tell callers the wrong next action. A requirement asks what the host needs now, an outcome answers one interaction, and errors express unmet preconditions/inability to answer. None substitutes for another.
+
+NOT_REQUIRED proves no consent, so SDK offers queries/explicit requests rather than compliance proof. This narrower promise keeps account configuration and host answers from becoming client-owned legal/business facts.
+
 ## Semantics and interaction boundary
 
 NOT_REQUIRED says only that the host requires no authorization now, not proof of consent: it may also mean no declared collection. Every call asks the host rather than treating old state as permanent truth; the host supplies the contract name.

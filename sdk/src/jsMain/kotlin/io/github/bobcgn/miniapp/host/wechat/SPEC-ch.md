@@ -18,6 +18,12 @@ tags: [wechat, host]
 
 Host 为 location 复用与权限、隐私 capability 相同的服务实例，避免另一套状态；其构造不会预先读取 `wx`。公共契约的存在不意味着某个平台专属概念应向公共层搬移。
 
+## 设计依据与未确认项
+
+[WechatHost.kt](WechatHost.kt) 是组合事实的来源；[ADR 0003](../../../../../../../../../../docs/decisions/0003-miniapp-host-boundary-ch.md) 解释为何微信是 Host Adapter 而非 SDK core。页面栈、微信登录态等语义留在逃生口，可以保留宿主事实而不把它们承诺为其他平台都有的能力。
+
+**未确认的设计动机：** 维护者尚未确定 `WechatHost` / `WechatPlatformApi` 为什么收敛为 internal。当前没有公开构造入口是实现事实；它既不证明刻意永久封闭，也不证明已承诺新增 Kotlin Host API。不能以本规格替这项未决意图作决定。
+
 ## 子模块依赖与边界
 
 [[submodule-sdk-wechat-interop]] 提供原始契约、presence 与解码；[[submodule-sdk-wechat-adapter]] 使用这些契约、公共模型与 internal 异步机制；[[submodule-sdk-wechat-runtime]] 使用公共模型和 adapter inspection port，负责门控与 lifecycle。Host 组合后三者，不把它们解释为严格的目录串联。

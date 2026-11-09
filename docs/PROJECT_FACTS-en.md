@@ -11,7 +11,7 @@ See the [WeChat capability matrix](platforms/wechat/WECHAT_CAPABILITIES-en.md) f
 ## 1. Project Identity
 
 - Project: `kmp-miniapp-sdk`
-- Purpose: a Kotlin Multiplatform client runtime for sharing client behaviour, host capabilities, and presentation state across Mini App platforms, while keeping rendering host-native. It uses official Kotlin Multiplatform and Kotlin/JS so shared Kotlin logic can be consumed by a WeChat Mini Program JavaScript or TypeScript runtime.
+- Purpose: bring existing shared Kotlin Multiplatform client logic to Mini Apps while keeping rendering host-native. The Gradle plugin owns consumer compilation/distribution wiring, runtime host capabilities are the foundation, and direct JS/TS SDK consumption is supplementary. Current WeChat bridging uses official Kotlin/JS. Presentation-state responsibility does not establish a current Presentation Core implementation.
 - Kind: SDK / library.
 
 The backend owns business truth, Kotlin owns client behaviour, and the host owns rendering. [ADR 0011](decisions/0011-presentation-state-shared-rendering-host-native-en.md) fixes the four layers — backend, KMP client runtime, host integration, platform UI — and the responsibility matrix across them; [ARCHITECTURE-en.md](ARCHITECTURE-en.md) carries the matrix.
@@ -89,7 +89,7 @@ Root project 'kmp-miniapp-sdk'
 
 The runtime coordinate the plugin adds is `io.github.bobcgn:kmp-miniapp-sdk:<version>`. `gradle/libs.versions.toml` is the single source of that version: the plugin's coordinate is generated into it as a resource, and the SDK's own `MiniAppSdk.VERSION` is generated from the same place, so neither can drift away from the version being built. The plugin adds it to `miniappMain` only, and `miniappTest` inherits it through the source-set hierarchy. Version 0.1.1 is the latest public release: 0.1.0 was the first public release, and 0.1.1 adds the distribution pipeline without changing anything 0.1.0 introduced. Releases go to Maven Central and the Gradle Plugin Portal; repository-development fixtures use composite substitution so they test the working tree rather than a released binary.
 
-`examples/` contains the `wechat-miniprogram` integration host and the independent `kmp-demo` and `kmp-demo-with-server` consumer builds. The two demos have their own modules and platform configuration; none of these is a module of the SDK root build or adds an SDK target.
+`examples/` contains the `wechat-miniprogram` integration host and independent `kmp-demo` / `kmp-demo-with-server` consumer builds. The maintainer confirms both demos are experimental reference cases, not generic templates; outstanding SDK verification/development does not become complete support when a case succeeds. They have their own modules/platform configuration; none is an SDK root-build module or adds an SDK target.
 
 SDK Maven publication is configured in `sdk/build.gradle.kts`; existing release and online-consumer verification records retain their original dates. This documentation reconciliation reruns neither publication nor online verification.
 

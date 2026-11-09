@@ -15,6 +15,12 @@ tags: [contracts, platform-neutral]
 
 承载消费者可以共享的 Host、能力契约、模型、错误和 internal 异步原语。`api/MiniAppSdk.kt` 提供版本 metadata；其值由 Gradle 从 catalog 生成，不维护第二份版本字面量。它不创建具体宿主或实现消费者业务。
 
+## 设计理由与代价
+
+共享逻辑必须能表达「需要什么能力」，而不把某个 runtime 的调用方式编进自身。因此本层保留语义契约，把微信对象与可用性探测留给实现。[ADR 0003](../../../docs/decisions/0003-miniapp-host-boundary-ch.md) 给出了避免平台枚举和最低公分母 API 的理由。
+
+这种隔离并不承诺所有操作可移植：只有语义真正共同的部分进入公共契约；平台特有选项仍需从宿主逃生口访问。新增一个微信函数不自动构成新增 common capability 的理由。子模块仍在同一 compilation 中，目录划分不赋予它们独立 artifact 身份。
+
 ## 子模块与依赖
 
 [[submodule-sdk-host]] 定义宿主与版本，[[submodule-sdk-capabilities]] 定义支持模型和各能力领域。两者互用公共类型，属于同一 compilation，不是宣称完全独立的发布包。能力声明使用身份 key；Host 使用支持状态与错误；[[submodule-sdk-errors]] 使用能力 key；[[submodule-sdk-async]] 使用错误与 coroutines。

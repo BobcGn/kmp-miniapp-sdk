@@ -15,11 +15,17 @@ title: host · host, versions and capability guard
 
 `HostVersion` owns common parsing/comparison. WeChat versions required by particular capabilities are host data, not constants here. `requireSupported` accepts only `Supported`; all other states throw `UnsupportedCapability`. Callers needing a reason query support directly.
 
+## Trade-off and implementation evidence
+
+[MiniAppHost.kt](MiniAppHost.kt) separates availability from host-specific options: consumers ask about capabilities without recognizing platform enums. The guard retains only the failed key, so its exception loses version/permission reasons. Callers needing explanations query full support rather than parse error text.
+
+[HostVersion.kt](HostVersion.kt) parses/compares without a host, making it shareable/testable. Reading a version and assigning API minimum versions belong elsewhere, keeping WeChat version tables out of common models.
+
 ## Boundary and known discrepancy
 
 This layer probes no `wx`, manages no permission state and offers no generic service locator. Capability-provider facets belong to their domains rather than an ever-growing Host base.
 
-The guard is a public checking entry, not currently the only exception path: adapters also construct that exception, and some operations are not pre-gated. The difference from ADR 0007's single-path requirement remains explicit in [[architecture]]; this spec decides no refactoring approach.
+The guard is a public checking entry, not currently the only exception path: adapters also construct that exception, and some operations are not pre-gated. The difference from ADR 0007's single-path requirement remains explicit in [[architecture]]; unified gating remains undecided, not an implemented invariant.
 
 ## Verification
 

@@ -17,7 +17,7 @@ depends-on: [submodule-server-demo-core]
 
 ## 依赖与运行边界
 
-server 依赖 core JVM variant 和 Ktor/日志；core、runtime SDK 与 Mini App greeting 都不依赖 server。源码当前绑定 0.0.0.0:8080，启动会监听网络；不能把运行服务伪装成只读编译检查，本次不自动启动。
+server 依赖 core JVM variant 和 Ktor/日志；core、runtime SDK 与 Mini App greeting 都不依赖 server。源码当前绑定 0.0.0.0:8080，启动会监听网络；运行服务不是只读编译检查，调用 run 时需要考虑该网络监听副作用。
 
 ## 验证
 

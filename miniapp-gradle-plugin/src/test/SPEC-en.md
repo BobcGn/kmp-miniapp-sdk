@@ -15,6 +15,12 @@ Contract/unit suites check descriptors, public coordinates, typed extension, dep
 
 `js/verify-consumer-declarations.cjs` uses actual consumer TypeScript packages, configuration and generated declarations to check calls and definition identity. It installs no second dependency set and does not equate language-service output with IDE-click acceptance.
 
+## Why rules and wiring have separate checks
+
+Broken requires/unsafe paths can be reproduced in tiny directories without recompiling Kotlin/JS. Actual compilation-owned source sets, executed tests and cache reuse cannot be proved by pure functions. Unit suites own rules, TestKit owns real Gradle wiring, and persistent fixtures own external-consumer shapes.
+
+[TESTING](../../../docs/TESTING-en.md) records the trade-off, implemented by the existing suite layers. More fixtures do not replace missing contract checks, and task-name assertions do not prove compiled user code.
+
 ## Dependencies and isolation
 
 Fixtures share the buildscript classpath between KGP and the tested plugin; runtime resolves through public coordinates and test-side composite builds. Production knows no repository path. Temporary projects read no developer-private WeChat configuration or publishing credentials.

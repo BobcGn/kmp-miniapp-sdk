@@ -4,6 +4,8 @@ These rules apply to `examples/**` and extend the repository root `AGENTS.md`.
 
 Examples are integration hosts, not SDK source. Their purpose is to prove that generated SDK artifacts run in WeChat Developer Tools and, when applicable, a real-device WeChat Mini Program runtime.
 
+`kmp-demo` and `kmp-demo-with-server` are experimental reference consumers, not generic project templates or stable platform-support commitments. Keep their observed results and pending verification separate; their layouts do not become SDK API or mandatory consumer structure. This does not remove the plugin's minimal WeChat source-host initialization-template contract.
+
 An example may contain:
 
 - WXML

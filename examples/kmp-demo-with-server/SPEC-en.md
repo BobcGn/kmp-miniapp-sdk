@@ -2,7 +2,7 @@
 translation-of: module-example-server
 language: en
 status: draft
-title: kmp-demo-with-server · clients and server composition
+title: kmp-demo-with-server · experimental multi-client consumer
 ---
 
 # Clients and server composition
@@ -11,7 +11,13 @@ title: kmp-demo-with-server · clients and server composition
 
 ## Responsibility and root configuration
 
-An independent KMP consumer contains mobile clients, WeChat and a Ktor server, consuming current SDK source through includeBuild. Unlike the serverless demo, core applies the plugin with rootHost and sourceDirectory app/miniApp; root logicProject does not migrate modules here.
+As the experimental reference consumer defined by [[module-examples]], this includes mobile clients, WeChat and Ktor server with current SDK source via includeBuild, not a generic project template. Unlike the serverless demo, core applies the plugin with rootHost and sourceDirectory app/miniApp; root logicProject does not migrate modules here.
+
+## Why server and clients are different consumers
+
+Ktor can consume core's JVM variant while WeChat consumes its Mini App variant. This observes shared logic/platform-dependency isolation, not a requirement for a WeChat backend or SDK backend ownership. Greeting makes no network call; server is another consumption environment, evidenced by [README](README-en.md) and module source.
+
+Core-local rootHost and the other demo's root logicProject are existing experimental paths, not a promise to maintain two templates. Mobile UI/resources/server remain outside Mini App compilation. Other cases' success cannot fill this case's unaccepted paths.
 
 ## Module dependencies
 

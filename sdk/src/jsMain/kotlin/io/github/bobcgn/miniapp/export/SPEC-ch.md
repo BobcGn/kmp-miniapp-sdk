@@ -18,6 +18,12 @@ tags: [exports, typescript]
 
 namespace 在 `host/wechat` 之外，但当前 facade 持有 `WechatHost`，不是公开支持任意宿主注入的中性实现。它调用公共契约与微信逃生口，不直接调用 `wx`。示例中的手写 CommonJS wrapper 只归一 namespace、参数与返回值形状。
 
+## 为什么有单独的导出边界
+
+调用方不能因为使用 JS 就被迫构造 Kotlin Map 或收集 Kotlin Flow；同样，也不应得到第二套微信行为实现。因此本层只把 Kotlin 行为换成宿主可使用的参数、Promise、DTO 与显式观察入口，真正的语义仍由原能力／adapter 提供。[MiniAppExports.kt](MiniAppExports.kt) 与会话类是实现依据，headers 形状的取舍已记录在 ADR 0005。
+
+代价是 Kotlin 与 JS/TS 表面不逐签名相同，类型声明和归一 wrapper 必须与同一产物对应。namespace 独立不意味着 Host 已可任意替换；internal 入口的未确认动机归 [[submodule-sdk-wechat]]，不是本层额外制定的禁令。
+
 ## 会话与资源边界
 
 JS 不能收集 Flow 或取消 Promise，因此 `NetworkStatusObservation`、`BleObservationSession` 通过显式 start/stop 持有 collector；关闭 BLE adapter 还终止 discovery/connection 观察。会话快照各保留最近 32 项，不是完整日志或全部扫描结果。

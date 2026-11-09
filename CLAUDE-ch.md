@@ -24,6 +24,8 @@ WeChat Mini Program
 
 它是一个 SDK / library。后端拥有业务事实，Kotlin 拥有客户端行为，宿主拥有渲染 —— 见 [ADR 0011](docs/decisions/0011-presentation-state-shared-rendering-host-native-ch.md)。它不是 application、UI framework、Kuikly replacement、Compose renderer、Virtual DOM 或 WXML replacement，并且它从不渲染。
 
+产品主线是已有 KMP 共享逻辑接入 Mini App；插件负责接线，runtime 宿主能力提供底座，直接 JS/TS 消费是补充。两个 KMP demo 仅为实验性参考案例，不是通用模板或稳定平台承诺。具体意图与未确认项以目标和所属规格为依据，不从目录、draft 状态或 internal 可见性推导设计动机。
+
 ## 2. 修改前必读
 
 修改项目前，请先阅读：

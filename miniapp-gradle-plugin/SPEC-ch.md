@@ -16,6 +16,12 @@ tags: [gradle-plugin]
 
 `io.github.bobcgn.miniapp` 由 `MiniAppGradlePlugin` 实现。公开 extension 为 `MiniAppExtension` 及 typed `wechat` 配置，任务契约为 miniappTest、assembleMiniAppBundle、initMiniApp、syncMiniApp、assembleMiniApp、verifyMiniApp 与 checkMiniAppHostBoundary。它不链接 runtime 实现，只向消费者注入公共 SDK 坐标。
 
+## 为什么由插件拥有接线而不是消费者脚本
+
+[ADR 0010](../docs/decisions/0010-miniapp-gradle-plugin-source-set-model-ch.md) 对比过「手工命名 target」「只有自定义 source set」「插件拥有 target」：名字存在但没有 compilation 会让消费者源码被静默忽略；正确机制留给每个消费者手写又没有消除接入负担。插件因此创建 target，让 KGP 拥有模型，消费者保留业务源码。
+
+[MiniAppPlatformSupport.kt](src/main/kotlin/io/github/bobcgn/miniapp/gradle/MiniAppPlatformSupport.kt) 是当前实现依据。其代价是受 KGP 命名、variant 和兼容规则约束，不能宣称另有 Mini App 编译器；公共 runtime 坐标又避免消费者依赖 SDK 仓库内部 project 路径。
+
 ## 平台与配置所有权
 
 命名 `miniapp` 的 Kotlin/JS target 由 KGP 派生真实 source sets、compilations 和 common 父边；插件不手工拼 dependsOn 模型。配置时只实体化标准 Kotlin 源码目录，不初始化微信宿主。Node、CommonJS library 和声明生成属于当前宿主构建形态。

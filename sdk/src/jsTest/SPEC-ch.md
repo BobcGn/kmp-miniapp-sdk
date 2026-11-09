@@ -18,6 +18,12 @@ tags: [testing, wechat]
 
 Storage、HTTP、lifecycle、permission、privacy 等测试复用公共检查，验证同一语义在参考实现与微信实现上成立；另有微信专属失败分类、结果解码、版本边界、abort 和 listener 身份配对测试。
 
+## 为什么还需要平台专属测试
+
+共享检查不能表达 wx 的错误文本、原始对象缺失字段、task abort 或 listener 按身份移除。平台 suite 因而对这些适配责任单独施压，同时复用公共保证；它不靠访问真实账号让单元测试变成偶然可用的集成测试。该分工来自 [TESTING](../../../docs/TESTING-ch.md) 与 raw-port fake 的现有结构。
+
+能伪造宿主的代价是不能用绿色测试证明真实宿主行为。精确回调消息、权限弹窗和硬件仍需要原环境证据，而不是继续扩大 fake 的权威。
+
 ## 边界与依赖
 
 依赖生产 JS 实现、[[submodule-sdk-common-tests]] 的共享检查、Kotlin test 和 coroutines-test。允许用 raw JavaScript 构造畸形宿主结果，但不调用真实 `wx`、弹出权限界面或读取开发者账号凭据。

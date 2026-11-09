@@ -2,7 +2,7 @@
 translation-of: module-example-kmp
 language: en
 status: draft
-title: kmp-demo · serverless client composition
+title: kmp-demo · experimental serverless consumer
 ---
 
 # Serverless client composition
@@ -11,7 +11,13 @@ title: kmp-demo · serverless client composition
 
 ## Responsibility and root configuration
 
-An independent build demonstrates shared logic consumed by mobile UI and WeChat. Root logicProject selects `:core` without root KMP compilation. includeBuild consumes current repository source, not a claim that unreleased root selection is a public-release contract.
+As the experimental reference consumer defined by [[module-examples]], this independent build observes shared logic consumed by mobile UI/WeChat, not a generic project template. Root logicProject selects `:core` without root KMP compilation. includeBuild consumes current repository source, not a claim that unreleased root selection is a public-release contract.
+
+## Why core and UI are separate
+
+Mini App compilation inherits common source-set dependencies. When shared also owns Compose UI/resources, adding a target alone does not make those dependencies fit WeChat. Manual consumer separation preserves behaviour/mobile UI while observing independent core Mini App delivery. [README](README-en.md) records the original problem/verification scope.
+
+Root logicProject is this case's current shape, not mandatory consumer layout. The experiment establishes no template stability, all-platform execution or automatic migration; the parent owns both demos' role/trade-off.
 
 ## Module dependencies
 

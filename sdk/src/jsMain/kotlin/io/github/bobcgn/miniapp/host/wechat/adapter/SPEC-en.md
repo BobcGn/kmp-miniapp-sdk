@@ -13,6 +13,12 @@ title: adapter · host behaviour and failure adaptation
 
 Convert typed callback ports into Kotlin capabilities or WeChat results, owning conversion, semantic validation, failure classification and resource ownership. Production `Wx*Host` ports call interop; tests inject fakes. Adapters own neither UI nor consumer business logic.
 
+## Why adaptation is not function-by-function forwarding
+
+A successful callback need not carry data satisfying SDK contracts; failure text need not establish user cancellation. Adapters must validate, retain unknown information and classify only with evidence, not casts, zero-filled fields or fuzzy text matches. Otherwise shared logic receives convenient but semantically false values.
+
+[WechatErrorMapper.kt](WechatErrorMapper.kt) centralizes interpretation; ports let tests drive real adapters without wx. Mapping/resource mechanics are shared, not promotion of every platform API into common capabilities. Each domain retains its contract; [[submodule-sdk-wechat]] owns cross-layer direction.
+
 ## Behaviour domains
 
 - Storage/HTTP meet common contracts; HTTP requests raw text and connects real task abort to cancellation. Network query/listener probes are separate with per-collector listener pairing; conflation means no lossless-event guarantee.
@@ -26,7 +32,7 @@ Convert typed callback ports into Kotlin capabilities or WeChat results, owning 
 
 BLE is Experimental: adapter/discovery/connection collectors own listeners and attempt identity-preserving removal on termination. Refused removal retains counts, not a zero-leak guarantee. Channels are bounded/drop-oldest, but device-deduplication `seen` has no capacity limit; not all state is bounded.
 
-`WechatErrorMapper` centralizes classification; unknown failures remain HostFailure and diagnostic strings can enter public errors. Some adapters directly construct UnsupportedCapability, differing from the historical unified-guard requirement in [[architecture]]. Import chooses no refactor.
+`WechatErrorMapper` centralizes classification; unknown failures remain HostFailure and diagnostic strings can enter public errors. Some adapters directly construct UnsupportedCapability, differing from the historical unified-guard requirement in [[architecture]]. That gap remains unresolved, not a guarantee that every call is uniformly gated.
 
 ## Verification boundary
 

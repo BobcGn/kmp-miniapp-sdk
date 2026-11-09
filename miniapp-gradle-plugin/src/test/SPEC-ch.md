@@ -18,6 +18,12 @@ contract/unit suite 检查 descriptor、公共坐标、typed extension、依赖�
 
 `js/verify-consumer-declarations.cjs` 使用消费者实际 TypeScript 包、配置与生成声明检查类型调用和定义身份；不安装第二套依赖，不把语言服务结果记为 IDE 点击验收。
 
+## 为什么规则与接线分层验证
+
+损坏的 require 或不安全路径可以用很小的目录直接复现，没有必要每次都编译 Kotlin/JS；但 source set 真正被 compilation 使用、测试真正执行和配置缓存可复用，又不能由纯函数断言证明。因此 unit suite 拥有规则，TestKit 拥有真实 Gradle 接线，持久 fixture 拥有外部消费者形状。
+
+该取舍已在 [TESTING](../../../docs/TESTING-ch.md) 说明，并由现有三类 suite 实现。不能用多造几个 fixture 代替缺失的契约检查，也不能把任务名断言当作用户代码已编译的证据。
+
 ## 依赖与隔离边界
 
 fixture 让 KGP 与被测插件共享 buildscript classpath，runtime 通过公共坐标和测试侧 composite build 解析，生产插件不知道仓库路径。临时工程不会读取开发者私有微信配置或发布凭据。

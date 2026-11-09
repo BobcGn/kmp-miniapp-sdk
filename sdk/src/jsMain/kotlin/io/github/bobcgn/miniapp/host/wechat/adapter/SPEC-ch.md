@@ -16,6 +16,12 @@ tags: [adapters, wechat]
 
 将 typed callback ports 转为 Kotlin 能力或微信专属结果，拥有类型映射、语义校验、错误分类和资源归属。生产 `Wx*Host` 实现调用 interop，测试注入 fake port；adapter 不承载 UI 或消费者业务。
 
+## 为什么适配不是逐函数转发
+
+宿主的 callback 成功不一定包含满足 SDK 契约的数据，失败文本也不一定能归因于用户取消。因此 adapter 必须验证、保留未知信息并只在有证据时分类，而不能靠强转、补零或模糊文本匹配伪造答案。否则共享逻辑得到的是更容易使用、但含义错误的值。
+
+[WechatErrorMapper.kt](WechatErrorMapper.kt) 集中错误解释，其他 ports 允许测试驱动真实 adapter 而无需 wx。统一的是映射和资源机制，不是把平台专属 API 全部提升为公共能力。每个领域仍以自身契约为准，跨层方向由 [[submodule-sdk-wechat]] 统一说明。
+
 ## 行为领域
 
 - Storage 与 HTTP 满足各自公共契约；HTTP 请求原始文本，真实 task abort 接入取消。网络状态 query/listener 分别探测，逐 collector 配对监听；实现有 conflate，不承诺无丢失事件。
@@ -29,7 +35,7 @@ tags: [adapters, wechat]
 
 BLE 是 Experimental：adapter/discovery/connection 用 collector 持有 listener，终止时尝试用相同身份移除；宿主拒绝移除时保留计数，不能保证零残留。channel 有界且丢弃旧值，但按设备去重的 `seen` 集合没有容量上限，不宣称全部状态均有界。
 
-错误分类集中在 `WechatErrorMapper`，未知失败保持 HostFailure，诊断字符串仍可能进入公共错误。某些 adapter 直接构造 UnsupportedCapability，与统一 guard 路径的历史要求有差异，见 [[architecture]]；导入不选择重构方案。
+错误分类集中在 `WechatErrorMapper`，未知失败保持 HostFailure，诊断字符串仍可能进入公共错误。某些 adapter 直接构造 UnsupportedCapability，与统一 guard 路径的历史要求有差异，见 [[architecture]]；该差异仍为未决项，不能当成所有调用已统一门控的保证。
 
 ## 验证边界
 

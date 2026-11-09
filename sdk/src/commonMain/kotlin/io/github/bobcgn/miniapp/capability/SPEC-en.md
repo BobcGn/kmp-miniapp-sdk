@@ -15,6 +15,12 @@ title: capability · identity and support state
 
 Common keys express host-neutral meaning; WeChat owns namespaced platform keys, not raw `wx` methods disguised as universal capabilities. The current WeChat gate does not produce PermissionDependent; model presence proves no implemented dynamic permission gating.
 
+## Why identity and support are separate
+
+In [Capability.kt](Capability.kt), a key is stable semantic identity; support is the current host's answer. Combining them into a build-time boolean loses conditions under which another version/state could help. Four states let callers explain unavailability, at the cost that model declarations alone prove no adapter produces/implements every state.
+
+Provider facets leave service provision with domains rather than expanding Host into a service locator. Common-capability promotion needs shared semantics, not merely a same-named WeChat API. [[architecture]] owns that decision principle.
+
 ## Domains and dependencies
 
 [[submodule-sdk-storage]] owns string storage; [[submodule-sdk-network]] owns text HTTP and network status; [[submodule-sdk-lifecycle]] owns app visibility; [[submodule-sdk-permissions]] and [[submodule-sdk-privacy]] own separate lifecycles. Domains use small provider facets, not sibling implementations or a central service locator.

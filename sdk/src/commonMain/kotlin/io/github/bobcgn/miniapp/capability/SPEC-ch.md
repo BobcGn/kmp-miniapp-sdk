@@ -17,6 +17,12 @@ tags: [capabilities]
 
 公共 key 使用宿主无关语义；微信专属 key 由微信目录命名，不把原始 `wx` 方法当作通用能力。当前微信 gate 不产出 PermissionDependent，不能从模型中存在该状态推断已完成动态权限门控。
 
+## 为什么身份与支持状态分开
+
+[Capability.kt](Capability.kt) 中 key 是稳定语义身份，support 是当前宿主的回答；把它们合成构建时 boolean 会丢失「换版本／满足条件后才可能可用」的信息。四态模型使调用方能解释不可用原因，代价是有声明不代表每个 adapter 都已产出或落实全部状态。
+
+provider facet 把「提供哪项服务」留给领域，不让 Host 随新增能力膨胀成 service locator。是否该提升为公共能力取决于可共用的语义，而不是微信中是否恰好存在同名 API；该原则的决定来源归 [[architecture]]。
+
 ## 领域与依赖
 
 [[submodule-sdk-storage]] 拥有字符串存储；[[submodule-sdk-network]] 拥有文本 HTTP 与网络状态；[[submodule-sdk-lifecycle]] 拥有 App 可见性；[[submodule-sdk-permissions]] 与 [[submodule-sdk-privacy]] 分别拥有独立生命周期。各领域使用小 provider facet，不依赖兄弟实现或中央 service locator。

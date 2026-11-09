@@ -24,6 +24,8 @@ WeChat Mini Program
 
 It is an SDK / library. The backend owns business truth, Kotlin owns client behaviour, and the host owns rendering — see [ADR 0011](docs/decisions/0011-presentation-state-shared-rendering-host-native-en.md). It is not an application, a UI framework, a Kuikly replacement, a Compose renderer, a Virtual DOM, or a WXML replacement, and it never renders.
 
+The main track brings existing shared KMP logic to Mini Apps: the plugin owns wiring, runtime capabilities provide the foundation, and direct JS/TS use is supplementary. Both KMP demos are experimental reference cases, not generic templates or stable platform commitments. Goals/owning specs distinguish intent from unconfirmed items; directories, draft status and internal visibility do not establish design motives.
+
 ## 2. Read before changing
 
 Read these before modifying the project:

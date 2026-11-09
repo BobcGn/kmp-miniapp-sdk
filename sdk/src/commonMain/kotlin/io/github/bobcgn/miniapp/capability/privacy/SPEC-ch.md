@@ -15,6 +15,12 @@ tags: [privacy]
 
 `MiniAppPrivacy` 提供 status、requestAuthorization 和只查询的 requireSatisfied，key 为 `privacy`。`PrivacyStatus` 描述宿主当前要求与协议名，`PrivacyAuthorizationOutcome` 描述一次请求的 Authorized/Refused；要求、结果与错误是独立概念。
 
+## 为什么不是权限的另一个状态
+
+[MiniAppPrivacy.kt](MiniAppPrivacy.kt) 与 ADR 0009 的依据是宿主将权限和隐私分别提示、保存、清除；共享一个模型会报告错误的下一步动作。要求是宿主现在要什么，outcome 是一次交互的回答，错误则是无法满足前置条件或无法作答，三者不能互相代替。
+
+SDK 无法从 NOT_REQUIRED 证明同意，因此只提供查询与显式请求，不替调用方证明合规。这个较窄的保证避免把账号配置或宿主回答变成客户端拥有的法律／业务事实。
+
 ## 语义与交互边界
 
 NOT_REQUIRED 只表示宿主当前不要求授权，不证明用户同意，因为未声明收集类型时也可能如此。每次询问宿主，不把旧状态作为永久事实；协议名来自宿主，不由 SDK 生成。

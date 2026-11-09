@@ -15,6 +15,12 @@ title: gradle · Wrapper, versions and dependency catalog
 
 The SDK version constant and plugin runtime coordinate are generated from the catalog to avoid duplicated literals. The consumer plugin compiles against KGP with compileOnly, supplied by consumers at runtime, not an SDK runtime dependency.
 
+## Why version inputs have one source
+
+[libs.versions.toml](libs.versions.toml) drives publication version, runtime's generated constant and the plugin's runtime coordinate. Separate literals could compile yet give consumers mismatched dependencies/reports; generated relationships constrain drift better than manual synchronization.
+
+The Wrapper fixes a build entry, not every consumer's project version. Independent consumers can pin experiment/released-dependency inputs; unifying them for tidy root numbers would destroy evidence identity.
+
 ## Boundary and version scope
 
 The root build pins no JDK toolchain. A documented verification JDK is not a new hard toolchain requirement. Use `./gradlew` or `gradlew.bat`, not system Gradle as authority.

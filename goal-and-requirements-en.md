@@ -11,9 +11,11 @@ title: Project goal and scope
 
 ## Goal and audience
 
-Let Kotlin Multiplatform consumers bring existing shared client behaviour to Mini Apps while each host owns final rendering. The project delivers a runtime SDK and its Gradle plugin, not an application or UI framework.
+The primary value is bringing existing Kotlin Multiplatform client logic to Mini Apps while each host owns final rendering. The primary users maintain that shared Kotlin. Runtime host capabilities are the foundation; direct JavaScript / TypeScript SDK consumption is supplementary, not a separate equal product track.
 
-Its users are client developers writing shared Kotlin and WeChat host developers consuming artifacts through JavaScript / TypeScript. Shared code should not duplicate business logic to integrate WeChat, and the host should not take over SDK capability adaptation.
+## Why this project exists
+
+A typed `wx` wrapper alone does not give existing KMP logic a Mini App compilation, runtime dependency or host-loadable artifact. The plugin removes that build wiring; the runtime connects required host capabilities through common contracts; the host only binds state and events. Shared behaviour need not be duplicated for WeChat and rendering need not move into Kotlin. The maintainer confirmed this priority; [ADR 0010](docs/decisions/0010-miniapp-gradle-plugin-source-set-model-en.md) records the existing build-responsibility rationale.
 
 ## Current capabilities
 
@@ -36,7 +38,10 @@ The backend owns trusted identity, orders and other business facts; the SDK owns
 - Client-side signing, holding merchant keys, or confirming identity, payment or order facts from host callbacks.
 - Mirroring every WeChat API or presenting WeChat-specific semantics as universal host contracts.
 - Consumer-plugin uploads, deployment, or management of AppID, templates, payment or backend business configuration.
+- Treating the two experimental KMP demos as generic project templates or complete platform-support commitments; [[module-examples]] owns their role.
 
 ## Specs and evidence
 
-Chinese files are the spec tree's sole nodes; English files are synchronized translations. `draft` means user review is still pending. Specs describe current responsibilities and explicit decisions, not a roadmap or task list. Recorded verification retains its original environment and date; importing specs is not fresh acceptance.
+Chinese files are the spec tree's sole nodes; English files are synchronized translations. `draft` means review is pending, not that every inference has been confirmed. Specs describe current responsibilities and explicit decisions, not a roadmap or task list.
+
+Product intent comes from maintainer confirmation, implementation facts from source/executable configuration, and historical trade-offs from applicable ADRs. Unevidenced design motives must be marked unconfirmed inline; newly written specs do not prove each other's inferences. [[module-docs]] owns documentation/verification rules; existing results retain their original environment and date.

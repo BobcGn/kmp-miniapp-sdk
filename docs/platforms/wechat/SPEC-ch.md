@@ -15,6 +15,12 @@ tags: [wechat, verification]
 
 用 [能力矩阵](WECHAT_CAPABILITIES-ch.md) 索引当前实现与状态，用 [宿主验证矩阵](WECHAT_HOST_VERIFICATION-ch.md) 规定最低环境、复测与证据格式。二者不定义新的 runtime API，也不把计划升级为能力。
 
+## 为什么能力状态与运行证据分别拥有
+
+实现存在只能说明 SDK 写了什么，fake/Node 只能说明构造条件下的行为；权限、真实硬件、账号资格与后端结果还受 SDK 无法控制的环境影响。因此能力矩阵回答当前状态，验证矩阵说明什么证据足以支撑它，而不是用一张绿色清单代替全部环境。
+
+既有两份矩阵及 TESTING 是规则来源。代价是完成一段代码不一定能关闭验收缺口；缺少合法模板、受控服务或商户环境时，应保留限制，而不是为了规格完整而伪造成功。
+
 ## 状态边界
 
 `Stable` 需要实现、自动化和规定宿主等级的证据。`Partial` 明确保留语义或验证缺口；`Experimental` 不承诺稳定。`Planned`、`Unsupported` 与 presentation 条目不是已有接口。

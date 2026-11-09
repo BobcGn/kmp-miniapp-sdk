@@ -21,4 +21,4 @@ MainActivity 与 Android application 配置承载 shared Compose UI，拥有 man
 
 ## 验证
 
-在示例根运行 `./gradlew :app:androidApp:assembleDebug`，之后另行安装并运行。已有 APK 构建证据不能被标记为设备 UI、服务器链路或 SDK Android target 验收；本次不提交签名材料。
+在示例根运行 `./gradlew :app:androidApp:assembleDebug`，之后另行安装并运行。已有 APK 构建证据不能被标记为设备 UI、服务器链路或 SDK Android target 验收；签名材料属于消费者私有配置，不得入库。

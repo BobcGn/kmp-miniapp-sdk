@@ -19,4 +19,4 @@ Client renderer, Android APIs and local signing stay outside Mini App dependenci
 
 ## Verification
 
-At the example root run `./gradlew :app:androidApp:assembleDebug`, then separately install/run. APK evidence establishes no device UI, server chain or SDK Android-target acceptance. This import commits no signing material.
+At the example root run `./gradlew :app:androidApp:assembleDebug`, then separately install/run. APK evidence establishes no device UI, server chain or SDK Android-target acceptance. Signing material is consumer-private configuration and must not be committed.

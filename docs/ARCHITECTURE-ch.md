@@ -16,6 +16,16 @@ references: [module-repository-build, module-sdk, module-miniapp-gradle-plugin, 
 
 ## 1. 系统边界
 
+### 主线、职责与依据
+
+[[goal-and-requirements]] 确认主线是已有 KMP 逻辑接入 Mini App，而非建立第二套 UI 或业务真相。由此分出三个交付责任：插件拥有消费者编译与分发接线；runtime 拥有宿主能力适配；消费者 Host UI 拥有最终渲染。构建失败、宿主失败和业务失败因此有不同归属，不能互相吞并。
+
+这里的分离有既有决定支撑：[ADR 0010](decisions/0010-miniapp-gradle-plugin-source-set-model-ch.md) 避免消费者手工接线及未被 compilation 消费的假 source set；[ADR 0003](decisions/0003-miniapp-host-boundary-ch.md) 避免把微信语义当成通用语义；[ADR 0011](decisions/0011-presentation-state-shared-rendering-host-native-ch.md) 避免 SDK 获得 renderer 或后端权威。它们不是从目录名字推导出的新禁令。
+
+公共声明、当前可用的微信入口与已确认设计动机仍需区分。`WechatHost` 的 internal 可见性是实现事实，收敛入口的原因未确认，归 [[submodule-sdk-wechat]] 记录。[[module-examples]] 拥有两个 demo 的实验性角色；它们不是产品模板或额外的平台支持承诺。
+
+下面的 Kotlin/JS 链路描述 runtime 产物的消费，不代替插件为既有 KMP 工程建立 compilation/bundle 的主工作流。各模块的局部取舍由所属规格解释，系统规则不在每个叶节点重复定义。
+
 ```text
 commonMain
     ↓

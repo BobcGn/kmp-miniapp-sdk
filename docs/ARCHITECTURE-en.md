@@ -13,6 +13,16 @@ This document records stable architectural boundaries. It does not imply that ev
 
 ## 1. System Boundary
 
+### Main track, responsibilities and evidence
+
+[[goal-and-requirements]] confirms the main track is bringing existing KMP logic to Mini Apps, not a second UI or source of business truth. Three delivery responsibilities follow: the plugin owns consumer compilation/distribution wiring; runtime owns host-capability adaptation; consumer Host UI owns final rendering. Build, host and business failures consequently have separate owners and must not swallow each other.
+
+Existing decisions support the separation: [ADR 0010](decisions/0010-miniapp-gradle-plugin-source-set-model-en.md) avoids handwritten wiring and unconsumed pseudo-source-sets; [ADR 0003](decisions/0003-miniapp-host-boundary-en.md) avoids treating WeChat semantics as universal; [ADR 0011](decisions/0011-presentation-state-shared-rendering-host-native-en.md) excludes SDK renderers/backend authority. These are not new prohibitions inferred from directory names.
+
+Public declarations, currently available WeChat entries and confirmed motives remain distinct. `WechatHost` internal visibility is an implementation fact; its entry-consolidation motive is unconfirmed and owned by [[submodule-sdk-wechat]]. [[module-examples]] owns the two demos' experimental role, not product templates or additional platform-support promises.
+
+The Kotlin/JS chain below describes runtime-artifact consumption, not a replacement for the plugin's main workflow establishing compilations/bundles in existing KMP projects. Owning module specs explain local trade-offs without redefining system rules in every leaf.
+
 ```text
 commonMain
     ↓

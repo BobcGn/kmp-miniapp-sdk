@@ -15,6 +15,12 @@ Root `settings.gradle.kts` includes the runtime and consumer plugin projects plu
 
 `buildMiniAppSdk` depends on SDK production-library distribution and synchronizes compiler modules, declarations and source maps to the WeChat capability example while retaining its handwritten CommonJS wrapper. It is not a consumer initialization/distribution entry.
 
+## Why repository orchestration is not a consumer contract
+
+[build.gradle.kts](build.gradle.kts) validates SDK/plugin deliverables from this repository; consumer builds must not know its paths/copy lists. Internal buildMiniAppSdk can maintain a capability example, but making it an integration step would tie shared logic to an SDK checkout instead of independent consumption.
+
+Root tasks make persistent fixtures, docs and size checks repeatable rather than evidence that somebody once opened an example. Nested clean/shared build directories need ordered ownership to avoid concurrent overwrites, without orchestration taking over the plugin implementation under test.
+
 ## Verification tasks and ownership
 
 `verifyMiniAppConsumerDocs` checks root README heading/fence structure, fixture paths and consumer commands and joins check. `verifyMiniAppGradlePluginIntegration` aggregates plugin suites, SDK guard and real consumer fixtures without joining check, avoiding nested-build reentry.
@@ -31,4 +37,4 @@ Root wiring adds no renderer, business configuration, source migration or host d
 ./gradlew verifyMiniAppGradlePluginIntegration
 ```
 
-These commands have different scopes. Running only documentation checks establishes no full build. Actual Gradle tasks/logs are evidence; historical results are not relabelled as this run.
+These commands have different scopes. Running only documentation checks establishes no full build. Actual Gradle tasks/logs are evidence; historical results do not substitute for fresh execution.

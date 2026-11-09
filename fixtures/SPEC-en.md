@@ -15,6 +15,12 @@ Keep reviewable, repeatable external-consumer shapes, not extra SDK root-build m
 
 The first two composite-resolve the working-tree plugin/runtime; the third deliberately rejects local substitution. Their evidence is not interchangeable: published archives, module wiring and WeChat execution answer separately.
 
+## Why independent consumers supplement repository-internal tests
+
+Tests always inside SDK builds/internal classpaths could bypass user-facing plugin resolution, public coordinates and source-set wiring. Fixtures isolate single-project flows, root ownership and published-archive identity so internal paths cannot hide different failure classes. They are not three product templates.
+
+Source composites validate current changes but not published binary/source archives; released consumers cannot replace current-plugin regressions. Settings resolution, verifyPublishedSdkSources refusal conditions and TESTING records support the separation.
+
 ## Dependency and evidence boundary
 
 Fixtures consume public APIs/plugins, not SDK internal packages. Hosts own WXML/WXSS/thin JS; generated libraries are not handwritten source. Test-account data, private configuration and credentials stay untracked.

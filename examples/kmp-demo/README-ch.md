@@ -4,6 +4,8 @@
 
 这是通过 `includeBuild("../..")` 使用当前 SDK/插件源码的独立消费者。根级产物模块选择不属于已发布的 0.1.1，不需要后端。
 
+本例仅为实验性参考消费者，不是通用项目模板或稳定布局承诺。它用于观察共享逻辑、UI 隔离与 Mini App 接入，不能由案例成功推导 SDK 全部待验证能力均已支持。职责与理由见 [示例规格](SPEC-ch.md)。
+
 ## 目录与依赖边界
 
 - `core/`：`Greeting`、`sayHello`、平台信息与实现、Mini App 导出和逻辑测试。应用 Kotlin Multiplatform，不包含 Compose 依赖。

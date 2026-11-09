@@ -17,6 +17,12 @@ tags: [runtime, kotlin-js]
 
 公共 Kotlin API 与 JS/TS ABI 是两种消费表面：前者使用接口、模型、错误与协程；后者经 `MiniAppExports` 和编译器声明消费。`WechatHost` / `WechatPlatformApi` 本身为 internal，不存在公开的微信 Host 构造或任意宿主注入入口。
 
+## 为什么 runtime 与构建、宿主 UI 分开
+
+已有 KMP 逻辑需要的是可调用、可测试的宿主行为，而不是 Gradle project 或微信页面对象。runtime 因而拥有契约与适配，插件负责让消费者得到它，Host UI 负责展示；修改 bundle 路径不应改变 storage 语义，修改页面也不应要求重写 adapter。这条职责分割来自 [[architecture]] 的既有决定，并服务于 [[goal-and-requirements]] 的接入主线。
+
+两种消费表面是语言边界适配，不是复制一套行为：Kotlin 保留契约，JS/TS 获得可构造的导出形状。当前具体 Host 的公开入口动机仍未确认，不能从 internal 实现推导永久不开放的政策；该未确认项归 [[submodule-sdk-wechat]]。
+
 ## 模块结构与依赖
 
 - [[submodule-sdk-common]] 拥有公共契约、版本 metadata、错误和 internal 异步原语，进一步分出 Host 与各能力领域。
@@ -39,4 +45,4 @@ tags: [runtime, kotlin-js]
 ./gradlew :kmp-miniapp-sdk:jsNodeTest
 ```
 
-这是 SDK 自动化入口，不证明微信、真机或后端成功。精确能力状态、未实现范围与既有验收由 [[submodule-wechat-evidence]] 索引；本规格导入不运行或补造这些验收。
+这是 SDK 自动化入口，不证明微信、真机或后端成功。精确能力状态、未实现范围与既有验收由 [[submodule-wechat-evidence]] 索引；规格存在本身不构成这些验收的执行证据。

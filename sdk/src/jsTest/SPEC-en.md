@@ -15,6 +15,12 @@ Use controllable raw callback ports in Kotlin/JS to verify real adapters, intero
 
 Storage, HTTP, lifecycle, permission and privacy suites reuse common checks against reference and WeChat implementations. WeChat-specific checks cover failure classification, decoding, version boundaries, abort and listener-identity pairing.
 
+## Why platform-specific tests are still needed
+
+Shared checks cannot express wx error text, missing raw fields, task abort or identity-based listener removal. Platform suites stress these adaptation responsibilities while reusing common guarantees, not turning unit tests into account-dependent integrations. [TESTING](../../../docs/TESTING-en.md) and existing raw-port fakes establish the split.
+
+The cost of fake hosts is that green tests prove no real-host behaviour. Exact callback messages, permission prompts and hardware still need original-environment evidence, not ever-expanding fake authority.
+
 ## Boundary and dependencies
 
 Depend on production JS implementations, shared checks from [[submodule-sdk-common-tests]], Kotlin test and coroutines-test. Raw JavaScript may construct malformed host results, but tests do not call real `wx`, show permission UI or read developer-account credentials.

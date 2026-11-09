@@ -4,6 +4,8 @@
 
 This independent Gradle build contains Android/iOS clients and a Ktor server. It consumes the SDK plugin and runtime from this checkout using `includeBuild("../..")`, including unreleased root-host support; it does not verify a published plugin version.
 
+This is an experimental reference consumer, not a generic project template or stable-layout promise. Server is another consumer of shared logic, not a WeChat prerequisite; case success closes no other SDK verification gaps. [The example spec](SPEC-en.md) owns responsibility/rationale.
+
 ## Layout
 
 - `core/`: shared logic for Android, iOS and JVM. The Mini App plugin adds `core/src/miniappMain/kotlin` and `core/src/miniappTest/kotlin` here. The SDK runtime is injected only into the Mini App source set.

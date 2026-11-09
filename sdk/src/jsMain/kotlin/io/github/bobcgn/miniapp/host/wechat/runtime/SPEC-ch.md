@@ -18,6 +18,12 @@ tags: [runtime, capability-gating]
 
 `WechatRuntimeInfo` 将版本和平台分别延迟读取并缓存，优先使用现代 API、旧基础库有兼容回退；`canIUse` 保持实时。基础库版本已知不等于所有 API 都可用。
 
+## 为什么状态在运行时作答
+
+[WechatCapabilityGate.kt](WechatCapabilityGate.kt)、[WechatRuntimeInfo.kt](WechatRuntimeInfo.kt) 与 ADR 0007 的依据是：同一构建可能运行在不同基础库和设备，构建时清单无法回答当前能力。标量版本／平台延迟读取避免模块加载时就触碰尚未就绪的宿主；缓存它们不应冻结 live probe。
+
+这带来的限制是「代码里有 adapter」不等于「当前可调用」，无法确认时必须保守作答。生命周期又来自消费者自己的注册，runtime 只能接收报告，不因能观察状态而取得页面或导航所有权。
+
 ## 生命周期与边界
 
 `WechatAppLifecycle` 接收消费者转发的 launch/show/hide，提供公共 App state；`WechatPageLifecycle` 跟踪显示页面的 route 与页面状态，留在微信逃生口。它们不拦截 App/Page 注册、不拥有页面树或导航框架。
