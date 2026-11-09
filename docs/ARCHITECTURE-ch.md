@@ -1,3 +1,13 @@
+---
+id: architecture
+type: architecture-design
+status: draft
+title: 系统架构与模块边界
+parent: goal-and-requirements
+tags: [architecture, host-boundary]
+references: [module-repository-build, module-sdk, module-miniapp-gradle-plugin, module-build-logic, module-fixtures, module-examples, module-kgp-model-poc, module-ci-release, module-docs]
+---
+
 # 架构
 
 [English](ARCHITECTURE-en.md)
@@ -5,6 +15,16 @@
 本文档记录稳定的架构边界，不表示其中描述的所有 integration 都已经实现。当前能力见 [PROJECT_FACTS-ch.md](PROJECT_FACTS-ch.md)。
 
 ## 1. 系统边界
+
+### 主线、职责与依据
+
+[[goal-and-requirements]] 确认主线是已有 KMP 逻辑接入 Mini App，而非建立第二套 UI 或业务真相。由此分出三个交付责任：插件拥有消费者编译与分发接线；runtime 拥有宿主能力适配；消费者 Host UI 拥有最终渲染。构建失败、宿主失败和业务失败因此有不同归属，不能互相吞并。
+
+这里的分离有既有决定支撑：[ADR 0010](decisions/0010-miniapp-gradle-plugin-source-set-model-ch.md) 避免消费者手工接线及未被 compilation 消费的假 source set；[ADR 0003](decisions/0003-miniapp-host-boundary-ch.md) 避免把微信语义当成通用语义；[ADR 0011](decisions/0011-presentation-state-shared-rendering-host-native-ch.md) 避免 SDK 获得 renderer 或后端权威。它们不是从目录名字推导出的新禁令。
+
+公共声明、当前可用的微信入口与已确认设计动机仍需区分。`WechatHost` 的 internal 可见性是实现事实，收敛入口的原因未确认，归 [[submodule-sdk-wechat]] 记录。[[module-examples]] 拥有两个 demo 的实验性角色；它们不是产品模板或额外的平台支持承诺。
+
+下面的 Kotlin/JS 链路描述 runtime 产物的消费，不代替插件为既有 KMP 工程建立 compilation/bundle 的主工作流。各模块的局部取舍由所属规格解释，系统规则不在每个叶节点重复定义。
 
 ```text
 commonMain
@@ -92,7 +112,7 @@ SDK 的范围仅包括 shared logic、runtime integration 和 typed platform bri
 
 ### 事件源
 
-报告事件而不只是回答问题的 capability，需要在有 collector 关注的期间持有一个宿主注册。BLE 概念验证确立（而网络状态流此前已遵循）的规则是：**每个 collector 恰好拥有一个注册，并在所有终止路径 —— 正常结束、异常、取消 —— 上移除同一个值**。微信按身份移除 listener，因此共享一个注册就需要引用计数来决定何时移除，而那里一旦出错，listener 会泄漏到小程序的整个生命周期。
+报告事件而不只是回答问题的 capability，需要在有 collector 关注的期间持有一个宿主注册。BLE 概念验证确立（而网络状态流此前已遵循）的规则是：**每个 collector 恰好拥有一个注册，并在所有终止路径 —— 正常结束、异常、取消 —— 上尝试移除同一个值**。BLE 会记录宿主拒绝移除的失败并保留 listener 计数，不能保证宿主清理一定成功。微信按身份移除 listener，因此共享一个注册就需要引用计数来决定何时移除，而那里一旦出错，listener 会泄漏到小程序的整个生命周期。
 
 由此产生两条结论：事件流必须给出明确的重复事件策略与有界缓冲，因为宿主回调与 collector 都不该决定对方可以占用多少内存；取消永远不是 SDK 报告的错误，因为停止监听的调用方并没有遭遇宿主失败。BLE 是该模型的概念验证，标记为 `Experimental`；该 adapter 仅通过平台逃生口到达宿主。
 
@@ -104,7 +124,7 @@ Capability support 有四种状态：`Supported`、`Unsupported`、`VersionDepen
 
 版本比较属于平台无关逻辑，以 `HostVersion` 落在 `commonMain`。哪个基础库提供某项能力属于宿主数据，因此位于微信目录表；目录项可以不设最低版本，转而依靠 `wx.canIUse`——它回答的是当前真正运行的宿主，而不是从表格抄来的数字。微信 runtime 关于自身的报告（含基础库版本）属于宿主专属信息，仅通过逃生口可达。
 
-`requireSupported` 会把除 `Supported` 外的任何状态转换为 `MiniAppException.UnsupportedCapability`，并且是产出该异常的唯一路径。完全无法探测的宿主按失败关闭处理：SDK 无法确认的能力一律报告为 `Unsupported`，而不是假定可用。
+`requireSupported` 会把除 `Supported` 外的任何状态转换为 `MiniAppException.UnsupportedCapability`。当前实现还会在 adapter 的 presence 检查中直接产生同一异常，并非所有操作都先调用该 guard；[ADR 0007](decisions/0007-capability-support-and-version-gating-ch.md) 的「唯一路径」要求尚未在源码中统一落实。这里记录现状与决策的差异，不将其视为已满足的不变量，也不通过导入规格决定是否统一门控。完全无法探测的宿主按失败关闭处理：SDK 无法确认的能力一律报告为 `Unsupported`，而不是假定可用。
 
 ### Runtime families
 
@@ -162,7 +182,7 @@ Capability 还可能有 SDK 能够强制、而不只是记录的前置条件。�
 
 能力的**概念**可以是公共的，而它的**词汇**不是。网络状态就是这种情况：每个宿主都能回答「是否在线、通过什么链路」，因此问题与模型是公共的，但词是宿主的。所以答案同时携带两者——SDK 能识别的名字，以及紧挨着它的宿主原词——而 SDK 从未见过的链路类型会被如实报告，而不是被折进一个 `unknown` 成员里，那等于声称 SDK 知道得比实际更多。同样的拆分也适用于门控：宿主可能能回答该问题却不提供变更事件，因此查询与监听是两个独立的 key，而不是一个「有或没有」的能力。
 
-事件形态的 capability 必须决定谁来拥有宿主注册。生命周期避开了这个问题，因为消费者转发的是它自己拥有的钩子。凡是由 SDK 自行注册 listener 的地方，本 SDK 让每个 collector 拥有一次注册，并在该 collector 结束时移除它：宿主按身份移除 listener，因此在多个 collector 之间共享一次注册就需要引用计数，而那里一旦出错，listener 会泄漏到小程序的整个生命周期。每个 collector 一次注册的代价是每个活跃 collector 一个 listener，换来的是每条终止路径上精确成对的清理。
+事件形态的 capability 必须决定谁来拥有宿主注册。生命周期避开了这个问题，因为消费者转发的是它自己拥有的钩子。凡是由 SDK 自行注册 listener 的地方，本 SDK 让每个 collector 拥有一次注册，并在该 collector 结束时尝试移除它：宿主按身份移除 listener，因此在多个 collector 之间共享一次注册就需要引用计数，而那里一旦出错，listener 会泄漏到小程序的整个生命周期。每个 collector 一次注册的代价是每个活跃 collector 一个 listener，换来的是每条终止路径上精确成对的清理。
 
 请求与结果建立在宿主**文件**之上的 capability，即使其外围操作是可移植的，也保留在逃生口之后。上传与下载是 HTTP exchange，这一点公共 transport capability 已经覆盖；它们额外带来的是宿主自身文件系统中的路径，而本 SDK 刻意没有可移植的文件引用，因此把它们提升为公共能力就意味着凭空发明一个。它们的 task handle 按有用之处建模：消费者可以停止传输，取消等待也会停止它，因为一个不再等待某次传输的调用方并没有要求它继续运行。咨询性的进度报告为宿主的最后一个数值，永远不是估算值。
 
@@ -209,7 +229,7 @@ Virtual Payment
 
 Business 和 shared layers 不得直接操作 `dynamic` values。将其转换为类型化 Kotlin values 是 adapter boundary 的职责。
 
-微信 interop 层只描述全局 `wx` object、option bags、result shapes 和 callbacks。Plain-object factories 的存在仅因为 external interfaces 没有 Kotlin constructors；它们不调用宿主 API，也不包含错误映射、capability policy 或业务逻辑。
+微信 interop 层描述全局 `wx` object、option bags、result shapes 与 callbacks，并提供 presence 探测和原始值的安全解码。Plain-object factories 的存在仅因为 external interfaces 没有 Kotlin constructors；这些 factory 不调用宿主 API。原始值的类型／范围检查可以留在解码边界，SDK 错误分类、capability policy 与业务逻辑仍属于 adapter 或 runtime，而不是 interop。
 
 `host/wechat` 是 host boundary 下的平台特定 namespace。该 namespace 为未来宿主保留空间，但当前不引入其他宿主实现或新的 Gradle modules。
 
@@ -236,7 +256,7 @@ Coroutine cancellation 与 Host cancellation 是不同概念：
 - 没有 abort hook 时，cancellation 只停止消费结果，Host operation 可以继续执行。
 - 存在真实 abort hook 时，cancellation 最多调用该 hook 一次。
 
-Promise 与 event adaptation 仍属于由真实用例驱动的未来工作，但有一类事件形态的 capability 已经出现用例：应用生命周期状态。`MiniAppLifecycle` 发布当前状态与后续变化的 `Flow`，这也是 SDK 引入的唯一流抽象。
+异步适配已有具体用例：callback-to-coroutine primitive、面向 JS 的 Promise facade、App lifecycle 与网络状态的 `Flow`，以及实验性 BLE 事件流和显式 observation session。App lifecycle 由消费者转发钩子；网络状态和 BLE 则由 collector 持有宿主 listener。当前不存在独立的通用 Promise／event adaptation framework，不应把这个限制误写成尚无事件适配。
 
 首个具体 Capability 使用以下路径：
 
@@ -305,7 +325,7 @@ wx.request
 
 Export surface 可以适配 Kotlin API，但不得成为业务实现层。
 
-宿主无关的 export facade 位于 `jsMain/.../export`，可以调用 `commonMain` 中的共享 Kotlin API，但不得包含 `wx` 调用或平台能力实现。当编译器生成的 CommonJS namespace 不适合作为稳定的 consumer ABI 时，可以使用极薄的 JavaScript wrapper，仅做 module 和 export shape normalization；wrapper 不得包含业务逻辑、宿主错误映射或平台行为。
+export facade 位于独立于 `host/wechat` 的 `jsMain/.../export` namespace，但当前实现构造并绑定 `WechatHost`，不是可注入任意宿主的通用 facade。它可以调用共享 Kotlin API 和宿主 adapter，但不得直接调用 `wx` 或承载平台能力、业务规则的实现。当编译器生成的 CommonJS namespace 不适合作为稳定的 consumer ABI 时，可以使用极薄的 JavaScript wrapper，仅做 module 和 export shape normalization；wrapper 不得包含业务逻辑、宿主错误映射或平台行为。
 
 Kotlin collection 无法跨越 `@JsExport` 边界，因为 JavaScript 调用方无法构造 Kotlin map。需要键值数据的 export 因此改用可原生表示的形状承载，并由 wrapper 还原为对象形状；Kotlin API 仍保留符合习惯的 collection 类型。HTTP transport export 对 headers 采用该规则，将其表示为 name 与 value 交替的扁平字符串序列。
 
@@ -342,7 +362,7 @@ bundle 不是宿主工程，二者不可混淆。Mini App 构建有三样东西�
 | `miniApp/miniprogram/libs/` | 该工程内由编译器产出的 module | `syncMiniApp` |
 | `build/miniapp-dist/` | 完整、独立的工程 | `assembleMiniApp` |
 
-`initMiniApp` 依据插件作为资源随附的模板创建第一个，只写入缺失的文件，因此重复执行不产生变化，已有修改也绝不会被还原。它绝不会由插件应用、Gradle 配置或 IDE sync 触发：一个仅因被配置就写入源码的构建，没人能对它有把握。`syncMiniApp` 是 `Sync` 而不是 `Copy`，因为 generated area 属于插件 —— 离开 bundle 的 module 也必须离开 source host，否则宿主会继续加载构建已不再产出的代码。`assembleMiniApp` 读第一个、把当前编译产物作为第二个注入、写出第三个，因此消费者用来验收的产物并不是消费者开发所用的工程，且两者都不要求对方先被产出。这些路径都会到达 `Sync` 或创建文件，因此在任何写入发生前都会先校验：source host 必须在工程内、generated area 必须严格位于 source host 内部、distribution 必须在工程内。`clean` 删除 distribution 与 bundle，从不删除 source host。
+`initMiniApp` 依据插件作为资源随附的模板创建第一个，只写入缺失的文件，因此重复执行不产生变化，已有修改也绝不会被还原。它绝不会由插件应用、Gradle 配置或 IDE sync 触发：一个仅因被配置就写入源码的构建，没人能对它有把握。`syncMiniApp` 是 `Sync` 而不是 `Copy`，因为 generated area 属于插件 —— 离开 bundle 的 module 也必须离开 source host，否则宿主会继续加载构建已不再产出的代码。`assembleMiniApp` 读第一个、把当前编译产物作为第二个注入、写出第三个，因此消费者用来验收的产物并不是消费者开发所用的工程，且两者都不要求对方先被产出。这些路径都会到达 `Sync` 或创建文件，因此在任何写入发生前都会先校验：source host 必须在工程内、generated area 必须严格位于 source host 内部、distribution 必须在工程内。默认布局下，`clean` 删除 build 内的 distribution 与 bundle，保留 source host。根级宿主模式会强制 source host 位于根级 build 之外；模块内模式并未禁止把 source 配到 build 内，因此不能把默认布局的保留保证推广到任意自定义路径。
 
 `verifyMiniApp` 只读取组装好的 distribution，不读其他任何东西，因为它回答的是「该目录能否独立成立」。一个会去看工程的检查，会在「只有工程在旁边时才能工作」的 distribution 上通过。它确立的是结构与接线：微信工程文件可解析、`miniprogramRoot` 可解析、每个声明页面都有入口文件、generated library area 位于 mini program root 内且恰好包含一个 module、一个 declaration 及其 npm manifest，并且 distribution 内的每个 `require()` 都能解析到确实存在的文件。它拒绝绝对路径、`node_modules` 与回指原工程的引用。静态读取与 Node smoke 是模块接线证据；只有微信开发者工具才是宿主验收，插件中任何内容都不得把前者说成后者。
 
@@ -350,7 +370,7 @@ bundle 不是宿主工程，二者不可混淆。Mini App 构建有三样东西�
 
 `fixtures/miniapp-consumer` 是本仓库自己的消费者：与本仓库并列的普通构建，按 id 应用插件、按公共坐标解析 runtime，对本仓库结构一无所知。它是该边界的可执行形式 —— SDK 被消费、宿主集成被打包、宿主本身是 UI。其微信 source host 是 `miniApp/`，由 `initMiniApp` 创建一次，此后手工编辑；其微信 UI 是 WXML、WXSS 与薄 JavaScript。这些 markup 留在宿主内：它们永不进入 SDK 或消费者的 Kotlin，因为某个宿主的视图词汇不是平台的词汇。
 
-消费者侧构建配置只有一个 extension `miniapp`，其唯一宿主是 `wechat`。层级本身就是要点：`MiniAppExtension` 是平台，`WeChatHostConfiguration` 是宿主，因此新增宿主是新增一个子类型与一个访问器，而不是把微信那个类型加宽。它只承载构建路径 —— bundle、source host、其中的 generated library area 与 distribution —— 因为 Gradle DSL 中每个字段都是消费者必须做出的决定，而输出形态、CommonJS、declaration 与 renderer 边界是插件的决定，不是消费者的决定。它不承载 AppID、密钥、页面 route 或能力：那些属于宿主与后端。业务与后台配置不在此建模，理由与它在运行期不被建模相同。
+消费者侧构建配置只有一个 extension `miniapp`，其唯一宿主是 `wechat`。层级本身就是要点：`MiniAppExtension` 是平台，`WeChatHostConfiguration` 是宿主，因此新增宿主是新增一个子类型与一个访问器，而不是把微信那个类型加宽。它只承载明确的产物模块选择与宿主构建路径 —— `logicProject`、`rootHost`、bundle、source host、其中的 generated library area 与 distribution —— 因为 Gradle DSL 中每个字段都是消费者必须做出的决定，而输出形态、CommonJS、declaration 与 renderer 边界是插件的决定，不是消费者的决定。它不承载 AppID、密钥、页面 route 或能力：那些属于宿主与后端。业务与后台配置不在此建模，理由与它在运行期不被建模相同。
 
 若消费者的 `commonMain` 依赖另一个 Kotlin Multiplatform project，则必须对该 project 同样应用本插件。该依赖经由 Mini App variant 解析，不提供该 variant 的 project 会解析失败；不存在回退，把依赖移出 `commonMain` 也不是变通办法。
 
@@ -368,3 +388,18 @@ bundle 不是宿主工程，二者不可混淆。Mini App 构建有三样东西�
 - 完整镜像 `wx` API
 - 通过中央平台枚举选择 Host
 - 用误导性的公共抽象隐藏平台专属 API
+
+## 9. 规格导航与仓库边界
+
+中文规格以本文件为架构父节点；英文文件是同步译文，不重复注册。节点通过 `parent` 组成侧栏树，通过依赖边和正文链接表达协作；目录名本身不会建立树关系。
+
+- [[module-repository-build]] 拥有根构建产物与验证接线，[[submodule-gradle-toolchain]] 说明 Wrapper 与版本输入。
+- [[module-sdk]] 拥有 runtime；公共契约、微信实现、导出与测试在其子树说明。真实调用方向是 export → Host → adapter/runtime → interop；runtime 也使用 adapter inspection port，不是四个目录机械串联。
+- [[module-miniapp-gradle-plugin]] 拥有消费者构建集成。它注入 SDK 公共坐标而不链接 runtime 实现；消费者 Kotlin compilation 才依赖 runtime。
+- [[module-build-logic]] 拥有本仓库专用的包体积检查；它测量编译产物，不进入消费者依赖图。
+- [[module-fixtures]] 与 [[module-examples]] 拥有独立消费者和宿主。demo 内的客户端 UI、服务器与 core 有自己的依赖图，不成为 SDK 根构建的模块或新增 runtime targets。
+- [[module-kgp-model-poc]] 保存隔离的模型实验；[[module-ci-release]] 拥有仓库验证与维护者发布；[[module-docs]] 说明文档、决策与证据的不同职责。
+
+这些是现有代码的责任边界，不是新增 Gradle modules。Root `settings.gradle.kts` 仍只包含 runtime 与消费者插件，并 include 仓库构建逻辑。Wrapper、version catalog、内部 `buildMiniAppSdk` 与消费者集成入口属于根构建接线；它们不扩大消费者插件职责。
+
+架构禁令与自动化覆盖不是同一件事：SDK guard 检查 Kotlin import/package 与声明依赖清单，消费者 guard 检查解析出的 runtime classpath；二者都不是任意手写 renderer 的语义检测。具体覆盖与剩余人工检查见 [DEVELOPMENT](DEVELOPMENT-ch.md)。

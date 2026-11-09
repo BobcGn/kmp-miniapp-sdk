@@ -161,7 +161,7 @@ README 是消费者的入口，因此由 `verifyMiniAppConsumerDocs` 守护：�
 ./gradlew :kmp-miniapp-sdk:jsNodeTest --tests "*Bluetooth*" --tests "*Ble*"
 ```
 
-BLE 是本 SDK 第一个建立在真实 `on`/`off` 事件源之上的能力，因此其测试针对的是资源模型而不是 Bluetooth：**24** 个 adapter 测试、**12** 个 interop 测试、**7** 个 session 测试，外加一个证明三个能力键彼此独立门控的 gate 检查。
+BLE 进一步检验真实 `on`/`off` 事件源的资源模型，而非首个或唯一事件源，因此其测试针对的是资源模型而不是 Bluetooth：**24** 个 adapter 测试、**12** 个 interop 测试、**7** 个 session 测试，外加一个证明三个能力键彼此独立门控的 gate 检查。
 
 它们断言的内容各自都有变异探针支撑：discovery 与 connection 调用到达宿主；SDK 无法读取的条目会被跳过并计数，而「不是设备数组」的载荷会以 `InvalidResponse` 结束流；空白设备标识在调用宿主前被拒绝；被取消的 collector 会移除**它注册的那个值**；正常结束或失败的 collector 同样移除；宿主拒绝的移除只被计数且不覆盖结果；两个 collector 不共享状态；重复设备只发一次事件；迟到的宿主回调不改变任何东西；取消不会被报告为宿主失败；停止后 session 的 listener 计数回到 0。
 
@@ -181,6 +181,17 @@ BLE 是本 SDK 第一个建立在真实 `on`/`off` 事件源之上的能力，�
 可重复性是证据而非断言。对同一批文件的两次运行产生完全相同的报告，且任务复用 configuration cache。**重建**会让输入略微移动：Kotlin 编译器重新生成 `kotlinx-coroutines-core.js` 与 `kotlin-kotlin-stdlib.js` 时会有几字节差异，四次重建中总计 gzip 数字观察到的浮动为 7 字节。基线文档记录了这一点，阈值规则中的下限部分也正是为此存在。
 
 报告测量的字节数。它不测量启动，本仓库也无法测量：首次加载观察是人工读取微信开发者工具自身的 Launch Time，[PERFORMANCE_BASELINE-ch.md](PERFORMANCE_BASELINE-ch.md) 说明了具体方法以及该数字能与不能说明什么。
+
+### 规格文档检查
+
+规格树以 [项目目标](../goal-and-requirements-ch.md) 为单根，节点归属与覆盖由 [架构](ARCHITECTURE-ch.md) 导航。中文规格注册唯一节点，英文配对文件是同步译文而不是重复节点。文档变更使用 `spec_validate` 检查重复 ID、悬空链接与父环，并检查整树可达性、译文结构和本地文件链接；这些是文档检查，不是 runtime 验收。
+
+```shell
+./gradlew --no-daemon --console=plain verifyMiniAppConsumerDocs
+git diff --check
+```
+
+上述 Gradle 任务只检查根 README 的结构、消费者路径和命令；完整规格图谱还需用 `spec_*` 和树覆盖检查验证。仅改文档时无需因此执行完整 SDK 构建，更不能把文档检查报告为微信或真机验证。
 
 ## 3. 真实宿主层
 
@@ -278,7 +289,7 @@ tab 切换从 index 页面核对，它是唯一一个目标必须声明在小程
 - `CapabilitySupportContractChecks` 在 Fake Host 与真实 `WechatHost` 两处运行同一组契约断言。
 - 变异探针已实测并回滚：把版本比较方向取反后，方向项与边界项共 3 项失败。
 
-卡片中的基础库版本必须与所选调试基础库一致，请记录下来：它是验证矩阵所要求的证据的一部分。该能力已完成开发者工具与真机验收，记录见 [微信真实宿主验证矩阵](../platforms/wechat/WECHAT_HOST_VERIFICATION-ch.md)。
+卡片中的基础库版本必须与所选调试基础库一致，请记录下来：它是验证矩阵所要求的证据的一部分。该能力已完成开发者工具与真机验收，记录见 [微信真实宿主验证矩阵](platforms/wechat/WECHAT_HOST_VERIFICATION-ch.md)。
 
 9. 验证权限生命周期。页面加载期间不会请求任何权限，因此以下每一步都由点击触发。卡片初始显示宿主已有的状态：全新安装或清除小程序授权数据后为 `NotRequested`。
 

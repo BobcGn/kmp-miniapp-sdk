@@ -24,6 +24,8 @@ WeChat Mini Program
 
 It is an SDK / library. The backend owns business truth, Kotlin owns client behaviour, and the host owns rendering — see [ADR 0011](docs/decisions/0011-presentation-state-shared-rendering-host-native-en.md). It is not an application, a UI framework, a Kuikly replacement, a Compose renderer, a Virtual DOM, or a WXML replacement, and it never renders.
 
+The main track brings existing shared KMP logic to Mini Apps: the plugin owns wiring, runtime capabilities provide the foundation, and direct JS/TS use is supplementary. Both KMP demos are experimental reference cases, not generic templates or stable platform commitments. Goals/owning specs distinguish intent from unconfirmed items; directories, draft status and internal visibility do not establish design motives.
+
 ## 2. Read before changing
 
 Read these before modifying the project:
@@ -34,6 +36,8 @@ Read these before modifying the project:
 4. `docs/ROADMAP-en.md` or `docs/ROADMAP-ch.md` — only when the task concerns future scope or sequencing
 
 Then, for the affected area, read the nested rules: `sdk/AGENTS.md` for `sdk/**`, `examples/AGENTS.md` for `examples/**`.
+
+Specs form one Chinese tree: `goal-and-requirements-ch.md` is the goal root, `docs/ARCHITECTURE-ch.md` the architecture node, and nearby `SPEC-ch.md` files cover real modules or key submodules, not individual source files. For work governed by a documented boundary, contract, invariant, behavior, or decision, use `spec_grep`, `spec_get`, or `spec_graph` first when available, then read the owning spec's relevant body before making changes; fall back to file reads without these tools. This navigation does not change the fact hierarchy below.
 
 ## 3. Fact hierarchy
 
@@ -55,7 +59,7 @@ For source/document or document/document conflicts, follow AGENTS.md Section 2, 
 
 **Scope discipline.** Without an explicit task, do not add Android, iOS, JVM, or Wasm targets; Compose, Ktor, serialization, or dependency injection frameworks; npm or Maven publication; or speculative Gradle modules.
 
-**UI and rendering boundary.** The runtime SDK and any future Presentation Core must not depend on Compose, another UI framework, or host markup such as WXML or WXSS. Compose is a client UI consumer. Mini App host integration binds host state and host events and never renders. `./gradlew :kmp-miniapp-sdk:checkArchitectureBoundaries` enforces the dependency half and runs as part of `:kmp-miniapp-sdk:check`; see `AGENTS.md` §10 and [ADR 0011](docs/decisions/0011-presentation-state-shared-rendering-host-native-en.md).
+**UI and rendering boundary.** The runtime SDK and any future Presentation Core must not depend on Compose, another UI framework, or host markup such as WXML or WXSS. Compose is a client UI consumer. Mini App host integration binds host state and host events and never renders. `./gradlew :kmp-miniapp-sdk:checkArchitectureBoundaries` checks Kotlin import/package statements and declared dependency coordinates against classification lists, not arbitrary renderers or all transitive dependencies, and runs as part of `:kmp-miniapp-sdk:check`; see `AGENTS.md` §10 and [ADR 0011](docs/decisions/0011-presentation-state-shared-rendering-host-native-en.md).
 
 **Credential safety.** Never commit AppID secrets, tokens, certificates, or other credentials; examples and tests use placeholders.
 
@@ -71,7 +75,7 @@ For source/document or document/document conflicts, follow AGENTS.md Section 2, 
 
 **JS boundary.** `dynamic`, `external`, and `js()` must never enter `commonMain`. Keep raw JavaScript interop as narrow as possible, preferably under `jsMain/.../wechat/interop`.
 
-**Documentation sync.** Human-facing documentation uses synchronized `-en.md` / `-ch.md` pairs, except the authoritative AGENTS.md and the intentional CLAUDE.md / CLAUDE-ch.md guide pair. When either language changes, update its counterpart in the same task with the same facts, structure, and intent. This applies to this file too. A change to a project fact or boundary — capability, supported scope, supported tool or IDE, workflow, verified result, or known limit — updates every fact source that states it (PROJECT_FACTS, ARCHITECTURE, README, DEVELOPMENT, TESTING, platform matrices) in the same PR; see `AGENTS.md` §6.
+**Documentation sync.** Human-facing documentation uses synchronized `-en.md` / `-ch.md` pairs, except the authoritative AGENTS.md and the intentional CLAUDE.md / CLAUDE-ch.md guide pair. When either language changes, update its counterpart in the same task with the same facts, structure, and intent. This applies to this file too. Only Chinese specs register unique graph nodes with YAML `id` and `type`; their English `-en.md` translations use `translation-of: <Chinese spec ID>` without `id` or `type`. Both spec language versions remain `draft` until user review: their bodies stay synchronized, while identity metadata intentionally differs. A change to a project fact or boundary — capability, supported scope, supported tool or IDE, workflow, verified result, or known limit — updates every fact source that states it (PROJECT_FACTS, ARCHITECTURE, README, DEVELOPMENT, TESTING, platform matrices) in the same PR. Changes to documented boundaries, contracts, invariants, behavior, or decisions also update the owning spec and translation. Explicitly record unresolved source/contract discrepancies rather than making new decisions through documentation; see `AGENTS.md` §6.
 
 **ADRs are historical.** Accepted decisions in `docs/decisions/` are records. To change one, add a new ADR that supersedes it; do not rewrite the original.
 
@@ -91,18 +95,19 @@ docs/                      PROJECT_FACTS, ARCHITECTURE, DEVELOPMENT, TESTING, RO
 gradle/libs.versions.toml  single source of dependency and plugin versions
 settings.gradle.kts        includes :kmp-miniapp-sdk and :miniapp-gradle-plugin
 sdk/                       the Kotlin/JS runtime SDK module
-miniapp-gradle-plugin/     the io.github.bobcgn.miniapp Gradle plugin skeleton
-examples/                  integration host; not a Gradle module
+miniapp-gradle-plugin/     the io.github.bobcgn.miniapp Gradle plugin and distribution pipeline
+examples/                  hosts and independent demos; not modules of the SDK root build
 ```
 
 Inside `sdk/src`:
 
 - `commonMain` — platform-neutral APIs, models, errors, shared logic. No `wx`, no DOM or Node APIs, no `dynamic` / `external` / `js()`.
 - `commonTest` — shared tests.
-- `jsMain/kotlin/io/github/bobcgn/miniapp/host/wechat/` — `interop`, `adapter`, `runtime`, and `export`, plus the `WechatHost` implementation.
+- `jsMain/kotlin/io/github/bobcgn/miniapp/host/wechat/` — `interop`, `adapter`, and `runtime`, plus the `WechatHost` implementation.
+- `jsMain/kotlin/io/github/bobcgn/miniapp/export/` — the Kotlin-to-JavaScript and TypeScript boundary, outside `host/wechat`.
 - `jsTest` — JavaScript tests.
 
-Layer responsibilities in `jsMain/.../host/wechat`: `interop` holds raw JavaScript and `wx` contracts and no business logic; `adapter` owns type conversion, error mapping, and async adaptation and no UI responsibilities; `runtime` owns host runtime and lifecycle integration only; `export` owns the Kotlin-to-JavaScript and TypeScript boundary and must not become the business implementation layer.
+Layer responsibilities in `jsMain/.../host/wechat`: `interop` holds raw JavaScript and `wx` contracts and no business logic; `adapter` owns type conversion, error mapping, and async adaptation and no UI responsibilities; `runtime` owns host runtime and lifecycle integration only. The separate `jsMain/.../export` boundary must not become the business implementation layer.
 
 Dependency direction: `commonMain` never depends on WeChat code; `interop` never depends on business implementation logic; platform code may implement contracts defined by platform-neutral code, never the reverse.
 
@@ -122,15 +127,15 @@ Verified on 2026-09-14:
 
 Toolchain: Gradle 9.3.1 from the checked-in Wrapper, project Kotlin 2.4.20 from `gradle/libs.versions.toml`, `kotlinx-coroutines-core` 1.11.0, verified on JDK 25.0.2. No JDK toolchain is pinned. Always use `./gradlew` (Unix) or `gradlew.bat` (Windows), never a system Gradle.
 
-Current state, as of 2026-09-15:
+Current-source summary (the 2026-09-15 status baseline and command results above are historical evidence, not a new validation run):
 
-- Status is experimental / pre-alpha. Bootstrap is complete, and every implemented capability is verified in WeChat Developer Tools and, where applicable, on a real device. The one gap is the permission `NotRequested` state, which the account used could not reproduce and which automated tests cover instead.
-- Module list is `:kmp-miniapp-sdk` and `:miniapp-gradle-plugin`. `examples/` is an integration host directory, not a Gradle module. The plugin registers the `miniapp` target and that target's Node.js test run, provisioning `miniappMain` / `miniappTest` as compilation-owned source sets and making `miniappTest` execute, it adds the runtime SDK to `miniappMain` as the public coordinate `io.github.bobcgn:kmp-miniapp-sdk`, `assembleMiniAppBundle` republishes the host bundle at `build/miniapp/bundle/`, and a `miniapp { wechat { } }` extension configures that location; no other build setting is exposed.
-- The JavaScript target is configured with `nodejs()`, `useCommonJs()`, `binaries.library()`, and `generateTypeScriptDefinitions()`.
-- `sdk/src/commonMain/.../api/MiniAppSdk.kt` declares `MiniAppSdk.VERSION = "0.1.0-SNAPSHOT"`; `commonTest` asserts it.
+- Status is experimental / pre-alpha, and bootstrap is complete. Implementation does not establish host acceptance; consult the [WeChat capability matrix](docs/platforms/wechat/WECHAT_CAPABILITIES-en.md) and [real-host verification matrix](docs/platforms/wechat/WECHAT_HOST_VERIFICATION-en.md) for each capability's evidence and outstanding checks.
+- The SDK root-build modules are `:kmp-miniapp-sdk` and `:miniapp-gradle-plugin`; hosts and independent demo builds under `examples/` are not modules of that build. The plugin registers the `miniapp` target and that target's Node.js test run, provisioning `miniappMain` / `miniappTest` as compilation-owned source sets and making `miniappTest` execute. It adds the runtime SDK to `miniappMain` as the public coordinate `io.github.bobcgn:kmp-miniapp-sdk`; `assembleMiniAppBundle` republishes the host bundle at `build/miniapp/bundle/`. The `miniapp { wechat { } }` extension configures bundle, source-host, generated-library, and distribution paths. Current source also supports root host mode and root `logicProject` selection, neither part of released 0.1.1.
+- The SDK's JavaScript target is configured with `nodejs()`, `useCommonJs()`, `binaries.library()`, and `generateTypeScriptDefinitions()`.
+- `MiniAppSdk.VERSION` delegates to `GeneratedMiniAppSdkVersion.VALUE`, generated by `sdk/build.gradle.kts` from `gradle/libs.versions.toml`; `commonTest` checks that relationship rather than a version literal. The plugin's runtime coordinate is generated from the same catalog into `miniapp-plugin-metadata.properties`.
 - `commonMain` contains `MiniAppHost` / `HostPlatformApi`, `HostVersion`, `CapabilityKey` / `CapabilitySupport` with its `Supported` / `Unsupported` / `VersionDependent` / `PermissionDependent` states and the `requireSupported` guard, `MiniAppStorage` with `StorageCapabilityProvider`, `MiniAppHttpTransport` with `NetworkCapabilityProvider`, `MiniAppLifecycle` with `LifecycleCapabilityProvider`, `MiniAppPermissions` with `PermissionCapabilityProvider` and its `PermissionKey` / `PermissionState` model, `MiniAppException`, and the internal `awaitHostCallback` primitive.
-- WeChat interop covers typed `login`, `showToast`, Storage, `request`, the three page-stack navigation contracts, the runtime-inspection members with their presence guards, and the three permission methods with their raw authorization-map reader. Storage, WeChat client login, the HTTP transport, navigation, and the permission lifecycle have adapters; `showToast` remains interop-only. `WechatAppLifecycle`, `WechatPageLifecycle`, `WechatRuntimeInfo`, and the capability catalog and gate live in the WeChat `runtime` package, while `WechatPermissions` and `WechatPermissionScopes` live in its `adapter` package. Only the microphone permission is mapped.
-- Only the app-level lifecycle is a common capability. Page-level lifecycle, navigation, and the runtime description are WeChat-specific and are reachable only through `WechatPlatformApi`. Capability support is answered from the running host, so it is not constant for a build.
+- WeChat interop includes typed `login`, `showToast`, Storage, `request`, the four navigation contracts, the runtime-inspection members with their presence guards, and the three permission methods with their raw authorization-map reader. Storage, WeChat client login, the HTTP transport, navigation, and the permission lifecycle have adapters; `showToast` remains interop-only. `WechatAppLifecycle`, `WechatPageLifecycle`, `WechatRuntimeInfo`, and the capability catalog and gate live in the WeChat `runtime` package, while `WechatPermissions` and `WechatPermissionScopes` live in its `adapter` package. `WechatPermissionScopes` is the single mapping point for WeChat scope strings; it maps both microphone and location permissions.
+- App-level lifecycle is a common capability. Page-level lifecycle, navigation, and the runtime description are WeChat-specific and are reachable only through `WechatPlatformApi`. Capability support is answered from the running host, so it is not constant for a build.
 - The compiler-generated TypeScript declaration contains the version, Storage, WeChat login, HTTP transport, lifecycle, navigation, capability-support, and permission exports, and the hand-maintained CommonJS wrapper exposes them as flat functions.
 
 Node.js is only the local Kotlin/JS build and test environment. The intended production host is the WeChat Mini Program JavaScript runtime, and a passing Node.js test does not establish WeChat Mini Program integration. Report those two results separately.

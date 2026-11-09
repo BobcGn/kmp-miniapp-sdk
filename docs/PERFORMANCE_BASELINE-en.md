@@ -69,8 +69,7 @@ What the numbers say, stated plainly:
 - The SDK's own code is 397 KB raw and 49 KB gzip. The Kotlin and coroutines runtimes are 646 KB raw
   and 102 KB gzip — **the runtime is about 62% of the bytes a host must load**, and coroutines alone
   is larger than the SDK.
-- Source maps and declarations are 495 KB raw, a third of the directory, and none of them ship to a
-  host.
+- Source maps and declarations are 495 KB raw, a third of the directory; they are not runtime code but are included in the assembled distribution.
 - The WeChat host distribution measured the same day: 11 files, 1,581,342 raw / 291,071 gzip — sdk
   408,958 raw / 51,734 gzip (the module plus the hand-written wrapper), runtime 645,824 raw / 102,237
   gzip, development 526,560 raw / 137,100 gzip. It is larger than the library distribution because it
@@ -97,14 +96,14 @@ stable is the compiler's output itself — see the limitations below.
 ## Thresholds
 
 `verifyMiniAppBundleSize` compares a fresh measurement with the committed baseline and fails only
-when **both** of these are exceeded, for any category or for the complete assembled distribution:
+when **both** of these are reached or exceeded, for any category or for the complete assembled distribution:
 
 | Threshold | Value | Basis |
 | --- | --- | --- |
 | Absolute floor | 4,096 bytes | A few hundred bytes are not a decision anyone can act on in a mini program whose package limit is measured in megabytes; 4 KB is about 0.2% of WeChat's 2 MB per-package limit |
 | Relative share | 5% | The smallest shipped category (atomicfu, 9 KB) can double without mattering to a host, so a share alone would fire on noise; the largest (coroutines, 380 KB) can absorb 19 KB before the share trips |
 
-Both must be crossed, so a small file growing a lot and a large file growing a little are both
+The gate compares raw-byte growth; gzip is reported only. Both must be reached or exceeded, so a small file growing a lot and a large file growing a little are both
 reported and neither fails. Only growth counts: a smaller bundle never fails. Auxiliary
 `development` files participate because they are present in the assembled distribution. The total
 is guarded separately so material growth spread across several categories cannot evade the gate.

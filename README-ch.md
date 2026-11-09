@@ -6,6 +6,8 @@
 source set、测试 source set、微信 source host、可分发的宿主 bundle 与独立 distribution，以及这些源码所编译依赖
 的 Kotlin runtime。Mini App 是平台，**微信是当前 Host**，渲染由宿主负责。
 
+产品主线是让已有 KMP 共享逻辑接入 Mini App；runtime 宿主能力是底座，直接 JS/TS 消费 SDK 是补充方式。两个 KMP demo 仅为实验性参考案例，不是通用模板；准确职责见 [规格目标](goal-and-requirements-ch.md) 与 [示例规格](examples/SPEC-ch.md)。
+
 下列工作流与每一条命令都取自并实际执行于本仓库真实的消费者构建：
 [`fixtures/miniapp-consumer`](fixtures/miniapp-consumer)。代码片段只在文中明确说明的位置做删减，
 不会引入未经验证的 API 或构建步骤。
@@ -437,6 +439,8 @@ runtime `io.github.bobcgn:kmp-miniapp-sdk:0.1.1`，Gradle 从 Maven Central 解�
 
 ## 文档
 
+- [项目目标与范围（规格树入口）](goal-and-requirements-ch.md)
+- [文档、决策与证据职责](docs/SPEC-ch.md)
 - [当前项目事实](docs/PROJECT_FACTS-ch.md)
 - [架构](docs/ARCHITECTURE-ch.md)
 - [开发指南](docs/DEVELOPMENT-ch.md)

@@ -12,6 +12,8 @@ Before modifying the project, read:
 - `docs/ARCHITECTURE-en.md` or `docs/ARCHITECTURE-ch.md`
 - `docs/DEVELOPMENT-en.md` or `docs/DEVELOPMENT-ch.md`
 
+Project specs form one Chinese tree: `goal-and-requirements-ch.md` is the goal root, `docs/ARCHITECTURE-ch.md` the architecture node, and nearby `SPEC-ch.md` files cover real modules or key submodules, not individual source files. For work governed by a documented boundary, contract, invariant, behavior, or decision, first locate the owning spec with `spec_grep`, `spec_get`, or `spec_graph` when available, then read its relevant body before making changes. Fall back to file reads when the tools are unavailable. This navigation does not change Section 2's fact hierarchy.
+
 For new requirements, follow Section 14 before implementation; clarification stays read-only.
 
 If the task concerns future scope or sequencing, also read `docs/ROADMAP-en.md` or `docs/ROADMAP-ch.md`.
@@ -58,6 +60,10 @@ AGENTS.md is authoritative; CLAUDE.md and CLAUDE-ch.md form the synchronized Eng
 
 All other human-facing project documentation uses synchronized `-en.md` and `-ch.md` pairs. When either language changes, update its counterpart in the same task with the same facts, structure, and intent.
 
+Only Chinese specs register graph nodes with YAML `id` and `type`; each ID is unique. Their `-en.md` translations use `translation-of: <Chinese spec ID>` without `id` or `type`, avoiding duplicate registration. Both spec language versions remain `draft` until user review. Their bodies synchronize facts, structure, and intent; identity metadata intentionally differs.
+
+When a change alters a documented boundary, contract, invariant, behavior, or decision, update the owning spec and its translation alongside the affected fact sources. Record unresolved source/contract discrepancies explicitly; do not turn them into new decisions through documentation.
+
 When a change affects modules, dependencies, Kotlin or Gradle versions, targets, public architecture, or current capabilities, check and update both `docs/PROJECT_FACTS-en.md` and `docs/PROJECT_FACTS-ch.md` when necessary.
 
 When a change alters a project fact or boundary — a capability, supported scope, supported tool or IDE, workflow, verified result, or known limit — update every fact source that states it in the same task and PR: `docs/PROJECT_FACTS-*`, `docs/ARCHITECTURE-*`, `README-*`, `docs/DEVELOPMENT-*`, `docs/TESTING-*`, and the platform capability and verification matrices, in both languages. Check each of these sources; leave unaffected ones unchanged and state in the PR or report which sources were checked and found unaffected. Do not leave one fact source contradicting another.
@@ -78,7 +84,7 @@ Do not add public API casually. Every public declaration must have explicit visi
 
 The SDK shares client behaviour, host capabilities, and presentation state. It never renders. [ADR 0011](docs/decisions/0011-presentation-state-shared-rendering-host-native-en.md) records the boundary.
 
-- **The runtime SDK, and any Presentation Core, must not depend on Compose** — not on `androidx.compose.*`, `org.jetbrains.compose.*`, Material or the Compose compiler plugin, not on Android views, UIKit or SwiftUI, and not on host markup such as WXML, WXSS, AXML or HTML. `./gradlew :kmp-miniapp-sdk:checkArchitectureBoundaries` enforces this and runs as part of `:kmp-miniapp-sdk:check`.
+- **The runtime SDK, and any Presentation Core, must not depend on Compose** — not on `androidx.compose.*`, `org.jetbrains.compose.*`, Material or the Compose compiler plugin, not on Android views, UIKit or SwiftUI, and not on host markup such as WXML, WXSS, AXML or HTML. `./gradlew :kmp-miniapp-sdk:checkArchitectureBoundaries` checks Kotlin import/package statements and declared dependency coordinates against classification lists and runs as part of `:kmp-miniapp-sdk:check`; it is not a semantic detector for every renderer.
 - **Compose is a client UI consumer, not SDK infrastructure.** A client application may use Compose; the SDK must not know it exists.
 - **Mini App host integration binds, it does not render.** Code under `sdk/src/jsMain` and a consumer's `miniappMain` may bind state to the host's own view mechanism and turn host events into actions. It must not contain a renderer, virtual DOM, view tree, layout engine, Kotlin UI DSL or WXML generator.
 - **WXML and WXSS belong to the WeChat host UI** — `examples/wechat-miniprogram` and the consumer fixture's `host/`. They do not enter SDK source.

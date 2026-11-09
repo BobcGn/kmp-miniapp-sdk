@@ -2,6 +2,14 @@
 
 [English](DEVELOPMENT-en.md)
 
+## 项目规格与文档验证
+
+规格采用中文单树：[目标根](../goal-and-requirements-ch.md) → [架构节点](ARCHITECTURE-ch.md) → 真实模块或关键子模块就近的 `SPEC-ch.md`，不按每个源码文件建规格。修改已记录的边界、契约、不变量、行为或决策前，先用可用的 `spec_grep`、`spec_get` 或 `spec_graph` 定位，再按需阅读归属规格；工具不可用时回退文件读取。
+
+只有中文规格以 YAML `id` / `type` 注册唯一节点；英文 `-en.md` 是同步译文，以 `translation-of: <中文规格 ID>` 关联，不重复携带 `id` / `type`。两语言正文的事实、结构、意图同步，身份元数据有意不同，用户 review 前均保持 `draft`。导航不改变 `AGENTS.md` 的事实层级；边界变化须同步归属规格和译文。源码与契约不一致时，分别记录已核实实现、契约要求与**未决差异**，不通过文档对账改变 API 或已接受的 ADR。
+
+纯文档变更运行 `git diff --check`，并在规格工具可用时运行 `spec_validate`，检查图链接、重复 ID 与 `parent` 环；正文事实、双语语义和普通 Markdown 链接仍需另外核对。这些检查不代表构建、测试、微信宿主或后端验收通过，不要求新增基础设施或安装依赖。
+
 ## 环境要求
 
 - 与仓库内置 Gradle 9.3.1 Wrapper 兼容的 JDK。项目没有固定 JDK toolchain；当前验证环境为 JDK 25.0.2。
@@ -75,11 +83,11 @@ runtime SDK 共享客户端行为、宿主能力与 presentation state，从不�
 ./gradlew :kmp-miniapp-sdk:checkArchitectureBoundaries
 ```
 
-当 `sdk/**` 下任何内容导入 UI framework namespace 或声明 UI framework 依赖时，该任务会失败，并且它是 `:kmp-miniapp-sdk:check` 的一部分。它被有意设计为构建失败而不是评审提醒，因为「SDK 不依赖 Compose」这条不变量必须能在没有读过 ADR 的贡献者手中存活。
+该任务扫描 `sdk/src/**/*.kt` 中的 `import` / `package` 声明，并检查 Gradle 模型中的声明依赖坐标；匹配 `sdk/build.gradle.kts` 内的命名空间与依赖分类清单时失败。它是 `:kmp-miniapp-sdk:check` 的一部分，被有意设计为构建失败而不是评审提醒，因为「SDK 不依赖 Compose」这条不变量必须能在没有读过 ADR 的贡献者手中存活。
 
 依赖匹配分两种：当某个 group 只为 UI framework 服务时按 group 匹配；当该 group 同时承载本 SDK 正当使用的依赖时，按精确 module coordinate 匹配。`org.jetbrains.kotlinx` 承载 `kotlinx-coroutines-core`，因此不能封禁整个 group；改为封禁 `kotlinx-html` 及其 `-js` / `-jvm` 变体这些 module。在把分类器用于真实模型之前，任务会先拿一张固定的期望结论表跑一遍，任何坐标被分类成与预期不符即失败，因此后续改动无法悄悄放宽或收紧规则。
 
-该检查不做的事：它无法发现不导入任何 UI framework 却写出来的 renderer。一个 WXML generator，或用 SDK 自身类型拼装的 view tree，都能通过它。这类错误仍由评审与 `sdk/AGENTS.md` 规则拦截，而不是由构建拦截。
+该检查不扫描非 Kotlin 文件，也不解析全部传递依赖；它无法发现不触及分类清单却写出来的 renderer。一个 WXML generator，或用 SDK 自身类型拼装的 view tree，都能通过它。这类错误仍由评审与 `sdk/AGENTS.md` 规则拦截，而不是由该任务拦截。
 
 ## Mini App Gradle 插件
 
@@ -109,6 +117,8 @@ miniapp {
 }
 ```
 
+下表仅说明本节的 bundle 字段；其他宿主路径与根级选择见后续分发和多模块章节。
+
 | 字段 | 默认值 | 改变什么 |
 | --- | --- | --- |
 | `wechat.bundleDirectory` | `build/miniapp/bundle` | `assembleMiniAppBundle` 写入宿主 bundle 的位置 |
@@ -121,7 +131,7 @@ miniapp {
 
 **有意不放在这里的内容。** AppID 与密钥、商户与支付材料、订单或签名数据、API token、用户身份、订阅消息模板 ID、权限状态、presentation state、页面 route、markup、View 定义，以及其他任何业务或后台配置。它们不是构建输入。Gradle extension 不是宿主控制台的副本；SDK 在构建期不为它们建模，理由与它在运行期不为它们建模相同。
 
-**唯一的一条校验。** `bundleDirectory` 必须是项目内的目录。`assembleMiniAppBundle` 使用 `Sync`，会删除目标目录中 bundle 不包含的文件，因此项目之外的目录、或项目目录本身，会被删除而不是被组装进去。失败信息会指出字段、两个路径与期望值。写入项目内的小程序目录是允许的；放宽该规则需要有真实的外部用例。
+**该字段的目录校验。** `bundleDirectory` 必须是项目内的目录。`assembleMiniAppBundle` 使用 `Sync`，会删除目标目录中 bundle 不包含的文件，因此项目之外的目录、或项目目录本身，会被删除而不是被组装进去。失败信息会指出字段、两个路径与期望值。写入项目内的小程序目录是允许的；放宽该规则需要有真实的外部用例。
 
 ### 宿主 bundle
 
@@ -279,7 +289,7 @@ miniapp {
 ./gradlew updateMiniAppSizeBaseline
 ```
 
-`verifyMiniAppBundleSize` 测量 SDK 生产分发 —— 逐文件、逐分类与合计的原始与 gzip 字节 —— 写出 `build/reports/miniapp-size/bundle-size.json`，并与提交在 `docs/performance-baseline.json` 的基线比较。它只在某个交付分类的增长同时超过 4 KB 下限与 5% 比例时才失败，因此编译器以几字节差异重新生成某个文件不会打断构建。`updateMiniAppSizeBaseline` 重写该基线；它是一次维护者操作，其 diff 按普通改动评审。
+`verifyMiniAppBundleSize` 测量 SDK 生产分发 —— 逐文件、逐分类与合计的原始与 gzip 字节 —— 写出 `build/reports/miniapp-size/bundle-size.json`，并与提交在 `docs/performance-baseline.json` 的基线比较。它只在某个交付分类的增长同时达到或超过 4,096 字节下限与 5% 比例时才失败，因此编译器以几字节差异重新生成某个文件不会打断构建。`updateMiniAppSizeBaseline` 重写该基线；它是一次维护者操作，其 diff 按普通改动评审。
 
 用同一任务测量其他分发 —— 微信宿主的，或某个消费者 bundle —— 只需指向它：
 
@@ -556,7 +566,7 @@ SDK 校验模板与响应关联，而不猜测答案词汇：ID 必须非空白�
 
 ## Bluetooth（实验性）
 
-BLE 是对 SDK **事件驱动资源模型**的概念验证，不是 Bluetooth API，其全部内容均为 `Experimental`。它存在的原因是：SDK 其他能力要么回答问题，要么转发消费者本就拥有的界面；BLE 是第一个真实的 `on`/`off` 事件源。
+BLE 是对 SDK **事件驱动资源模型**的概念验证，不是 Bluetooth API，其全部内容均为 `Experimental`。它进一步验证真实 `on`/`off` 事件源的注册、缓冲与清理模型；网络状态监听已有同类资源边界，因此 BLE 并非唯一或首个事件源。
 
 覆盖范围：adapter 的 open / close / state；discovery 及其设备流；connection 及其连接状态流。刻意不做：service、characteristic、notify、MTU、信号强度查询、配对、自动重连、后台扫描与 `getBluetoothDevices`。
 
@@ -566,7 +576,7 @@ BLE 是对 SDK **事件驱动资源模型**的概念验证，不是 Bluetooth AP
 
 概念验证所依据、并由其测试断言的规则：
 
-- **每个 collector 一个注册，并在所有终止路径上移除。** 每条流只注册一个宿主 listener，并把同一个值交给移除调用，因此无论 collector 正常结束、失败还是被取消都不会留下残留。宿主拒绝的移除只会被计数而不会抛出 —— 在清理阶段抛出会覆盖调用方自己的结果或取消。
+- **每个 collector 一个注册，并在所有终止路径上尝试移除同一个值。** 无论 collector 正常结束、失败还是被取消，每条流都会把它注册的同一个宿主 listener 交给移除调用。只有宿主移除调用成功才扣减活跃计数；宿主拒绝时保留该计数并累计失败，而不抛出 —— 在清理阶段抛出会覆盖调用方自己的结果或取消。
 - **重复事件策略：按 `deviceId` 逐 collector 一次事件**，以首次出现为准。discovery 同时以 `allowDuplicatesKey = false` 启动，因此宿主也会过滤；但流的形状不依赖宿主是否遵守该标志。
 - **背压：有界缓冲并丢弃最旧事件**，因此宿主回调永不阻塞，也没有 collector 能让 SDK 无界地持有事件。由于 discovery 同时要求宿主不要重复上报，被丢弃的事件可能永久丢失；这是尽力而为的观察流，不是完整扫描结果。
 - **幂等的状态变更。** 打开已开启的 adapter、关闭已关闭的 adapter、停止未运行的扫描，都不会调用宿主。

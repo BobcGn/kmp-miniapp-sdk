@@ -4,6 +4,8 @@
 
 这是包含 Android/iOS 客户端和 Ktor 服务器的独立 Gradle 构建。它通过 `includeBuild("../..")` 使用当前仓库的 SDK 插件与 runtime，包括尚未发布的根级宿主支持；不代表已发布插件版本的验证结果。
 
+本例仅为实验性参考消费者，不是通用项目模板或稳定布局承诺。服务器只是另一种共享逻辑消费环境，不是微信接入前置条件；案例成功也不关闭 SDK 其他验证缺口。职责与理由见 [示例规格](SPEC-ch.md)。
+
 ## 目录
 
 - `core/`：Android、iOS 与 JVM 共享逻辑。Mini App 插件在这里增加 `core/src/miniappMain/kotlin` 和 `core/src/miniappTest/kotlin`。SDK runtime 只接入 Mini App source set。

@@ -11,7 +11,7 @@
 ## 1. 项目标识
 
 - 项目：`kmp-miniapp-sdk`
-- 目的：一个 Kotlin Multiplatform client runtime，用于跨 Mini App 平台共享客户端行为、宿主能力与 presentation state，同时保持渲染由宿主原生负责。它使用官方 Kotlin Multiplatform 和 Kotlin/JS，让共享 Kotlin 逻辑可由微信小程序 JavaScript 或 TypeScript runtime 消费。
+- 目的：让已有 Kotlin Multiplatform 共享客户端逻辑接入 Mini App，同时保持渲染由宿主原生负责。Gradle 插件负责消费者编译与分发接线，runtime 宿主能力是底座，直接 JS/TS 消费 SDK 是补充方式；当前微信桥接使用官方 Kotlin/JS。presentation state 的责任边界不等于当前已有 Presentation Core 实现。
 - 类型：SDK / library。
 
 后端拥有业务事实，Kotlin 拥有客户端行为，宿主拥有渲染。[ADR 0011](decisions/0011-presentation-state-shared-rendering-host-native-ch.md) 固定了四层 —— backend、KMP client runtime、host integration、platform UI —— 及其责任矩阵；矩阵内容见 [ARCHITECTURE-ch.md](ARCHITECTURE-ch.md)。
@@ -46,9 +46,9 @@
 - 微信标准支付已实现，并作为「后端参数的类型化转发器」通过自动化检查；Android 真机已验证运行时支持与「未配置参数」保护，真实支付验收仍受阻塞于合法商户环境与可信后端
 - 虚拟支付未实现：不存在请求、结果、capability 条目或导出，且所带开发者工具基础库中没有可发现的虚拟支付契约。其边界记录于 ARCHITECTURE，状态在能力矩阵中为 `Planned`
 - `io.github.bobcgn.miniapp` Gradle 插件已实现并有自动化覆盖。把它应用到 Kotlin Multiplatform 项目会提供 `miniappMain` 与 `miniappTest`，二者是由 compilation 拥有、以 `commonMain` / `commonTest` 为父边的真实 source set；为 IDE 与 CLI 消费者创建标准的 `src/miniappMain/kotlin` 与 `src/miniappTest/kotlin` 目录；绑定 Node.js test run 使 `miniappTest` 真正执行测试；把 runtime SDK 接入 `miniappMain`，使消费者无需声明 artifact 即可针对公开 API 编译；并提供 `assembleMiniAppBundle`，把 Kotlin/JS production library —— 消费者模块与其声明，以及它所需的 runtime 模块 —— 重新发布到 `build/miniapp/bundle`，作为 compiler-managed Mini App distribution。它会对缺少 Kotlin Multiplatform 的编译项目报错，但允许不编译 KMP 的根工程明确选择 KMP 逻辑子模块，也会在 `miniappRuntimeClasspath` 携带客户端 renderer 时报错。它通过 `miniapp { wechat { } }` extension 配置，用于选择产物模块和配置宿主构建路径；模块 bundle 默认为 `build/miniapp/bundle`
-- Mini App distribution pipeline 已实现并有自动化覆盖。`initMiniApp` 依据插件作为资源随附的模板在消费者项目中创建微信 source host `miniApp/`，只写入缺失的文件，绝不重写已存在的文件；它只在被显式调用时运行，绝不在插件应用、Gradle 配置或 IDE sync 期间运行。`syncMiniApp` 把 compiler-managed bundle 重新发布到 `miniApp/miniprogram/libs/`，替换上一次 bundle 留下的内容。`assembleMiniApp` 由 source host 与*当前*编译产物在 `build/miniapp-dist/` 组装出完整、独立的微信工程，既不要求先运行 `syncMiniApp`，也不写入 source host。`verifyMiniApp` 只读取组装好的 distribution：解析 `miniprogramRoot`、检查每个声明页面的入口文件、检查 generated library area 恰好包含一个 module、一个 declaration 及其 npm manifest、解析 distribution 内的每一个 `require()`，并拒绝绝对路径、`node_modules` 与回指原工程的引用。source host、其 generated library area 与 distribution 是三个路径、三个归属，因此 `clean` 只删除构建产物，从不删除 source host
+- Mini App distribution pipeline 已实现并有自动化覆盖。`initMiniApp` 依据插件作为资源随附的模板在消费者项目中创建微信 source host `miniApp/`，只写入缺失的文件，绝不重写已存在的文件；它只在被显式调用时运行，绝不在插件应用、Gradle 配置或 IDE sync 期间运行。`syncMiniApp` 把 compiler-managed bundle 重新发布到 `miniApp/miniprogram/libs/`，替换上一次 bundle 留下的内容。`assembleMiniApp` 由 source host 与*当前*编译产物在 `build/miniapp-dist/` 组装出完整、独立的微信工程，既不要求先运行 `syncMiniApp`，也不写入 source host。`verifyMiniApp` 只读取组装好的 distribution：解析 `miniprogramRoot`、检查每个声明页面的入口文件、检查 generated library area 恰好包含一个 module、一个 declaration 及其 npm manifest、解析 distribution 内的每一个 `require()`，并拒绝绝对路径、`node_modules` 与回指原工程的引用。source host、其 generated library area 与 distribution 是三个路径、三个归属，在默认布局下 `clean` 只删除构建产物，保留 source host；根级模式强制 source 位于 build 之外，但模块内自定义 source 若位于 build 内仍会被 clean 删除
 - 若消费者的 `commonMain` 依赖另一个 Kotlin Multiplatform project，则必须对该 project 同样应用 Mini App 插件：该依赖经由 Mini App variant 解析，不提供该 variant 的 project 会产生 variant 解析错误，且不存在自动回退。把依赖移出 `commonMain` 以规避该问题是不可接受的变通
-- 客户端 / runtime 架构边界已记录并被强制：后端拥有业务事实，本 SDK 拥有客户端行为与宿主能力，宿主拥有渲染。当 runtime SDK 导入或声明 UI framework namespace 或 artifact 时，`:kmp-miniapp-sdk:checkArchitectureBoundaries` 会让构建失败，且它是 `:kmp-miniapp-sdk:check` 的一部分
+- 客户端 / runtime 架构边界已记录：后端拥有业务事实，本 SDK 拥有客户端行为与宿主能力，宿主拥有渲染。`:kmp-miniapp-sdk:checkArchitectureBoundaries` 按分类清单检查 `sdk/src/**/*.kt` 的 `import` / `package` 与 Gradle 模型中的声明依赖，发现匹配项时让构建失败；它是 `:kmp-miniapp-sdk:check` 的一部分，检查范围与限制见 DEVELOPMENT
 
 构建基线与第一条端到端消费链路均已通过验证。Common layer 包含最小 Host identity、Capability support 与强类型 platform escape-hatch contracts。Production code 通过 Host 与 adapter boundaries 调用 typed 微信 Storage contracts，完整 Storage 链路已通过真实宿主验证。
 
@@ -77,7 +77,7 @@ Capability support 由正在运行的宿主回答，而不是依据硬编码清�
 
 ## 3. 当前 Gradle Modules
 
-通过 `./gradlew projects` 验证：
+SDK 根构建的 module 列表（通过 `./gradlew projects` 验证的历史记录）：
 
 ```text
 Root project 'kmp-miniapp-sdk'
@@ -89,13 +89,17 @@ Root project 'kmp-miniapp-sdk'
 
 插件接入的 runtime 坐标为 `io.github.bobcgn:kmp-miniapp-sdk:<version>`。`gradle/libs.versions.toml` 是该版本的唯一来源：插件侧的坐标由它生成成资源，SDK 自身的 `MiniAppSdk.VERSION` 也由同一处生成，因此二者都不可能偏离当前构建的版本。插件只把它加入 `miniappMain`，`miniappTest` 通过 source-set hierarchy 继承。0.1.1 是当前最新公开版本：0.1.0 是首个公开发布版本，0.1.1 增加了 distribution pipeline，且未改变 0.1.0 引入的任何东西。正式版本分别发布到 Maven Central 与 Gradle Plugin Portal；仓库开发 fixture 使用 composite substitution，以便测试当前工作树而不是已发布的 binary。
 
-`examples/` 是 integration host 目录，不是 Gradle module。
+`examples/` 包含 `wechat-miniprogram` integration host，以及 `kmp-demo`、`kmp-demo-with-server` 两个独立消费者构建。维护者确认两个 demo 仅为实验性参考案例，不是通用模板；SDK 尚有待验证与待推进内容，不能由案例成功推出完整支持。它们各有自己的 module 与平台配置；以上均不是 SDK 根构建的 module，也不为 SDK 新增 target。
+
+SDK 的 Maven publication 已配置于 `sdk/build.gradle.kts`；既有发布与在线消费者验证保留原日期。本次文档对账未重新执行发布或在线验证。
 
 `fixtures/miniapp-consumer` 是消费者集成夹具：与本仓库并列的普通 Gradle build，而不是本仓库的 module，它按外部项目的方式消费插件与 runtime。其微信 source host 是 `miniApp/`，由 `initMiniApp` 创建一次，此后手工编辑。其 `miniappMain` / `miniappTest`、runtime 依赖、bundle 与 distribution 全部来自插件。
 
 `poc/kgp-model` 是 BOB-83 的 Kotlin Gradle Plugin 模型 PoC。它是一个独立 Gradle build，根构建不包含它，因此不为 SDK 贡献任何 module、target 或依赖。其决策记录于 [ADR 0010](decisions/0010-miniapp-gradle-plugin-source-set-model-ch.md)。
 
 ## 4. 当前 Targets
+
+以下仅列 SDK 根构建中 runtime 模块的 targets：
 
 ```text
 Kotlin Multiplatform
@@ -104,7 +108,7 @@ Kotlin Multiplatform
 
 Node.js 仅配置为本地 Kotlin/JS 构建和测试环境，不是目标宿主。预期生产宿主是微信小程序 JavaScript runtime。
 
-项目没有配置 Android、JVM、iOS、Wasm 或 browser application target。
+SDK 根构建的 runtime 模块没有配置 Android、JVM、iOS、Wasm 或 browser application target；独立 demo 的消费者 targets 不属于 SDK targets。
 
 ## 5. 当前 JS 策略
 
@@ -161,7 +165,7 @@ Kotlin/JS platform variants 及其传递依赖由 Gradle 在依赖解析期间�
 - `host/wechat/runtime`：宿主 lifecycle 和 runtime integration
 - `export`：宿主无关的 Kotlin 到 JavaScript / TypeScript public boundary
 
-`export` 边界包含版本 facade、Promise-based Storage functions、微信专属 login bootstrap、Promise-based HTTP transport function、供消费者转发的 App 与 Page lifecycle 入口、微信导航函数、capability support 与 runtime inspection 查询、权限生命周期函数、微信专属的会话检查、四项微信剪贴板与震动函数、五项微信文件系统函数、微信定位函数、微信扫码函数、微信媒体选择函数、微信订阅消息请求函数、网络状态函数，以及两个微信传输函数。Interop 边界包含 `login`、`showToast`、Storage、`request`、三个页面栈导航方法，以及带 presence guard 的 runtime inspection 成员的 internal 契约；production adapters 通过 `WechatHost` 调用 login、Storage、HTTP transport、导航、runtime inspection 与权限生命周期，`showToast` 仍仅为 interop contract。`runtime` 边界包含实现公共 lifecycle capability 的 `WechatAppLifecycle`、跟踪 runtime 报告为已显示页面的 `WechatPageLifecycle`，以及依据 runtime 报告判定支持状态的能力目录表与 gate。`adapter` 边界另外包含 `WechatPermissionScopes`，这是微信 scope 字符串唯一存在的地方。
+`export` 边界包含版本 facade、Promise-based Storage functions、微信专属 login bootstrap、Promise-based HTTP transport function、供消费者转发的 App 与 Page lifecycle 入口、微信导航函数、capability support 与 runtime inspection 查询、权限生命周期函数、微信专属的会话检查、四项微信剪贴板与震动函数、五项微信文件系统函数、微信定位函数、微信扫码函数、微信媒体选择函数、微信订阅消息请求函数、网络状态函数，以及两个微信传输函数。Interop 边界包含 `login`、`showToast`、Storage、`request`、四个导航方法、带 presence guard 的 runtime inspection 成员，以及三个权限方法与原始授权 map reader 的 internal 契约；production adapters 通过 `WechatHost` 调用 login、Storage、HTTP transport、导航、runtime inspection 与权限生命周期，`showToast` 仍仅为 interop contract。`runtime` 边界包含实现公共 lifecycle capability 的 `WechatAppLifecycle`、跟踪 runtime 报告为已显示页面的 `WechatPageLifecycle`，以及依据 runtime 报告判定支持状态的能力目录表与 gate。`adapter` 边界另外包含 `WechatPermissionScopes`，这是微信 scope 字符串唯一存在的地方。
 
 ## 9. 当前能力
 
@@ -201,7 +205,7 @@ Kotlin/JS platform variants 及其传递依赖由 Gradle 在依赖解析期间�
 - Typed `wx.request` interop 覆盖 option bag、含 `statusCode`/`header`/`data` 的成功结果、含 `errMsg`/`errno` 的失败结果，以及返回的 task handle。
 - JavaScript / TypeScript facade 暴露不依赖 `any` 的 `networkRequest(url, init): Promise<NetworkResponse>`。
 - 自动测试覆盖 request 转发、response 映射、header 转换、invalid response、timeout 映射、host failure 映射，以及取消时的宿主中止。
-- `MiniAppLifecycle` 定义 App 级 lifecycle capability：当前 `MiniAppLifecycleState` 与后续变化的 `Flow`。它是唯一事件形态的 capability，也是唯一被建模为公共概念的生命周期。
+- `MiniAppLifecycle` 定义 App 级 lifecycle capability：当前 `MiniAppLifecycleState` 与后续变化的 `Flow`。它是唯一被建模为公共概念的生命周期，但不是唯一事件形态的 capability：`MiniAppNetworkStatus.changes` 也提供事件流。
 - `WechatAppLifecycle` 由 `App.onLaunch` 与 `App.onShow` 上报前台、`App.onHide` 上报后台来实现该契约。
 - `WechatPageLifecycle` 跟踪 runtime 报告为已显示的页面 route。Page 级生命周期不是公共 capability，仅通过 `WechatPlatformApi` 可达。
 - `WechatNavigation` 适配 `wx.navigateTo`、`wx.redirectTo`、`wx.navigateBack` 与 `wx.switchTab`，仅通过 `WechatPlatformApi` 可达，并将微信的 failure callback 映射为 `MiniAppException.HostFailure`。
@@ -278,7 +282,7 @@ Kotlin/JS platform variants 及其传递依赖由 Gradle 在依赖解析期间�
 - 没有任何自动化测试声称能够访问真实 `wx` runtime，也没有任何自动化检查可以替代真实宿主验证。
 
 - Bluetooth 是对 SDK **事件驱动资源模型**的概念验证，不是 Bluetooth API，且其全部内容均为 `Experimental`。已实现 adapter 的 open/close 与状态、discovery 及其设备流、connection 及其状态流；service、characteristic、notify、MTU、RSSI 查询、配对、自动重连、后台扫描与 `getBluetoothDevices` 均未实现。
-- 每条 BLE 流只注册一个宿主 listener，并在**所有终止路径**上移除**同一个值**，因此无论 collector 正常结束、失败还是被取消，都不会留下注册；adapter 自身的 listener 计数可由 `wechatBleListenerCount()` 读取，并会回到 0。
+- 每条 BLE 流为每个 collector 注册一个宿主 listener，并保证在**所有终止路径**（正常结束、失败、取消）上尝试用**同一个值**移除。只有宿主移除调用成功才扣减计数；宿主拒绝移除时保留活跃计数并累计失败，不覆盖调用方的结果或取消。`wechatBleListenerCount()` 报告 adapter 自身的 listener 计数；全部 collector 结束且移除均成功后才回到 0。
 - discovery 按 `deviceId` 逐 collector 去重 —— 每个设备只发一次事件，以首次出现为准 —— 同时 SDK 要求宿主不要重复上报设备（`allowDuplicatesKey = false`），因此流的形状不取决于宿主是否遵守该标志。
 - discovery 与 connection 流使用有界缓冲、丢弃最旧事件，而不是无界队列；adapter 也不接受来自宿主回调的背压。由于同时要求宿主不要重复上报，被丢弃的 discovery 事件可能不会再次出现，因此它是尽力而为的观察流，不是完整结果集。
 - BLE 不建模任何权限或隐私前置条件：微信把「蓝牙未开启」报告为普通的 `openBluetoothAdapter` 失败，且无法从宿主契约确认该能力的前置条件。adapter 唯一的端口就是 Bluetooth host，因此它无法查询二者。
@@ -287,7 +291,7 @@ Kotlin/JS platform variants 及其传递依赖由 Gradle 在依赖解析期间�
 
 ## 10. 明确尚不具备的能力
 
-项目当前没有：
+SDK 本身当前没有（独立消费者 demo 的平台配置不在此列）：
 
 - Router 或导航栈框架
 - UI 组件生命周期抽象
@@ -300,7 +304,7 @@ Kotlin/JS platform variants 及其传递依赖由 Gradle 在依赖解析期间�
 - 通用推送通知抽象；由后端发送订阅消息；模板管理；静默或页面加载时的订阅请求；以及任何「已同意订阅即表示消息已发送或将要送达」的说法
 - 客户端签名、商户密钥或证书、订单创建或任何订单模型、退款、对账，以及 `requestVirtualPayment` 边界；也包括任何「客户端支付交互完成即代表订单已支付」的说法
 - 带重试、缓存或认证的通用 HTTP 客户端；断点续传、下载缓存或下载管理器；读取、移动、解压或解析下载内容；WebSocket 客户端；以及任何「下载结果的路径会超出本次会话」的说法
-- Request 或 response body 序列化、cookie 处理、redirect 策略、streaming、upload 或 download
+- 公共 `MiniAppHttpTransport` 中的 request 或 response body 序列化、cookie 处理、redirect 策略、streaming、upload 或 download：这些不属于该公共契约；微信专属上传与下载已有实现，保留在平台逃生口之后，见第 9 节
 - 服务端 code exchange、已认证用户/session 管理和 token refresh
 - 公共通用 callback-to-coroutine API
 - Compose integration、UI DSL、renderer 或 Virtual DOM
@@ -308,7 +312,6 @@ Kotlin/JS platform variants 及其传递依赖由 Gradle 在依赖解析期间�
 - Mini App renderer、view tree、layout engine、Kotlin view DSL 或 WXML generator；`miniappMain` 与 `jsMain` 只做宿主状态与宿主事件的 binding，从不渲染
 - 可以携带客户端 renderer 的 Mini App 宿主 bundle：当 `miniappRuntimeClasspath` 携带 Compose、Skiko、Compose 专用的 AndroidX 集成 artifact、`kotlinx-browser` 或 `kotlinx-html` 时，`checkMiniAppHostBoundary` 会让构建失败。非 Compose 的 lifecycle、saved-state 与 navigation primitives 仍允许作为共享行为。消费者的 `miniappMain` 可以继承共享行为与 state，但 Compose UI 必须位于不作为 `miniappMain` 父 source set 的客户端 module 或 source set 中
 - npm publication
-- Maven publication
 - 承载宿主业务配置的 Gradle DSL。`miniapp { }` extension 已存在，且只承载明确的产物模块选择与宿主构建路径 —— 并有意不含其他内容：没有 AppID 或密钥、没有商户或支付材料、没有订单或签名数据、没有 API token、没有模板 ID、没有 presentation state、没有 markup 或 View 定义。插件会组装 compiler-managed Mini App distribution，但不执行上传、发布或宿主部署。其消费者夹具 bundle 已在基础库 3.17.3 上完成微信开发者工具验收；该结果不会把部署变成插件职责
 - 第二个 Mini App 宿主。当前只有微信；extension 的形状使得新增宿主是「新增一个 `MiniAppHostConfiguration` 子类型与一个访问器」，而不是把微信那个类型加宽
 - 支付宝或 Telegram Host implementations

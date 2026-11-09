@@ -11,7 +11,7 @@ See the [WeChat capability matrix](platforms/wechat/WECHAT_CAPABILITIES-en.md) f
 ## 1. Project Identity
 
 - Project: `kmp-miniapp-sdk`
-- Purpose: a Kotlin Multiplatform client runtime for sharing client behaviour, host capabilities, and presentation state across Mini App platforms, while keeping rendering host-native. It uses official Kotlin Multiplatform and Kotlin/JS so shared Kotlin logic can be consumed by a WeChat Mini Program JavaScript or TypeScript runtime.
+- Purpose: bring existing shared Kotlin Multiplatform client logic to Mini Apps while keeping rendering host-native. The Gradle plugin owns consumer compilation/distribution wiring, runtime host capabilities are the foundation, and direct JS/TS SDK consumption is supplementary. Current WeChat bridging uses official Kotlin/JS. Presentation-state responsibility does not establish a current Presentation Core implementation.
 - Kind: SDK / library.
 
 The backend owns business truth, Kotlin owns client behaviour, and the host owns rendering. [ADR 0011](decisions/0011-presentation-state-shared-rendering-host-native-en.md) fixes the four layers — backend, KMP client runtime, host integration, platform UI — and the responsibility matrix across them; [ARCHITECTURE-en.md](ARCHITECTURE-en.md) carries the matrix.
@@ -46,9 +46,9 @@ The project is not a WeChat Mini Program UI framework, Kuikly replacement, Compo
 - WeChat standard payment implemented and covered by automated checks as a typed forwarder of backend-produced parameters; an Android real-device run verified runtime support and the no-parameters guard, while real payment acceptance is blocked on a legal merchant environment and a trusted backend
 - Virtual payment is not implemented: no request, outcome, capability entry, or export exists, and the installed Developer Tools base library contains no discoverable virtual-payment contract. Its boundary is recorded in ARCHITECTURE and its status is `Planned` in the capability matrix
 - The `io.github.bobcgn.miniapp` Gradle plugin is implemented and covered by automated checks. Applying it to a Kotlin Multiplatform project provisions `miniappMain` and `miniappTest` as compilation-owned source sets with `commonMain` and `commonTest` as their parents, creates their conventional `src/miniappMain/kotlin` and `src/miniappTest/kotlin` directories for IDE and CLI consumers, binds a Node.js test run so `miniappTest` executes tests, adds the runtime SDK to `miniappMain` so the consumer compiles against the public API without declaring an artifact, and exposes `assembleMiniAppBundle`, which republishes the Kotlin/JS production library — the consumer's module and declaration plus the runtime modules it needs — at `build/miniapp/bundle` as a compiler-managed Mini App distribution. It rejects a compilation project without Kotlin Multiplatform unless a non-KMP root explicitly selects a KMP logic subproject, and it rejects a Mini App runtime classpath carrying a client renderer. It is configured through a `miniapp { wechat { } }` extension that selects a producer and configures host build paths; the module bundle defaults to `build/miniapp/bundle`
-- The Mini App distribution pipeline is implemented and covered by automated checks. `initMiniApp` creates the consumer's WeChat source host at `miniApp/` from a template the plugin ships as resources, writing only the files that are absent and never rewriting one that exists; it runs only when it is asked for, never during plugin application, Gradle configuration, or an IDE sync. `syncMiniApp` republishes the compiler-managed bundle into `miniApp/miniprogram/libs/`, replacing whatever the previous bundle left there. `assembleMiniApp` builds a complete standalone WeChat project at `build/miniapp-dist/` from the source host plus the *current* compiler output, without requiring `syncMiniApp` to have run and without writing into the source host. `verifyMiniApp` reads only the assembled distribution: it resolves `miniprogramRoot`, checks every declared page's entry files, checks the generated library area carries one module, one declaration and its npm manifest, resolves every `require()` inside the distribution, and rejects absolute paths, `node_modules` and references back to the project. The source host, its generated library area and the distribution are three separate paths with three separate owners, so `clean` removes the build output and never the source host
+- The Mini App distribution pipeline is implemented and covered by automated checks. `initMiniApp` creates the consumer's WeChat source host at `miniApp/` from a template the plugin ships as resources, writing only the files that are absent and never rewriting one that exists; it runs only when it is asked for, never during plugin application, Gradle configuration, or an IDE sync. `syncMiniApp` republishes the compiler-managed bundle into `miniApp/miniprogram/libs/`, replacing whatever the previous bundle left there. `assembleMiniApp` builds a complete standalone WeChat project at `build/miniapp-dist/` from the source host plus the *current* compiler output, without requiring `syncMiniApp` to have run and without writing into the source host. `verifyMiniApp` reads only the assembled distribution: it resolves `miniprogramRoot`, checks every declared page's entry files, checks the generated library area carries one module, one declaration and its npm manifest, resolves every `require()` inside the distribution, and rejects absolute paths, `node_modules` and references back to the project. The source host, its generated library area and the distribution are three separate paths with three separate owners, with the default layout `clean` removes build output and preserves the source host. Root mode enforces source outside build, but a module-local custom source placed under build is still removed by clean
 - A consumer whose `commonMain` depends on another Kotlin Multiplatform project must apply the Mini App plugin to that project as well: the dependency is resolved through a Mini App variant, so a project that offers none produces variant-resolution errors and there is no automatic fallback. Keeping a dependency out of `commonMain` to avoid this is not a supported workaround
-- The client/runtime architecture boundary is recorded and enforced: the backend owns business truth, this SDK owns client behaviour and host capabilities, and the host owns rendering. `:kmp-miniapp-sdk:checkArchitectureBoundaries` fails the build when the runtime SDK imports or declares a UI framework namespace or Artifact, and it runs as part of `:kmp-miniapp-sdk:check`
+- The client/runtime architecture boundary is recorded: the backend owns business truth, this SDK owns client behaviour and host capabilities, and the host owns rendering. `:kmp-miniapp-sdk:checkArchitectureBoundaries` checks `import` / `package` statements in `sdk/src/**/*.kt` and declared dependencies in the Gradle model against classification lists, failing on a match; it runs as part of `:kmp-miniapp-sdk:check`. See DEVELOPMENT for the check's scope and limits
 
 The build baseline and first end-to-end consumer bridge both pass verification. The common layer contains minimal host identity, capability support, and typed platform escape-hatch contracts. Production code invokes the typed WeChat Storage contracts through the Host and adapter boundaries, and the complete Storage path has passed real-host verification.
 
@@ -77,7 +77,7 @@ Current source ships a Mini App JavaScript analysis configuration and compiler-d
 
 ## 3. Current Gradle Modules
 
-Verified with `./gradlew projects`:
+SDK root-build module list (historically verified with `./gradlew projects`):
 
 ```text
 Root project 'kmp-miniapp-sdk'
@@ -89,13 +89,17 @@ Root project 'kmp-miniapp-sdk'
 
 The runtime coordinate the plugin adds is `io.github.bobcgn:kmp-miniapp-sdk:<version>`. `gradle/libs.versions.toml` is the single source of that version: the plugin's coordinate is generated into it as a resource, and the SDK's own `MiniAppSdk.VERSION` is generated from the same place, so neither can drift away from the version being built. The plugin adds it to `miniappMain` only, and `miniappTest` inherits it through the source-set hierarchy. Version 0.1.1 is the latest public release: 0.1.0 was the first public release, and 0.1.1 adds the distribution pipeline without changing anything 0.1.0 introduced. Releases go to Maven Central and the Gradle Plugin Portal; repository-development fixtures use composite substitution so they test the working tree rather than a released binary.
 
-`examples/` is an integration host directory, not a Gradle module.
+`examples/` contains the `wechat-miniprogram` integration host and independent `kmp-demo` / `kmp-demo-with-server` consumer builds. The maintainer confirms both demos are experimental reference cases, not generic templates; outstanding SDK verification/development does not become complete support when a case succeeds. They have their own modules/platform configuration; none is an SDK root-build module or adds an SDK target.
+
+SDK Maven publication is configured in `sdk/build.gradle.kts`; existing release and online-consumer verification records retain their original dates. This documentation reconciliation reruns neither publication nor online verification.
 
 `fixtures/miniapp-consumer` is the consumer integration fixture: an ordinary Gradle build beside this one, not a module of it, which consumes the plugin and the runtime the way an external project does. Its WeChat source host is `miniApp/`, created once by `initMiniApp` and edited by hand afterwards. Its `miniappMain` / `miniappTest`, its runtime dependency, its bundle and its distribution all come from the plugin.
 
 `poc/kgp-model` is the BOB-83 Kotlin Gradle Plugin model PoC. It is a standalone Gradle build that the root build does not include, so it contributes no module, target, or dependency to the SDK. Its decision is recorded in [ADR 0010](decisions/0010-miniapp-gradle-plugin-source-set-model-en.md).
 
 ## 4. Current Targets
+
+Only the runtime module's targets in the SDK root build are listed here:
 
 ```text
 Kotlin Multiplatform
@@ -104,7 +108,7 @@ Kotlin Multiplatform
 
 Node.js is configured only as the local Kotlin/JS build and test environment. It is not the target host. The intended production host is the WeChat Mini Program JavaScript runtime.
 
-No Android, JVM, iOS, Wasm, or browser application target is configured.
+The runtime module in the SDK root build configures no Android, JVM, iOS, Wasm, or browser application target; the independent demos' consumer targets are not SDK targets.
 
 ## 5. Current JS Strategy
 
@@ -201,7 +205,7 @@ The `export` boundary contains the version facade, Promise-based Storage functio
 - The typed `wx.request` interop covers the option bag, the success result with `statusCode`/`header`/`data`, the failure result with `errMsg`/`errno`, and the returned task handle.
 - The JavaScript and TypeScript facade exposes `networkRequest(url, init): Promise<NetworkResponse>` without `any`.
 - Automated tests cover request forwarding, response mapping, header conversion, invalid responses, timeout mapping, host-failure mapping, and host abort on cancellation.
-- `MiniAppLifecycle` defines the app-level lifecycle capability: the current `MiniAppLifecycleState` and a `Flow` of later changes. It is the only event-shaped capability and the only lifecycle concept modelled as common.
+- `MiniAppLifecycle` defines the app-level lifecycle capability: the current `MiniAppLifecycleState` and a `Flow` of later changes. It is the only lifecycle concept modelled as common, but not the only event-shaped capability: `MiniAppNetworkStatus.changes` also exposes an event stream.
 - `WechatAppLifecycle` implements that contract from `App.onLaunch` and `App.onShow` reporting the foreground and `App.onHide` reporting the background.
 - `WechatPageLifecycle` tracks the route the runtime reports as shown. Page-level lifecycle is not a common capability and is reachable only through `WechatPlatformApi`.
 - `WechatNavigation` adapts `wx.navigateTo`, `wx.redirectTo`, `wx.navigateBack`, and `wx.switchTab`, is reachable only through `WechatPlatformApi`, and reports WeChat's failure callback as `MiniAppException.HostFailure`.
@@ -278,7 +282,7 @@ The `export` boundary contains the version facade, Promise-based Storage functio
 - No automated test claims access to a real `wx` runtime, and no automated check substitutes for real-host verification.
 
 - Bluetooth is a proof of concept for the SDK's event-driven resource model, not a Bluetooth API, and every part of it is `Experimental`. Adapter open/close and state, discovery with its device stream, and connection with its state stream exist; services, characteristics, notifications, MTU, RSSI queries, pairing, reconnection, background scanning and `getBluetoothDevices` do not.
-- Every BLE stream registers exactly one host listener and removes **that same value** on every termination path, so a collector that ends normally, fails, or is cancelled leaves no registration behind; the adapter's own listener count is readable through `wechatBleListenerCount()` and reaches zero.
+- Each BLE stream registers one host listener per collector and guarantees an attempt to remove **that same value** on **every termination path** — normal completion, failure, or cancellation. The count decreases only when the host removal call succeeds; a refused removal retains the active count and increments the failure count without replacing the caller's result or cancellation. `wechatBleListenerCount()` reports the adapter's own listener count; it reaches zero after all collectors end only if every removal succeeds.
 - Discovery deduplicates by `deviceId` per collector — one event per device, first sighting wins — and the SDK also asks the host not to repeat devices (`allowDuplicatesKey = false`), so the stream's shape does not depend on the host honouring that flag.
 - Discovery and connection streams use a bounded buffer that drops the oldest events rather than an unbounded queue, and the adapter accepts no backpressure from the host callback. A dropped discovery event may not be reported again because the host is asked not to repeat devices, so discovery is a best-effort observation rather than an exhaustive result set.
 - BLE models no permission and no privacy precondition: WeChat reports a switched-off adapter as a plain `openBluetoothAdapter` failure, and no precondition for this capability could be confirmed from the host contract. The adapter's only port is the Bluetooth host, so it cannot query either.
@@ -287,7 +291,7 @@ The `export` boundary contains the version facade, Promise-based Storage functio
 
 ## 10. Explicit Non-Capabilities
 
-The project currently has no:
+The SDK itself currently has no (independent consumer demo platform configuration is outside this list):
 
 - Router or navigation-stack framework
 - UI component lifecycle abstraction
@@ -299,7 +303,7 @@ The project currently has no:
 - A player, editor, compressor, or transcoder for the selected media; image recognition; upload, download, or backend storage; long-term management of the host's temporary files; a complete wrapper of WeChat's media APIs; or the media picker's own interface
 - A general push-notification abstraction; sending subscription messages from a backend; template management; silent or load-time subscription requests; or any claim that an accepted subscription means a message was or will be delivered
 - A general HTTP client with retry, caching, or authentication; a resume, cache, or download manager; reading, moving, unpacking, or parsing downloaded content; a WebSocket client; or any claim that a download result outlives the session
-- Request or response body serialization, cookie handling, redirect policy, streaming, upload, or download
+- Request or response body serialization, cookie handling, redirect policy, streaming, upload, or download in the common `MiniAppHttpTransport` contract: these are non-goals of that contract; WeChat-specific upload and download are implemented behind the platform escape hatch (Section 9)
 - Client-side signing, merchant keys or certificates, order creation or any order model, refunds, reconciliation, or the `requestVirtualPayment` boundary; and any client-side claim that a completed payment interaction means an order is paid
 - Server-side code exchange, authenticated user/session management, and token refresh
 - A public generic callback-to-coroutine API
@@ -308,7 +312,6 @@ The project currently has no:
 - A Mini App renderer, view tree, layout engine, Kotlin view DSL or WXML generator; `miniappMain` and `jsMain` bind host state and host events, and never render
 - A Mini App host bundle that can carry a client renderer: `checkMiniAppHostBoundary` fails the build when the `miniappRuntimeClasspath` carries Compose, Skiko, a Compose-specific AndroidX integration artifact, `kotlinx-browser` or `kotlinx-html`. Non-Compose lifecycle, saved-state and navigation primitives remain allowed shared behaviour. A consumer's `miniappMain` may inherit shared behaviour and state, but the Compose UI must live in a client module or source set that is not a parent of `miniappMain`
 - npm publication
-- Maven publication
 - A Gradle DSL that carries host business configuration. The `miniapp { }` extension exists and carries explicit producer selection and host build paths — and deliberately nothing else: no application identifiers or secrets, merchant or payment material, order or signature data, API tokens, template identifiers, presentation state, markup or view definitions. The plugin assembles a compiler-managed Mini App distribution but performs no upload, publication or host deployment. Its consumer fixture bundle has completed WeChat Developer Tools acceptance at base library 3.17.3; that result does not turn deployment into a plugin responsibility
 - A second Mini App host. Only WeChat exists; the extension is shaped so that another host is an added `MiniAppHostConfiguration` subtype and an added accessor, not a widened WeChat type
 - Alipay or Telegram host implementations

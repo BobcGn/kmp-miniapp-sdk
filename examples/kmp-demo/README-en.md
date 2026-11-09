@@ -4,6 +4,8 @@
 
 This independent consumer uses the current SDK/plugin checkout through `includeBuild("../..")`. Root producer selection is not in published 0.1.1. It requires no backend.
 
+This is an experimental reference consumer, not a generic project template or stable-layout promise. It observes shared logic, UI isolation and Mini App integration; case success establishes no complete support for outstanding SDK capabilities. [The example spec](SPEC-en.md) owns responsibility/rationale.
+
 ## Layout and dependency boundary
 
 - `core/`: `Greeting`, `sayHello`, platform identities/implementations, Mini App exports and logical tests. It applies Kotlin Multiplatform and has no Compose dependency.
